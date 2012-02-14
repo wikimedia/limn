@@ -1,8 +1,85 @@
 #!/usr/bin/env coco
 
+fs       = require 'fs'
+path     = require 'path'
+
+_        = require 'underscore'
 express  = require 'express'
 compiler = require 'connect-compiler-extras'
 
 
+stylus   = require 'stylus'
+nib      = require 'nib'
+
+
+
+### Config
+
+PORT = 8081
+
+CWD = process.cwd()
+WWW = "#CWD/www"
+VAR = "#CWD/var"
+
+
+
+
+### Setup
+
 exports.app = app = express.createServer()
-app.listen 8081
+app.listen PORT
+
+console.log "~>\tStarting kraken-ui Dev Server (port=#PORT)!\t<~"
+
+
+app.configure ->
+    console.log 'server.configure()'
+    
+    app.set 'views', WWW
+    app.set 'view engine', 'jade'
+    app.set 'view options',
+        layout  : true
+        pretty  : true
+        _       : _
+        jade    : require 'jade'
+        fs      : fs
+    
+    app.use express.logger()
+    app.use express.bodyParser()
+    app.use express.methodOverride()
+    app.use app.router
+    
+    log_level = 'INFO'
+    
+    app.use compiler do
+        src     : WWW
+        dest    : VAR
+        enabled : <[ stylus coco ]>
+        options : stylus : { nib:true, include:"#WWW/css" }
+        log_level : log_level
+    
+    # wrap modules in commonjs closure for browser
+    app.use compiler do
+        enabled : 'commonjs'
+        src     : [ VAR, WWW ]
+        dest    : VAR
+        options : commonjs : drop_path_parts:1
+        log_level : log_level
+    
+    app.use require('browserify') do
+        mount   : '/lib/browserify.js'
+        require : 'seq'
+    
+    app.use express.static WWW
+    app.use express.static VAR
+    app.use express.errorHandler do
+        dumpExceptions : true
+        showStack      : true
+
+
+### Routes
+
+app.get '/', (req, res) ->
+    res.render 'index'
+
+
