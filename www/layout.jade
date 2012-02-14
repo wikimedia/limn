@@ -1,10 +1,16 @@
 !!! html
 html
     head
-        link(href="/css/kraken.css", type='text/css', media='screen', rel='stylesheet')
+        meta(http-equiv="content-type", content="text/html; charset=utf-8")
+        link(type='text/css', rel='stylesheet', media='screen', href='/css/reset.min.css')
+        link(type='text/css', rel='stylesheet', media='screen', href="/css/kraken.css")
+        title Kraken
     body
-        div
+        .content
             != body
         .scripts 
-            script(src="vendor/jquery.min.js")
+            script(src="/vendor/jquery.min.js")
+            script(src="/vendor/dygraph-combined.js")
             script(src="/js/kraken-ui/main.js")
+        
+
