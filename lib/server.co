@@ -71,6 +71,7 @@ app.configure ->
     
     app.use express.static WWW
     app.use express.static VAR
+    app.use express.static "#{CWD}/static"
     app.use express.errorHandler do
         dumpExceptions : true
         showStack      : true

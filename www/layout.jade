@@ -1,3 +1,10 @@
-body
-  div
-    != body
+!!! html
+html
+    head
+        link(href="/css/kraken.css", type='text/css', media='screen', rel='stylesheet')
+    body
+        div
+            != body
+        .scripts 
+            script(src="vendor/jquery.min.js")
+            script(src="/js/kraken-ui/main.js")
