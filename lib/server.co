@@ -43,7 +43,7 @@ app.configure ->
         jade    : require 'jade'
         fs      : fs
     
-    app.use express.logger()
+    # app.use express.logger()
     app.use express.bodyParser()
     app.use express.methodOverride()
     app.use app.router
