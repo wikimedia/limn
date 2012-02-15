@@ -58,7 +58,6 @@ app.configure ->
     # app.use express.logger()
     app.use express.bodyParser()
     app.use express.methodOverride()
-    app.use app.router
     
     log_level = 'INFO'
     
@@ -84,6 +83,7 @@ app.configure ->
     app.use express.static WWW
     app.use express.static VAR
     app.use express.static STATIC
+    app.use app.router
     app.use express.errorHandler do
         dumpExceptions : true
         showStack      : true
