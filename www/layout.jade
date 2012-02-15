@@ -4,14 +4,32 @@ html
         meta(http-equiv="content-type", content="text/html; charset=utf-8")
         link(type='text/css', rel='stylesheet', media='screen', href='/css/reset.min.css')
         link(type='text/css', rel='stylesheet', media='screen', href="/css/kraken.css")
-        title Kraken
+        block head
+        link(type="image/ico", rel="icon", href="/favicon.ico")
+        link(type="image/x-icon", rel="shortcut icon", href="/favicon.ico")
+        block title
+            title Kraken
     body
-        .content
-            != body
-        .scripts 
-            script(src="/vendor/jquery.min.js")
-            //- script(src="/vendor/dygraph-combined.js")
-            script(src="/vendor/dygraph.js")
+        header
+            h1: a(href="/") Kraken
+            //- 
+                block nav
+                    nav#menu: ul
+                        li.home Home
+            block header
+        
+        section#content
+            block content
+                .inner
+        
+        footer
+            block footer
+        
+        .scripts
+            //- script(src='/lib/lib-bundle.min.js')
+            for src in sources(WWW+'/modules.yaml')
+                script(src=src+"?"+version)
+            block scripts
             script(src="/js/kraken-ui/main.js")
         
 

@@ -1,0 +1,24 @@
+-   suffix: .js
+    paths:
+    - vendor:
+        - es5-shim.min
+        - modernizr.min
+        - json2.min
+        - jquery.min
+        - jquery.hotkeys.min
+        - jquery.history.min
+        - browserify
+        - require
+        - underscore.mod
+        - underscore.string.mod
+        - u.min
+        - dygraph
+
+# -   suffix: .mod.js
+#     paths:
+#     - 'js/kraken-ui':
+#         - graph
+
+# -   suffix: .js
+#     paths:
+#     - js/kraken-ui/main

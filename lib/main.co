@@ -1,13 +1,11 @@
 g = null
 
 main = ->
-    g = new Dygraph do
-          $ '#graphdiv' .0
+    g := new Dygraph do
+          $ '#graph' .0
           'data/page_views_by_project.csv'
           {'logscale': true}
     
     
-
-
 
 jQuery main
