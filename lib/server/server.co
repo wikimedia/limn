@@ -2,6 +2,7 @@
 
 fs       = require 'fs'
 path     = require 'path'
+{exec, spawn} = require 'child_process'
 
 _        = require 'underscore'
 express  = require 'express'
@@ -18,10 +19,20 @@ nib      = require 'nib'
 PORT = 8081
 
 CWD = process.cwd()
-WWW = "#CWD/www"
-VAR = "#CWD/var"
+WWW    = "#CWD/www"
+VAR    = "#CWD/var"
+STATIC = "#CWD/static"
+
+NODE_ENV = process.env.NODE_ENV or 'development'
 
 
+VERSION = 'dev'
+err, stdout, stderr <- exec 'git rev-parse --short HEAD', {cwd:CWD, env:process.env}
+throw err if err
+VERSION = stdout.trim!
+
+# err <- fs.writeFile 'lib/version.js', "module.exports = exports = '#{VERSION}';\n", 'utf8'
+# try VERSION = require '../version' catch e
 
 
 ### Setup
@@ -29,19 +40,20 @@ VAR = "#CWD/var"
 exports.app = app = express.createServer()
 app.listen PORT
 
-console.log "~>\tStarting kraken-ui Dev Server (port=#PORT)!\t<~"
+console.log "starting Kraken dev server (port=#PORT, env=#NODE_ENV, version=#VERSION)"
+console.log "========================================================================"
 
 app.configure ->
-    console.log 'server.configure()'
-    
     app.set 'views', WWW
     app.set 'view engine', 'jade'
-    app.set 'view options',
-        layout  : true
+    app.set 'view options', {
+        layout  : false
         pretty  : true
-        _       : _
-        jade    : require 'jade'
-        fs      : fs
+        version : VERSION
+        WWW     : WWW
+        VAR     : VAR
+        STATIC  : STATIC
+    } import require './view-helpers'
     
     # app.use express.logger()
     app.use express.bodyParser()
@@ -60,18 +72,18 @@ app.configure ->
     # wrap modules in commonjs closure for browser
     app.use compiler do
         enabled : 'commonjs'
-        src     : [ VAR, WWW ]
+        src     : [ VAR, WWW, STATIC ]
         dest    : VAR
         options : commonjs : drop_path_parts:1
         log_level : log_level
     
     app.use require('browserify') do
-        mount   : '/lib/browserify.js'
-        require : 'seq'
+        mount   : '/vendor/browserify.js'
+        require : <[ events seq ]>
     
     app.use express.static WWW
     app.use express.static VAR
-    app.use express.static "#{CWD}/static"
+    app.use express.static STATIC
     app.use express.errorHandler do
         dumpExceptions : true
         showStack      : true
@@ -80,6 +92,9 @@ app.configure ->
 ### Routes
 
 app.get '/', (req, res) ->
-    res.render 'index'
+    res.render 'graph'
+
+app.get '/:page', (req, res) ->
+    res.render req.params.page
 
 

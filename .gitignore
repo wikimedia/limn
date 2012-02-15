@@ -26,6 +26,7 @@ test/*.log
 test/fixtures/*.json
 test/fixtures/logs/*.log
 
+lib/version.js
 build/
 dist/
 tmp/

@@ -1,0 +1,33 @@
+# Utilities for use in templates
+
+fs   = exports.fs   = require 'fs'
+path = exports.path = require 'path'
+              
+_    = exports._    = require 'underscore'
+yaml = exports.yaml = require 'js-yaml'
+jade = exports.jade = require 'jade'
+              
+NODE_ENV = exports.NODE_ENV = (process.env.NODE_ENV or 'development').toLowerCase()
+IS_PROD  = exports.IS_PROD  = _ <[ prod production ]> .contains NODE_ENV
+IS_DEV   = exports.IS_DEV   = not IS_PROD
+
+
+sources = exports.sources = (modulesFile) ->
+    mods = yaml.load fs.readFileSync modulesFile, 'utf8'
+    _.flatten mods.map ({suffix or '', paths}) -> joinTree('', paths).map -> it+suffix
+
+joinTree = exports.joinTree = function joinTree(root, tree)
+    return ["#root/#tree"] if typeof tree is 'string'
+    _ tree .reduce do
+        (acc, branch) ->
+            if typeof branch is 'string'
+                acc.push "#root/#branch"
+            else
+                _.each branch, (v, k) ->
+                    acc.push.apply acc, joinTree "#root/#k", v
+            acc
+        []
+
+
+# util = exports.util = require '../util'
+
