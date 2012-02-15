@@ -28,6 +28,7 @@ You should now have a server running on 8081.
   
 - brb lunch
 
+- Can Fabian commit?
 
 
 [nodejs]: http://nodejs.org/
