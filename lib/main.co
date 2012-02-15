@@ -1,14 +1,10 @@
 g = null
 
 main = ->
-    console.log 'hi'
     g = new Dygraph do
           $ '#graphdiv' .0
-          "Date,Temperature\n
-          2008-05-07,75\n
-          2008-05-08,70\n
-          2008-05-09,80\n"
-          {}
+          'data/page_views_by_project.csv'
+          {'logscale': true}
     
     
 
