@@ -26,9 +26,6 @@ You should now have a server running on 8081.
   
 - Coco require compilation before it'll run in the browser (though node can run it directly -- `#!/usr/bin/env coco` will work as a shebang as well). I've written [request middleware][connect-compiler] that recompiles stale files on demand, and it is pretty cool.
   
-- brb lunch
-
-- Can Fabian commit?
 
 
 [nodejs]: http://nodejs.org/

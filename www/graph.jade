@@ -1,9 +1,14 @@
 extends layout
 
 block title
-    title Kraken Test Graph
+    title Kraken: Graph Test Page
 
-block content
-    section#graph
+append content
+    section.graph
+        .viewport
+        fieldset.settings
+            legend Settings
+            
+            mixin text_field('data', 'data/page_views_by_project.csv')
     
 
