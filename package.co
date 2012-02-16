@@ -30,5 +30,5 @@ scripts                         : test:'expresso'
 repository                      : type:'git', url:'git://github.com/dsc/kraken-ui.git'
 bugs                            : url:'http://github.com/dsc/kraken-ui/issues'
 
-engine                          : node:'>=0.6.x'
+engine                          : node:'>=0.6.2'
 license                         : 'MIT'
