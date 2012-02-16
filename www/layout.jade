@@ -1,3 +1,4 @@
+include mixins/helpers
 include mixins/forms
 
 !!! html
@@ -8,7 +9,7 @@ html
             
             block styles
                 link(type='text/css', rel='stylesheet', media='screen', href='/css/reset.min.css')
-                link(type='text/css', rel='stylesheet', media='screen', href="/css/layout.css?#{version}")
+                mixin css('layout.css')
             
             link(type="image/ico", rel="icon", href="/favicon.ico")
             link(type="image/x-icon", rel="shortcut icon", href="/favicon.ico")

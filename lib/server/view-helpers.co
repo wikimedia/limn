@@ -1,5 +1,8 @@
 # Utilities for use in templates
 
+# maybe!
+exports.require = require
+
 fs   = exports.fs   = require 'fs'
 path = exports.path = require 'path'
               
