@@ -1,0 +1,39 @@
+@import 'colors'
+
+
+$font_size     = 16px
+$fonts_body    = helvetica, arial, sans-serif
+$fonts_headers = "gotham rounded", "helvetica neue", helvetica, arial, sans-serif
+
+
+html, body
+    font-family $fonts_body
+    font-size $font_size
+    line-height 1.5
+    color $body_text
+    background-color $foot_bgcolor
+
+a, a:link, a:visited, a:active
+    color $body_link
+    text-decoration underline
+    &:hover
+        text-decoration none
+
+h1, h2, h3
+    font-family $fonts_headers
+    color $body_text
+    font-weight 300
+    
+    a, a:link, a:visited, a:active
+        color $body_text
+        text-decoration none
+        &:hover
+            color $body_text
+
+footer
+    color $foot_text
+    
+    a, a:link, a:visited, a:active
+        color $foot_link
+    
+

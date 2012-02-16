@@ -31,3 +31,4 @@ build/
 dist/
 tmp/
 var/
+static/tmp

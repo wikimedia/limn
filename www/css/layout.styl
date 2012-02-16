@@ -1,0 +1,79 @@
+@import 'nib'
+@import 'colors'
+@import 'text'
+
+
+header, footer, #content
+    position relative
+    padding 0.5em
+
+#content
+    z-index 10
+    min-height 100%
+    background-color $page_bgcolor
+    box-shadow 0px 0px 6px 2px rgba(0,0,0,0.4)
+    
+    // .spacer offsets #content to pad for header
+    .spacer
+        font-size 250%
+        margin-top 1em
+        padding-top 1em
+    
+    .notice
+        absolute top 1.25em left 50%
+        // animate to 4em to display:
+        // absolute top 4em left 50%
+        margin-left -25%
+        width 50%
+        padding 0.25em
+        border-radius 0.5em
+        text-align center
+        
+        &.info
+            color white
+            background #4596FF
+        &.error
+            color white
+            background #AF2A31
+
+nav
+    absolute top right 16px
+    height 100%
+    
+    ul, li
+        relative top left
+    
+    ul
+        height 100%
+        top 50%
+    
+    li
+        display inline-block
+        top -0.75em
+        margin 0 0.5em
+    
+
+header
+    z-index 1000
+    fixed top left
+    z-index 100
+    width 100%
+    height auto
+    background-color $main_bgcolor
+    box-shadow 0px 0px 6px 2px rgba(0,0,0,0.3)
+    
+    h1
+        font-size 150%
+        margin 0 0 0 1em
+
+footer
+    z-index 1
+    padding 1em 2em
+    background-color $foot_bgcolor
+    // TODO: 3-column "fat" footer
+    
+
+
+
+
+

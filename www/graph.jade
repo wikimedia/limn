@@ -1,9 +1,21 @@
 extends layout
 
 block title
-    title Kraken Test Graph
+    title Kraken: Graph Test Page
+
+append styles
+    mixin css('forms.css')
+    mixin css('graph.css')
+    //- 
+        link(type='text/css', rel='stylesheet', media='screen', href='/css/forms.css')
+        link(type='text/css', rel='stylesheet', media='screen', href='/css/graph.css')
 
 block content
-    section#graph
+    section.graph
+        .viewport
+        fieldset
+            legend Settings
+            form.settings
+                mixin text_field('data', 'data/page_views_by_project.csv')
     
 
