@@ -8,20 +8,26 @@ all:
         - jquery.min
         - jquery.hotkeys.min
         - jquery.history.min
+        - jquery.tipsy.min
+        - spin.min
+        - jquery.spin.min
         - browserify
         - require
         - underscore.mod
         - underscore.string.mod
+        - jade.min
+        - backbone
         - u.min
         - dygraph
 
 # -   suffix: .mod.js
 #     paths:
-#     - 'js/kraken-ui':
+#     - 'js/kraken':
 #         - graph
+#         - scaffold
 
 # -   suffix: .js
 #     paths:
-#     - js/kraken-ui/main
+#     - js/kraken/main
 prod: []
 dev: []
