@@ -2,15 +2,16 @@
   "name": "kraken-ui",
   "version": "0.1.0",
   "description": "kraken-ui",
-  "homepage": "http://dsc.github.com/kraken-ui/",
+  "homepage": "http://git.less.ly/?p=kraken-ui.git",
   "keywords": [
     "util",
     "server",
     "client",
-    "browser"
+    "browser",
+    "visualization",
+    "graph"
   ],
   "author": "David Schoonover <dsc@less.ly> (http://less.ly)",
-  "main": "./lib/kraken-ui.js",
   "dependencies": {
     "coco": ">= 0.7.0",
     "express": ">= 2.5.8",
@@ -35,13 +36,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/dsc/kraken-ui.git"
-  },
-  "bugs": {
-    "url": "http://github.com/dsc/kraken-ui/issues"
+    "url": "git://git@less.ly:kraken-ui.git"
   },
   "engine": {
-    "node": ">=0.6.x"
+    "node": ">=0.6.2"
   },
   "license": "MIT"
 }

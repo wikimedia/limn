@@ -1,11 +1,11 @@
 name                            : 'kraken-ui'
 version                         : '0.1.0'
 description                     : 'kraken-ui'
-homepage                        : 'http://dsc.github.com/kraken-ui/'
-keywords                        : <[ util server client browser ]>
+homepage                        : 'http://git.less.ly/?p=kraken-ui.git'
+keywords                        : <[ util server client browser visualization graph ]>
 author                          : 'David Schoonover <dsc@less.ly> (http://less.ly)'
 
-main                            : './lib/kraken-ui.js'
+# main                            : './lib/kraken-ui.js'
 # directories                   : lib: './lib', bin:'./bin', doc:'./doc', man:'./man'
 
 dependencies                    : 
@@ -27,8 +27,7 @@ devDependencies                 :
     'expresso'                  : '>= 0.9.2'
 
 scripts                         : test:'expresso'
-repository                      : type:'git', url:'git://github.com/dsc/kraken-ui.git'
-bugs                            : url:'http://github.com/dsc/kraken-ui/issues'
+repository                      : type:'git', url:'git://git@less.ly:kraken-ui.git'
 
 engine                          : node:'>=0.6.2'
 license                         : 'MIT'
