@@ -4,7 +4,7 @@ main = ->
     g := new Dygraph do
           $ '.graph' .eq 0 .find '.viewport' .0
           'data/page_views_by_language.csv'
-          {'logscale': true}
+          # {'logscale': true}
     
     
 
