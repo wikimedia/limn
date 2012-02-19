@@ -1,0 +1,418 @@
+_ = require 'underscore'
+
+
+/**
+ * A Set class, implemented using the `__id__` property on non-primitive objects it is passed. 
+ * Arrays are hashed based on their contents. If an object lacks `__id__`, an exception will be
+ * thrown. This class does not keep values in sorted order.
+ * 
+ * Underscore provides an easy way to generate unique IDs with the (surprise!) `_.uniqueId()`
+ * function.
+ * @see http://documentcloud.github.com/underscore/#uniqueId
+ * 
+ * @class
+ */
+class HashSet
+    /**
+     * Objects by Id.
+     * @private
+     */
+    _byId : {}
+    
+    /**
+     * Set contents.
+     * @private
+     */
+    _o : []
+    
+    /**
+     * Number of elements in the set.
+     * @property {Number}
+     */
+    length : 0
+    
+    
+    /**
+     * Accepts any number of collections to be added to the set.
+     * @constructor
+     */
+    ->
+        @_byId = {}
+        @_o    = []
+        @update ...arguments if arguments.length
+    
+    
+    
+    /**
+     * Determine unique identifier for the given value.
+     * @private
+     * @returns {String} Id for this value.
+     */
+    _getIdSafe : (v) ->
+        t  = typeof v
+        
+        switch t
+        case 'undefined'
+            return 'u'
+        case 'boolean' 'string' 'number'
+            return "#{t.charAt 0}:#v"
+        if v is null
+            return 'n'
+        if '__id__' in v
+            return 'o:' + v.__id__
+        if _.isArray v
+            return 'a:' + v.map @_getIdSafe, this .join ','
+    
+    /**
+     * Determine unique identifier for the given value, throwing an exception otherwise.
+     * @private
+     * @returns {String} Id for this value.
+     */
+    _getId : (v) ->
+        id = @_getIdSafe v
+        unless id?
+            throw new Error "HashSet elements must be hashable (#v)"
+        id
+    
+    
+    
+    /**
+     * Aliases: HashSet#has
+     * @param {Any} v Value to test.
+     * @returns {Boolean} Whether HashSet contains value.
+     */
+    contains : (v) ->
+        @_getIdSafe(v) in @_byId
+    
+    
+    /**
+     * @private
+     * @returns {this}
+     */
+    _addOne : (v) ->
+        id = @_getId v
+        unless id in @_byId
+            @_byId[id] = v
+            @_o.push(v)
+            @length = @_o.length
+        this
+    
+    
+    /**
+     * Add values to the HashSet.
+     * Aliases: HashSet#push HashSet#unshift
+     * @param {Any} values... Values to add.
+     * @returns {this}
+     */
+    add : (...values) ->
+        _.each arguments, @_addOne, this
+        this
+    
+    /**
+     * @private
+     * @returns {this}
+     */
+    _removeOne : (v) ->
+        id = @_getId v
+        if id in @_byId
+            delete @_byId[id]
+            @_o.splice @_o.indexOf(v), 1
+            @length = @_o.length
+        this
+    
+    
+    /**
+     * Remove values from the HashSet.
+     * Aliases: HashSet#without
+     * @param {Any} values... Values to remove.
+     * @returns {this}
+     */
+    remove : (...values) ->
+        _.each arguments, @_removeOne, this
+        this
+    
+    
+    /**
+     * Update this HashSet (in-place) with other collections.
+     * Aliases: HashSet#extend HashSet#concat
+     * @param {Array|Object} it... Collection to add.
+     * @returns {this}
+     */
+    update : (vs) ->
+        _.each arguments, ~> _.each it, @_addOne, this
+        this
+    
+    
+    /**
+     * Remove and return an element from the set.
+     * Aliases: HashSet#shift
+     * @returns {Any} An element from the set.
+     */
+    pop : ->
+        return unless @_o.length
+        v  = @_o.shift()
+        id = @_getIdSafe v
+        delete @_byId[id]
+        return v
+    
+    
+    /**
+     * Returns but does not remove the an element from the set.
+     * @returns {Any} An element from the set.
+     */
+    element : ->
+        @_o[0]
+    
+    
+    /**
+     * Clones the set, returning a new object.
+     * @returns {HashSet}
+     */
+    clone : ->
+        new HashSet @_o
+    
+    
+    /**
+     * Removes all elements from the set.
+     * Aliases: HashSet#empty
+     * @returns {this}
+     */
+    clear: ->
+        @_byId  = {}
+        @_o     = []
+        @length = 0
+        this
+    
+    
+    
+    ### Collection Operations
+    
+    /**
+     * Transforms the collection into a single value, front-to-back.
+     * Aliases: HashSet#inject HashSet#fold HashSet#foldl HashSet#foldr
+     * @param {Function} fn Reducer function.
+     * @param {Any} [acc] Starting accumulator value.
+     * @param {Object} [cxt=this] Context; defaults to this HashSet.
+     * @see https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Array/reduce
+     * @returns {Any}
+     */
+    reduce: (fn, acc, cxt) ->
+        _.reduce @_o, fn, acc, cxt or this
+    
+    /**
+     * Applies a function to each element.
+     * Aliases: HashSet#each
+     * @see https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Array/forEach
+     * @returns {this}
+     */
+    forEach: (fn, cxt) ->
+        _.forEach @_o, fn, cxt or this
+        this
+    
+    /**
+     * @see https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Array/map
+     * @return {HashSet} A new HashSet of elements produced by applying the transform across each element.
+     */
+    map: (fn, cxt) ->
+        new HashSet _.map @_o, fn, cxt or this
+    
+    
+    /**
+     * Aliases: HashSet#select
+     * @see https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Array/filter
+     * @return {HashSet} A new HashSet of only the elements passing the filter.
+     */
+    filter: (fn, cxt) ->
+        new HashSet _.filter @_o, fn, cxt or this
+    
+    /**
+     * Like `HashSet.filter()`, but instead keeps values for which the filter returns false.
+     * @see HashSet#filter
+     * @return {HashSet} A new HashSet of only the elements for which the filter returns false.
+     */
+    reject: (fn, cxt) ->
+        new HashSet _.reject @_o, fn, cxt or this
+    
+    
+    /**
+     * Aliases: HashSet#any
+     * @see https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Array/some
+     * @return {Boolean}
+     */
+    some: (fn, cxt) ->
+        _.some @_o, fn, cxt or this
+    
+    /**
+     * Aliases: HashSet#all
+     * @see https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Array/every
+     * @return {Boolean}
+     */
+    every: (fn, cxt) ->
+        _.every @_o, fn, cxt or this
+    
+    
+    /**
+     * Iterates through the HashSet, returning the first value for which `fn` returns truth-y.
+     * Aliases: HashSet#detect
+     * @returns {Any}
+     */
+    find: (fn, cxt) ->
+        _.find @_o, fn, cxt or this
+    
+    
+    /**
+     * @returns {Array} List of all values at property `prop`.
+     */
+    pluck : (prop) ->
+        _.pluck @_o, prop
+    
+    
+    /**
+     * Invokes the named method on each element in the set, returning a list of the results.
+     * @param {String} methodName Name of the method on each element to call.
+     * @param {Any...} [args...] Optional arguments to call pass to method call.
+     * @returns {Array} List of results.
+     */
+    invoke : (methodName) ->
+        _.invoke @_o, ...arguments
+    
+    
+    /**
+     * @returns {Array} List of the unique identifiers for each element of the set.
+     */
+    keys : ->
+        _.keys @_byId
+    
+    /**
+     * Converts this HashSet to an Array.
+     * Aliases: HashSet#toArray
+     * @returns {Array}
+     */
+    values : ->
+        @_o.slice()
+    
+    
+    
+    ### Comparators and HashSet Operations
+    
+    /**
+     * Tests if `a` is a Collection and has all elements in common with the set.
+     * Sets are equal if and only if their intersection has the same size as both sets.
+     * @param {Collection} a
+     * @returns {Boolean}
+     */
+    equals : (a) ->
+        return false unless a
+        L = @_o.length
+        return L is a.length and L is @intersect(a).length
+    
+    
+    /**
+     * Tests if the set has no elements in common with `a`.
+     * Sets are disjoint if and only if their intersection is the empty set.
+     * @param {Collection} a
+     * @returns {Boolean}
+     */
+    isDisjoint : (a) ->
+        return true unless a
+        return not _.some a, @contains, this
+    
+    
+    /**
+     * Test whether every element in the set is in `a`.
+     * @param {Collection} a
+     * @returns {Boolean}
+     */
+    isSubset : (a) ->
+        return false unless a
+        A = _ if _.isArray a then a else _.values a
+        @every A.contains, A
+    
+    
+    /**
+     * Test whether every element in `a` is in the set.
+     * @param {Array|Object} a
+     * @returns {Boolean}
+     */
+    isSuperset : (a) ->
+        return false unless a
+        _.every a, @contains, this
+    
+    
+    /**
+     * HashSet Intersection (A ^ B)
+     * Intersects this YArray with another collection, returning a new YArray.
+     * The membership test uses _(a).contains(), so it is possible to intersect collections of different types.
+     * For YArray and YObject, .contains() uses strict equality (is) via .indexOf().
+     * 
+     * @param {Array|Object} a Comparison collection.
+     * @returns {HashSet} A new YArray of all elements of {this} found in the supplied collection.
+     * 
+     * @example
+     *      foo = /foo/
+     *      A = [foo, 'A', 1, 2, 3, 'C', /foo/]
+     *      B = [foo, 'B', 3, 'A', 1, /foo/]
+     *      ins = _(A).intersect(B)
+     *      ins.toString() is "HashSet([/foo/,A,1,3])"; # true
+     *      ins.get(0) is foo; # true
+     */
+    intersect : (a) ->
+        new HashSet _.intersect @_o, _.map arguments, _.values
+    
+    
+    /**
+     * HashSet Union (A v B)
+     * Aliases: HashSet#extend HashSet#concat
+     * @param {Array|Object} a Other collection(s).
+     * @returns {HashSet} A new HashSet of all elements of both collections, without duplicates.
+     */
+    union : (a) ->
+        _.reduce arguments, ((out, it) -> out.update it), @clone()
+    
+    
+    /**
+     * HashSet Difference (A - B)
+     * @param {Array|Object} a Comparison collection(s).
+     * @returns {HashSet} A new HashSet of only elements of this HashSet not in supplied collection(s).
+     */
+    difference : (a) ->
+        new HashSet _.difference @_o, _.map arguments, _.values
+    
+    
+    /**
+     * Symmetric Difference (A - B) v (B - A)
+     * @returns {HashSet} 
+     */
+    xor : (a) ->
+        a = _.values a
+        @difference a .union _.difference a, @_o
+    
+    
+    toString : ->
+        "HashSet([#{@_o}])"
+    
+
+
+### Aliases
+
+pt = HashSet::
+
+pt.push    = pt.unshift = pt.add
+pt.shift   = pt.pop
+pt.without = pt.remove
+pt.empty   = pt.clear
+pt.has     = pt.include = pt.contains
+
+pt.fold    = pt.foldl = pt.foldr = pt.inject = pt.reduce
+pt.each    = pt.forEach
+pt.select  = pt.filter
+pt.all     = pt.every
+pt.any     = pt.some
+
+pt.detect  = pt.find
+pt.toArray = pt.values
+pt.extend  = pt.concat = pt.union
+
+
+exports = module.exports = HashSet
+

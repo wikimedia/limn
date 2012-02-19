@@ -1,0 +1,18 @@
+_ = require 'kraken/underscore'
+
+root = do -> this
+root.console or= _ <[ log info warn error dir table group groupCollapsed groupEnd ]> .synthesize -> [it, nop]
+
+root.jQuery?.fn.invoke = (method, ...args) ->
+    for el, idx of this
+        el = jQuery(el)
+        el[method] ...args
+
+op        = require 'kraken/util/op'
+# HashSet   = require 'kraken/util/hashset'
+# BitString = require 'kraken/util/bitstring'
+# {crc32}   = require 'kraken/util/crc'
+
+
+exports import { root, _, op, }
+# exports import { root, _, op, HashSet, BitString, crc32, }

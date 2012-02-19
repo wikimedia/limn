@@ -1,0 +1,247 @@
+SEEK_ABSOLUTE = 0
+SEEK_RELATIVE = 1
+SEEK_FROM_EOF = 2
+
+
+# Binary representation of the number
+bin = (n) ->
+    do
+        s = (if n % 2 then '1' else '0') + (s or '')
+        n >>= 1
+    while n
+    s
+
+# Number of bits needed to represent the absolute value of n.
+binlen = (n) ->
+    bin Math.abs n .length
+
+# Returns a run of 1s of size n.
+mask = (n) ->
+    (1 << n) - 1
+
+chr = -> String.fromCharCode it
+ord = -> String(it).charCodeAt 0
+
+
+
+
+/**
+ * File-like object for reading/writing bits.
+ * @class
+ */
+class BitString
+    # Array<UInt8>
+    buf : null
+    
+    # Byte position of read/write cursor (-1 for end).
+    _pos : -1
+    
+    # Spill cache for bits smaller than a byte waiting to write.
+    _spill : 0
+    
+    # Number of bits in the spill cache.
+    _spillen : 0
+    
+    # Peek cache for read requests smaller than a byte.
+    _peek : 0
+    
+    # Number of bits in the peek cache.
+    _peeklen : 0
+    
+    
+    
+    (source='', buf=[]) ->
+        @buf = buf.slice()
+        for i til source.length
+            @_bufwrite source.charCodeAt i
+    
+    size: ->
+        @buf.length + if @_spillen then 1 else 0
+    
+    bitsize: ->
+        @buf.length*8 + @_spillen
+    
+    _bufwrite: (b) ->
+        if @_pos is -1
+            @buf.push b
+        else
+            @buf[@_pos] = b
+            @_pos = -1 if ++@_pos >= @buf.length
+        this
+    
+    # Writes bits to the stream; bits must be supplied as a number. Supplying n=0 will write one bit.
+    # Supplying the optional parameter length treats the bits as a field with the given length.
+    writebits: (n, size) ->
+        size = size or binlen n
+        bits = (@_spill << size) | n
+        size += @_spillen # handles _spill=0 but _spillen > 0
+        while size >= 8
+            size -= 8
+            b = bits >> size
+            bits &= mask size
+            @_bufwrite b
+        @_spill = bits
+        @_spillen = size
+        this
+    
+    # Flushes any pending bits to the stream.
+    flush: ->
+        b = @_spill
+        if @_spillen
+            b <<= 8 - @_spillen
+            @_bufwrite b
+        @_spill   = 0
+        @_spillen = 0
+        this
+    
+    # Truncates the stream to zero bits.
+    truncate: ->
+        @buf      = []
+        @_pos     = -1
+        @_spill   = 0
+        @_spillen = 0
+        @_peek    = 0
+        @_peeklen = 0
+        this
+    
+    # Move buffer cursor to given byte-offset. mode: 0 = absolute, 1 = relative, 2 = relative EOF
+    _bufseek: (n, mode=SEEK_ABSOLUTE) ->
+        switch mode
+        case 1 # relative
+            pos = @_pos + n
+        case 2
+            pos = @buf.length + n
+        default # absolute
+            pos = n
+        @_pos = if pos >= @buf.length then -1 else Math.max 0, pos
+        this
+    
+    # Flushes the bit-buffer and moves to the given byte-offset. mode: 0 = absolute, 1 = relative, 2 = relative EOF
+    seek: (n, mode=SEEK_ABSOLUTE) ->
+        @flush()
+        @_peek = 0
+        @_peeklen = 0
+        @_bufseek n, mode
+        this
+    
+    # Returns the current position of the cursor as a *byte* offset from the start of the stream.
+    tell: ->
+        if @_pos is -1 then @buf.length else @_pos
+    
+    
+    _nextbyte: ->
+        return null if @_pos is -1
+        byte = @buf[ @_pos++ ]
+        @_pos = -1 if @_pos >= @buf.length
+        byte
+    
+    
+    # Reads n bits from the stream.
+    readbits: (n) ->
+        return 0 if n == 0
+        
+        size = @_peeklen
+        bits = @_peek
+        
+        while size < n
+            byte = @_nextbyte()
+            break unless byte?
+            size += 8
+            bits = (bits << 8) | byte
+        
+        if size > n
+            @_peeklen = size - n
+            @_peek = bits & mask(@_peeklen)
+            bits >>= @_peeklen
+        else
+            @_peeklen = 0
+            @_peek = 0
+        
+        return if size then bits else null
+    
+    
+    # Reads the next n bits without moving the cursor.
+    peek: (n) ->
+        offset = 0
+        size = @_peeklen
+        bits = @_peek
+        
+        while size < n
+            byte = @_nextbyte()
+            break unless byte?
+            offset += 1
+            size += 8
+            bits = (bits << 8) | byte
+        
+        if size == 0
+            return null
+        
+        if size > n
+            bits >>= size - n
+        
+        if offset
+            @_bufseek -offset, SEEK_RELATIVE
+        bits
+    
+    
+    # True if there is more data to read.
+    hasMore: ->
+        @peek(1)?
+    
+    
+    ### XXX: Should .each(), .map(), .reduce() flush?
+    
+    # forEach of bytes
+    each: (fn, cxt=this) ->
+        @buf.forEach fn, cxt
+    
+    # map over bytes
+    map: (fn, cxt=this) ->
+        @buf.map fn, cxt
+    
+    # reduce over bytes
+    reduce: (fn, acc, cxt=this) ->
+        fn .= bind this
+        @buf.reduce fn, acc
+    
+    
+    # Returns the stream as a bytearray.
+    bytearray: ->
+        @flush().buf.slice()
+    
+    # Dumps the stream as a binary string. Unlike __index__(), bin() will not cause int overflow.
+    bin: (byte_sep='') ->
+        @flush().buf.map(bin).join(byte_sep)
+    
+    # Returns the stream as a hex string.
+    hex: ->
+        @flush().buf.map(hex).join('')
+    
+    # Returns the buffer as a number. Use this with obvious caution. Called by builtins bin(), int(), long(), etc.
+    number: ->
+        @flush()
+        @reduce (n, byte) -> (n << 8) | byte
+    
+    
+    # Dumps the stream as a string; does not flush or change cursor position.
+    dump: ->
+        @buf.map(chr).join('') + if @_spillen then chr @_spill << (8 - @_spillen) else ''
+    
+    repr: (dump_buf=true) ->
+        s = if dump_buf then "buf=#{@dump()}" else "len(buf)=#{@buf.length}"
+        return "BitString(#s, 
+            spill[#{@_spillen}]=#{bin @_spill}, 
+            tell=#{@tell()}, 
+            peek[#{@_peeklen}]=#{bin @_peek})
+        "
+    
+    # Dumps the stream as a string; flushes the bit-buffer but leaves cursor position unchanged.
+    toString: ->
+        @flush().dump()
+
+
+exports = module.exports = BitString
+
+exports.SEEK_ABSOLUTE = SEEK_ABSOLUTE
+exports.SEEK_RELATIVE = SEEK_RELATIVE
+exports.SEEK_FROM_EOF = SEEK_FROM_EOF

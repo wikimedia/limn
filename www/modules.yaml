@@ -28,8 +28,11 @@ all:
                 - underscore.array
                 - underscore.object
                 - index
-            # - scaffold
-            # - graph
+            - util:
+                - op
+                - index
+            - scaffold
+            - graph
 
 # -   suffix: .js
 #     paths:
