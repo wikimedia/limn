@@ -1,0 +1,47 @@
+_ = require 'underscore'
+
+I       = -> it
+defined = (o) -> o?
+
+_array = do
+    /**
+     * Transforms an Array of tuples (two-element Arrays) into an Object, such that for each
+     * tuple [k, v]:
+     *      result[k] = v if filter(v)
+     * @param {Array} o A collection.
+     * @param {Function} [filter=defined] Optional filter function. If omitted, will 
+     *  exclude `undefined` and `null` values.
+     * @return {Object} Transformed result.
+     */
+    generate : (o, filter=defined) ->
+        _.reduce do
+            o
+            (acc, [k, v], idx) ->
+                if k and filter(v)
+                    acc[k] = v
+                acc
+            {}
+    
+    /**
+     * As {@link _.generate}, but first transforms the collection using `fn`.
+     * @param {Array} o A collection.
+     * @param {Function} [fn=I] Transformation function. Defaults to the identity transform.
+     * @param {Function} [filter=defined] Optional filter function. If omitted, will 
+     *  exclude `undefined` and `null` values.
+     * @return {Object} Transformed result.
+     */
+    synthesize : (o, fn=I, filter=defined) ->
+        _array.generate _.map(o, fn), filter
+    
+    
+    /**
+     * Symmetric Difference
+     */
+    xor : (a, b) ->
+        a = _.values a
+        b = _.values b
+        return _.union _.difference(a,b), _.difference(b,a)
+    
+
+
+exports import _array

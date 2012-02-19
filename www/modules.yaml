@@ -20,11 +20,16 @@ all:
         - u.min
         - dygraph
 
-# -   suffix: .mod.js
-#     paths:
-#     - 'js/kraken':
-#         - graph
-#         - scaffold
+-   suffix: .mod.js
+    paths:
+    - js:
+        - kraken:
+            - underscore:
+                - underscore.array
+                - underscore.object
+                - index
+            # - scaffold
+            # - graph
 
 # -   suffix: .js
 #     paths:

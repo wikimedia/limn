@@ -1,0 +1,8 @@
+_     = require 'underscore'
+_.str = require 'underscore.string'
+_.mixin _.str.exports()
+_.mixin require './underscore/underscore.array'
+_.mixin require './underscore/underscore.object'
+
+module.exports = exports = _
+

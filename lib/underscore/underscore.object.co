@@ -1,0 +1,60 @@
+_ = require 'underscore'
+
+_obj = do
+    /**
+     * Searches a heirarchical object for a given subkey specified in dotted-property syntax.
+     * @param {Object} base The object to serve as the root of the property-chain.
+     * @param {Array|String} chain The property-chain to lookup.
+     * @retruns {null|Object} If found, the object is of the form `{ key: Qualified key name, obj: Parent object of key, val: Value at obj[key] }`. Otherwise `null`.
+     */
+    getNestedMeta = (obj, chain) ->
+        chain = chain.split('.') if typeof chain is 'string'
+        return _.reduce do
+            chain
+            (current, key, idx, chain) ->
+                return null unless current?
+                
+                if idx is chain.length-1
+                    return
+                        obj : current
+                        key : key
+                        val : current[key]
+                
+                if key in current
+                    current[key]
+                else
+                    null
+            obj
+    
+    /**
+     * Searches a heirarchical object for a given subkey specified in dotted-property syntax.
+     * @param {Object} obj The object to serve as the root of the property-chain.
+     * @param {Array|String} chain The property-chain to lookup.
+     * @param {Any} def Value to return if lookup fails.
+     * @retruns {null|Object} If found, returns the value, and otherwise `default`.
+     */
+    getNested = (obj, chain, def=null) ->
+        meta = _obj.getNestedMeta obj, chain
+        if meta
+            meta.val
+        else
+            def
+    
+    /**
+     * Searches a heirarchical object for a given subkey specified in
+     * dotted-property syntax, setting it with the provided value if found.
+     * @param {Object} obj The object to serve as the root of the property-chain.
+     * @param {Array|String} chain The property-chain to lookup.
+     * @param {Any} value The value to set.
+     * @retruns {null|Object} If found, returns the old value, and otherwise `null`.
+     */
+    setNested = (obj, chain, value) ->
+        meta = _obj.getNestedMeta obj, chain
+        if meta
+            meta.obj[meta.key] = value
+            meta.val
+        else
+            null
+    
+
+exports import _obj
