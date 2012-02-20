@@ -25,8 +25,9 @@ all:
     - js:
         - kraken:
             - underscore:
-                - underscore.array
-                - underscore.object
+                - array
+                - object
+                - string
                 - index
             - util:
                 - op

@@ -10,6 +10,7 @@ author                          : 'David Schoonover <dsc@less.ly> (http://less.l
 
 dependencies                    : 
     'coco'                      : '>= 0.7.0'
+    'mime'                      : '>= 1.2.5'
     'express'                   : '>= 2.5.8'
     'connect-compiler'          : '>= 0.1.2'
     'connect-compiler-extras'   : 'https://github.com/dsc/connect-compiler-extras/tarball/master'
