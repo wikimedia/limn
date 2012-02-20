@@ -12,7 +12,7 @@ dependencies                    :
     'coco'                      : '>= 0.7.0'
     'mime'                      : '>= 1.2.5'
     'express'                   : '>= 2.5.8'
-    'connect-compiler'          : '>= 0.1.2'
+    'connect-compiler'          : 'https://github.com/dsc/connect-compiler/tarball/master'
     'connect-compiler-extras'   : 'https://github.com/dsc/connect-compiler-extras/tarball/master'
     'jade'                      : '>= 0.20.1'
     'stylus'                    : '>= 0.23.0'
