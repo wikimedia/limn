@@ -1,0 +1,179 @@
+_  = require 'kraken/underscore'
+op = require 'kraken/util/op'
+
+
+
+Field = exports.Field = Backbone.Model.extend do # {{{
+    idAttribute : 'name'
+    
+    initialize: ->
+        @set 'value', @get('default'), {+silent} if not @has 'value'
+    
+    defaults: ->
+        {
+            name     : ''
+            type     : 'String'
+            default  : null
+            desc     : ''
+            category : 'General'
+            tags     : []
+            examples : []
+        }
+    
+    getParser: (type) ->
+        type or= @get 'type'
+        t = _ type.toLowerCase()
+        
+        parser = op.toStr
+        if t.startsWith 'integer'
+            parser = op.toInt
+        if t.startsWith 'float'
+            parser = op.toFloat
+        if t.startsWith 'boolean'
+            parser = op.toBool
+        if t.startsWith 'object' or t.startsWith 'array'
+            parser = op.toObject
+        if t.startsWith 'function'
+            parser = (fn) -> eval "(#fn)"
+        
+        # TODO: handle 'or' by returning an array of parsers
+        parser
+    
+    
+    getValue: ->
+        @getParser() @get 'value'
+    
+    setValue: (v, options) ->
+        def = @get 'default'
+        if not v and def == null
+            val = null
+        else
+            val = @getParser()(v)
+        @set 'value', val, options
+    
+    clearValue: ->
+        @set 'value', @get('default')
+    
+    isDefault: ->
+        @get('value') is @get('default')
+    
+# }}}
+
+
+FieldList = exports.FieldList = Backbone.Collection.extend do # {{{
+    model : Field
+    
+    /**
+     * 
+     */
+    values: ->
+        _.synthesize do
+            @models.filter -> not it.isDefault()
+            -> [ it.get('name'), it.getValue() ]
+        
+        # @reduce do
+        #     (acc, field) ->
+        #         k = field.get 'name'
+        #         v = field.getValue()
+        #         if k and not field.isDefault() and v?
+        #             acc[k] = v
+        #         acc
+        #     {}
+    
+# }}}
+
+
+### Views
+
+FieldView = exports.FieldView = Backbone.View.extend do # {{{
+    tagName   : 'div'
+    className : 'field'
+    
+    events :
+      'blur .value'   : 'update'
+      'submit .value' : 'update'
+    
+    
+    
+    initialize: ->
+        @$el.data { model:@model, view:this }
+        @model.on 'change',  @render, this
+        @model.on 'destroy', @remove, this
+    
+    update: ->
+        val     = @$el.find('.value').val()
+        current = @model.get 'value'
+        return if val is current
+        
+        console.log "#this.update( #current -> #val )"
+        @model.setValue val, {+silent}
+    
+    render: ->
+        return @remove() if @model.get 'hidden'
+        
+        name  = @model.get 'name'
+        id    = _.camelize name
+        label = _.humanize name
+        @$el.html """
+            <label class="name" for="#id">#label</label>
+            <input class="value" type="text" id="#id" name="#id">
+        """
+        # @$el.find '.value' .attr 'value', @model.get 'value'
+        @$el.find '.value' .val @model.get 'value'
+        this
+    
+    remove: ->
+        @$el.remove()
+        this
+    
+    clear: ->
+        @model.destroy()
+        this
+    
+    toString: ->
+        "FieldView(#{@model.id})"
+    
+# }}}
+
+
+# There are several special options that, if passed, will be attached directly to the view:
+#   model, collection, el, id, className, tagName, attributes
+
+Scaffold = exports.Scaffold = Backbone.View.extend do # {{{
+    tagName        : 'form'
+    className      : 'scaffold'
+    
+    collectionType : FieldList
+    subviewType    : FieldView
+    
+    
+    initialize: ->
+        _.bindAll this, 'addOne', 'addAll'
+        # @subviews = []
+        
+        CollectionType = @collectionType
+        @collection or= new CollectionType
+        @collection.on 'add',   @addOne
+        @collection.on 'reset', @addAll
+        # @collection.on 'all',   @render
+        
+        @$el.addClass @className
+            .data { model:@collection, view:this }
+            .attr { action:'/save', method:'get' }
+    
+    
+    addOne: (field) ->
+        SubviewType = @subviewType
+        view = new SubviewType model:field
+        # @subviews.push view
+        @$el.append view.render().el
+        view
+    
+    addAll: ->
+        # _.invoke @subviews, 'remove'
+        # @subviews = []
+        @collection.each @addOne
+        this
+    
+# }}}
+

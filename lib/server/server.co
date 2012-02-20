@@ -64,7 +64,7 @@ app.configure ->
     app.use compiler do
         src     : WWW
         dest    : VAR
-        enabled : <[ stylus coco ]>
+        enabled : <[ stylus coco pyyaml ]>
         options : stylus : { nib:true, include:"#WWW/css" }
         log_level : log_level
     

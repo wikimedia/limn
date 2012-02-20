@@ -37,12 +37,19 @@ html
             
             .scripts
                 block scripts
-                    //- script(src='/lib/lib-bundle.min.js')
-                    for src in sources(WWW+'/modules.yaml')
-                        script(src=src+"?"+version, type="text/javascript")
+                    script
+                        var VERSION = !{ JSON.stringify(version)  };
+                        var ENV     = !{ JSON.stringify(NODE_ENV) };
+                    
+                    if IS_PROD
+                        script(src='/vendor/lib-bundle.min.js?'+version)
+                        script(src='/js/kraken/app-bundle.min.js?'+version)
+                    else
+                        for src in sources(WWW+'/modules.yaml')
+                            script(src=src+"?"+version)
                     
                     block page-scripts
                     
-                    script(src="/js/kraken/main.js")
+                    script(src="/js/kraken/main.js?"+version)
             
 

@@ -17,7 +17,7 @@ _array = do
         _.reduce do
             o
             (acc, [k, v], idx) ->
-                if k and filter(v)
+                if k and filter(v, k)
                     acc[k] = v
                 acc
             {}

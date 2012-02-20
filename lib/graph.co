@@ -1,0 +1,96 @@
+_ = require 'kraken/underscore'
+{ Field, FieldList, FieldView, Scaffold
+} = require 'kraken/scaffold'
+
+
+GraphModel = exports.GraphModel = Backbone.Model.extend do
+    urlRoot : '/graphs'
+    
+    initialize : ->
+        name = @get 'name'
+        if name and not (@id or @has 'id')
+            @id = @attributes.id = _.underscored name
+    
+    defaults : ->
+        {
+            name    : 'Kraken Graph'
+            dataset : 'data/page_views_by_language.csv'
+            options : {}
+        }
+    
+
+
+Graph = exports.Graph = Backbone.View.extend do
+    tagName : 'section'
+    className : 'graph'
+    
+    events:
+        'keypress input'       : 'onKeypress'
+        'submit form.settings' : 'onSubmit'
+    
+    
+    initialize : (o={}) ->
+        @model or= new GraphModel
+        
+        @$el.data { model:@model, view:this }
+        @model.on 'change',  @render, this
+        @model.on 'destroy', @remove, this
+        
+        @viewport = @$el.find '.viewport'
+        @scaffold = new Scaffold do
+            el: @$el.find 'form.settings'
+        @scaffold.collection.reset CHART_OPTIONS_SPEC
+        
+        @render()
+    
+    
+    chartOptions: (values) ->
+        options = @scaffold.collection
+        
+        # @chartOptions 'label', 'label value!'
+        if arguments.length > 1
+            [k, v] = arguments
+            values = { "#k": v }
+        
+        if values
+            for k, v in values
+                options.get(k)?.setValue v
+            this
+        else
+            options.values()
+    
+    render: ->
+        @viewport.empty()
+        
+        # Remove old style, as it confuses dygraph after options update
+        @viewport.attr 'style', ''
+        console.log do 
+            'viewport.{ width=%s, height=%s, style=%s }'
+            @viewport.css('width')
+            @viewport.css('height')
+            @viewport.attr 'style'
+        console.log 'options:', JSON.stringify @chartOptions()
+        
+        @chart?.destroy()
+        @chart = new Dygraph do
+            @viewport.0
+            'data/page_views_by_language.csv'
+            @chartOptions()
+    
+    onKeypress: (evt) ->
+        $(evt.target).submit() if evt.keyCode is 13
+    
+    onSubmit: ->
+        console.log 'Graph.onSubmit!'
+        @render()
+        false
+    
+    toString: ->
+        "Graph()"
+
+
+
+
+    
+    
+

@@ -6,9 +6,6 @@ block title
 append styles
     mixin css('forms.css')
     mixin css('graph.css')
-    //- 
-        link(type='text/css', rel='stylesheet', media='screen', href='/css/forms.css')
-        link(type='text/css', rel='stylesheet', media='screen', href='/css/graph.css')
 
 block content
     section.graph
@@ -16,6 +13,11 @@ block content
         fieldset
             legend Settings
             form.settings
-                mixin text_field('data', 'data/page_views_by_project.csv')
+                //- mixin text_field('data', 'data/page_views_by_project.csv')
+    
+
+block page-scripts
+    script
+        var CHART_OPTIONS_SPEC = !{ fs.readFileSync('www/dygraph-options.json', 'utf8') };
     
 
