@@ -6,6 +6,7 @@ all:
         - modernizr.min
         - json2.min
         - jquery.min
+        - jquery.isotope.min
         - jquery.hotkeys.min
         - jquery.history.min
         - jquery.tipsy.min
