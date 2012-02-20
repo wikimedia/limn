@@ -1,0 +1,36 @@
+_    = require 'underscore'
+_str = require 'underscore.string'
+
+_string = do
+    
+    drop : (s, ...parts) ->
+        do
+            starting = s
+            for part of parts
+                s .= slice part.length              if _str.startsWith s, part
+                s .= slice 0, s.length-part.length  if _str.endsWith   s, part
+        while s and s is not starting
+        s
+    
+    ldrop : (s, ...parts) ->
+        do
+            starting = s
+            for part of parts
+                s .= slice part.length if _str.startsWith s, part
+        while s and s is not starting
+        s
+    
+    rdrop : (s, ...parts) ->
+        do
+            starting = s
+            for part of parts
+                s .= slice 0, s.length-part.length if _str.endsWith s, part
+        while s and s is not starting
+        s
+    
+
+_string import do
+    dropLeft  : _string.ldrop
+    dropRight : _string.rdrop
+
+exports import _string

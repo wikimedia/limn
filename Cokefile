@@ -2,7 +2,9 @@ require 'buildtools'
 require 'buildtools/tasks'
 
 
-MODULE_LINK  = "node_modules/kraken"
+MODULE_LINK      = 'node_modules/kraken'
+EXPRESS_DEP_MIME = 'node_modules/express/node_modules/mime'
+
 task \link 'Link package source to node_modules so the name resolves correctly' ->
     # Browser-based require doens't support relative requires, but things
     # like `require 'kraken/utils'` rarely work in node without this hack.
@@ -11,18 +13,30 @@ task \link 'Link package source to node_modules so the name resolves correctly' 
         say "Creating #{basename MODULE_LINK} symlink..."
         fs.symlinkSync "../lib", MODULE_LINK
 
-task \server 'Start dev server' ->
+task \install 'Install project dependencies.' ->
+    <- sh 'npm install', {-verbose, +errors, +die}
+    
+    # Remove express's copy of node-mime so we can add our own extensions
+    # and have it pick them up by default.
+    remove EXPRESS_DEP_MIME, true if exists EXPRESS_DEP_MIME
+
+task \setup 'Ensure project is set up for development.' ->
+    invoke \install
     invoke \link
     invoke \update_version
+
+
+task \server 'Start dev server' ->
+    invoke \setup
+    say ''
     run 'lib/server/server.co'
 
 task \build 'Build coco sources' ->
-    invoke \link
-    invoke \update_version
+    invoke \setup
     coco <[ -bjc package.co ]>
 
 task \test 'Rebuild test files and run tests' ->
-    invoke \link
+    invoke \setup
     tests = glob.globSync 'test/*.co'
     tests.forEach (file) ->
         js = file.replace '.co', '.js'
@@ -31,6 +45,6 @@ task \test 'Rebuild test files and run tests' ->
     sh 'expresso'
 
 task \clean 'Clean up environment and artifacts' ->
-    remove [MODULE_LINK, 'var', 'tmp/dest'], true
+    remove [MODULE_LINK, EXPRESS_DEP_MIME, 'var', 'tmp/dest'], true
 
 

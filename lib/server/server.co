@@ -5,12 +5,9 @@ path     = require 'path'
 {exec, spawn} = require 'child_process'
 
 _        = require 'underscore'
+mime     = require 'mime'
 express  = require 'express'
 compiler = require 'connect-compiler-extras'
-
-
-stylus   = require 'stylus'
-nib      = require 'nib'
 
 
 
@@ -18,12 +15,13 @@ nib      = require 'nib'
 
 PORT = 8081
 
-CWD = process.cwd()
+CWD    = process.cwd()
 WWW    = "#CWD/www"
 VAR    = "#CWD/var"
 STATIC = "#CWD/static"
 
-NODE_ENV = process.env.NODE_ENV or 'development'
+NODE_ENV  = process.env.NODE_ENV or 'development'
+LOG_LEVEL = if NODE_ENV is 'development' then 'INFO' else 'WARN'
 
 
 VERSION = 'dev'
@@ -37,13 +35,16 @@ VERSION = stdout.trim!
 
 ### Setup
 
-exports.app = app = express.createServer()
-app.listen PORT
+app = express.createServer()
 
-console.log "starting Kraken dev server (port=#PORT, env=#NODE_ENV, version=#VERSION)"
-console.log "========================================================================"
+app.start = ->
+    console.log "starting Kraken dev server (port=#PORT, env=#NODE_ENV, version=#VERSION)"
+    console.log "========================================================================"
+    app.listen PORT
 
 app.configure ->
+    mime.define 'text/plain' : <[ jade co styl stylus ]>
+    
     app.set 'views', WWW
     app.set 'view engine', 'jade'
     app.set 'view options', {
@@ -55,18 +56,16 @@ app.configure ->
         STATIC  : STATIC
     } import require './view-helpers'
     
-    # app.use express.logger()
+    app.use express.logger() if LOG_LEVEL is 'DEBUG'
     app.use express.bodyParser()
     app.use express.methodOverride()
-    
-    log_level = 'INFO'
     
     app.use compiler do
         src     : WWW
         dest    : VAR
         enabled : <[ stylus coco pyyaml ]>
         options : stylus : { nib:true, include:"#WWW/css" }
-        log_level : log_level
+        log_level : LOG_LEVEL
     
     # wrap modules in commonjs closure for browser
     app.use compiler do
@@ -74,7 +73,7 @@ app.configure ->
         src     : [ VAR, WWW, STATIC ]
         dest    : VAR
         options : commonjs : drop_path_parts:1
-        log_level : log_level
+        log_level : LOG_LEVEL
     
     app.use require('browserify') do
         mount   : '/vendor/browserify.js'
@@ -83,7 +82,9 @@ app.configure ->
     app.use express.static WWW
     app.use express.static VAR
     app.use express.static STATIC
+    
     app.use app.router
+    
     app.use express.errorHandler do
         dumpExceptions : true
         showStack      : true
@@ -97,4 +98,16 @@ app.get '/', (req, res) ->
 app.get '/:page', (req, res) ->
     res.render req.params.page
 
+
+
+exports import {
+    CWD, WWW, VAR, STATIC,
+    PORT, LOG_LEVEL, NODE_ENV, VERSION,
+    app, module, require,
+}
+
+
+mainfile = path.basename require.main?.filename
+if require.main is module or 'Cokefile' is mainfile
+    app.start()
 

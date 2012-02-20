@@ -1,8 +1,10 @@
 _     = require 'underscore'
 _.str = require 'underscore.string'
 _.mixin _.str.exports()
-_.mixin require 'kraken/underscore/underscore.array'
-_.mixin require 'kraken/underscore/underscore.object'
+
+_.mixin require 'kraken/underscore/array'
+_.mixin require 'kraken/underscore/object'
+_.mixin require 'kraken/underscore/string'
 
 module.exports = exports = _
 
