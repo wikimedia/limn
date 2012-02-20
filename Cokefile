@@ -2,17 +2,13 @@ require 'buildtools'
 require 'buildtools/tasks'
 
 
-PROJECT_NAME = 'kraken-ui'
-MODULE_LINK  = "node_modules/#PROJECT_NAME"
-
-
-
+MODULE_LINK  = "node_modules/kraken"
 task \link 'Link package source to node_modules so the name resolves correctly' ->
     # Browser-based require doens't support relative requires, but things
-    # like `require 'kraken-ui/utils'` rarely work in node without this hack.
+    # like `require 'kraken/utils'` rarely work in node without this hack.
     mkdirp 'node_modules'
     if not exists MODULE_LINK
-        say "Creating #PROJECT_NAME symlink..."
+        say "Creating #{basename MODULE_LINK} symlink..."
         fs.symlinkSync "../lib", MODULE_LINK
 
 task \server 'Start dev server' ->
