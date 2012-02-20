@@ -61,9 +61,9 @@ app.configure ->
     app.use express.methodOverride()
     
     app.use compiler do
+        enabled : <[ stylus coco jade-browser pyyaml ]>
         src     : WWW
         dest    : VAR
-        enabled : <[ stylus coco pyyaml ]>
         options : stylus : { nib:true, include:"#WWW/css" }
         log_level : LOG_LEVEL
     
@@ -72,7 +72,7 @@ app.configure ->
         enabled : 'commonjs'
         src     : [ VAR, WWW, STATIC ]
         dest    : VAR
-        options : commonjs : drop_path_parts:1
+        options : commonjs : { drop_path_parts:1, drop_full_ext:true }
         log_level : LOG_LEVEL
     
     app.use require('browserify') do
@@ -93,10 +93,14 @@ app.configure ->
 ### Routes
 
 app.get '/', (req, res) ->
-    res.render 'graph'
+    res.render 'dashboard'
 
-app.get '/:page', (req, res) ->
-    res.render req.params.page
+app.get '/:type/:action', (req, res, next) ->
+    {type, action} = req.params
+    if path.existsSync "#WWW/#type/#action.jade"
+        res.render "#type/#action"
+    else
+        next()
 
 
 

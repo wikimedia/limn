@@ -3,7 +3,60 @@ _ = require 'kraken/underscore'
 } = require 'kraken/scaffold'
 
 
-GraphModel = exports.GraphModel = Backbone.Model.extend do
+/**
+ * Field with graph-option-specific handling for validation, parsing, tags, etc.
+ */
+GraphOption = exports.GraphOption = Field.extend do # {{{
+    initialize : ->
+        Field..initialize ...
+# }}}
+
+
+GraphOptionList = exports.GraphOptionList = FieldList.extend do # {{{
+    model : GraphOption
+    # initialize : -> FieldList..initialize ...
+# }}}
+
+
+GraphOptionView = exports.GraphOptionView = FieldView.extend do # {{{
+    tagName        : 'form'
+    className      : 'field graph_option'
+    template       : require 'kraken/template/graph-option'
+    
+    events :
+        'blur .value' : 'update'
+    
+    initialize: ->
+        FieldView..initialize ...
+    
+    update: ->
+        val     = @$el.find('.value').val()
+        current = @model.get 'value'
+        return if val is current
+        
+        console.log "#this.update( #current -> #val )"
+        @model.setValue val, {+silent}
+    
+    render: ->
+        @$el.html @template @model.toJSON()
+        this
+    
+    toString: -> "GraphOptionView(#{@model.id})"
+    
+# }}}
+
+
+
+GraphOptionsScaffold = exports.GraphOptionsScaffold = Scaffold.extend do # {{{
+    className      : 'options scaffold'
+    collectionType : GraphOptionList
+    subviewType    : GraphOptionView
+    
+    toString: -> "GraphOptionsScaffold()"
+# }}}
+
+
+GraphModel = exports.GraphModel = Backbone.Model.extend do # {{{
     urlRoot : '/graphs'
     
     initialize : ->
@@ -17,12 +70,13 @@ GraphModel = exports.GraphModel = Backbone.Model.extend do
             dataset : 'data/page_views_by_language.csv'
             options : {}
         }
-    
+# }}}
 
 
-Graph = exports.Graph = Backbone.View.extend do
-    tagName : 'section'
+Graph = exports.Graph = Backbone.View.extend do # {{{
+    tagName   : 'section'
     className : 'graph'
+    template  : require 'kraken/template/graph'
     
     events:
         'keypress input'       : 'onKeypress'
@@ -37,7 +91,7 @@ Graph = exports.Graph = Backbone.View.extend do
         @model.on 'destroy', @remove, this
         
         @viewport = @$el.find '.viewport'
-        @scaffold = new Scaffold do
+        @scaffold = new GraphOptionsScaffold do
             el: @$el.find 'form.settings'
         @scaffold.collection.reset CHART_OPTIONS_SPEC
         
@@ -87,10 +141,7 @@ Graph = exports.Graph = Backbone.View.extend do
     
     toString: ->
         "Graph()"
+# }}}
 
 
-
-
-    
-    
 

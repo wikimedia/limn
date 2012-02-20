@@ -15,7 +15,7 @@ all:
         - require
         - underscore.mod
         - underscore.string.mod
-        - jade.min
+        - jade.runtime.min
         - backbone
         - u.min
         - dygraph
@@ -32,6 +32,9 @@ all:
             - util:
                 - op
                 - index
+            - template:
+                - graph.jade
+                - graph-option.jade
             - scaffold
             - graph
 

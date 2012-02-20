@@ -64,21 +64,13 @@ FieldList = exports.FieldList = Backbone.Collection.extend do # {{{
     model : Field
     
     /**
-     * 
+     * Collects a map of fields to their values, excluding those set to `null` or their default.
+     * @returns {Object}
      */
     values: ->
         _.synthesize do
             @models.filter -> not it.isDefault()
             -> [ it.get('name'), it.getValue() ]
-        
-        # @reduce do
-        #     (acc, field) ->
-        #         k = field.get 'name'
-        #         v = field.getValue()
-        #         if k and not field.isDefault() and v?
-        #             acc[k] = v
-        #         acc
-        #     {}
     
 # }}}
 
@@ -109,11 +101,16 @@ FieldView = exports.FieldView = Backbone.View.extend do # {{{
         @model.setValue val, {+silent}
     
     render: ->
+        if @template
+            @$el.html @template @model.toJSON()
+            return this
+        
         return @remove() if @model.get 'hidden'
         
         name  = @model.get 'name'
         id    = _.camelize name
-        label = _.humanize name
+        label = name
+        # label = _.humanize name
         @$el.html """
             <label class="name" for="#id">#label</label>
             <input class="value" type="text" id="#id" name="#id">
@@ -175,5 +172,7 @@ Scaffold = exports.Scaffold = Backbone.View.extend do # {{{
         @collection.each @addOne
         this
     
+    toString: ->
+        "Scaffold()"
 # }}}
 
