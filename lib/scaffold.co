@@ -4,10 +4,12 @@ op = require 'kraken/util/op'
 
 
 Field = exports.Field = Backbone.Model.extend do # {{{
+    ctorName : 'Field'
     idAttribute : 'name'
     
     initialize: ->
         @set 'value', @get('default'), {+silent} if not @has 'value'
+        # console.log "#this.initialize!"
     
     defaults: ->
         {
@@ -57,10 +59,16 @@ Field = exports.Field = Backbone.Model.extend do # {{{
     isDefault: ->
         @get('value') is @get('default')
     
+    toJSON: ->
+        {id:@id} import do
+            _.clone(@attributes) import { value:@getValue(), def:@get('default') }
+    
+    toString: -> "#{@ctorName}(id=#{@id}, value=#{@get 'value'})"
 # }}}
 
 
 FieldList = exports.FieldList = Backbone.Collection.extend do # {{{
+    ctorName : 'FieldList'
     model : Field
     
     /**
@@ -72,6 +80,7 @@ FieldList = exports.FieldList = Backbone.Collection.extend do # {{{
             @models.filter -> not it.isDefault()
             -> [ it.get('name'), it.getValue() ]
     
+    toString: -> "#{@ctorName}(length=#{@length})"
 # }}}
 
 
@@ -82,22 +91,21 @@ FieldView = exports.FieldView = Backbone.View.extend do # {{{
     className : 'field'
     
     events :
-      'blur .value'   : 'update'
-      'submit .value' : 'update'
-    
+        'blur .value'   : 'onUIChange'
+        'submit .value' : 'onUIChange'
     
     
     initialize: ->
+        # console.log "#this.initialize!"
         @$el.data { model:@model, view:this }
         @model.on 'change',  @render, this
         @model.on 'destroy', @remove, this
     
-    update: ->
+    onUIChange: ->
         val     = @$el.find('.value').val()
         current = @model.get 'value'
         return if val is current
-        
-        console.log "#this.update( #current -> #val )"
+        console.log "#this.onUIChange( #current -> #val )"
         @model.setValue val, {+silent}
     
     render: ->
@@ -119,16 +127,9 @@ FieldView = exports.FieldView = Backbone.View.extend do # {{{
         @$el.find '.value' .val @model.get 'value'
         this
     
-    remove: ->
-        @$el.remove()
-        this
-    
-    clear: ->
-        @model.destroy()
-        this
-    
-    toString: ->
-        "FieldView(#{@model.id})"
+    remove   : -> @$el.remove();        this
+    clear    : -> @model.destroy();     this
+    toString : -> "#{@ctorName}(model=#{@model})"
     
 # }}}
 
@@ -154,9 +155,7 @@ Scaffold = exports.Scaffold = Backbone.View.extend do # {{{
         @collection.on 'reset', @addAll
         # @collection.on 'all',   @render
         
-        @$el.addClass @className
-            .data { model:@collection, view:this }
-            .attr { action:'/save', method:'get' }
+        @$el.data { model:@collection, view:this } .addClass @className
     
     
     addOne: (field) ->
@@ -173,6 +172,6 @@ Scaffold = exports.Scaffold = Backbone.View.extend do # {{{
         this
     
     toString: ->
-        "Scaffold()"
+        "#{@ctorName}(collection=#{@collection})"
 # }}}
 

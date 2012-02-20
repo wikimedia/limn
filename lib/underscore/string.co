@@ -28,6 +28,15 @@ _string = do
         while s and s is not starting
         s
     
+    # Converts to snake_case, concatenates the key-value pair (with '_'), normalizing _'s.
+    # If only a key is given, domize auto-curries and waits for a second argument.
+    domize : (key='', value='') ->
+        key = _str.trim _str.underscored(key), '_'
+        if arguments.length <= 1
+            arguments.callee.bind this, key
+        else
+            "#{key}_#{_str.trim _str.underscored(value), '_'}"
+    
 
 _string import do
     dropLeft  : _string.ldrop

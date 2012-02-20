@@ -1,0 +1,25 @@
+- var _            = require('kraken/underscore');
+- var value_id     = _.domize('value', id);
+- var category_cls = _.domize('category', category);
+- var tags_cls     = tags.map(_.domize('tag')).join(' ');
+- var type_cls     = _.domize('type', type);
+
+.field.option(id=_.domize('option', id), class="#{category_cls} #{tags_cls}")
+    label.name(for=value_id) #{name}
+    input.value(type="text", id=value_id, name=name, value=value)
+    
+    .type(class=type_cls) #{type}
+    .default(class=type_cls) #{def}
+    
+    .desc
+        #{desc}
+        //- != jade.filters.markdown(desc)
+    
+    .tags: ul
+        for tag in tags
+            li.tag(class=_.domize('tag', tag)) #{tag}
+    .examples: ul
+        for example in examples
+            li.example
+                a(href="http://dygraphs.com/tests/#{example}.html", target="_blank") #{example}
+    

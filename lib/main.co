@@ -1,7 +1,10 @@
 _       = require 'kraken/underscore'
-{ Field, FieldList, FieldView, Scaffold
+{   Field, FieldList, FieldView, Scaffold
 }       = require 'kraken/scaffold'
-{Graph} = require 'kraken/graph'
+{   Graph, GraphModel,
+    GraphOption, GraphOptionList, GraphOptionView,
+    GraphOptionsScaffold,
+}       = require 'kraken/graph'
 
 
 

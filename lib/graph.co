@@ -7,27 +7,35 @@ _ = require 'kraken/underscore'
  * Field with graph-option-specific handling for validation, parsing, tags, etc.
  */
 GraphOption = exports.GraphOption = Field.extend do # {{{
-    initialize : ->
-        Field..initialize ...
+    ctorName : 'GraphOption'
+    # initialize : ->
+    #     # console.log "#this.initialize!"
+    #     Field::initialize ...
 # }}}
 
 
 GraphOptionList = exports.GraphOptionList = FieldList.extend do # {{{
-    model : GraphOption
-    # initialize : -> FieldList..initialize ...
+    ctorName : 'GraphOptionList'
+    model    : GraphOption
+    # initialize : ->
+    #     console.log "#this.initialize!"
+    #     FieldList::initialize ...
 # }}}
 
 
 GraphOptionView = exports.GraphOptionView = FieldView.extend do # {{{
-    tagName        : 'form'
-    className      : 'field graph_option'
-    template       : require 'kraken/template/graph-option'
+    ctorName  : 'GraphOptionView'
+    tagName   : 'div'
+    className : 'field option'
+    template  : require 'kraken/template/graph-option'
     
     events :
-        'blur .value' : 'update'
+        'blur .value'   : 'update'
+        'submit .value' : 'update'
     
-    initialize: ->
-        FieldView..initialize ...
+    # initialize: ->
+    #     # console.log "#this.initialize!"
+    #     FieldView::initialize ...
     
     update: ->
         val     = @$el.find('.value').val()
@@ -41,23 +49,21 @@ GraphOptionView = exports.GraphOptionView = FieldView.extend do # {{{
         @$el.html @template @model.toJSON()
         this
     
-    toString: -> "GraphOptionView(#{@model.id})"
-    
 # }}}
 
 
 
 GraphOptionsScaffold = exports.GraphOptionsScaffold = Scaffold.extend do # {{{
+    ctorName       : 'GraphOptionsScaffold'
     className      : 'options scaffold'
     collectionType : GraphOptionList
     subviewType    : GraphOptionView
-    
-    toString: -> "GraphOptionsScaffold()"
 # }}}
 
 
 GraphModel = exports.GraphModel = Backbone.Model.extend do # {{{
-    urlRoot : '/graphs'
+    ctorName : 'GraphModel'
+    urlRoot  : '/graphs'
     
     initialize : ->
         name = @get 'name'
@@ -67,20 +73,23 @@ GraphModel = exports.GraphModel = Backbone.Model.extend do # {{{
     defaults : ->
         {
             name    : 'Kraken Graph'
-            dataset : 'data/page_views_by_language.csv'
+            dataset : '/data/page_views_by_language.csv'
             options : {}
         }
+    
+    toString: -> "#{@ctorName}(id=#{@id}, name=#{@get 'name'}, dataset=#{@get 'dataset'})"
 # }}}
 
 
 Graph = exports.Graph = Backbone.View.extend do # {{{
+    ctorName  : 'Graph'
     tagName   : 'section'
     className : 'graph'
     template  : require 'kraken/template/graph'
     
     events:
-        'keypress input'       : 'onKeypress'
-        'submit form.settings' : 'onSubmit'
+        'keypress form.options .value' : 'onKeypress'
+        'submit   form.options'        : 'onSubmit'
     
     
     initialize : (o={}) ->
@@ -99,13 +108,12 @@ Graph = exports.Graph = Backbone.View.extend do # {{{
     
     
     chartOptions: (values) ->
-        options = @scaffold.collection
-        
-        # @chartOptions 'label', 'label value!'
+        # Handle @chartOptions k, v
         if arguments.length > 1
             [k, v] = arguments
             values = { "#k": v }
         
+        options = @scaffold.collection
         if values
             for k, v in values
                 options.get(k)?.setValue v
@@ -118,29 +126,29 @@ Graph = exports.Graph = Backbone.View.extend do # {{{
         
         # Remove old style, as it confuses dygraph after options update
         @viewport.attr 'style', ''
+        console.log "#this"
         console.log do 
-            'viewport.{ width=%s, height=%s, style=%s }'
+            "  .viewport.{ width=%s, height=%s, style=%s }"
             @viewport.css('width')
             @viewport.css('height')
             @viewport.attr 'style'
-        console.log 'options:', JSON.stringify @chartOptions()
+        console.log '  .options:', JSON.stringify @chartOptions()
         
         @chart?.destroy()
         @chart = new Dygraph do
             @viewport.0
-            'data/page_views_by_language.csv'
+            @model.get 'dataset'
             @chartOptions()
     
     onKeypress: (evt) ->
         $(evt.target).submit() if evt.keyCode is 13
     
     onSubmit: ->
-        console.log 'Graph.onSubmit!'
+        console.log "#this.onSubmit!"
         @render()
         false
     
-    toString: ->
-        "Graph()"
+    toString: -> "#{@ctorName}(#{@model})"
 # }}}
 
 
