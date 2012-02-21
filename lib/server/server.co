@@ -61,7 +61,7 @@ app.configure ->
     app.use express.methodOverride()
     
     app.use compiler do
-        enabled : <[ stylus coco jade-browser ]>
+        enabled : <[ stylus coco jade-browser yaml ]>
         src     : WWW
         dest    : VAR
         options : stylus : { nib:true, include:"#WWW/css" }

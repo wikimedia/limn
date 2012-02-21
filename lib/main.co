@@ -7,16 +7,9 @@ _       = require 'kraken/underscore'
 }       = require 'kraken/graph'
 
 
-
-
 root = do -> this
+
 main = ->
-    console.log 'main()'
-    
-    # root.g = new Dygraph do
-    #       $ '.graph' .eq 0 .find '.viewport' .0
-    #       'data/page_views_by_language.csv'
-    #       # {'logscale': true}
     
     graph = root.graph = new Graph do
         el : $ 'section.graph' .eq 0
