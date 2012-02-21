@@ -37,5 +37,3 @@ You should now have a server running on 8081.
 [coffee]: http://coffeescript.org/
 [coffee-docs]: http://coffeescript.org/#language
 [connect-compiler]: https://github.com/dsc/connect-compiler
-
-
