@@ -70,7 +70,13 @@ app.configure ->
     # wrap modules in commonjs closure for browser
     app.use compiler do
         enabled : 'commonjs'
-        src     : [ VAR, WWW, STATIC ]
+        src     : [ STATIC ]
+        dest    : VAR
+        options : commonjs : { drop_path_parts:1, drop_full_ext:false }
+        log_level : LOG_LEVEL
+    app.use compiler do
+        enabled : 'commonjs'
+        src     : [ VAR, WWW ]
         dest    : VAR
         options : commonjs : { drop_path_parts:1, drop_full_ext:true }
         log_level : LOG_LEVEL
