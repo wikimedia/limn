@@ -2,9 +2,10 @@
 - var value_id     = _.domize('value', id);
 - var category_cls = _.domize('category', category);
 - var tags_cls     = tags.map(_.domize('tag')).join(' ');
-- var type_cls     = _.domize('type', type);
+- var type_cls     = _.domize('type', type); 
 
 .field.option(id=_.domize('option', id), class="#{category_cls} #{tags_cls}")
+    h3.shortname #{_.shortname(name)}
     label.name(for=value_id) #{name}
     input.value(type="text", id=value_id, name=name, value=value)
     

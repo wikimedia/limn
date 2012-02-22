@@ -97,6 +97,7 @@ FieldView = exports.FieldView = Backbone.View.extend do # {{{
     
     initialize: ->
         # console.log "#this.initialize!"
+        @model.view = this
         @$el.data { model:@model, view:this }
         @model.on 'change',  @render, this
         @model.on 'destroy', @remove, this
@@ -110,7 +111,9 @@ FieldView = exports.FieldView = Backbone.View.extend do # {{{
     
     render: ->
         if @template
-            @$el.html @template @model.toJSON()
+            t = $ @template @model.toJSON()
+            @$el.html t.html()
+                .attr { id:t.attr('id'), class:t.attr('class') }
             return this
         
         return @remove() if @model.get 'hidden'
@@ -147,21 +150,22 @@ Scaffold = exports.Scaffold = Backbone.View.extend do # {{{
     
     initialize: ->
         _.bindAll this, 'addOne', 'addAll'
-        # @subviews = []
+        @subviews = []
         
         CollectionType = @collectionType
-        @collection or= new CollectionType
+        @model = @collection or= new CollectionType
         @collection.on 'add',   @addOne
         @collection.on 'reset', @addAll
-        # @collection.on 'all',   @render
         
         @$el.data { model:@collection, view:this } .addClass @className
     
     
     addOne: (field) ->
+        _.remove @subviews, field.view if field.view
+        
         SubviewType = @subviewType
         view = new SubviewType model:field
-        # @subviews.push view
+        @subviews.push view
         @$el.append view.render().el
         view
     
@@ -171,7 +175,18 @@ Scaffold = exports.Scaffold = Backbone.View.extend do # {{{
         @collection.each @addOne
         this
     
-    toString: ->
-        "#{@ctorName}(collection=#{@collection})"
+    get: (id) ->
+        @collection.get id
+    
+    at: (idx) ->
+        @collection.at idx
+    
+    pluck: (prop) ->
+        @collection.pluck prop
+    
+    values: ->
+        @collection.values()
+    
+    toString: -> "#{@ctorName}(collection=#{@collection})"
 # }}}
 

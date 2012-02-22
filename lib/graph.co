@@ -17,25 +17,32 @@ GraphOption = exports.GraphOption = Field.extend do # {{{
 GraphOptionList = exports.GraphOptionList = FieldList.extend do # {{{
     ctorName : 'GraphOptionList'
     model    : GraphOption
-    # initialize : ->
-    #     console.log "#this.initialize!"
-    #     FieldList::initialize ...
 # }}}
 
 
+/**
+ * The view for a single configurable option.
+ */
 GraphOptionView = exports.GraphOptionView = FieldView.extend do # {{{
     ctorName  : 'GraphOptionView'
     tagName   : 'div'
     className : 'field option'
     template  : require 'kraken/template/graph-option'
     
-    events :
-        'blur .value'   : 'update'
-        'submit .value' : 'update'
+    isCollapsed : true
     
-    # initialize: ->
-    #     # console.log "#this.initialize!"
-    #     FieldView::initialize ...
+    events :
+        'blur .value'                   : 'update'
+        'submit .value'                 : 'update'
+    
+    
+    initialize: ->
+        # console.log "#this.initialize!"
+        FieldView::initialize ...
+        @$el.on 'click', (evt) ~>
+            target = $ evt.target
+            @toggleCollapsed() if @el is evt.target or not target.is '.value, label, input'
+        
     
     update: ->
         val     = @$el.find('.value').val()
@@ -46,7 +53,16 @@ GraphOptionView = exports.GraphOptionView = FieldView.extend do # {{{
         @model.setValue val, {+silent}
     
     render: ->
-        @$el.html @template @model.toJSON()
+        outer = $ @template @model.toJSON()
+        @$el.html outer.html()
+            .attr do
+                id    : outer.attr 'id'
+                class : outer.attr('class') + if @isCollapsed then ' collapsed' else ''
+        this
+    
+    toggleCollapsed: ->
+        @$el.toggleClass 'collapsed'
+        @isCollapsed = @$el.hasClass 'collapsed'
         this
     
 # }}}
@@ -58,9 +74,25 @@ GraphOptionsScaffold = exports.GraphOptionsScaffold = Scaffold.extend do # {{{
     className      : 'options scaffold'
     collectionType : GraphOptionList
     subviewType    : GraphOptionView
+    
+    # initialize : ->
+    #     Scaffold::initialize ...
+    #     @$el.isotope do
+    #         itemSelector    : '.field.option'
+    #         layoutMode      : 'masonry'
+    #         masonry         : columnWidth : 10
+    #         animationEngine : 'jquery'
+    #     
+    
 # }}}
 
 
+
+
+/**
+ * Represents a Graph, including its charting options, dataset, annotations, and all
+ * other settings for both its content and presentation.
+ */
 GraphModel = exports.GraphModel = Backbone.Model.extend do # {{{
     ctorName : 'GraphModel'
     urlRoot  : '/graphs'

@@ -2,6 +2,20 @@ _ = require 'underscore'
 
 _obj = do
     /**
+     * In-place removal of a value from an Array or Object.
+     */
+    remove: (obj, v) ->
+        values = [].slice.call arguments, 1
+        if _.isArray obj
+            for v of values
+                idx = obj.indexOf v
+                obj.splice idx, 1 if idx is not -1
+        else
+            for k, v in obj
+                delete obj[k] if -1 is not values.indexOf v
+        obj
+    
+    /**
      * Searches a heirarchical object for a given subkey specified in dotted-property syntax.
      * @param {Object} base The object to serve as the root of the property-chain.
      * @param {Array|String} chain The property-chain to lookup.

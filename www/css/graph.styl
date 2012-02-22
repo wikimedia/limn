@@ -1,4 +1,50 @@
 @import 'nib'
 @import 'colors'
 
-
+section.graph
+    .graph-label
+        position relative
+    
+    .viewport
+        position relative
+    
+    form.details
+        position relative
+    
+    fieldset.options
+        legend
+            position relative
+    
+    .field.option
+        padding 0.5em
+        margin 0.5em
+        
+        .shortname
+            display none
+        .value
+            position relative
+        .type
+            position relative
+        .default
+            position relative
+        .desc
+            position relative
+        .tags
+            .tag
+                position relative
+        .examples
+            .example
+                position relative
+        
+        
+        &.collapsed
+            float left
+            min-width 2em
+            min-height 2em
+            background-color #ccc
+            
+            *
+                display none
+            .shortname
+                display inline
+            

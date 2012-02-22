@@ -37,6 +37,19 @@ _string = do
         else
             "#{key}_#{_str.trim _str.underscored(value), '_'}"
     
+    shortname: (s) ->
+        return s if s.length <= 6
+        parts = _ s
+            .chain()
+                .underscored()
+                .trim '_'
+            .value()
+            .replace /_+/g, '_'
+            .split '_'
+            .map -> _.capitalize it.slice 0, 2
+        return s if parts.length is 1 #and s.length <= 8
+        parts.shift().toLowerCase() + parts.join('')
+    
 
 _string import do
     dropLeft  : _string.ldrop
