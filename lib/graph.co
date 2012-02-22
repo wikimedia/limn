@@ -93,6 +93,7 @@ Graph = exports.Graph = Backbone.View.extend do # {{{
     
     
     initialize : (o={}) ->
+        {graph_spec} = o
         @model or= new GraphModel
         
         @$el.data { model:@model, view:this }
@@ -102,7 +103,7 @@ Graph = exports.Graph = Backbone.View.extend do # {{{
         @viewport = @$el.find '.viewport'
         @scaffold = new GraphOptionsScaffold do
             el: @$el.find 'form.settings'
-        @scaffold.collection.reset CHART_OPTIONS_SPEC
+        @scaffold.collection.reset graph_spec
         
         @render()
     

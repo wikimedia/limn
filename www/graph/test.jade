@@ -17,7 +17,8 @@ append styles
                     //- mixin text_field('data', 'data/page_views_by_project.csv')
 
 block page-scripts
-    script
-        var CHART_OPTIONS_SPEC = !{ fs.readFileSync('www/graph/dygraph-options.json', 'utf8') };
+    //-
+        script
+            var CHART_OPTIONS_SPEC = !{ fs.readFileSync('www/graph/dygraph-options.json', 'utf8') };
     
 

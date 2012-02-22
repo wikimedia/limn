@@ -10,9 +10,18 @@ _       = require 'kraken/underscore'
 root = do -> this
 
 main = ->
-    
     graph = root.graph = new Graph do
         el : $ 'section.graph' .eq 0
-    
+        graph_spec : CHART_OPTIONS_SPEC
 
-jQuery main
+
+jQuery.ajax do
+    url      : '/graph/dygraph-options.json',
+    dataType : 'json'
+    
+    success : (data) ->
+        CHART_OPTIONS_SPEC = data
+        jQuery main
+    
+    error : (err) -> console.error err
+
