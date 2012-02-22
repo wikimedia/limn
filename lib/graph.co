@@ -81,7 +81,7 @@ GraphModel = exports.GraphModel = Backbone.Model.extend do # {{{
 # }}}
 
 
-Graph = exports.Graph = Backbone.View.extend do # {{{
+GraphView = exports.GraphView = Backbone.View.extend do # {{{
     ctorName  : 'Graph'
     tagName   : 'section'
     className : 'graph'

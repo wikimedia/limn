@@ -1,7 +1,7 @@
 _       = require 'kraken/underscore'
 {   Field, FieldList, FieldView, Scaffold
 }       = require 'kraken/scaffold'
-{   Graph, GraphModel,
+{   GraphView, GraphModel,
     GraphOption, GraphOptionList, GraphOptionView,
     GraphOptionsScaffold,
 }       = require 'kraken/graph'
@@ -9,19 +9,19 @@ _       = require 'kraken/underscore'
 
 root = do -> this
 
+# Create the Graph Scaffold
 main = ->
-    graph = root.graph = new Graph do
-        el : $ 'section.graph' .eq 0
-        graph_spec : CHART_OPTIONS_SPEC
+    graph = root.graph = new GraphView { 
+        graph_spec: CHART_OPTIONS_SPEC
+        el: $ 'section.graph' .eq 0
+    }
 
 
 jQuery.ajax do
     url      : '/graph/dygraph-options.json',
     dataType : 'json'
-    
     success : (data) ->
-        CHART_OPTIONS_SPEC = data
+        root.CHART_OPTIONS_SPEC = data
         jQuery main
-    
     error : (err) -> console.error err
 
