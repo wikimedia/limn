@@ -1,11 +1,11 @@
 include browser-helpers
 - var option_id    = _.domize('option', id);
 - var value_id     = _.domize('value', id);
-- var category_cls = _.domize('category', category);
+//- - var category_cls = _.domize('category', category);
 - var tags_cls     = tags.map(_.domize('tag')).join(' ');
 - var type_cls     = _.domize('type', type); 
 
-.field.option(id=option_id, class="#{category_cls} #{tags_cls}")
+.field.option(id=option_id, class="#{category} #{tags_cls}")
     a.close &times;
     
     h3.shortname #{_.shortname(name)}
@@ -18,10 +18,12 @@ include browser-helpers
     .desc
         != (jade.filters || {}).markdown(desc)
     
-    .tags(data-toggle="collapse", data-target="ul"): ul.collapse
+    //- .tags(data-toggle="collapse", data-target="##{option_id} .tags ul"): ul.collapse
+    .tags
         for tag in tags
-            li.tag(class=_.domize('tag', tag)) #{tag}
-    .examples(data-toggle="collapse", data-target="ul"): ul.collapse
+            span.tag(class=_.domize('tag', tag)) #{tag}
+            |  
+    .examples(data-toggle="collapse", data-target="##{option_id} .examples ul"): ul.collapse
         for example in examples
             li.example
                 a(href="http://dygraphs.com/tests/#{example}.html", target="_blank") #{example}

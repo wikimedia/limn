@@ -21,6 +21,7 @@ section.graph
     
     .field.option
         float left
+        z-index 3
         padding 0.5em
         margin 0.5em
         width 200px
@@ -31,29 +32,34 @@ section.graph
         background-color #ccc
         font-size 90%
         
+        *
+            position relative
+        
         .close
             z-index 10
-            absolute top 0.5em right 0.5em
+            // absolute top 0.5em right 0.5em
+            absolute top 0.25em right 0.25em
+            cursor pointer
+            
             width 1em
             height 1em
-            
-            opacity 1
-            color rgba(51,51,51, 0.4)
             text-align center
-            border 1px solid #afafaf
-            border-radius 50%
-            background-color #ccc
+            // border-radius 50%
             
-            text-decoration none
-            cursor pointer
+            // text-decoration none
+            // border 1px solid #afafaf
+            // background-color #ccc
+            
+            // opacity 1
+            // color rgba(51,51,51, 0.4)
         
-        .close:hover
-            color rgba(51,51,51, 1)
-            border 1px solid #999
+        // .close:hover
+        //     color rgba(51,51,51, 1)
+        //     border 1px solid #999
         
         .shortname
             z-index -1
-            absolute bottom 0.5em right 0.5em
+            // absolute bottom 0.5em right 0.5em
             font-weight bold
             color white
         .name
@@ -62,34 +68,52 @@ section.graph
             font-size 100%
         .value
             width auto
+            font-family menlo, monospace
         .type
             &::before
                 content "Type: "
+                font-weight bold
         .default
             &::before
                 content "Default: "
+                font-weight bold
         .desc
             position relative
+        .tags, .examples
+            cursor pointer
         .tags
             &::before
-                content "Tags"
-            ul
-                display none
+                content "Tags: "
+                font-weight bold
+                font-size 85%
             .tag
-                position relative
+                margin 0.2em
+                line-height 1.5
+                padding 0.2em
+                font-size 85%
+                color white
+                background-color rgba(255,255,255, 0.15)
+                border-radius 5px
+                border 1px solid white
+                white-space nowrap
         .examples
+            display none
             &::before
                 content "Examples"
+                font-weight bold
             .example
                 position relative
         
         
         &.collapsed
+            z-index 2
             width auto
             min-width 50px
             min-height 2em
+            
             line-height 2em
             text-align center
+            cursor pointer
             
             *
                 display none
@@ -97,3 +121,25 @@ section.graph
                 display inline
                 position static
         
+        
+        /* Category Colors {{{ */
+        for i in 0...length($hilites)
+            &.category_{i}
+                $bg_color = $hilites[i]
+                $fg_color = light($bg_color) ? $dark : $light
+                
+                background-color $bg_color
+                color $fg_color
+                label, h1, h2, h3, .shortname, .name, .close
+                    color $fg_color
+        
+    
+    
+    
+    
+    
+    // }}}
+
+
+
+

@@ -1,32 +1,46 @@
 /** Project Colors **/
 
+$dark           = #333
+$light          = #eee
+
+/* spot colors */
+$hilite_dkblue     = #182B53
+$hilite_ltblue     = #4596FF
+$hilite_steelblue  = #A6D9FF
+$hilite_teal       = #00FFBC
+$hilite_green      = #83BB32
+$hilite_lime       = #B1E43B
+$hilite_yellow     = #F1D950
+$hilite_squash     = #EF8158
+$hilite_orange     = #DC3522
+$hilite_red        = #AD3238
+$hilite_pink       = #FF87FF
+$hilite_magenta    = #FF0097
+$hilite_purple     = #553DC9
+$hilite_periwinkle = #9DA5FF
+
+
+$hilites = ($hilite_dkblue $hilite_ltblue $hilite_steelblue $hilite_teal $hilite_green $hilite_lime $hilite_yellow $hilite_squash $hilite_orange $hilite_red $hilite_pink $hilite_magenta $hilite_purple $hilite_periwinkle)
+
+
 /* background colors */
-$main_bgcolor   = #fff
-$page_bgcolor   = #eee
+$main_bgcolor   = white
+$page_bgcolor   = $light
 $foot_bgcolor   = #3b3b3b
 
 /* text & link colors */
-$body_text      = #333
+$body_text      = $dark
 $foot_text      = #505050
 $body_link      = #2d588f
 $foot_link      = #666
 
 $border_color   = #ccc
 
-/* spot colors */
-$hilite_dkblue  = #182B53
-$hilite_ltblue  = #4596FF
-$hilite_teal    = #00FFBC
-$hilite_green   = #B1E43B
-$hilite_yellow  = #F1D950
-$hilite_orange  = #EF8158
-$hilite_red     = #AD3238
-$hilite_pink    = #FF0097
-$hilite_purple  = #553DC9
-
 
 /** Color Helpers **/
 
 invert($v)
     hsla( 180deg * hue($v), 100% - saturation($v), 100% - lightness($v), alpha($v) )
+
+
 

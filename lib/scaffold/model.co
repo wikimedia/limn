@@ -11,6 +11,7 @@ Field = exports.Field = Backbone.Model.extend do # {{{
     
     initialize: ->
         @set 'value', @get('default'), {+silent} if not @has 'value'
+        
         # console.log "#this.initialize!"
     
     defaults: ->
@@ -19,7 +20,6 @@ Field = exports.Field = Backbone.Model.extend do # {{{
             type     : 'String'
             default  : null
             desc     : ''
-            category : 'General'
             include  : 'diff'
             tags     : []
             examples : []

@@ -22,8 +22,32 @@ GraphOption = exports.GraphOption = Field.extend do # {{{
 
 
 GraphOptionList = exports.GraphOptionList = FieldList.extend do # {{{
-    ctorName : 'GraphOptionList'
-    model    : GraphOption
+    ctorName   : 'GraphOptionList'
+    model      : GraphOption
+    categories : {}
+    
+    
+    initialize : ->
+        FieldList::initialize ...
+        @categories  = {}
+    
+    
+    reset: ->
+        FieldList::reset ...
+        console.log "#this.reset!"
+        
+        n = 0
+        cats = @categories
+        @forEach (field) ->
+            cat = field.get('tags', [])[0]
+            unless cats[cat]?
+                cats[cat] = n++
+            field.set 'category', "category_#{cats[cat]}", {+silent}
+        
+        setTimeout do
+            ~> _ _.pluck(@models, 'view') .invoke 'render'
+            10
+        this
 # }}}
 
 
