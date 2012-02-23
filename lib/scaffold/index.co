@@ -1,0 +1,3 @@
+models = require 'kraken/scaffold/model'
+views  = require 'kraken/scaffold/view'
+exports import models import views

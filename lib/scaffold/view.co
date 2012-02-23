@@ -1,92 +1,7 @@
 _  = require 'kraken/underscore'
 op = require 'kraken/util/op'
-
-
-
-### Scaffold Models
-
-Field = exports.Field = Backbone.Model.extend do # {{{
-    ctorName : 'Field'
-    idAttribute : 'name'
-    
-    initialize: ->
-        @set 'value', @get('default'), {+silent} if not @has 'value'
-        # console.log "#this.initialize!"
-    
-    defaults: ->
-        {
-            name     : ''
-            type     : 'String'
-            default  : null
-            desc     : ''
-            category : 'General'
-            include  : 'diff'
-            tags     : []
-            examples : []
-        }
-    
-    getParser: (type) ->
-        type or= @get 'type'
-        t = _ type.toLowerCase()
-        
-        parser = op.toStr
-        if t.startsWith 'integer'
-            parser = op.toInt
-        if t.startsWith 'float'
-            parser = op.toFloat
-        if t.startsWith 'boolean'
-            parser = op.toBool
-        if t.startsWith 'object' or t.startsWith 'array'
-            parser = op.toObject
-        if t.startsWith 'function'
-            parser = (fn) -> eval "(#fn)"
-        
-        # TODO: handle 'or' by returning an array of parsers
-        parser
-    
-    
-    getValue: (def) ->
-        @getParser() @get 'value', def
-    
-    setValue: (v, options) ->
-        def = @get 'default'
-        if not v and def == null
-            val = null
-        else
-            val = @getParser()(v)
-        @set 'value', val, options
-    
-    clearValue: ->
-        @set 'value', @get('default')
-    
-    isDefault: ->
-        @get('value') is @get('default')
-    
-    toJSON: ->
-        {id:@id} import do
-            _.clone(@attributes) import { value:@getValue(), def:@get('default') }
-    
-    toString: -> "(#{@id}: #{@get 'value'})"
-# }}}
-
-
-FieldList = exports.FieldList = Backbone.Collection.extend do # {{{
-    ctorName : 'FieldList'
-    model : Field
-    
-    /**
-     * Collects a map of fields to their values, excluding those set to `null` or their default.
-     * @returns {Object}
-     */
-    values: ->
-        _.synthesize do
-            @models.filter -> not it.isDefault()
-            -> [ it.get('name'), it.getValue() ]
-    
-    toString: -> "#{@ctorName}(length=#{@length})"
-# }}}
-
-
+{ Field, FieldList,
+}  = require 'kraken/scaffold/model'
 
 
 ### Views
@@ -97,9 +12,8 @@ BaseView = exports.BaseView = Backbone.View.extend do # {{{
     
     
     initialize: ->
-        _.bindAll this, ...@__bind__
+        _.bindAll this, ...@__bind__ if @__bind__.length
         @__super__ = @constructor.__super__
-        Backbone.View::initialize ...
         
         @model.view = this
         @$el.data { @model, view:this }
@@ -127,6 +41,8 @@ BaseView = exports.BaseView = Backbone.View.extend do # {{{
     
     render: ->
         @build()
+        @trigger 'render', this
+        this
     
     hide   : -> @$el.hide();      this
     show   : -> @$el.show();      this
@@ -170,11 +86,11 @@ FieldView = exports.FieldView = BaseView.extend do # {{{
         val     = @$el.find('.value').val()
         current = @model.get 'value'
         return if val is current
-        console.log "#this.onUIChange( #current -> #val )"
+        # console.log "#this.onUIChange( #current -> #val )"
         @model.setValue val, {+silent}
     
     render: ->
-        return @remove() if @model.get 'hidden'
+        return @remove() if @model.get 'hidden', false
         return BaseView::render ... if @template
         
         name  = @model.get 'name'
@@ -219,12 +135,15 @@ Scaffold = exports.Scaffold = BaseView.extend do # {{{
     
     
     addOne: (field) ->
+        # console.log "[S] #this.addOne!", @__super__
         _.remove @subviews, field.view if field.view
         
         SubviewType = @subviewType
         view = new SubviewType model:field
         @subviews.push view
-        @$el.append view.render().el
+        @$el.append view.render().el unless field.get 'hidden'
+        
+        @render()
         view
     
     addAll: ->

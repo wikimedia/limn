@@ -1,0 +1,88 @@
+_  = require 'kraken/underscore'
+op = require 'kraken/util/op'
+
+
+
+### Scaffold Models
+
+Field = exports.Field = Backbone.Model.extend do # {{{
+    ctorName : 'Field'
+    idAttribute : 'name'
+    
+    initialize: ->
+        @set 'value', @get('default'), {+silent} if not @has 'value'
+        # console.log "#this.initialize!"
+    
+    defaults: ->
+        {
+            name     : ''
+            type     : 'String'
+            default  : null
+            desc     : ''
+            category : 'General'
+            include  : 'diff'
+            tags     : []
+            examples : []
+        }
+    
+    getParser: (type) ->
+        type or= @get 'type'
+        t = _ type.toLowerCase()
+        
+        parser = op.toStr
+        if t.startsWith 'integer'
+            parser = op.toInt
+        if t.startsWith 'float'
+            parser = op.toFloat
+        if t.startsWith 'boolean'
+            parser = op.toBool
+        if t.startsWith 'object' or t.startsWith 'array'
+            parser = op.toObject
+        if t.startsWith 'function'
+            parser = (fn) -> eval "(#fn)"
+        
+        # TODO: handle 'or' by returning an array of parsers
+        parser
+    
+    
+    getValue: (def) ->
+        @getParser() @get 'value', def
+    
+    setValue: (v, options) ->
+        def = @get 'default'
+        if not v and def == null
+            val = null
+        else
+            val = @getParser()(v)
+        @set 'value', val, options
+    
+    clearValue: ->
+        @set 'value', @get('default')
+    
+    isDefault: ->
+        @get('value') is @get('default')
+    
+    toJSON: ->
+        {id:@id} import do
+            _.clone(@attributes) import { value:@getValue(), def:@get('default') }
+    
+    toString: -> "(#{@id}: #{@get 'value'})"
+# }}}
+
+
+FieldList = exports.FieldList = Backbone.Collection.extend do # {{{
+    ctorName : 'FieldList'
+    model : Field
+    
+    /**
+     * Collects a map of fields to their values, excluding those set to `null` or their default.
+     * @returns {Object}
+     */
+    values: ->
+        _.synthesize do
+            @models.filter -> not it.isDefault()
+            -> [ it.get('name'), it.getValue() ]
+    
+    toString: -> "#{@ctorName}(length=#{@length})"
+# }}}
+

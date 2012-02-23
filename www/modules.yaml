@@ -18,6 +18,7 @@ all:
         - underscore.mod
         - underscore.string.mod
         - backbone
+        - showdown.mod
         - jade.runtime.min
         - dygraph
 
@@ -37,7 +38,10 @@ all:
             - template:
                 - graph.jade
                 - graph-option.jade
-            - scaffold
+            - scaffold:
+                - model
+                - view
+                - index
             - graph
 
 # -   suffix: .js

@@ -1,0 +1,3 @@
+- window.Markdown || (window.Markdown = new (require('showdown').Showdown).converter());
+- (jade.filters || (jade.filters = {})).markdown = function (s, name){ return s && Markdown.makeHtml(s.replace(/\n/g, '\n\n')); };
+

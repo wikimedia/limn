@@ -31,6 +31,7 @@ GraphOptionList = exports.GraphOptionList = FieldList.extend do # {{{
  * The view for a single configurable option.
  */
 GraphOptionView = exports.GraphOptionView = FieldView.extend do # {{{
+    # __bind__  : <[ onClick ]>
     ctorName  : 'GraphOptionView'
     tagName   : 'div'
     className : 'field option'
@@ -41,37 +42,38 @@ GraphOptionView = exports.GraphOptionView = FieldView.extend do # {{{
     events :
         'blur .value'                   : 'update'
         'submit .value'                 : 'update'
+        'click .close'                  : 'toggleCollapsed'
+        'click'                         : 'onClick'
     
     
-    initialize: ->
-        # console.log "#this.initialize!"
-        FieldView::initialize ...
-        @$el.on 'click', (evt) ~>
-            target = $ evt.target
-            @toggleCollapsed() if @el is evt.target or not target.is '.value, label, input'
-        
+    # initialize: ->
+    #     console.log "#this.initialize!"
+    #     FieldView::initialize ...
+    #     
     
     update: ->
         val     = @$el.find('.value').val()
         current = @model.get 'value'
         return if val is current
-        
         console.log "#this.update( #current -> #val )"
         @model.setValue val, {+silent}
     
     render: ->
-        FieldView::render.call this
+        @__super__.render ...
         @$el.addClass 'collapsed' if @isCollapsed
-        # outer = $ @template @model.toJSON()
-        # @$el.html outer.html()
-        #     .attr do
-        #         id    : outer.attr 'id'
-        #         class : outer.attr('class') + if @isCollapsed then ' collapsed' else ''
         this
     
+    onClick: (evt) ->
+        target = $ evt.target
+        console.log "#this.onClick()", target
+        @toggleCollapsed() if @$el.hasClass('collapsed') and not target.hasClass('close')
+    
     toggleCollapsed: ->
+        starting = @$el.hasClass 'collapsed' #@isCollapsed
         @$el.toggleClass 'collapsed'
         @isCollapsed = @$el.hasClass 'collapsed'
+        console.log "#this.toggleCollapsed!", starting, '->', @isCollapsed
+        @trigger 'change:collapse', this
         this
     
 # }}}
@@ -85,18 +87,26 @@ GraphOptionsScaffold = exports.GraphOptionsScaffold = Scaffold.extend do # {{{
     collectionType : GraphOptionList
     subviewType    : GraphOptionView
     
-    # initialize : ->
-    #     Scaffold::initialize ...
+    
+    initialize : ->
+        Scaffold::initialize ...
+        @render = _.debounce @render.bind(this), 50
     
     render: ->
+        # console.log "#this.render() -> .isotope()"
         @__super__.render ...
         @$el.isotope do
             itemSelector    : '.field.option'
             layoutMode      : 'masonry'
-            masonry         : columnWidth : 100
+            masonry         : columnWidth : 10
+            # itemPositionDataEnabled : true
             # animationEngine : 'jquery'
-            itemPositionDataEnabled : true
-        
+    
+    addOne: ->
+        # console.log "#this.addOne!"
+        view = @__super__.addOne ...
+        view.on 'change:collapse render', @render
+        view
     
 # }}}
 
@@ -141,6 +151,7 @@ GraphView = exports.GraphView = BaseView.extend do # {{{
     initialize : (o={}) ->
         @model or= new GraphModel
         BaseView::initialize ...
+        # console.log "#this.initialize!"
         
         @model.on 'change',  @render, this
         @model.on 'destroy', @remove, this
@@ -172,8 +183,6 @@ GraphView = exports.GraphView = BaseView.extend do # {{{
             options.values()
     
     render: ->
-        # BaseView::render ...
-        
         options = @chartOptions()
         w = options.width  or= @scaffold.get 'width'  .getValue() or 480
         h = options.height or= @scaffold.get 'height' .getValue() or 320
