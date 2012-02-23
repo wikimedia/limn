@@ -85,7 +85,7 @@ app.configure ->
         log_level : LOG_LEVEL
     app.use require('browserify') do
         mount   : '/vendor/browserify.js'
-        require : <[ events seq ]>
+        require : <[ events seq hashish ]>
     
     # Serve static files
     app.use express.static WWW

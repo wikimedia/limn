@@ -1,11 +1,11 @@
 include browser-helpers
 - var option_id    = _.domize('option', id);
 - var value_id     = _.domize('value', id);
-//- - var category_cls = _.domize('category', category);
+- var category_cls = _.domize('category', model.getCategoryIndex()) + ' ' + _.domize('category', model.getCategory());
 - var tags_cls     = tags.map(_.domize('tag')).join(' ');
 - var type_cls     = _.domize('type', type); 
 
-.field.option(id=option_id, class="#{category} #{tags_cls}")
+.field.option(id=option_id, class="#{category_cls} #{tags_cls}")
     a.close &times;
     
     h3.shortname #{_.shortname(name)}
@@ -21,7 +21,7 @@ include browser-helpers
     //- .tags(data-toggle="collapse", data-target="##{option_id} .tags ul"): ul.collapse
     .tags
         for tag in tags
-            span.tag(class=_.domize('tag', tag)) #{tag}
+            span.tag(class=_.domize('tag', tag)+' '+_.domize('category', model.getTagIndex(tag))) #{tag}
             |  
     .examples(data-toggle="collapse", data-target="##{option_id} .examples ul"): ul.collapse
         for example in examples

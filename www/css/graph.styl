@@ -124,14 +124,19 @@ section.graph
         
         /* Category Colors {{{ */
         for i in 0...length($hilites)
+            $bg_color = $hilites[i]
+            $fg_color = light($bg_color) ? $dark : $light
+            
             &.category_{i}
-                $bg_color = $hilites[i]
-                $fg_color = light($bg_color) ? $dark : $light
-                
-                background-color $bg_color
                 color $fg_color
+                background-color $bg_color
                 label, h1, h2, h3, .shortname, .name, .close
                     color $fg_color
+            
+            .tag{i}
+                color $fg_color
+                background-color $bg_color
+                border 1px solid $fg_color
         
     
     
