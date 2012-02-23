@@ -1,5 +1,5 @@
 _ = require 'kraken/underscore'
-{ Field, FieldList, FieldView, Scaffold
+{ Field, FieldList, BaseView, FieldView, Scaffold
 } = require 'kraken/scaffold'
 
 
@@ -11,6 +11,13 @@ GraphOption = exports.GraphOption = Field.extend do # {{{
     # initialize : ->
     #     # console.log "#this.initialize!"
     #     Field::initialize ...
+    
+    toJSON: ->
+        o = Field::toJSON ...
+        for k, v in o
+            o[k] = '' if v!?
+        o
+    
 # }}}
 
 
@@ -53,11 +60,13 @@ GraphOptionView = exports.GraphOptionView = FieldView.extend do # {{{
         @model.setValue val, {+silent}
     
     render: ->
-        outer = $ @template @model.toJSON()
-        @$el.html outer.html()
-            .attr do
-                id    : outer.attr 'id'
-                class : outer.attr('class') + if @isCollapsed then ' collapsed' else ''
+        FieldView::render.call this
+        @$el.addClass 'collapsed' if @isCollapsed
+        # outer = $ @template @model.toJSON()
+        # @$el.html outer.html()
+        #     .attr do
+        #         id    : outer.attr 'id'
+        #         class : outer.attr('class') + if @isCollapsed then ' collapsed' else ''
         this
     
     toggleCollapsed: ->
@@ -71,18 +80,23 @@ GraphOptionView = exports.GraphOptionView = FieldView.extend do # {{{
 
 GraphOptionsScaffold = exports.GraphOptionsScaffold = Scaffold.extend do # {{{
     ctorName       : 'GraphOptionsScaffold'
+    tagName        : 'form'
     className      : 'options scaffold'
     collectionType : GraphOptionList
     subviewType    : GraphOptionView
     
     # initialize : ->
     #     Scaffold::initialize ...
-    #     @$el.isotope do
-    #         itemSelector    : '.field.option'
-    #         layoutMode      : 'masonry'
-    #         masonry         : columnWidth : 10
-    #         animationEngine : 'jquery'
-    #     
+    
+    render: ->
+        @__super__.render ...
+        @$el.isotope do
+            itemSelector    : '.field.option'
+            layoutMode      : 'masonry'
+            masonry         : columnWidth : 100
+            # animationEngine : 'jquery'
+            itemPositionDataEnabled : true
+        
     
 # }}}
 
@@ -113,8 +127,8 @@ GraphModel = exports.GraphModel = Backbone.Model.extend do # {{{
 # }}}
 
 
-GraphView = exports.GraphView = Backbone.View.extend do # {{{
-    ctorName  : 'Graph'
+GraphView = exports.GraphView = BaseView.extend do # {{{
+    ctorName  : 'GraphView'
     tagName   : 'section'
     className : 'graph'
     template  : require 'kraken/template/graph'
@@ -125,19 +139,22 @@ GraphView = exports.GraphView = Backbone.View.extend do # {{{
     
     
     initialize : (o={}) ->
-        {graph_spec} = o
         @model or= new GraphModel
+        BaseView::initialize ...
         
-        @$el.data { model:@model, view:this }
         @model.on 'change',  @render, this
         @model.on 'destroy', @remove, this
         
+        @build()
         @viewport = @$el.find '.viewport'
-        @scaffold = new GraphOptionsScaffold do
-            el: @$el.find 'form.settings'
-        @scaffold.collection.reset graph_spec
         
-        @render()
+        @scaffold = new GraphOptionsScaffold
+        @$el.find 'fieldset' .append @scaffold.el
+        @scaffold.collection.reset that if o.graph_spec
+        
+        setTimeout do
+            ~> @render()
+            50
     
     
     chartOptions: (values) ->
@@ -155,23 +172,36 @@ GraphView = exports.GraphView = Backbone.View.extend do # {{{
             options.values()
     
     render: ->
-        @viewport.empty()
+        # BaseView::render ...
+        
+        options = @chartOptions()
+        w = options.width  or= @scaffold.get 'width'  .getValue() or 480
+        h = options.height or= @scaffold.get 'height' .getValue() or 320
+        @viewport.css { width:w, height:h }
         
         # Remove old style, as it confuses dygraph after options update
         @viewport.attr 'style', ''
+        
         console.log "#this"
         console.log do 
             "  .viewport.{ width=%s, height=%s, style=%s }"
             @viewport.css('width')
             @viewport.css('height')
             @viewport.attr 'style'
-        console.log '  .options:', JSON.stringify @chartOptions()
+            @viewport
+        console.log '  .options:', JSON.stringify options
         
-        @chart?.destroy()
-        @chart = new Dygraph do
-            @viewport.0
-            @model.get 'dataset'
-            @chartOptions()
+        # @chart?.destroy()
+        unless @chart
+            @chart = new Dygraph do
+                @viewport.0
+                @model.get 'dataset'
+                options
+        else
+            @chart.updateOptions options
+            @chart.resize w, h
+        
+        this
     
     onKeypress: (evt) ->
         $(evt.target).submit() if evt.keyCode is 13

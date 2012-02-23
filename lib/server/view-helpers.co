@@ -1,25 +1,35 @@
 # Utilities for use in templates
 
+CWD    = exports.CWD    = process.cwd()
+WWW    = exports.WWW    = "#CWD/www"
+VAR    = exports.VAR    = "#CWD/var"
+STATIC = exports.STATIC = "#CWD/static"
+
+VERSION = 'dev'
+try VERSION = require '../version' catch e
+exports.VERSION = VERSION
+
 # maybe!
 exports.require = require
 
 fs   = exports.fs   = require 'fs'
 path = exports.path = require 'path'
-              
-_    = exports._    = require 'underscore'
+
+_     = exports._ = require 'underscore'
 _.str = require 'underscore.string'
 _.mixin _.str.exports()
 
+
 yaml = exports.yaml = require 'js-yaml'
 jade = exports.jade = require 'jade'
-              
+
 exports.env = process.env
-NODE_ENV = (process.env.NODE_ENV or 'dev').toLowerCase()
-IS_PROD  = exports.IS_PROD  = _ NODE_ENV .startsWith 'prod'
-IS_TEST  = exports.IS_TEST  = _ NODE_ENV .startsWith 'test'
-IS_DEV   = exports.IS_DEV   = not (IS_PROD or IS_TEST) # _.startsWith NODE_ENV, 'dev'
-# Canonicalize
-NODE_ENV = exports.NODE_ENV = if IS_PROD then 'prod' else if IS_TEST then 'test' else 'dev'
+NODE_ENV = exports.NODE_ENV = (process.env.NODE_ENV or 'dev').toLowerCase()
+# IS_PROD  = exports.IS_PROD  = _ NODE_ENV .startsWith 'prod'
+# IS_TEST  = exports.IS_TEST  = _ NODE_ENV .startsWith 'test'
+# IS_DEV   = exports.IS_DEV   = not (IS_PROD or IS_TEST) # _.startsWith NODE_ENV, 'dev'
+# # Canonicalize
+# NODE_ENV = exports.NODE_ENV = if IS_PROD then 'prod' else if IS_TEST then 'test' else 'dev'
 
 
 sources = exports.sources = (modulesFile, node_env=NODE_ENV) ->

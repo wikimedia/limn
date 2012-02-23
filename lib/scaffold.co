@@ -3,6 +3,8 @@ op = require 'kraken/util/op'
 
 
 
+### Scaffold Models
+
 Field = exports.Field = Backbone.Model.extend do # {{{
     ctorName : 'Field'
     idAttribute : 'name'
@@ -18,6 +20,7 @@ Field = exports.Field = Backbone.Model.extend do # {{{
             default  : null
             desc     : ''
             category : 'General'
+            include  : 'diff'
             tags     : []
             examples : []
         }
@@ -42,8 +45,8 @@ Field = exports.Field = Backbone.Model.extend do # {{{
         parser
     
     
-    getValue: ->
-        @getParser() @get 'value'
+    getValue: (def) ->
+        @getParser() @get 'value', def
     
     setValue: (v, options) ->
         def = @get 'default'
@@ -63,7 +66,7 @@ Field = exports.Field = Backbone.Model.extend do # {{{
         {id:@id} import do
             _.clone(@attributes) import { value:@getValue(), def:@get('default') }
     
-    toString: -> "#{@ctorName}(id=#{@id}, value=#{@get 'value'})"
+    toString: -> "(#{@id}: #{@get 'value'})"
 # }}}
 
 
@@ -84,9 +87,73 @@ FieldList = exports.FieldList = Backbone.Collection.extend do # {{{
 # }}}
 
 
+
+
 ### Views
 
-FieldView = exports.FieldView = Backbone.View.extend do # {{{
+BaseView = exports.BaseView = Backbone.View.extend do # {{{
+    # List of methods to bind on initialize; set on subclass
+    __bind__ : []
+    
+    
+    initialize: ->
+        _.bindAll this, ...@__bind__
+        @__super__ = @constructor.__super__
+        Backbone.View::initialize ...
+        
+        @model.view = this
+        @$el.data { @model, view:this }
+        @model.on 'change',  @render, this
+        @model.on 'destroy', @remove, this
+    
+    
+    toTemplateLocals: ->
+        { $, _, op, @model, view:this } import @model.toJSON()
+    
+    $template: (locals={}) ->
+        $ @template @toTemplateLocals() import locals
+    
+    build: ->
+        return this unless @template
+        
+        outer = @$template()
+        @$el.html outer.html()
+            .attr do
+                id    : outer.attr 'id'
+                class : outer.attr('class')
+        
+        # @$parent = p if (p = @$el.parent()).length
+        this
+    
+    render: ->
+        @build()
+    
+    hide   : -> @$el.hide();      this
+    show   : -> @$el.show();      this
+    remove : -> @$el.remove();    this
+    clear  : -> @model.destroy(); @remove()
+    
+    
+    # remove : ->
+    #     if (p = @$el.parent()).length
+    #         @$parent or= p
+    #         # @parent_index = p.children().indexOf @$el
+    #     @$el.remove()
+    #     this
+    # 
+    # reparent : (parent=@$parent) ->
+    #     parent = $ parent
+    #     @$el.appendTo parent if parent?.length
+    #     this
+    
+    toString : -> "#{@ctorName}(model=#{@model})"
+
+
+# }}}
+
+
+
+FieldView = exports.FieldView = BaseView.extend do # {{{
     tagName   : 'div'
     className : 'field'
     
@@ -97,10 +164,7 @@ FieldView = exports.FieldView = Backbone.View.extend do # {{{
     
     initialize: ->
         # console.log "#this.initialize!"
-        @model.view = this
-        @$el.data { model:@model, view:this }
-        @model.on 'change',  @render, this
-        @model.on 'destroy', @remove, this
+        BaseView::initialize ...
     
     onUIChange: ->
         val     = @$el.find('.value').val()
@@ -110,29 +174,21 @@ FieldView = exports.FieldView = Backbone.View.extend do # {{{
         @model.setValue val, {+silent}
     
     render: ->
-        if @template
-            t = $ @template @model.toJSON()
-            @$el.html t.html()
-                .attr { id:t.attr('id'), class:t.attr('class') }
-            return this
-        
         return @remove() if @model.get 'hidden'
+        return BaseView::render ... if @template
         
         name  = @model.get 'name'
         id    = _.camelize name
         label = name
-        # label = _.humanize name
+        value = @model.get 'value'
+        value = '' if value!?
+        
         @$el.html """
             <label class="name" for="#id">#label</label>
-            <input class="value" type="text" id="#id" name="#id">
+            <input class="value" type="text" id="#id" name="#id" value="#value">
         """
-        # @$el.find '.value' .attr 'value', @model.get 'value'
-        @$el.find '.value' .val @model.get 'value'
+        
         this
-    
-    remove   : -> @$el.remove();        this
-    clear    : -> @model.destroy();     this
-    toString : -> "#{@ctorName}(model=#{@model})"
     
 # }}}
 
@@ -140,7 +196,8 @@ FieldView = exports.FieldView = Backbone.View.extend do # {{{
 # There are several special options that, if passed, will be attached directly to the view:
 #   model, collection, el, id, className, tagName, attributes
 
-Scaffold = exports.Scaffold = Backbone.View.extend do # {{{
+Scaffold = exports.Scaffold = BaseView.extend do # {{{
+    __bind__       : <[ addOne addAll ]>
     tagName        : 'form'
     className      : 'scaffold'
     
@@ -149,11 +206,12 @@ Scaffold = exports.Scaffold = Backbone.View.extend do # {{{
     
     
     initialize: ->
-        _.bindAll this, 'addOne', 'addAll'
         @subviews = []
-        
         CollectionType = @collectionType
         @model = @collection or= new CollectionType
+        
+        BaseView::initialize ...
+        
         @collection.on 'add',   @addOne
         @collection.on 'reset', @addAll
         

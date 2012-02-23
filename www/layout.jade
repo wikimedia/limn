@@ -6,9 +6,11 @@ html
     head
         block head
             meta(http-equiv="content-type", content="text/html; charset=utf-8")
+            meta(name="viewport", content="width=device-width, initial-scale=1.0")
             
             block styles
-                link(type='text/css', rel='stylesheet', media='screen', href='/css/reset.min.css')
+                mixin css('reset.min.css')
+                mixin css('/vendor/bootstrap/css/bootstrap.css')
                 mixin css('layout.css')
             
             link(type="image/ico", rel="icon", href="/favicon.ico")
@@ -41,7 +43,7 @@ html
                         var VERSION = !{ JSON.stringify(version)  };
                         var ENV     = !{ JSON.stringify(NODE_ENV) };
                     
-                    if IS_PROD
+                    if NODE_ENV == 'production'
                         script(src='/vendor/lib-bundle.min.js?'+version)
                         script(src='/js/kraken/app-bundle.min.js?'+version)
                     else

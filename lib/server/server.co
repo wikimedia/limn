@@ -45,23 +45,26 @@ app.start = ->
 app.configure ->
     mime.define 'text/plain' : <[ jade co styl stylus ]>
     
+    # Set up 
     app.set 'views', WWW
     app.set 'view engine', 'jade'
     app.set 'view options', {
         layout  : false
         pretty  : true
         version : VERSION
-        WWW     : WWW
-        VAR     : VAR
-        STATIC  : STATIC
     } import require './view-helpers'
     
     app.use express.logger() if LOG_LEVEL is 'DEBUG'
+    
+    # Parse form submits into req.params
     app.use express.bodyParser()
+    
+    # Allow "spoofing" HTTP methods that IE doesn't support
     app.use express.methodOverride()
     
+    # Transparently recompile modules that have changed
     app.use compiler do
-        enabled : <[ stylus coco jade-browser yaml ]>
+        enabled : <[ coco jade-browser stylus yaml ]>
         src     : WWW
         dest    : VAR
         options : stylus : { nib:true, include:"#WWW/css" }
@@ -80,16 +83,22 @@ app.configure ->
         dest    : VAR
         options : commonjs : { drop_path_parts:1, drop_full_ext:true }
         log_level : LOG_LEVEL
-    
     app.use require('browserify') do
         mount   : '/vendor/browserify.js'
         require : <[ events seq ]>
     
+    # Serve static files
     app.use express.static WWW
     app.use express.static VAR
     app.use express.static STATIC
     
+    # Route to the web services
     app.use app.router
+    
+    # Serve directory listings
+    app.use express.directory WWW
+    app.use express.directory VAR
+    app.use express.directory STATIC
     
     app.use express.errorHandler do
         dumpExceptions : true

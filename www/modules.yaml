@@ -4,21 +4,21 @@ all:
     - vendor:
         - es5-shim.min
         - modernizr.min
+        - browserify
+        - require
         - json2.min
         - jquery.min
-        - jquery.isotope.min
-        - jquery.hotkeys.min
         - jquery.history.min
+        - jquery.hotkeys.min
+        - jquery.isotope.min
         - jquery.tipsy.min
         - spin.min
         - jquery.spin.min
-        - browserify
-        - require
+        - bootstrap.min
         - underscore.mod
         - underscore.string.mod
-        - jade.runtime.min
         - backbone
-        - u.min
+        - jade.runtime.min
         - dygraph
 
 -   suffix: .mod.js
@@ -32,6 +32,7 @@ all:
                 - index
             - util:
                 - op
+                - backbone
                 - index
             - template:
                 - graph.jade

@@ -1,5 +1,5 @@
-_       = require 'kraken/underscore'
-{   Field, FieldList, FieldView, Scaffold
+{_, op} = require 'kraken/util'
+{   Field, FieldList, BaseView, FieldView, Scaffold
 }       = require 'kraken/scaffold'
 {   GraphView, GraphModel,
     GraphOption, GraphOptionList, GraphOptionView,
@@ -11,10 +11,10 @@ root = do -> this
 
 # Create the Graph Scaffold
 main = ->
-    graph = root.graph = new GraphView { 
+    graph = root.graph = new GraphView {
         graph_spec: CHART_OPTIONS_SPEC
-        el: $ 'section.graph' .eq 0
     }
+    $ '#content' .append graph.el
 
 
 jQuery.ajax do

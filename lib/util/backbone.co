@@ -1,0 +1,52 @@
+_ = require 'underscore'
+# Backbone = require 'backbone'
+
+
+_backbone = do
+    
+    /**
+     * @returns {Array<Class>} The list of all superclasses for this class or object.
+     */
+    getSuperClasses: function getSuperClasses(cls)
+        cls .= constructor if cls and typeof cls is not 'function'
+        if superclass = cls?.__super__?.constructor
+            [superclass].concat getSuperClasses superclass
+        else
+            []
+    
+
+exports import _backbone
+
+
+/**
+ * Decorates a function so that its receiver (`this`) is always added as the
+ * first argument, followed by the call arguments.
+ * @returns {Function}
+ */
+methodize = exports.methodize = (fn) ->
+    m = fn.__methodized__
+    return m if m
+    
+    g = fn.__genericized__
+    return that if g?.__wraps__
+    
+    m = fn.__methodized__ = (...args) ->
+        args.unshift this
+        fn.apply this, args
+    
+    m.__wraps__ = fn
+    m
+
+
+# Add the class extensions as static methods of the Backbone classes
+_methodized = exports._methodized = _.reduce do
+    _backbone
+    (o, v, k) ->
+        o[k] = if typeof v is 'function' then methodize v else v
+        o
+    {}
+
+for Cls of Backbone.<[ Model Collection View ]>
+    Cls     import _methodized
+    Cls::   import _methodized
+

@@ -4,7 +4,7 @@ mixin css(href, media, root)
     - media = media || 'screen'
     - root = root || '/css'
     - var ver = (version ? '?'+version : '')
-    - href = (root ? root+'/' : '') + href + ver
+    - href = ((root && href.charAt(0) !== '/') ? root+'/' : '') + href + ver
     link(type='text/css', rel='stylesheet', media=media, href=href)
 
 
