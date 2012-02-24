@@ -1,5 +1,5 @@
-@import 'nib'
 @import 'colors'
+@import 'nib'
 
 section.graph
     .graph-label
@@ -58,14 +58,15 @@ section.graph
         //     border 1px solid #999
         
         .shortname
-            z-index -1
+            // z-index -1
             // absolute bottom 0.5em right 0.5em
             font-weight bold
             color white
         .name
+            display none
             font-weight bold
-            line-height 1.5
-            font-size 100%
+            // line-height 1.5
+            // font-size 100%
         .value
             width auto
             font-family menlo, monospace
@@ -82,20 +83,19 @@ section.graph
         .tags, .examples
             cursor pointer
         .tags
+            font-size 85%
             &::before
                 content "Tags: "
                 font-weight bold
-                font-size 85%
             .tag
                 margin 0.2em
                 line-height 1.5
                 padding 0.2em
-                font-size 85%
+                white-space nowrap
                 color white
                 background-color rgba(255,255,255, 0.15)
                 border-radius 5px
-                border 1px solid white
-                white-space nowrap
+                // border 1px solid white
         .examples
             display none
             &::before
@@ -124,19 +124,24 @@ section.graph
         
         /* Category Colors {{{ */
         for i in 0...length($hilites)
-            $bg_color = $hilites[i]
-            $fg_color = light($bg_color) ? $dark : $light
+            $bg_color    = $hilites[i]
+            $tag_color   = $bg_color + contrast_direction($bg_color) * 50%
+            $fg_color    = (lightness($bg_color) > 55%) ? $dark : $light
             
             &.category_{i}
                 color $fg_color
                 background-color $bg_color
+                // .shortname, .name, .close
+                //     color $tag_color
                 label, h1, h2, h3, .shortname, .name, .close
                     color $fg_color
             
-            .tag{i}
+            .tag.category_{i}
+                // border 1px solid $tag_color
+                // color $tag_color
+                // background-color $bg_color
                 color $fg_color
                 background-color $bg_color
-                border 1px solid $fg_color
         
     
     

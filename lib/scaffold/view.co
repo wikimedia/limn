@@ -20,9 +20,10 @@ BaseView = exports.BaseView = Backbone.View.extend do # {{{
         @model.on 'change',  @render, this
         @model.on 'destroy', @remove, this
     
-    
     toTemplateLocals: ->
-        { $, _, op, @model, view:this } import @model.toJSON()
+        json = {value:v} = @model.toJSON()
+        json.value = JSON.stringify v if _.isArray(v) or _.isObject(v)
+        { $, _, op, @model, view:this } import json
     
     $template: (locals={}) ->
         $ @template @toTemplateLocals() import locals
@@ -86,7 +87,7 @@ FieldView = exports.FieldView = BaseView.extend do # {{{
         val     = @$el.find('.value').val()
         current = @model.get 'value'
         return if val is current
-        # console.log "#this.onUIChange( #current -> #val )"
+        console.log "#this.onUIChange( #current -> #val )"
         @model.setValue val, {+silent}
     
     render: ->

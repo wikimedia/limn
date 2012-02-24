@@ -97,25 +97,41 @@ Field = exports.Field = Backbone.Model.extend do # {{{
     
     
     getParser: (type) ->
-        type or= @get 'type'
-        t = _ type.toLowerCase()
-        
-        parser = op.toStr
-        if t.startsWith 'integer'
-            parser = op.toInt
-        if t.startsWith 'float'
-            parser = op.toFloat
-        if t.startsWith 'boolean'
-            parser = op.toBool
-        if t.startsWith 'object' or t.startsWith 'array'
-            parser = op.toObject
-        if t.startsWith 'function'
-            parser = (fn) -> eval "(#fn)"
-        
-        # TODO: handle 'or' by returning an array of parsers
-        parser
+        # XXX: handle 'or' by returning an array of parsers?
+        type = _ (type or @get 'type').toLowerCase()
+        for t of <[ Integer Float Boolean Object Array Function ]>
+            if type.startsWith t.toLowerCase()
+                console.log "parse#t ->", @["parse#t"] unless @["parse#t"]
+                return @["parse#t"]
+        @parseString
     
-        
+    parseString: (v) ->
+        if v? then op.toStr v else null
+    
+    parseInteger: (v) ->
+        r = op.toInt v
+        unless isNaN r then r else null
+    
+    parseFloat: (v) ->
+        r = op.toFloat v
+        unless isNaN r then r else null
+    
+    parseBoolean: (v) ->
+        op.toBool v
+    
+    parseArray: (v) ->
+        if v then op.toObject v else null
+    
+    parseObject: (v) ->
+        if v then op.toObject v else null
+    
+    parseFunction: (fn) ->
+        if fn and _.startswith String(fn), 'function'
+            try eval "(#fn)" catch err
+        else
+            null
+    
+    
     getValue: (def) ->
         @getParser() @get 'value', def
     

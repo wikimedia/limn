@@ -17,12 +17,13 @@ include browser-helpers
     .default(class=type_cls, title="Default: #{def} (#{type})") #{def}
     
     .desc
-        != (jade.filters || {}).markdown(desc)
+        != jade.filters.markdown(desc)
     
     //- .tags(data-toggle="collapse", data-target="##{option_id} .tags ul"): ul.collapse
     .tags
         for tag in tags
-            span.tag(class=_.domize('tag', tag)+' '+_.domize('category', model.getTagIndex(tag))) #{tag}
+            - var tag_cls = _.domize('tag',tag) + ' ' + _.domize('category',model.getTagIndex(tag))
+            span.tag(class=tag_cls) #{tag}
             |  
     .examples(data-toggle="collapse", data-target="##{option_id} .examples ul"): ul.collapse
         for example in examples

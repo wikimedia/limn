@@ -32,22 +32,22 @@ GraphOptionList = exports.GraphOptionList = FieldList.extend do # {{{
         @categories  = {}
     
     
-    reset: ->
-        FieldList::reset ...
-        console.log "#this.reset!"
-        
-        n = 0
-        cats = @categories
-        @forEach (field) ->
-            cat = field.get('tags', [])[0]
-            unless cats[cat]?
-                cats[cat] = n++
-            field.set 'category', "category_#{cats[cat]}", {+silent}
-        
-        setTimeout do
-            ~> _ _.pluck(@models, 'view') .invoke 'render'
-            10
-        this
+    # reset: ->
+    #     FieldList::reset ...
+    #     console.log "#this.reset!"
+    #     
+    #     n = 0
+    #     cats = @categories
+    #     @forEach (field) ->
+    #         cat = field.get('tags', [])[0]
+    #         unless cats[cat]?
+    #             cats[cat] = n++
+    #         field.set 'category', "category_#{cats[cat]}", {+silent}
+    #     
+    #     setTimeout do
+    #         ~> _ _.pluck(@models, 'view') .invoke 'render'
+    #         10
+    #     this
 # }}}
 
 
@@ -89,14 +89,14 @@ GraphOptionView = exports.GraphOptionView = FieldView.extend do # {{{
     
     onClick: (evt) ->
         target = $ evt.target
-        console.log "#this.onClick()", target
+        # console.log "#this.onClick()", target
         @toggleCollapsed() if @$el.hasClass('collapsed') and not target.hasClass('close')
     
     toggleCollapsed: ->
         starting = @$el.hasClass 'collapsed' #@isCollapsed
         @$el.toggleClass 'collapsed'
         @isCollapsed = @$el.hasClass 'collapsed'
-        console.log "#this.toggleCollapsed!", starting, '->', @isCollapsed
+        # console.log "#this.toggleCollapsed!", starting, '->', @isCollapsed
         @trigger 'change:collapse', this
         this
     

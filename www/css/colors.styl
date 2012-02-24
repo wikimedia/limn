@@ -1,3 +1,13 @@
+/** Color Helpers **/
+
+invert($v)
+    hsla( 180deg * hue($v), 100% - saturation($v), 100% - lightness($v), alpha($v) )
+
+contrast_direction($v)
+    // ((lightness($v) * (100% - saturation($v))) < 50%) ? 1 : -1
+    (lightness($v) < 50%) ? 1 : -1
+
+
 /** Project Colors **/
 
 $dark               = #333
@@ -26,6 +36,8 @@ $hilite_lavender    = #9323FF
 
 $hilites = ($hilite_dkblue $hilite_sky $hilite_ltblue $hilite_steelblue $hilite_cyan $hilite_hurricane $hilite_tourquoise $hilite_green $hilite_lime $hilite_yellow $hilite_squash $hilite_orange $hilite_watermelon $hilite_red $hilite_pink $hilite_magenta $hilite_purple $hilite_periwinkle $hilite_lavender)
 
+$hilite_favs = ($hilite_dkblue $hilite_ltblue $hilite_cyan $hilite_lime $hilite_yellow $hilite_squash $hilite_red $hilite_magenta $hilite_purple)
+// colors: ["#FF0097", "#EF8158", "#83BB32", "#182B53", "#4596FF", "#553DC9", "#AD3238", "#00FFBC", "#F1D950"]
 
 
 /* background colors */
@@ -40,12 +52,5 @@ $body_link      = #2d588f
 $foot_link      = #666
 
 $border_color   = #ccc
-
-
-/** Color Helpers **/
-
-invert($v)
-    hsla( 180deg * hue($v), 100% - saturation($v), 100% - lightness($v), alpha($v) )
-
 
 
