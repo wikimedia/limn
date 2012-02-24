@@ -5,6 +5,8 @@ path     = require 'path'
 {exec, spawn} = require 'child_process'
 
 _        = require 'underscore'
+Seq      = require 'seq'
+yaml     = require 'js-yaml'
 mime     = require 'mime'
 express  = require 'express'
 compiler = require 'connect-compiler-extras'
@@ -109,6 +111,40 @@ app.configure ->
 
 app.get '/', (req, res) ->
     res.render 'dashboard'
+
+
+YAML_EXT_PAT = /\.ya?ml$/i
+
+app.get '/data/list', (req, res, next) ->
+    fs.readdir "#CWD/data", (err, files) ->
+        res.send do
+            files.filter -> /\.(json|ya?ml)$/i.test it
+                 .map    -> "/data/#it".replace YAML_EXT_PAT, '.json'
+
+app.get '/data/all', (req, res, next) ->
+    data = {}
+    files = []
+    Seq()
+        .seq fs.readdir, "#CWD/data", Seq,
+        .flatten()
+        .filter -> /\.(json|ya?ml)$/.test it
+        .seq ->
+            files := @stack.slice()
+            @ok @stack
+        .parMap (f) -> fs.readFile "#CWD/data/#f", 'utf8', this
+        .parMap (text, i) ->
+            f = files[i]
+            k = f.replace YAML_EXT_PAT, '.json'
+            v = data[k] = {}
+            try
+                if YAML_EXT_PAT.test f
+                    v = data[k] = yaml.load text
+                else
+                    v = data[k] = JSON.parse text
+                @ok v
+            catch err
+                this err
+        .seq -> res.send data
 
 app.get '/:type/:action', (req, res, next) ->
     {type, action} = req.params
