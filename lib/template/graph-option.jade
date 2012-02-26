@@ -20,7 +20,8 @@ include browser-helpers
         textarea.value(id=value_id, name=name, class=type_cls) #{value}
     else
         - var input_type = (/boolean/i.test(type) ? 'checkbox' : 'text');
-        input.value(type=input_type, id=value_id, name=name, class=type_cls, value=value)
+        - var checked = ((/boolean/i.test(type) && value) ? 'checked' : null);
+        input.value(type=input_type, id=value_id, name=name, class=type_cls, value=value, checked=checked)
     
     .type(class=type_cls) #{type}
     .default(class=type_cls, title="Default: #{def} (#{type})") #{def}
