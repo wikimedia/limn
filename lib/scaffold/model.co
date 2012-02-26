@@ -6,34 +6,6 @@ Hash = require 'hashish'
 
 ### Scaffold Models
 
-class exports.TagSet extends Array
-    tags : {}
-    
-    (values=[]) ->
-        @tags = {}
-        @add values if values?.length
-    
-    has: (tag) ->
-        @tags[tag]?
-    
-    get: (tag) ->
-        return -1 unless tag
-        unless @tags[tag]?
-            @tags[tag] = @length
-            @push tag
-        @tags[tag]
-    
-    update: (tags) ->
-        is_single = typeof tags is 'string'
-        tags      = [tags] if is_single
-        indices   = ( for tag of tags then @get tag )
-        if is_single then indices[0] else indices
-    
-    toString: -> "Tags(length=#{@length}, values=[\"#{@join '", "'}\"])"
-
-
-KNOWN_TAGS = exports.KNOWN_TAGS = new TagSet()
-
 Field = exports.Field = Backbone.Model.extend do # {{{
     ctorName    : 'Field'
     idAttribute : 'name'
@@ -41,13 +13,8 @@ Field = exports.Field = Backbone.Model.extend do # {{{
     
     initialize: ->
         @set 'value', @get('default'), {+silent} if not @has 'value'
-        
         # console.log "#this.initialize!"
         @on 'all', (evt) ~> console.log "#this.trigger(#evt)"
-        
-        # Notify Tag indexer of category when created, to ensure all category-tags
-        # get indices with colors :P
-        KNOWN_TAGS.update @getCategory()
     
     # Model defaults
     defaults: ->
@@ -60,39 +27,6 @@ Field = exports.Field = Backbone.Model.extend do # {{{
             tags     : []
             examples : []
         }
-    
-    # Wrapper to ensure @set('tags') is called, as tags.push()
-    # will not trigger the 'changed:tags' event.
-    addTag: (tag) ->
-        return this unless tag
-        tags = @get('tags', [])
-        tags.push tag
-        @set 'tags', tags
-        this
-    
-    # Wrapper to ensure @set('tags') is called, as tags.push()
-    # will not trigger the 'changed:tags' event.
-    removeTag: (tag) ->
-        return this unless tag
-        tags = @get('tags', [])
-        _.remove tags, tag
-        @set 'tags', tags
-        this
-    
-    # Keep tag list up to date
-    onTagUpdate: ->
-        KNOWN_TAGS.update @get 'tags'
-        this
-    
-    getTagIndex: (tag) ->
-        KNOWN_TAGS.get tag
-    
-    # A field's category is its first tag.
-    getCategory: ->
-        @get('tags', [])[0]
-    
-    getCategoryIndex: ->
-        @getTagIndex @getCategory()
     
     
     
