@@ -115,6 +115,9 @@ app.get '/', (req, res) ->
 
 YAML_EXT_PAT = /\.ya?ml$/i
 
+/**
+ * Returns a JSON listing of the datasource metadata files.
+ */
 app.get '/data/list', (req, res, next) ->
     fs.readdir "#CWD/data", (err, files) ->
         res.send do

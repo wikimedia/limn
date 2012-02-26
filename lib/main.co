@@ -14,7 +14,7 @@ main = ->
     graph = root.graph = new GraphView {
         graph_spec: CHART_OPTIONS_SPEC
     }
-    $ '#content' .append graph.el
+    $ '#content .inner' .append graph.el
 
 
 jQuery.ajax do

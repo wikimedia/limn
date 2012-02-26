@@ -32,22 +32,6 @@ GraphOptionList = exports.GraphOptionList = FieldList.extend do # {{{
         @categories  = {}
     
     
-    # reset: ->
-    #     FieldList::reset ...
-    #     console.log "#this.reset!"
-    #     
-    #     n = 0
-    #     cats = @categories
-    #     @forEach (field) ->
-    #         cat = field.get('tags', [])[0]
-    #         unless cats[cat]?
-    #             cats[cat] = n++
-    #         field.set 'category', "category_#{cats[cat]}", {+silent}
-    #     
-    #     setTimeout do
-    #         ~> _ _.pluck(@models, 'view') .invoke 'render'
-    #         10
-    #     this
 # }}}
 
 
@@ -67,13 +51,9 @@ GraphOptionView = exports.GraphOptionView = FieldView.extend do # {{{
         'blur .value'                   : 'update'
         'submit .value'                 : 'update'
         'click .close'                  : 'toggleCollapsed'
-        'click'                         : 'onClick'
+        'click h3'                      : 'toggleCollapsed'
+        'click .collapsed'              : 'onClick'
     
-    
-    # initialize: ->
-    #     console.log "#this.initialize!"
-    #     FieldView::initialize ...
-    #     
     
     update: ->
         val     = @$el.find('.value').val()

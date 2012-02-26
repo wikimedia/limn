@@ -6,7 +6,7 @@ Hash = require 'hashish'
 
 ### Scaffold Models
 
-class exports.Tags extends Array
+class exports.TagSet extends Array
     tags : {}
     
     (values=[]) ->
@@ -32,7 +32,7 @@ class exports.Tags extends Array
     toString: -> "Tags(length=#{@length}, values=[\"#{@join '", "'}\"])"
 
 
-KNOWN_TAGS = exports.KNOWN_TAGS = new Tags()
+KNOWN_TAGS = exports.KNOWN_TAGS = new TagSet()
 
 Field = exports.Field = Backbone.Model.extend do # {{{
     ctorName    : 'Field'
