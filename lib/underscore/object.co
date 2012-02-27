@@ -27,7 +27,7 @@ _obj = do
         .join item_delimiter
     
     
-    fromKVPairs : (qs, item_delimiter='&', kv_delimiter='=') ->
+    fromKVPairs: (qs, item_delimiter='&', kv_delimiter='=') ->
         _.reduce do
             qs.split item_delimiter
             (acc, pair) ->
@@ -35,6 +35,7 @@ _obj = do
                 acc[ decodeURIComponent k ] = decodeURIComponent v if k
                 acc
             {}
+        
     
     /**
      * Searches a heirarchical object for a given subkey specified in dotted-property syntax.
@@ -42,7 +43,7 @@ _obj = do
      * @param {Array|String} chain The property-chain to lookup.
      * @retruns {null|Object} If found, the object is of the form `{ key: Qualified key name, obj: Parent object of key, val: Value at obj[key] }`. Otherwise `null`.
      */
-    getNestedMeta = (obj, chain) ->
+    getNestedMeta : (obj, chain) ->
         chain = chain.split('.') if typeof chain is 'string'
         return _.reduce do
             chain
@@ -68,7 +69,7 @@ _obj = do
      * @param {Any} def Value to return if lookup fails.
      * @retruns {null|Object} If found, returns the value, and otherwise `default`.
      */
-    getNested = (obj, chain, def=null) ->
+    getNested : (obj, chain, def=null) ->
         meta = _obj.getNestedMeta obj, chain
         if meta
             meta.val
@@ -83,7 +84,7 @@ _obj = do
      * @param {Any} value The value to set.
      * @retruns {null|Object} If found, returns the old value, and otherwise `null`.
      */
-    setNested = (obj, chain, value) ->
+    setNested : (obj, chain, value) ->
         meta = _obj.getNestedMeta obj, chain
         if meta
             meta.obj[meta.key] = value
