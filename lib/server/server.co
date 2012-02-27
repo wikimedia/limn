@@ -124,19 +124,27 @@ app.get '/data/list', (req, res, next) ->
             files.filter -> /\.(json|ya?ml)$/i.test it
                  .map    -> "/data/#it".replace YAML_EXT_PAT, '.json'
 
+/**
+ * Returns the aggregated JSON content of the datasource metadata files.
+ */
 app.get '/data/all', (req, res, next) ->
     data = {}
     files = []
     Seq()
-        .seq fs.readdir, "#CWD/data", Seq,
+        .seq fs.readdir, "#CWD/data", Seq
         .flatten()
         .filter -> /\.(json|ya?ml)$/.test it
         .seq ->
             files := @stack.slice()
-            @ok @stack
-        .parMap (f) -> fs.readFile "#CWD/data/#f", 'utf8', this
+            # console.log 'files:', files
+            @ok files
+        .flatten()
+        .parMap (f) ->
+            # console.log "fs.readFile '#CWD/data/#f'"
+            fs.readFile "#CWD/data/#f", 'utf8', this
         .parMap (text, i) ->
             f = files[i]
+            # console.log "parsing file[#i]: '#f' -> text[#{text.length}]..."
             k = f.replace YAML_EXT_PAT, '.json'
             v = data[k] = {}
             try
@@ -144,10 +152,19 @@ app.get '/data/all', (req, res, next) ->
                     v = data[k] = yaml.load text
                 else
                     v = data[k] = JSON.parse text
+                # console.log "#f ok!", data
                 @ok v
             catch err
-                this err
+                console.error "[/data/all] catch! #err"
+                console.error err
+                console.error that if err.stack
+                res.send { error:String(err), partial_data:data }
         .seq -> res.send data
+        .catch (err) ->
+            console.error '[/data/all] catch!'
+            console.error err
+            console.error that if err.stack
+            res.send { error:String(err), partial_data:data }
 
 app.get '/:type/:action', (req, res, next) ->
     {type, action} = req.params
@@ -156,7 +173,9 @@ app.get '/:type/:action', (req, res, next) ->
     else
         next()
 
-# Handle webhook notification to reload files
+/**
+ * Handle webhook notification to pull from origin.
+ */
 app.all '/webhook/post-update', (req, res) ->
     
     # exec the pull async...
