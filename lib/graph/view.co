@@ -1,5 +1,5 @@
 _ = require 'kraken/underscore'
-{BaseView} = require 'kraken/baseview'
+{BaseView} = require 'kraken/base'
 { Field, FieldList, FieldView, Scaffold
 } = require 'kraken/scaffold'
 {   GraphModel, GraphOption, GraphOptionList, TagSet,

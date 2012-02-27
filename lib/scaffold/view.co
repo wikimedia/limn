@@ -1,6 +1,6 @@
 _          = require 'kraken/underscore'
 op         = require 'kraken/util/op'
-{BaseView} = require 'kraken/baseview'
+{BaseView} = require 'kraken/base'
 { Field, FieldList,
 }          = require 'kraken/scaffold/model'
 
