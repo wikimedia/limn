@@ -22,7 +22,8 @@ BaseView = exports.BaseView = Backbone.View.extend do # {{{
     
     toTemplateLocals: ->
         json = {value:v} = @model.toJSON()
-        json.value = JSON.stringify v if _.isArray(v) or _.isObject(v)
+        if _.isArray(v) or _.isObject(v)
+            json.value = JSON.stringify v
         { $, _, op, @model, view:this } import json
     
     $template: (locals={}) ->
@@ -37,7 +38,7 @@ BaseView = exports.BaseView = Backbone.View.extend do # {{{
                 id    : outer.attr 'id'
                 class : outer.attr('class')
         
-        # @$parent = p if (p = @$el.parent()).length
+        
         this
     
     render: ->
