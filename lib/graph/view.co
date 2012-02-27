@@ -1,9 +1,11 @@
 _ = require 'kraken/underscore'
-{ Field, FieldList, BaseView, FieldView, Scaffold
+{BaseView} = require 'kraken/baseview'
+{ Field, FieldList, FieldView, Scaffold
 } = require 'kraken/scaffold'
-{   GraphOption, GraphOptionList, TagSet,
+{   GraphModel, GraphOption, GraphOptionList, TagSet,
 } = require 'kraken/graph/model'
 
+DEBOUNCE_RENDER = exports.DEBOUNCE_RENDER = 20ms
 
 
 /**
@@ -19,11 +21,12 @@ GraphOptionView = exports.GraphOptionView = FieldView.extend do # {{{
     isCollapsed : true
     
     events :
-        'blur .value'                   : 'update'
-        'submit .value'                 : 'update'
-        'click .close'                  : 'toggleCollapsed'
-        'click h3'                      : 'toggleCollapsed'
-        'click .collapsed'              : 'onClick'
+        'blur .value'                        : 'update'
+        'click input[type="checkbox"].value' : 'update'
+        'submit .value'                      : 'update'
+        'click .close'                       : 'toggleCollapsed'
+        'click h3'                           : 'toggleCollapsed'
+        'click .collapsed'                   : 'onClick'
     
     
     update: ->
@@ -65,7 +68,7 @@ GraphOptionsScaffold = exports.GraphOptionsScaffold = Scaffold.extend do # {{{
     
     initialize : ->
         Scaffold::initialize ...
-        @render = _.debounce @render.bind(this), 50
+        @render = _.debounce @render.bind(this), DEBOUNCE_RENDER
     
     render: ->
         # console.log "#this.render() -> .isotope()"
@@ -83,33 +86,12 @@ GraphOptionsScaffold = exports.GraphOptionsScaffold = Scaffold.extend do # {{{
         view.on 'change:collapse render', @render
         view
     
+    toKVPairs: ->
+        @collection.toKVPairs()
+    
 # }}}
 
 
-
-
-/**
- * Represents a Graph, including its charting options, dataset, annotations, and all
- * other settings for both its content and presentation.
- */
-GraphModel = exports.GraphModel = Backbone.Model.extend do # {{{
-    ctorName : 'GraphModel'
-    urlRoot  : '/graphs'
-    
-    initialize : ->
-        name = @get 'name'
-        if name and not (@id or @has 'id')
-            @id = @attributes.id = _.underscored name
-    
-    defaults : ->
-        {
-            name    : 'Kraken Graph'
-            dataset : '/data/page_views_by_language.csv'
-            options : {}
-        }
-    
-    toString: -> "#{@ctorName}(id=#{@id}, name=#{@get 'name'}, dataset=#{@get 'dataset'})"
-# }}}
 
 
 GraphView = exports.GraphView = BaseView.extend do # {{{
@@ -124,6 +106,7 @@ GraphView = exports.GraphView = BaseView.extend do # {{{
     
     
     initialize : (o={}) ->
+        @render = _.debounce @render.bind(this), DEBOUNCE_RENDER
         @model or= new GraphModel
         BaseView::initialize ...
         # console.log "#this.initialize!"
@@ -138,9 +121,7 @@ GraphView = exports.GraphView = BaseView.extend do # {{{
         @$el.find 'fieldset' .append @scaffold.el
         @scaffold.collection.reset that if o.graph_spec
         
-        setTimeout do
-            ~> @render()
-            50
+        _.delay @render, DEBOUNCE_RENDER
     
     
     chartOptions: (values) ->
@@ -194,6 +175,10 @@ GraphView = exports.GraphView = BaseView.extend do # {{{
         console.log "#this.onSubmit!"
         @render()
         false
+    
+    
+    toKVPairs: (keepDefaults=false) ->
+        @scaffold.toKVPairs()
     
     toString: -> "#{@ctorName}(#{@model})"
 # }}}

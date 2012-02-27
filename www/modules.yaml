@@ -35,6 +35,7 @@ all:
                 - op
                 - backbone
                 - index
+            - baseview
             - template:
                 - graph.jade
                 - graph-option.jade

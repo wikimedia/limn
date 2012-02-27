@@ -1,6 +1,5 @@
 _    = require 'kraken/underscore'
 op   = require 'kraken/util/op'
-Hash = require 'hashish'
 
 
 
@@ -29,6 +28,7 @@ Field = exports.Field = Backbone.Model.extend do # {{{
         }
     
     
+    /* * *  Parsers  * * */
     
     getParser: (type) ->
         # XXX: handle 'or' by returning an array of parsers?
@@ -66,6 +66,17 @@ Field = exports.Field = Backbone.Model.extend do # {{{
             null
     
     
+    /* * * Serializers * * */
+    serializeValue: ->
+        v = @getValue()
+        if v!?
+            v = ''
+        else if _.isArray(v) or _.isObject(v)
+            v = JSON.stringify v
+        String v
+    
+    
+    /* * * Value Accessors * * */
     getValue: (def) ->
         @getParser() @get 'value', def
     
@@ -88,6 +99,14 @@ Field = exports.Field = Backbone.Model.extend do # {{{
         {id:@id} import do
             _.clone(@attributes) import { value:@getValue(), def:@get('default') }
     
+    toKVPairs: ->
+        key   = @get 'name'
+        value = @get 'value'
+        if value?
+            "#{encodeURIComponent key}=#{encodeURIComponent value}"
+        else
+            ''
+    
     toString: -> "(#{@id}: #{@get 'value'})"
 # }}}
 
@@ -104,6 +123,15 @@ FieldList = exports.FieldList = Backbone.Collection.extend do # {{{
         _.synthesize do
             @models.filter -> not it.isDefault()
             -> [ it.get('name'), it.getValue() ]
+    
+    toJSON: ->
+        @values()
+    
+    toKVPairs: ->
+        @models
+            .filter -> it.get('name') and it.getValue()?
+            .map -> "#{encodeURIComponent it.id}=#{encodeURIComponent it.get 'value'}"
+            .join '&'
     
     toString: -> "#{@ctorName}(length=#{@length})"
 # }}}

@@ -1,0 +1,68 @@
+_  = require 'kraken/underscore'
+op = require 'kraken/util/op'
+
+
+BaseView = exports.BaseView = Backbone.View.extend do # {{{
+    # List of methods to bind on initialize; set on subclass
+    __bind__ : []
+    
+    
+    initialize: ->
+        _.bindAll this, ...@__bind__ if @__bind__.length
+        @__super__ = @constructor.__super__
+        
+        @model.view = this
+        @$el.data { @model, view:this }
+        @model.on 'change',  @render, this
+        @model.on 'destroy', @remove, this
+    
+    toTemplateLocals: ->
+        json = {value:v} = @model.toJSON()
+        if _.isArray(v) or _.isObject(v)
+            json.value = JSON.stringify v
+        { $, _, op, @model, view:this } import json
+    
+    $template: (locals={}) ->
+        $ @template @toTemplateLocals() import locals
+    
+    build: ->
+        return this unless @template
+        
+        outer = @$template()
+        @$el.html outer.html()
+            .attr do
+                id    : outer.attr 'id'
+                class : outer.attr('class')
+        
+        
+        this
+    
+    render: ->
+        @build()
+        @trigger 'render', this
+        this
+    
+    hide   : -> @$el.hide();      this
+    show   : -> @$el.show();      this
+    remove : -> @$el.remove();    this
+    clear  : -> @model.destroy(); @remove()
+    
+    
+    # remove : ->
+    #     if (p = @$el.parent()).length
+    #         @$parent or= p
+    #         # @parent_index = p.children().indexOf @$el
+    #     @$el.remove()
+    #     this
+    # 
+    # reparent : (parent=@$parent) ->
+    #     parent = $ parent
+    #     @$el.appendTo parent if parent?.length
+    #     this
+    
+    toString : -> "#{@ctorName}(model=#{@model})"
+
+
+# }}}
+
+

@@ -1,5 +1,6 @@
 _ = require 'kraken/underscore'
-{ Field, FieldList, BaseView, FieldView, Scaffold
+{BaseView} = require 'kraken/baseview'
+{ Field, FieldList, FieldView, Scaffold
 } = require 'kraken/scaffold'
 
 
@@ -88,20 +89,56 @@ GraphOption = exports.GraphOption = Field.extend do # {{{
             o[k] = '' if v!?
         o
     
+    toKVPairs: ->
+        key = @get 'name'
+        value = @get 'value'
+        if value?
+            "#{encodeURIComponent key}=#{encodeURIComponent value}"
+        else
+            ''
+    
+
 # }}}
 
 
 GraphOptionList = exports.GraphOptionList = FieldList.extend do # {{{
     ctorName   : 'GraphOptionList'
     model      : GraphOption
-    categories : {}
     
+    /**
+     * Transforms this list into form-encoded KV-pairs, excluding null values and 
+     * @returns {String}
+     */
+    toKVPairs: (keepDefaults=false) ->
+        @models
+            .filter -> it.get('name') and it.getValue()? and (keepDefaults or not it.isDefault())
+            .map -> "#{encodeURIComponent it.get 'name'}=#{encodeURIComponent it.serializeValue()}"
+            .join '&'
+    
+# }}}
+
+
+/**
+ * Represents a Graph, including its charting options, dataset, annotations, and all
+ * other settings for both its content and presentation.
+ */
+GraphModel = exports.GraphModel = Backbone.Model.extend do # {{{
+    ctorName : 'GraphModel'
+    urlRoot  : '/graphs'
     
     initialize : ->
-        FieldList::initialize ...
-        @categories  = {}
+        name = @get 'name'
+        if name and not (@id or @has 'id')
+            @id = @attributes.id = _.underscored name
     
+    defaults : ->
+        {
+            name    : 'Kraken Graph'
+            dataset : '/data/page_views_by_language.csv'
+            options : {}
+        }
     
+    toString: -> "#{@ctorName}(id=#{@id}, name=#{@get 'name'}, dataset=#{@get 'dataset'})"
 # }}}
 
 

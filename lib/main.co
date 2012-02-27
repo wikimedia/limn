@@ -1,10 +1,11 @@
-{_, op} = require 'kraken/util'
-{   Field, FieldList, BaseView, FieldView, Scaffold
-}       = require 'kraken/scaffold'
+{_, op}    = require 'kraken/util'
+{BaseView} = require 'kraken/baseview'
+{   Field, FieldList, FieldView, Scaffold
+}          = require 'kraken/scaffold'
 {   GraphView, GraphModel, TagSet,
     GraphOption, GraphOptionList, GraphOptionView,
     GraphOptionsScaffold,
-}       = require 'kraken/graph'
+}          = require 'kraken/graph'
 
 
 root = do -> this
