@@ -15,6 +15,27 @@ _obj = do
                 delete obj[k] if -1 is not values.indexOf v
         obj
     
+    
+    
+    toKVPairs: (o, item_delimiter='&', kv_delimiter='=') ->
+        _.reduce do
+            o
+            (acc, v, k) ->
+                acc.push encodeURIComponent(k)+kv_delimiter+encodeURIComponent(v) if k
+                acc
+            []
+        .join item_delimiter
+    
+    
+    fromKVPairs : (qs, item_delimiter='&', kv_delimiter='=') ->
+        _.reduce do
+            qs.split item_delimiter
+            (acc, pair) ->
+                [k, v] = pair.split kv_delimiter
+                acc[ decodeURIComponent k ] = decodeURIComponent v if k
+                acc
+            {}
+    
     /**
      * Searches a heirarchical object for a given subkey specified in dotted-property syntax.
      * @param {Object} base The object to serve as the root of the property-chain.
