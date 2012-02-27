@@ -1,5 +1,6 @@
 _ = require 'kraken/underscore'
-{BaseView} = require 'kraken/baseview'
+{ BaseModel, BaseView,
+} = require 'kraken/base'
 { Field, FieldList, FieldView, Scaffold
 } = require 'kraken/scaffold'
 
@@ -28,7 +29,7 @@ class exports.TagSet extends Array
         indices   = ( for tag of tags then @get tag )
         if is_single then indices[0] else indices
     
-    toString: -> "Tags(length=#{@length}, values=[\"#{@join '", "'}\"])"
+    toString: -> "TagSet(length=#{@length}, values=[\"#{@join '", "'}\"])"
 
 
 KNOWN_TAGS = exports.KNOWN_TAGS = new TagSet()
@@ -122,7 +123,7 @@ GraphOptionList = exports.GraphOptionList = FieldList.extend do # {{{
  * Represents a Graph, including its charting options, dataset, annotations, and all
  * other settings for both its content and presentation.
  */
-GraphModel = exports.GraphModel = Backbone.Model.extend do # {{{
+GraphModel = exports.GraphModel = BaseModel.extend do # {{{
     ctorName : 'GraphModel'
     urlRoot  : '/graphs'
     
@@ -137,6 +138,29 @@ GraphModel = exports.GraphModel = Backbone.Model.extend do # {{{
             dataset : '/data/page_views_by_language.csv'
             options : {}
         }
+    
+    
+    hasOption: (key) ->
+        options = @get 'options', {}
+        key in options
+    
+    setOption: (key, value, opts) ->
+        options = @get 'options', {}
+        options[key] = value
+        @set 'options', options, opts
+    
+    getOption: (key, def) ->
+        options = @get 'options', {}
+        if key in options then options[key] else def
+    
+    unsetOption: (key, opts) ->
+        options = @get 'options', {}
+        delete options[key]
+        @set 'options', options, opts
+    
+    
+    toKVPairs: ->
+        ...
     
     toString: -> "#{@ctorName}(id=#{@id}, name=#{@get 'name'}, dataset=#{@get 'dataset'})"
 # }}}

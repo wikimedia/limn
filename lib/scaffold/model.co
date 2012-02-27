@@ -1,13 +1,15 @@
 _    = require 'kraken/underscore'
 op   = require 'kraken/util/op'
+{BaseModel} = require 'kraken/base'
 
 
 
 ### Scaffold Models
 
-Field = exports.Field = Backbone.Model.extend do # {{{
-    ctorName    : 'Field'
-    idAttribute : 'name'
+Field = exports.Field = BaseModel.extend do # {{{
+    ctorName       : 'Field'
+    idAttribute    : 'name'
+    valueAttribute : 'value'
     
     
     initialize: ->
@@ -99,13 +101,6 @@ Field = exports.Field = Backbone.Model.extend do # {{{
         {id:@id} import do
             _.clone(@attributes) import { value:@getValue(), def:@get('default') }
     
-    toKVPairs: ->
-        key   = @get 'name'
-        value = @get 'value'
-        if value?
-            "#{encodeURIComponent key}=#{encodeURIComponent value}"
-        else
-            ''
     
     toString: -> "(#{@id}: #{@get 'value'})"
 # }}}

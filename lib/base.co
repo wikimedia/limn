@@ -2,9 +2,53 @@ _  = require 'kraken/underscore'
 op = require 'kraken/util/op'
 
 
-BaseView = exports.BaseView = Backbone.View.extend do # {{{
+BaseModel = exports.BaseModel = Backbone.Model.extend do # {{{
+    ctorName : 'BaseModel'
     # List of methods to bind on initialize; set on subclass
     __bind__ : []
+    
+    idAttribute    : 'id'
+    valueAttribute : 'value'
+    
+    
+    initialize: ->
+        _.bindAll this, ...@__bind__ if @__bind__.length
+        @__super__ = @constructor.__super__
+    
+    
+    toKVPairs: (kv_delimiter='=') ->
+        idAttr  = @idAttribute or 'id'
+        key     = @[idAttr] or @get idAttr
+        valAttr = @valueAttribute or 'value'
+        value   = @get 'value'
+        if key and value?
+            "#{encodeURIComponent key}#kv_delimiter#{encodeURIComponent value}"
+        else
+            ''
+    
+    toString: -> "#{@ctorName}(id=#{@id}, value=#{@get 'value'})"
+
+
+# Class Methods
+BaseModel import do
+    
+    fromKVPairs: (o) ->
+        o   = _.fromKVPairs o if typeof o is 'string'
+        Cls = if typeof this is 'function' then this else this.constructor
+        new Cls o
+
+# }}}
+
+
+/**
+ * @class Base View, used by scaffold and others.
+ */
+BaseView = exports.BaseView = Backbone.View.extend do # {{{
+    ctorName : 'BaseView'
+    
+    # List of methods to bind on initialize; set on subclass
+    __bind__ : []
+    
     
     
     initialize: ->
@@ -33,7 +77,6 @@ BaseView = exports.BaseView = Backbone.View.extend do # {{{
             .attr do
                 id    : outer.attr 'id'
                 class : outer.attr('class')
-        
         
         this
     
