@@ -1,0 +1,3 @@
+models = require 'kraken/graph/model'
+views  = require 'kraken/graph/view'
+exports import models import views

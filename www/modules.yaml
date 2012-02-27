@@ -42,7 +42,11 @@ all:
                 - model
                 - view
                 - index
-            - graph
+            - graph:
+                - model
+                - view
+                - index
+            
 
 # -   suffix: .js
 #     paths:

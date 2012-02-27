@@ -1,7 +1,7 @@
 {_, op} = require 'kraken/util'
 {   Field, FieldList, BaseView, FieldView, Scaffold
 }       = require 'kraken/scaffold'
-{   GraphView, GraphModel,
+{   GraphView, GraphModel, TagSet,
     GraphOption, GraphOptionList, GraphOptionView,
     GraphOptionsScaffold,
 }       = require 'kraken/graph'
