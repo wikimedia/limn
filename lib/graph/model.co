@@ -135,8 +135,8 @@ GraphModel = exports.GraphModel = BaseModel.extend do # {{{
     defaults : ->
         {
             name    : 'Kraken Graph'
-            dataset : '/data/page_views_by_language.csv'
-            options : { stackedGraph:1 }
+            dataset : '/data/pageviews_by.timestamp.language.csv'
+            options : {}
         }
     
     
