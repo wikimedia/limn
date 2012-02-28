@@ -10,20 +10,21 @@ FieldView = exports.FieldView = BaseView.extend do # {{{
     className : 'field'
     
     events :
-        'blur .value'   : 'onUIChange'
-        'submit .value' : 'onUIChange'
+        'blur .value'   : 'update'
+        'submit .value' : 'update'
     
     
     # initialize: ->
     #     # console.log "#this.initialize!"
     #     BaseView::initialize ...
     
-    onUIChange: ->
-        val     = @$el.find('.value').val()
-        current = @model.get 'value'
-        return if val is current
-        console.log "#this.onUIChange( #current -> #val )"
+    update: ->
+        val     = @model.getParser() @$el.find('.value').val()
+        current = @model.getValue()
+        return if _.isEqual val, current
+        console.log "#this.update( #current -> #val )"
         @model.setValue val, {+silent}
+        @trigger 'update', this
     
     render: ->
         return @remove() if @model.get 'hidden', false
@@ -74,10 +75,17 @@ Scaffold = exports.Scaffold = BaseView.extend do # {{{
         # console.log "[S] #this.addOne!", @__super__
         _.remove @subviews, field.view if field.view
         
+        # avoid duplicating event propagation
+        field.off 'change:value', @change, this
+        
+        # propagate value-change events as key-value change events
+        field.on 'change:value', @change, this
+        
         SubviewType = @subviewType
         view = new SubviewType model:field
         @subviews.push view
         @$el.append view.render().el unless field.get 'hidden'
+        view.on 'update', @change.bind(this, field)
         
         @render()
         view
@@ -88,18 +96,22 @@ Scaffold = exports.Scaffold = BaseView.extend do # {{{
         @collection.each @addOne
         this
     
-    get: (id) ->
-        @collection.get id
+    change: (field) ->
+        key   = field.get 'name'
+        value = field.getValue()
+        @trigger "change:#key", this, value, key, field
+        @trigger "change",      this, value, key, field
+        this
     
-    at: (idx) ->
-        @collection.at idx
-    
-    pluck: (prop) ->
-        @collection.pluck prop
-    
-    values: ->
-        @collection.values()
     
     toString: -> "#{@ctorName}(collection=#{@collection})"
+
+
+
+# Proxy collection methods
+<[ get at pluck invoke values toJSON toKVObject toKVPairs ]>
+    .forEach (methodname) ->
+        Scaffold::[methodname] = -> @collection[methodname].apply @collection, arguments
+
 # }}}
 

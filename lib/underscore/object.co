@@ -1,6 +1,26 @@
 _ = require 'underscore'
 
+OBJ_PROTO = Object.prototype
+getProto = Object.getPrototypeOf
+
 _obj = do
+    
+    isPlainObject : (o) ->
+        !! o and _.isObject(o) and OBJ_PROTO is getProto(o)
+    
+    /**
+     * Converts the collection to a list of its items:
+     * - Objects become a list of `[key, value]` pairs.
+     * - Strings become a list of characters.
+     * - Arguments objects become an array.
+     * - Arrays are copied.
+     */
+    items: (obj) ->
+        if _.isObject(obj) and not _.isArguments(obj)
+            _.map obj, (v, k) -> [k, v]
+        else
+            [].slice.call obj
+    
     /**
      * In-place removal of a value from an Array or Object.
      */
@@ -17,35 +37,61 @@ _obj = do
     
     
     
-    toKVPairs: (o, item_delimiter='&', kv_delimiter='=') ->
+    toKVPairs: (o, item_delim='&', kv_delim='=') ->
         _.reduce do
             o
             (acc, v, k) ->
-                acc.push encodeURIComponent(k)+kv_delimiter+encodeURIComponent(v) if k
+                acc.push encodeURIComponent(k)+kv_delim+encodeURIComponent(v) if k
                 acc
             []
-        .join item_delimiter
+        .join item_delim
     
-    
-    fromKVPairs: (qs, item_delimiter='&', kv_delimiter='=') ->
+    fromKVPairs: (qs, item_delim='&', kv_delim='=') ->
         _.reduce do
-            qs.split item_delimiter
+            qs.split item_delim
             (acc, pair) ->
-                [k, v] = pair.split kv_delimiter
+                idx = pair.indexOf kv_delim
+                if idx is not -1
+                    [k, v] = [pair.slice(0, idx), pair.slice(idx+1)]
+                else
+                    [k, v] = [pair, '']
                 acc[ decodeURIComponent k ] = decodeURIComponent v if k
                 acc
             {}
-        
+    
+    /**
+     * @returns {Object} Copies and flattens any sub-objects into namespaced keys on the parent object,
+     * such that `{ "foo":{ "bar":1 } }` becomes `{ "foo.bar":1 }`.
+     */
+    collapseObject: (obj, parent={}, prefix='') ->
+        prefix += '.' if prefix
+        _.each obj, (v, k) ->
+            if _.isPlainObject v
+                _.collapseObject v, parent, prefix+k
+            else
+                parent[prefix+k] = v
+        parent
+    
+    uncollapseObject: (obj) ->
+        _.reduce do
+            obj
+            (acc, v, k) ->
+                _.setNested acc, k, v, true
+                acc
+            {}
     
     /**
      * Searches a heirarchical object for a given subkey specified in dotted-property syntax.
      * @param {Object} base The object to serve as the root of the property-chain.
      * @param {Array|String} chain The property-chain to lookup.
+     * @param {Boolean} [ensure=false] If true, intermediate keys that are `null` or
+     *  `undefined` will be filled in with a new empty object `{}`, ensuring the get will
+     *   return valid metadata.
      * @retruns {null|Object} If found, the object is of the form `{ key: Qualified key name, obj: Parent object of key, val: Value at obj[key] }`. Otherwise `null`.
      */
-    getNestedMeta : (obj, chain) ->
+    getNestedMeta : (obj, chain, ensure=false) ->
         chain = chain.split('.') if typeof chain is 'string'
-        return _.reduce do
+        _.reduce do
             chain
             (current, key, idx, chain) ->
                 return null unless current?
@@ -56,8 +102,11 @@ _obj = do
                         key : key
                         val : current[key]
                 
-                if key in current
-                    current[key]
+                val = current[key]
+                if val?
+                    val
+                else if ensure 
+                    current[key] = {}
                 else
                     null
             obj
@@ -82,10 +131,13 @@ _obj = do
      * @param {Object} obj The object to serve as the root of the property-chain.
      * @param {Array|String} chain The property-chain to lookup.
      * @param {Any} value The value to set.
-     * @retruns {null|Object} If found, returns the old value, and otherwise `null`.
+     * @param {Boolean} [ensure=false] If true, intermediate keys that are `null` or
+     *  `undefined` will be filled in with a new empty object `{}`, ensuring the set
+     *  will succeed.
+     * @retruns {null|Any} If found, returns the old value, and otherwise `null`.
      */
-    setNested : (obj, chain, value) ->
-        meta = _obj.getNestedMeta obj, chain
+    setNested : (obj, chain, value, ensure=false) ->
+        meta = _obj.getNestedMeta obj, chain, ensure
         if meta
             meta.obj[meta.key] = value
             meta.val

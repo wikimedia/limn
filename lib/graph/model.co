@@ -89,33 +89,12 @@ GraphOption = exports.GraphOption = Field.extend do # {{{
         for k, v in o
             o[k] = '' if v!?
         o
-    
-    toKVPairs: ->
-        key = @get 'name'
-        value = @get 'value'
-        if value?
-            "#{encodeURIComponent key}=#{encodeURIComponent value}"
-        else
-            ''
-    
-
 # }}}
 
 
 GraphOptionList = exports.GraphOptionList = FieldList.extend do # {{{
     ctorName   : 'GraphOptionList'
     model      : GraphOption
-    
-    /**
-     * Transforms this list into form-encoded KV-pairs, excluding null values and 
-     * @returns {String}
-     */
-    toKVPairs: (keepDefaults=false) ->
-        @models
-            .filter -> it.get('name') and it.getValue()? and (keepDefaults or not it.isDefault())
-            .map -> "#{encodeURIComponent it.get 'name'}=#{encodeURIComponent it.serializeValue()}"
-            .join '&'
-    
 # }}}
 
 
@@ -132,21 +111,24 @@ GraphModel = exports.GraphModel = BaseModel.extend do # {{{
         if name and not (@id or @has 'id')
             @id = @attributes.id = _.underscored name
     
-    defaults : ->
+    defaults: ->
         {
+            id      : 'graph'
             name    : 'Kraken Graph'
             dataset : '/data/pageviews_by.timestamp.language.csv'
+            desc    : ''
+            width   : 'auto'
+            height  : 'auto'
             options : {}
         }
     
     
     hasOption: (key) ->
         options = @get 'options', {}
-        key in options
+        options[key]?
     
     getOption: (key, def) ->
-        options = @get 'options', {}
-        if key in options then options[key] else def
+        @get('options', {})[key] ? def
     
     setOption: (key, value, opts={}) ->
         options = @get 'options', {}
@@ -161,10 +143,8 @@ GraphModel = exports.GraphModel = BaseModel.extend do # {{{
         @trigger "change:options:#key", this, value, key, opts unless opts.silent
     
     
-    toKVPairs: ->
-        ...
-    
     toString: -> "#{@ctorName}(id=#{@id}, name=#{@get 'name'}, dataset=#{@get 'dataset'})"
+
 # }}}
 
 

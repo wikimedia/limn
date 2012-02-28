@@ -29,13 +29,6 @@ GraphOptionView = exports.GraphOptionView = FieldView.extend do # {{{
         'click .collapsed'                   : 'onClick'
     
     
-    update: ->
-        val     = @$el.find('.value').val()
-        current = @model.get 'value'
-        return if val is current
-        console.log "#this.update( #current -> #val )"
-        @model.setValue val, {+silent}
-    
     render: ->
         @__super__.render ...
         @$el.addClass 'collapsed' if @isCollapsed
@@ -80,21 +73,17 @@ GraphOptionsScaffold = exports.GraphOptionsScaffold = Scaffold.extend do # {{{
             # itemPositionDataEnabled : true
             # animationEngine : 'jquery'
     
+    /**
+     * Add a GraphOption to this scaffold, rerendering the isotope
+     * layout after collapse events.
+     */
     addOne: (field) ->
-        # console.log "#this.addOne!", field
-        
-        field.on 'change:value', ~>
-            key   = field.get 'name'
-            value = field.getValue()
-            @trigger "change:#key", this, value, key, field
-            @trigger "change",      this, value, key, field
-        
         view = @__super__.addOne ...
         view.on 'change:collapse render', @render
         view
     
     toKVPairs: ->
-        @collection.toKVPairs()
+        @collection.toKVPairs ...
     
 # }}}
 
@@ -114,19 +103,18 @@ GraphView = exports.GraphView = BaseView.extend do # {{{
     
     
     initialize : (o={}) ->
-        @render    = _.debounce @render,    DEBOUNCE_RENDER
-        @renderAll = _.debounce @renderAll, DEBOUNCE_RENDER
-        
         @model or= new GraphModel
         BaseView::initialize ...
         # console.log "#this.initialize!"
+        @render    = _.debounce @render,    DEBOUNCE_RENDER
+        @renderAll = _.debounce @renderAll, DEBOUNCE_RENDER
         
+        @model.on 'destroy', @remove, this
+        @model.on 'change',  @render, this
         @model.on 'change:options', ~>
             changes = @model.changedAttributes()
             console.log 'Model.changed(options) ->', changes
             @chartOptions changes, {+silent}
-        @model.on 'change',  @render, this
-        @model.on 'destroy', @remove, this
         
         @build()
         @viewport = @$el.find '.viewport'
@@ -136,13 +124,13 @@ GraphView = exports.GraphView = BaseView.extend do # {{{
         @scaffold.collection.reset that if o.graph_spec
         
         @scaffold.on 'change', (scaffold, value, key, field) ~>
-            console.log "scaffold.change", value, key, field
+            console.log "scaffold.change!", value, key, field
             @model.setOption key, value, {+silent}
         
         options = @model.get 'options', {}
         @chartOptions options, {+silent}
         
-        _.delay @render, DEBOUNCE_RENDER
+        _.delay @renderAll, DEBOUNCE_RENDER
     
     
     chartOptions: (values, opts) ->
@@ -204,9 +192,8 @@ GraphView = exports.GraphView = BaseView.extend do # {{{
         @render()
         false
     
-    
-    toKVPairs: (keepDefaults=false) ->
-        @scaffold.toKVPairs keepDefaults
+    toKVPairs: ->
+        @model.toKVPairs ...
     
     toString: -> "#{@ctorName}(#{@model})"
 # }}}

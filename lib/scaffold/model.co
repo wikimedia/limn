@@ -1,6 +1,6 @@
 _    = require 'kraken/underscore'
 op   = require 'kraken/util/op'
-{BaseModel} = require 'kraken/base'
+{BaseModel, BaseList} = require 'kraken/base'
 
 
 
@@ -68,19 +68,9 @@ Field = exports.Field = BaseModel.extend do # {{{
             null
     
     
-    /* * * Serializers * * */
-    serializeValue: ->
-        v = @getValue()
-        if v!?
-            v = ''
-        else if _.isArray(v) or _.isObject(v)
-            v = JSON.stringify v
-        String v
-    
-    
     /* * * Value Accessors * * */
     getValue: (def) ->
-        @getParser() @get 'value', def
+        @getParser() @get @valueAttribute, def
     
     setValue: (v, options) ->
         def = @get 'default'
@@ -88,45 +78,58 @@ Field = exports.Field = BaseModel.extend do # {{{
             val = null
         else
             val = @getParser()(v)
-        @set 'value', val, options
+        @set @valueAttribute, val, options
     
     clearValue: ->
-        @set 'value', @get('default')
+        @set @valueAttribute, @get('default')
     
     isDefault: ->
-        @get('value') is @get('default')
+        @get(@valueAttribute) is @get('default')
     
+    
+    /* * * Serializers * * */
+    serializeValue: ->
+        v = @getValue()
+        if v!?
+            v = ''
+        else if _.isBoolean v
+            v =  Number v
+        else if _.isArray(v) or _.isObject(v)
+            v = JSON.stringify v
+        String v
     
     toJSON: ->
         {id:@id} import do
             _.clone(@attributes) import { value:@getValue(), def:@get('default') }
     
+    toKVObject: ->
+        { "#{@id}": @serializeValue() }
     
-    toString: -> "(#{@id}: #{@get 'value'})"
+    toString: -> "(#{@id}: #{@serializeValue()})"
 # }}}
 
 
-FieldList = exports.FieldList = Backbone.Collection.extend do # {{{
+FieldList = exports.FieldList = BaseList.extend do # {{{
     ctorName : 'FieldList'
-    model : Field
+    model    : Field
     
     /**
      * Collects a map of fields to their values, excluding those set to `null` or their default.
      * @returns {Object}
      */
-    values: ->
+    values: (keepDefaults=false) ->
         _.synthesize do
-            @models.filter -> not it.isDefault()
+            if keepDefaults then @models else @models.filter -> not it.isDefault()
             -> [ it.get('name'), it.getValue() ]
     
     toJSON: ->
         @values()
     
-    toKVPairs: ->
-        @models
-            .filter -> it.get('name') and it.getValue()?
-            .map -> "#{encodeURIComponent it.id}=#{encodeURIComponent it.get 'value'}"
-            .join '&'
+    toKVObject: ->
+        _.collapseObject @toJSON()
+    
+    toKVPairs: (item_delim='&', kv_delim='=') ->
+        _.toKVPairs @toKVObject(), item_delim, kv_delim
     
     toString: -> "#{@ctorName}(length=#{@length})"
 # }}}
