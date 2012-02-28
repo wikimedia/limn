@@ -60,8 +60,8 @@ _obj = do
             {}
     
     /**
-     * @returns {Object} Copies and flattens any sub-objects into namespaced keys on the parent object,
-     * such that `{ "foo":{ "bar":1 } }` becomes `{ "foo.bar":1 }`.
+     * Copies and flattens any sub-objects into namespaced keys on the parent object, such 
+     * that `{ "foo":{ "bar":1 } }` becomes `{ "foo.bar":1 }`.
      */
     collapseObject: (obj, parent={}, prefix='') ->
         prefix += '.' if prefix
@@ -72,6 +72,10 @@ _obj = do
                 parent[prefix+k] = v
         parent
     
+    /**
+     * Inverse of `.collapseObject()` -- copies and expands any dot-namespaced keys in the object, such
+     * that `{ "foo.bar":1 }` becomes `{ "foo":{ "bar":1 }}`.
+     */
     uncollapseObject: (obj) ->
         _.reduce do
             obj

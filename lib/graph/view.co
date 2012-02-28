@@ -5,6 +5,7 @@ _ = require 'kraken/underscore'
 {   GraphModel, GraphOption, GraphOptionList, TagSet,
 } = require 'kraken/graph/model'
 
+root = do -> this
 DEBOUNCE_RENDER = exports.DEBOUNCE_RENDER = 100ms
 
 
@@ -58,20 +59,24 @@ GraphOptionsScaffold = exports.GraphOptionsScaffold = Scaffold.extend do # {{{
     collectionType : GraphOptionList
     subviewType    : GraphOptionView
     
+    # GraphView will set this
+    ready          : false
+    
+    
     
     initialize : ->
-        Scaffold::initialize ...
         @render = _.debounce @render.bind(this), DEBOUNCE_RENDER
+        Scaffold::initialize ...
     
     render: ->
-        console.log "#this.render() -> .isotope()"
+        # console.log "#this.render() -> .isotope()"
         @__super__.render ...
+        return this unless @ready
         @$el.isotope do
             itemSelector    : '.field.option'
             layoutMode      : 'masonry'
             masonry         : columnWidth : 10
             # itemPositionDataEnabled : true
-            # animationEngine : 'jquery'
     
     /**
      * Add a GraphOption to this scaffold, rerendering the isotope
@@ -91,7 +96,7 @@ GraphOptionsScaffold = exports.GraphOptionsScaffold = Scaffold.extend do # {{{
 
 
 GraphView = exports.GraphView = BaseView.extend do # {{{
-    __bind__  : <[ render renderAll ]>
+    __bind__  : <[ render renderAll onReady ]>
     ctorName  : 'GraphView'
     tagName   : 'section'
     className : 'graph'
@@ -100,6 +105,9 @@ GraphView = exports.GraphView = BaseView.extend do # {{{
     events:
         'keypress form.options .value' : 'onKeypress'
         'submit   form.options'        : 'onSubmit'
+    
+    ready: false
+    
     
     
     initialize : (o={}) ->
@@ -113,7 +121,7 @@ GraphView = exports.GraphView = BaseView.extend do # {{{
         @model.on 'change',  @render, this
         @model.on 'change:options', ~>
             changes = @model.changedAttributes()
-            console.log 'Model.changed(options) ->', changes
+            # console.log 'Model.changed(options) ->', changes
             @chartOptions changes, {+silent}
         
         @build()
@@ -124,14 +132,17 @@ GraphView = exports.GraphView = BaseView.extend do # {{{
         @scaffold.collection.reset that if o.graph_spec
         
         @scaffold.on 'change', (scaffold, value, key, field) ~>
-            console.log "scaffold.change!", value, key, field
-            @model.setOption key, value, {+silent}
+            # console.log "scaffold.change!", value, key, field
+            @model.setOption key, value, {+silent} unless field.isDefault()
         
         options = @model.get 'options', {}
         @chartOptions options, {+silent}
         
-        _.delay @renderAll, DEBOUNCE_RENDER
+        _.delay @onReady, DEBOUNCE_RENDER
     
+    onReady: ->
+        @ready = @scaffold.ready = true
+        @renderAll()
     
     chartOptions: (values, opts) ->
         # Handle @chartOptions(k, v, opts)
@@ -149,6 +160,7 @@ GraphView = exports.GraphView = BaseView.extend do # {{{
     
     
     render: ->
+        return this unless @ready
         options = @chartOptions()
         w = options.width  or= @scaffold.get 'width'  .getValue() or 480
         h = options.height or= @scaffold.get 'height' .getValue() or 320
@@ -157,14 +169,13 @@ GraphView = exports.GraphView = BaseView.extend do # {{{
         # Remove old style, as it confuses dygraph after options update
         @viewport.attr 'style', ''
         
-        console.log "#this"
-        console.log do 
-            "  .viewport.{ width=%s, height=%s, style=%s }"
-            @viewport.css('width')
-            @viewport.css('height')
-            @viewport.attr 'style'
-            # @viewport
-        console.log '  .options:', JSON.stringify options
+        # console.log "#this"
+        # console.log do 
+        #     "  .viewport.{ width=%s, height=%s, style=%s }"
+        #     @viewport.css('width')
+        #     @viewport.css('height')
+        #     @viewport.attr 'style'
+        # console.log '  .options:', JSON.stringify options
         
         # @chart?.destroy()
         unless @chart
@@ -176,9 +187,15 @@ GraphView = exports.GraphView = BaseView.extend do # {{{
             @chart.updateOptions options
             @chart.resize w, h
         
+        path = root.location?.path or '/'
+        url = "#path?#{@toKVPairs()}"
+        # console.log 'History.pushState', url
+        History.pushState url, @model.get('name', root.document?.title or ''), url
+        
         this
     
     renderAll: ->
+        return this unless @ready
         _.invoke @scaffold.subviews, 'render'
         @scaffold.render()
         @render()
@@ -188,12 +205,12 @@ GraphView = exports.GraphView = BaseView.extend do # {{{
         $(evt.target).submit() if evt.keyCode is 13
     
     onSubmit: ->
-        console.log "#this.onSubmit!"
+        # console.log "#this.onSubmit!"
         @render()
         false
     
     toKVPairs: ->
-        @model.toKVPairs ...
+        @model.toKVPairs.apply @model, arguments
     
     toString: -> "#{@ctorName}(#{@model})"
 # }}}

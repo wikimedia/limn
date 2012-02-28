@@ -4,17 +4,17 @@ all:
     - vendor:
         - es5-shim.min
         - modernizr.min
-        - browserify
-        - require
         - json2.min
         - jquery.min
         - jquery.history.min
         - jquery.hotkeys.min
         - jquery.isotope.min
-        - jquery.tipsy.min
+        # - jquery.tipsy.min
         - spin.min
         - jquery.spin.min
         - bootstrap.min
+        - browserify
+        - require
         - underscore.mod
         - underscore.string.mod
         - backbone

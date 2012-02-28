@@ -1,20 +1,38 @@
-{_, op}    = require 'kraken/util'
-{BaseView} = require 'kraken/base'
-{   Field, FieldList, FieldView, Scaffold
-}          = require 'kraken/scaffold'
+{ _, op
+} = require 'kraken/util'
+{ BaseView, BaseModel, BaseList,
+} = require 'kraken/base'
+{   Field, FieldList, FieldView, Scaffold,
+} = require 'kraken/scaffold'
 {   GraphView, GraphModel, TagSet,
     GraphOption, GraphOptionList, GraphOptionView,
     GraphOptionsScaffold,
-}          = require 'kraken/graph'
+} = require 'kraken/graph'
 
 
 root = do -> this
 
 # Create the Graph Scaffold
 main = ->
-    graph = root.graph = new GraphView {
-        graph_spec: CHART_OPTIONS_SPEC
-    }
+    History.Adapter.bind window, 'statechange', ->
+        console.log 'StateChange!', String root.location
+    
+    graph = root.graph = new GraphView do
+        graph_spec : CHART_OPTIONS_SPEC
+    
+    # If we got querystring args, apply them to the graph
+    if root.location?.search.slice 1
+        g = _.uncollapseObject _.fromKVPairs that
+        # yarr, have to do options separately or everything goes to shit
+        options = delete g.options
+        graph.model.set g, {+silent}
+        graph.chartOptions options, {+silent}
+        
+        # Flush all changes once the DOM settles
+        _.defer do
+            -> graph.scaffold.invoke 'change'
+            50
+    
     $ '#content .inner' .append graph.el
 
 

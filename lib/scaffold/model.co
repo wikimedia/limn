@@ -15,7 +15,7 @@ Field = exports.Field = BaseModel.extend do # {{{
     initialize: ->
         @set 'value', @get('default'), {+silent} if not @has 'value'
         # console.log "#this.initialize!"
-        @on 'all', (evt) ~> console.log "#this.trigger(#evt)"
+        # @on 'all', (evt) ~> console.log "#this.trigger(#evt)"
     
     # Model defaults
     defaults: ->
@@ -37,7 +37,7 @@ Field = exports.Field = BaseModel.extend do # {{{
         type = _ (type or @get 'type').toLowerCase()
         for t of <[ Integer Float Boolean Object Array Function ]>
             if type.startsWith t.toLowerCase()
-                console.log "parse#t ->", @["parse#t"] unless @["parse#t"]
+                # console.log "parse#t ->", @["parse#t"] unless @["parse#t"]
                 return @["parse#t"]
         @parseString
     
