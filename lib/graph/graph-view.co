@@ -3,7 +3,7 @@ _ = require 'kraken/underscore'
 { Field, FieldList, FieldView, Scaffold
 } = require 'kraken/scaffold'
 {   GraphModel, GraphOption, GraphOptionList, TagSet,
-} = require 'kraken/graph/model'
+} = require 'kraken/graph/graph-model'
 
 root = do -> this
 DEBOUNCE_RENDER = exports.DEBOUNCE_RENDER = 100ms
@@ -181,7 +181,7 @@ GraphView = exports.GraphView = BaseView.extend do # {{{
             height = @viewport.height()
         size = { width, height }
         @viewport.css size
-        console.log 'resizeViewport!', JSON.stringify size
+        console.log 'resizeViewport!', JSON.stringify(size), @viewport
         # @chart.resize size if forceRedraw
         size
     

@@ -40,12 +40,12 @@ all:
                 - graph.jade
                 - graph-option.jade
             - scaffold:
-                - model
-                - view
+                - scaffold-model
+                - scaffold-view
                 - index
             - graph:
-                - model
-                - view
+                - graph-model
+                - graph-view
                 - index
             
 

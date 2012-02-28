@@ -2,7 +2,7 @@ _          = require 'kraken/underscore'
 op         = require 'kraken/util/op'
 {BaseView} = require 'kraken/base'
 { Field, FieldList,
-}          = require 'kraken/scaffold/model'
+}          = require 'kraken/scaffold/scaffold-model'
 
 
 FieldView = exports.FieldView = BaseView.extend do # {{{
