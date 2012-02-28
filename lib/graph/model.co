@@ -103,22 +103,24 @@ GraphOptionList = exports.GraphOptionList = FieldList.extend do # {{{
  * other settings for both its content and presentation.
  */
 GraphModel = exports.GraphModel = BaseModel.extend do # {{{
-    ctorName : 'GraphModel'
-    urlRoot  : '/graphs'
+    ctorName    : 'GraphModel'
+    urlRoot     : '/graphs'
+    idAttribute : 'slug'
+    
     
     initialize : ->
         name = @get 'name'
-        if name and not (@id or @has 'id')
-            @id = @attributes.id = _.underscored name
+        if name and not (@id or @get('slug'))
+            @set 'slug', _.underscored name
     
     defaults: ->
         {
-            id      : 'graph'
-            name    : 'Kraken Graph'
+            slug    : ''
+            name    : ''
             dataset : '/data/pageviews_by.timestamp.language.csv'
             desc    : ''
             width   : 'auto'
-            height  : 'auto'
+            height  : 320
             options : {}
         }
     

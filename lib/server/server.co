@@ -43,6 +43,7 @@ app.start = ->
     console.log "starting Kraken dev server (port=#PORT, env=#NODE_ENV, version=#VERSION)"
     console.log "========================================================================"
     app.listen PORT
+    app
 
 app.configure ->
     mime.define 'text/plain' : <[ jade co styl stylus ]>

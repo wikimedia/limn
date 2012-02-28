@@ -96,7 +96,7 @@ GraphOptionsScaffold = exports.GraphOptionsScaffold = Scaffold.extend do # {{{
 
 
 GraphView = exports.GraphView = BaseView.extend do # {{{
-    __bind__  : <[ render renderAll onReady ]>
+    __bind__  : <[ resizeViewport render renderAll onReady ]>
     ctorName  : 'GraphView'
     tagName   : 'section'
     className : 'graph'
@@ -114,8 +114,12 @@ GraphView = exports.GraphView = BaseView.extend do # {{{
         @model or= new GraphModel
         BaseView::initialize ...
         # console.log "#this.initialize!"
-        @render    = _.debounce @render,    DEBOUNCE_RENDER
-        @renderAll = _.debounce @renderAll, DEBOUNCE_RENDER
+        
+        for name of <[ resizeViewport render renderAll ]>
+            @[name] = _.debounce @[name], DEBOUNCE_RENDER
+        
+        # Resize graph on window resize
+        $ root .on 'resize', @resizeViewport
         
         @model.on 'destroy', @remove, this
         @model.on 'change',  @render, this
@@ -140,9 +144,11 @@ GraphView = exports.GraphView = BaseView.extend do # {{{
         
         _.delay @onReady, DEBOUNCE_RENDER
     
+    
     onReady: ->
         @ready = @scaffold.ready = true
         @renderAll()
+    
     
     chartOptions: (values, opts) ->
         # Handle @chartOptions(k, v, opts)
@@ -159,15 +165,28 @@ GraphView = exports.GraphView = BaseView.extend do # {{{
             options.values()
     
     
-    render: ->
-        return this unless @ready
-        options = @chartOptions()
-        w = options.width  or= @scaffold.get 'width'  .getValue() or 480
-        h = options.height or= @scaffold.get 'height' .getValue() or 320
-        @viewport.css { width:w, height:h }
+    /**
+     * Resizes chart according to the model's width and height.
+     * @return { width, height }
+     */
+    resizeViewport: ->
+        return this unless @ready and @chart
         
         # Remove old style, as it confuses dygraph after options update
         @viewport.attr 'style', ''
+        
+        if (width = @model.get 'width')  is 'auto'
+            width = @viewport.width()
+        if (height = @model.get 'height') is 'auto'
+            height = @viewport.height()
+        size = { width, height }
+        @viewport.css size
+        console.log 'resizeViewport!', JSON.stringify size
+        # @chart.resize size if forceRedraw
+        size
+    
+    render: ->
+        return this unless @ready
         
         # console.log "#this"
         # console.log do 
@@ -177,6 +196,8 @@ GraphView = exports.GraphView = BaseView.extend do # {{{
         #     @viewport.attr 'style'
         # console.log '  .options:', JSON.stringify options
         
+        size = @resizeViewport()
+        options = @chartOptions()
         # @chart?.destroy()
         unless @chart
             @chart = new Dygraph do
@@ -185,7 +206,7 @@ GraphView = exports.GraphView = BaseView.extend do # {{{
                 options
         else
             @chart.updateOptions options
-            @chart.resize w, h
+            @chart.resize size
         
         path = root.location?.path or '/'
         url = "#path?#{@toKVPairs()}"
