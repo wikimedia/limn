@@ -136,7 +136,7 @@ GraphModel = exports.GraphModel = BaseModel.extend do # {{{
         {
             name    : 'Kraken Graph'
             dataset : '/data/page_views_by_language.csv'
-            options : {}
+            options : { stackedGraph:1 }
         }
     
     
@@ -144,19 +144,21 @@ GraphModel = exports.GraphModel = BaseModel.extend do # {{{
         options = @get 'options', {}
         key in options
     
-    setOption: (key, value, opts) ->
-        options = @get 'options', {}
-        options[key] = value
-        @set 'options', options, opts
-    
     getOption: (key, def) ->
         options = @get 'options', {}
         if key in options then options[key] else def
     
-    unsetOption: (key, opts) ->
+    setOption: (key, value, opts={}) ->
+        options = @get 'options', {}
+        options[key] = value
+        @set 'options', options, opts
+        @trigger "change:options:#key", this, value, key, opts unless opts.silent
+    
+    unsetOption: (key, opts={}) ->
         options = @get 'options', {}
         delete options[key]
         @set 'options', options, opts
+        @trigger "change:options:#key", this, value, key, opts unless opts.silent
     
     
     toKVPairs: ->

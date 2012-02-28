@@ -1,6 +1,6 @@
 _          = require 'kraken/underscore'
 op         = require 'kraken/util/op'
-{BaseView} = require 'kraken/baseview'
+{BaseView} = require 'kraken/base'
 { Field, FieldList,
 }          = require 'kraken/scaffold/model'
 
@@ -14,9 +14,9 @@ FieldView = exports.FieldView = BaseView.extend do # {{{
         'submit .value' : 'onUIChange'
     
     
-    initialize: ->
-        # console.log "#this.initialize!"
-        BaseView::initialize ...
+    # initialize: ->
+    #     # console.log "#this.initialize!"
+    #     BaseView::initialize ...
     
     onUIChange: ->
         val     = @$el.find('.value').val()
