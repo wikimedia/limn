@@ -14,6 +14,7 @@ Field = exports.Field = BaseModel.extend do # {{{
     
     
     initialize: ->
+        _.bindAll this, ...(_.functions this .filter -> _.startsWith(it, 'parse'))
         @set 'value', @get('default'), {+silent} if not @has 'value'
         # console.log "#this.initialize!"
         # @on 'all', (evt) ~> console.log "#this.trigger(#evt)"
@@ -38,7 +39,6 @@ Field = exports.Field = BaseModel.extend do # {{{
         type = _ (type or @get 'type').toLowerCase()
         for t of <[ Integer Float Boolean Object Array Function ]>
             if type.startsWith t.toLowerCase()
-                # console.log "parse#t ->", @["parse#t"] unless @["parse#t"]
                 return @["parse#t"]
         @parseString
     
@@ -64,7 +64,7 @@ Field = exports.Field = BaseModel.extend do # {{{
     
     parseFunction: (fn) ->
         if fn and _.startswith String(fn), 'function'
-            try eval "(#fn)" catch err
+            try eval "(#fn)" catch err then null
         else
             null
     
@@ -90,21 +90,14 @@ Field = exports.Field = BaseModel.extend do # {{{
     
     /* * * Serializers * * */
     serializeValue: ->
-        v = @getValue()
-        if v!?
-            v = ''
-        else if _.isBoolean v
-            v =  Number v
-        else if _.isArray(v) or _.isObject(v)
-            v = JSON.stringify v
-        String v
+        @serialize @getValue()
     
     toJSON: ->
         {id:@id} import do
             _.clone(@attributes) import { value:@getValue(), def:@get('default') }
     
     toKVObject: ->
-        { "#{@id}": @serializeValue() }
+        { "#{@id}":@serializeValue() }
     
     toString: -> "(#{@id}: #{@serializeValue()})"
 # }}}
@@ -118,16 +111,17 @@ FieldList = exports.FieldList = BaseList.extend do # {{{
      * Collects a map of fields to their values, excluding those set to `null` or their default.
      * @returns {Object}
      */
-    values: (keepDefaults=false) ->
+    values: (opts={}) ->
+        opts = {-keepDefaults, -serialize} import opts
         _.synthesize do
-            if keepDefaults then @models else @models.filter -> not it.isDefault()
-            -> [ it.get('name'), it.getValue() ]
+            if opts.keepDefaults then @models else @models.filter -> not it.isDefault()
+            -> [ it.get('name'), if opts.serialize then it.serializeValue() else it.getValue() ]
     
     toJSON: ->
         @values()
     
     toKVObject: ->
-        _.collapseObject @toJSON()
+        _.collapseObject @values false, true
     
     toKVPairs: (item_delim='&', kv_delim='=') ->
         _.toKVPairs @toKVObject(), item_delim, kv_delim

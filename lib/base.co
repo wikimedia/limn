@@ -12,8 +12,17 @@ BaseModel = exports.BaseModel = Backbone.Model.extend do # {{{
     ctorName : 'BaseModel'
     
     initialize: ->
-        _.bindAll this, ...@__bind__ if @__bind__.length
         @__super__ = @constructor.__super__
+        _.bindAll this, ...@__bind__ if @__bind__.length
+    
+    serialize: (v) ->
+        if v!?
+            v = ''
+        else if _.isBoolean v
+            v =  Number v
+        else if _.isObject v
+            v = JSON.stringify v
+        String v
     
     /**
      * Like `.toJSON()` in that it should return a plain object with no functions,
@@ -22,7 +31,10 @@ BaseModel = exports.BaseModel = Backbone.Model.extend do # {{{
      * @returns {Object}
      */
     toKVObject: ->
-        _.collapseObject @toJSON()
+        kvo = _.collapseObject @toJSON()
+        for k, v in kvo
+            kvo[k] = @serialize v
+        kvo
     
     /**
      * Serialize the model into a `www-form-encoded` string suitable for use as
@@ -85,6 +97,7 @@ BaseView = exports.BaseView = Backbone.View.extend do # {{{
         _.bindAll this, ...@__bind__ if @__bind__.length
         @__super__ = @constructor.__super__
         
+        @build()
         @model.view = this
         @$el.data { @model, view:this }
         @model.on 'change',  @render, this

@@ -57,7 +57,7 @@ module.exports = op =
     toInt       : (v) -> parseInt v
     toFloat     : (v) -> parseFloat v
     toStr       : (v) -> String v
-    toObject    : (v) -> if typeof v is 'string' then JSON.parse v else v
+    toObject    : (v) -> if typeof v is 'string' then JSON.parse(v) else v
     
     # comparison
     cmp       : (x,y)  ->  if x < y then -1 else (if x > y then 1 else 0)

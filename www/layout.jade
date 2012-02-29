@@ -21,16 +21,17 @@ html
     
     body
         block body
-            header.navbar.navbar-fixed-top: .navbar-inner: .container
-                block header
-                    h1: a(href="/") Kraken
-                    block nav
-                        nav#menu: ul
-                            block menu-items
-                                li.home Home
+            //- 
+                header
+                    block header
+                        h1: a(href="/") Kraken
+                        block nav
+                            nav#menu: ul
+                                block menu-items
+                                    li.home Home
             
             section#content
-                .spacer
+                //- .spacer
                 .inner
                     block content
             

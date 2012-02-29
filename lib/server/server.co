@@ -2,6 +2,7 @@
 
 fs       = require 'fs'
 path     = require 'path'
+{existsSync:exists} = path
 {exec, spawn} = require 'child_process'
 
 _        = require 'underscore'
@@ -65,6 +66,9 @@ app.configure ->
     # Allow "spoofing" HTTP methods that IE doesn't support
     app.use express.methodOverride()
     
+    # Route to the web services
+    app.use app.router
+    
     # Transparently recompile modules that have changed
     app.use compiler do
         enabled : <[ coco jade-browser stylus yaml ]>
@@ -95,9 +99,6 @@ app.configure ->
     app.use express.static VAR
     app.use express.static STATIC
     
-    # Route to the web services
-    app.use app.router
-    
     # Serve directory listings
     app.use express.directory WWW
     app.use express.directory VAR
@@ -112,6 +113,13 @@ app.configure ->
 
 app.get '/', (req, res) ->
     res.render 'dashboard'
+
+app.get '/graph/:id', (req, res, next) ->
+    {id} = req.params
+    console.log req.url
+    if exists("#WWW/graph/#id.yaml") or exists("#WWW/graph/#id.json")
+        req.url += '.json'
+    next()
 
 
 YAML_EXT_PAT = /\.ya?ml$/i
@@ -167,12 +175,17 @@ app.get '/data/all', (req, res, next) ->
             console.error that if err.stack
             res.send { error:String(err), partial_data:data }
 
+
 app.get '/:type/:action', (req, res, next) ->
     {type, action} = req.params
     if path.existsSync "#WWW/#type/#action.jade"
         res.render "#type/#action"
     else
         next()
+
+
+
+
 
 /**
  * Handle webhook notification to pull from origin.

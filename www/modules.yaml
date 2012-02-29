@@ -39,6 +39,7 @@ all:
             - template:
                 - graph.jade
                 - graph-option.jade
+                - graph-scaffold.jade
             - scaffold:
                 - scaffold-model
                 - scaffold-view

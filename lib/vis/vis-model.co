@@ -2,6 +2,7 @@ _ = require 'kraken/underscore'
 { BaseModel, BaseView,
 } = require 'kraken/base'
 
+root = do -> this
 
 
 /**
@@ -10,26 +11,44 @@ _ = require 'kraken/underscore'
  */
 VisModel = exports.VisModel = BaseModel.extend do # {{{
     ctorName    : 'VisModel'
-    urlRoot     : '/graphs'
+    urlRoot     : '/graph'
     idAttribute : 'slug'
     
     
     initialize : ->
+        BaseModel::initialize ...
         name = @get 'name'
-        if name and not (@id or @get('slug'))
+        if name and not @get 'slug', @id
             @set 'slug', _.underscored name
+    
     
     defaults: ->
         {
             slug    : ''
             name    : ''
-            dataset : '/data/pageviews_by.timestamp.language.csv'
             desc    : ''
+            dataset : '/data/pageviews_by.timestamp.language.csv'
+            # presets : []
             width   : 'auto'
             height  : 320
-            options : {}
-        }
+            options : {} import root.ROOT_VIS_OPTIONS
+        } import root.ROOT_VIS_DATA
     
+    
+    parse: (data) ->
+        data = JSON.parse data if typeof data is 'string'
+        for k, v in data
+            data[k] = Number v if _.contains(<[ width height ]>, k) and v is not 'auto'
+        data
+    
+    set: (values, opts) ->
+        if arguments.length > 1 and typeof values is 'string'
+            [k, v, opts] = arguments
+            values = { "#k": v }
+        BaseModel::set.call this, @parse(values), opts
+    
+    
+    ### Chart Option Accessors ###
     
     hasOption: (key) ->
         options = @get 'options', {}
@@ -49,6 +68,7 @@ VisModel = exports.VisModel = BaseModel.extend do # {{{
         delete options[key]
         @set 'options', options, opts
         @trigger "change:options:#key", this, value, key, opts unless opts.silent
+    
     
     
     toString: -> "#{@ctorName}(id=#{@id}, name=#{@get 'name'}, dataset=#{@get 'dataset'})"

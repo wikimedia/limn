@@ -1,3 +1,4 @@
+Seq = require 'seq'
 { _, op,
 } = require 'kraken/util'
 { BaseView, BaseModel, BaseList,
@@ -10,37 +11,62 @@
 { VisView, VisModel,
 } = require 'kraken/vis'
 
-root = do -> this
+root = this
+CHART_OPTIONS_SPEC = []
+ROOT_VIS_DATA      = {}
+ROOT_VIS_OPTIONS   = {}
+
 
 # Create the Graph Scaffold
 main = ->
-    History.Adapter.bind window, 'statechange', ->
-        console.log 'StateChange!', String root.location
+    # TODO: create a preset manager
+    # Remove chart options from data so we don't have to deepcopy
+    ROOT_VIS_OPTIONS := delete root.ROOT_VIS_DATA.options
     
-    graph = root.graph = new VisView do
-        graph_spec : CHART_OPTIONS_SPEC
+    # Bind to URL changes
+    History.Adapter.bind window, 'statechange', ->
+        console.log 'StateChange!', String(root.location)
+    
     
     # If we got querystring args, apply them to the graph
-    if root.location?.search.slice 1
-        g = _.uncollapseObject _.fromKVPairs that
-        # yarr, have to do options separately or everything goes to shit
-        options = delete g.options
-        graph.model.set g, {+silent}
-        graph.chartOptions options, {+silent}
+    data = {}
+    if String(root.location).split '?' .1
+        data = _.uncollapseObject _.fromKVPairs that.replace('#', '%23')
         
-        # Flush all changes once the DOM settles
-        _.defer do
-            -> graph.scaffold.invoke 'change'
-            50
+        # # yarr, have to do options separately or everything goes to shit
+        # options = delete data.options
+        # graph.model.set data, {+silent}
+        # graph.chartOptions options, {+silent}
+        # # Flush all changes once the DOM settles
+        # _.delay do
+        #     ->
+        #         graph.change()
+        #         # graph.scaffold.invoke 'change'
+        #     50
+    
+    
+    vis   = root.vis   = new VisModel data
+    graph = root.graph = new VisView do
+        graph_spec : root.CHART_OPTIONS_SPEC
+        model      : vis
     
     $ '#content .inner' .append graph.el
 
 
-jQuery.ajax do
-    url      : '/graph/dygraph-options.json',
-    dataType : 'json'
-    success : (data) ->
-        root.CHART_OPTIONS_SPEC = data
-        jQuery main
-    error : (err) -> console.error err
+
+# Load data files
+Seq([   <[ CHART_OPTIONS_SPEC /graph/dygraph-options.json ]>,
+        <[ ROOT_VIS_DATA /graph/root ]>
+])
+.parEach_ (next, [key, url]) ->
+    jQuery.ajax do
+        url : url,
+        dataType : 'json'
+        success : (data) ->
+            root[key] = data
+            next.ok()
+        error : (err) -> console.error err
+.seq ->
+    console.log 'All data loaded!'
+    jQuery main
 

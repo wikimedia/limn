@@ -8,7 +8,19 @@ section.graph
         position relative
     
     .graph-label
-        position relative
+        position absolute
+        z-index 100
+        top 1em
+        right 1em
+        max-width 300px
+        
+        padding 1em
+        border-radius 5px
+        background-color rgba(255,255,255, 0.75)
+        font 12px/1.3 "helvetica neue", helvetica, arial, sans-serif
+    
+    .viewport:hover + .graph-label
+        border 1px solid $light
     
     .viewport
         position relative
@@ -17,13 +29,19 @@ section.graph
         margin-bottom 1.5em
         overflow hidden
     
+    
     form.details
         position relative
         
         .name-row
+            font-size 120%
             line-height 2em
-            // input.name
-            //     width 50%
+            input.name
+                font-size 120%
+                line-height 1.2
+                height 1.2em
+                border-color $light
+                // width 50%
         .row-fluid
             .half.control-group
                 width 50%
@@ -38,11 +56,8 @@ section.graph
             font-size 11px
             line-height 1.3
     
-    fieldset.options
-        border-radius 5px
-        legend
-            width auto
-            display inline-block
+    .options fieldset
+        border 0px
     
     .field.option
         float left

@@ -4,6 +4,8 @@ _ = require 'kraken/underscore'
 { Field, FieldList, FieldView, Scaffold,
 } = require 'kraken/scaffold'
 
+IGNORED_TAGS = exports.IGNORED_TAGS = <[ callback deprecated debugging ]>
+
 
 
 class exports.TagSet extends Array
@@ -48,6 +50,12 @@ GraphOption = exports.GraphOption = Field.extend do # {{{
         # Notify Tag indexer of category when created, to ensure all category-tags
         # get indices with colors :P
         KNOWN_TAGS.update @getCategory()
+        
+        # Ignore functions/callbacks and, ahem, hidden tags.
+        type = @get 'type', '' .toLowerCase()
+        tags = @get 'tags', []
+        if _.str.include(type, 'function') or _.intersection tags, IGNORED_TAGS .length
+            @set 'ignore', true
     
     
     # Wrapper to ensure @set('tags') is called, as tags.push()

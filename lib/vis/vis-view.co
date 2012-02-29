@@ -26,8 +26,10 @@ VisView = exports.VisView = BaseView.extend do # {{{
     template  : require 'kraken/template/graph'
     
     events:
-        'keypress form.options .value' : 'onKeypress'
-        'submit   form.options'        : 'onSubmit'
+        'keypress form.details input[type="text"]' : 'onKeypress'
+        'keypress form.options .value'             : 'onKeypress'
+        'submit   form.details'                    : 'onDetailsSubmit'
+        'submit   form.options'                    : 'onOptionsSubmit'
     
     ready: false
     
@@ -51,11 +53,10 @@ VisView = exports.VisView = BaseView.extend do # {{{
             # console.log 'Model.changed(options) ->', changes
             @chartOptions changes, {+silent}
         
-        @build()
         @viewport = @$el.find '.viewport'
         
         @scaffold = new GraphOptionsScaffold
-        @$el.find 'fieldset' .append @scaffold.el
+        @$el.append @scaffold.el
         @scaffold.collection.reset that if o.graph_spec
         
         @scaffold.on 'change', (scaffold, value, key, field) ~>
@@ -65,12 +66,20 @@ VisView = exports.VisView = BaseView.extend do # {{{
         options = @model.get 'options', {}
         @chartOptions options, {+silent}
         
+        @resizeViewport()
         _.delay @onReady, DEBOUNCE_RENDER
     
     
     onReady: ->
+        console.log 'VisView.ready!'
         @ready = @scaffold.ready = true
+        @change()
         @renderAll()
+    
+    change: ->
+        @model.change()
+        @scaffold.invoke 'change'
+        this
     
     
     chartOptions: (values, opts) ->
@@ -85,7 +94,7 @@ VisView = exports.VisView = BaseView.extend do # {{{
                 options.get(k)?.setValue v, opts
             this
         else
-            options.values()
+            options.values() # TODO: pull this from model (must clone), sort out events
     
     
     /**
@@ -93,7 +102,7 @@ VisView = exports.VisView = BaseView.extend do # {{{
      * @return { width, height }
      */
     resizeViewport: ->
-        return this unless @ready and @chart
+        return this unless @ready
         
         # Remove old style, as it confuses dygraph after options update
         @viewport.attr 'style', ''
@@ -104,23 +113,19 @@ VisView = exports.VisView = BaseView.extend do # {{{
             height = @viewport.height()
         size = { width, height }
         @viewport.css size
-        console.log 'resizeViewport!', JSON.stringify(size), @viewport
+        # console.log 'resizeViewport!', JSON.stringify(size), @viewport
         # @chart.resize size if forceRedraw
         size
     
+    
     render: ->
         return this unless @ready
-        
-        # console.log "#this"
-        # console.log do 
-        #     "  .viewport.{ width=%s, height=%s, style=%s }"
-        #     @viewport.css('width')
-        #     @viewport.css('height')
-        #     @viewport.attr 'style'
-        # console.log '  .options:', JSON.stringify options
+        console.log 'VisView.render!'
         
         size = @resizeViewport()
-        options = @chartOptions()
+        options = @chartOptions() import size
+        options.labelsDiv = @$el.find '.graph-label' .0
+        
         # @chart?.destroy()
         unless @chart
             @chart = new Dygraph do
@@ -131,15 +136,18 @@ VisView = exports.VisView = BaseView.extend do # {{{
             @chart.updateOptions options
             @chart.resize size
         
-        path = root.location?.path or '/'
-        url = "#path?#{@toKVPairs()}"
-        # console.log 'History.pushState', url
-        History.pushState url, @model.get('name', root.document?.title or ''), url
+        # path = String(root.location?.path or '/')
+        data  = @toJSON()
+        title = @model.get('name', root.document?.title or '')
+        url   = "?"+@toKVPairs()
+        # console.log 'History.pushState', JSON.stringify(data), title, url
+        History.pushState data, title, url
         
         this
     
     renderAll: ->
         return this unless @ready
+        console.log 'VisView.renderAll!'
         _.invoke @scaffold.subviews, 'render'
         @scaffold.render()
         @render()
@@ -148,10 +156,22 @@ VisView = exports.VisView = BaseView.extend do # {{{
     onKeypress: (evt) ->
         $(evt.target).submit() if evt.keyCode is 13
     
-    onSubmit: ->
-        # console.log "#this.onSubmit!"
+    onDetailsSubmit: ->
+        console.log "#this.onDetailsSubmit!"
+        data = _.synthesize do
+            @$el.find('form.details').serializeArray()
+            -> [it.name, it.value]
+        console.log @$el, JSON.stringify data
+        @model.set data
+        false
+    
+    onOptionsSubmit: ->
+        console.log "#this.onOptionsSubmit!"
         @render()
         false
+    
+    toJSON: ->
+        @model.toJSON()
     
     toKVPairs: ->
         @model.toKVPairs.apply @model, arguments
