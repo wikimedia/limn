@@ -1,0 +1,58 @@
+_ = require 'kraken/underscore'
+{ BaseModel, BaseView,
+} = require 'kraken/base'
+
+
+
+/**
+ * Represents a Graph, including its charting options, dataset, annotations, and all
+ * other settings for both its content and presentation.
+ */
+VisModel = exports.VisModel = BaseModel.extend do # {{{
+    ctorName    : 'VisModel'
+    urlRoot     : '/graphs'
+    idAttribute : 'slug'
+    
+    
+    initialize : ->
+        name = @get 'name'
+        if name and not (@id or @get('slug'))
+            @set 'slug', _.underscored name
+    
+    defaults: ->
+        {
+            slug    : ''
+            name    : ''
+            dataset : '/data/pageviews_by.timestamp.language.csv'
+            desc    : ''
+            width   : 'auto'
+            height  : 320
+            options : {}
+        }
+    
+    
+    hasOption: (key) ->
+        options = @get 'options', {}
+        options[key]?
+    
+    getOption: (key, def) ->
+        @get('options', {})[key] ? def
+    
+    setOption: (key, value, opts={}) ->
+        options = @get 'options', {}
+        options[key] = value
+        @set 'options', options, opts
+        @trigger "change:options:#key", this, value, key, opts unless opts.silent
+    
+    unsetOption: (key, opts={}) ->
+        options = @get 'options', {}
+        delete options[key]
+        @set 'options', options, opts
+        @trigger "change:options:#key", this, value, key, opts unless opts.silent
+    
+    
+    toString: -> "#{@ctorName}(id=#{@id}, name=#{@get 'name'}, dataset=#{@get 'dataset'})"
+
+# }}}
+
+

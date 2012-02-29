@@ -47,6 +47,10 @@ all:
                 - graph-model
                 - graph-view
                 - index
+            - vis:
+                - vis-model
+                - vis-view
+                - index
             
 
 # -   suffix: .js

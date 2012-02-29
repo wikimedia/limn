@@ -1,14 +1,14 @@
-{ _, op
+{ _, op,
 } = require 'kraken/util'
 { BaseView, BaseModel, BaseList,
 } = require 'kraken/base'
 {   Field, FieldList, FieldView, Scaffold,
 } = require 'kraken/scaffold'
-{   GraphView, GraphModel, TagSet,
-    GraphOption, GraphOptionList, GraphOptionView,
-    GraphOptionsScaffold,
+{   GraphOption, GraphOptionList, GraphOptionView,
+    GraphOptionsScaffold, TagSet,
 } = require 'kraken/graph'
-
+{ VisView, VisModel,
+} = require 'kraken/vis'
 
 root = do -> this
 
@@ -17,7 +17,7 @@ main = ->
     History.Adapter.bind window, 'statechange', ->
         console.log 'StateChange!', String root.location
     
-    graph = root.graph = new GraphView do
+    graph = root.graph = new VisView do
         graph_spec : CHART_OPTIONS_SPEC
     
     # If we got querystring args, apply them to the graph

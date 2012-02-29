@@ -1,11 +1,10 @@
 _ = require 'kraken/underscore'
 {BaseView} = require 'kraken/base'
-{ Field, FieldList, FieldView, Scaffold
+{ Field, FieldList, FieldView, Scaffold,
 } = require 'kraken/scaffold'
-{   GraphModel, GraphOption, GraphOptionList, TagSet,
+{ GraphOption, GraphOptionList, TagSet, KNOWN_TAGS,
 } = require 'kraken/graph/graph-model'
 
-root = do -> this
 DEBOUNCE_RENDER = exports.DEBOUNCE_RENDER = 100ms
 
 
@@ -52,6 +51,9 @@ GraphOptionView = exports.GraphOptionView = FieldView.extend do # {{{
 
 
 
+/**
+ * 
+ */
 GraphOptionsScaffold = exports.GraphOptionsScaffold = Scaffold.extend do # {{{
     ctorName       : 'GraphOptionsScaffold'
     tagName        : 'form'
@@ -91,150 +93,5 @@ GraphOptionsScaffold = exports.GraphOptionsScaffold = Scaffold.extend do # {{{
         @collection.toKVPairs ...
     
 # }}}
-
-
-
-
-GraphView = exports.GraphView = BaseView.extend do # {{{
-    __bind__  : <[ resizeViewport render renderAll onReady ]>
-    ctorName  : 'GraphView'
-    tagName   : 'section'
-    className : 'graph'
-    template  : require 'kraken/template/graph'
-    
-    events:
-        'keypress form.options .value' : 'onKeypress'
-        'submit   form.options'        : 'onSubmit'
-    
-    ready: false
-    
-    
-    
-    initialize : (o={}) ->
-        @model or= new GraphModel
-        BaseView::initialize ...
-        # console.log "#this.initialize!"
-        
-        for name of <[ resizeViewport render renderAll ]>
-            @[name] = _.debounce @[name], DEBOUNCE_RENDER
-        
-        # Resize graph on window resize
-        $ root .on 'resize', @resizeViewport
-        
-        @model.on 'destroy', @remove, this
-        @model.on 'change',  @render, this
-        @model.on 'change:options', ~>
-            changes = @model.changedAttributes()
-            # console.log 'Model.changed(options) ->', changes
-            @chartOptions changes, {+silent}
-        
-        @build()
-        @viewport = @$el.find '.viewport'
-        
-        @scaffold = new GraphOptionsScaffold
-        @$el.find 'fieldset' .append @scaffold.el
-        @scaffold.collection.reset that if o.graph_spec
-        
-        @scaffold.on 'change', (scaffold, value, key, field) ~>
-            # console.log "scaffold.change!", value, key, field
-            @model.setOption key, value, {+silent} unless field.isDefault()
-        
-        options = @model.get 'options', {}
-        @chartOptions options, {+silent}
-        
-        _.delay @onReady, DEBOUNCE_RENDER
-    
-    
-    onReady: ->
-        @ready = @scaffold.ready = true
-        @renderAll()
-    
-    
-    chartOptions: (values, opts) ->
-        # Handle @chartOptions(k, v, opts)
-        if arguments.length > 1 and typeof values is 'string'
-            [k, v, opts] = arguments
-            values = { "#k": v }
-        
-        options = @scaffold.collection
-        if values
-            for k, v in values
-                options.get(k)?.setValue v, opts
-            this
-        else
-            options.values()
-    
-    
-    /**
-     * Resizes chart according to the model's width and height.
-     * @return { width, height }
-     */
-    resizeViewport: ->
-        return this unless @ready and @chart
-        
-        # Remove old style, as it confuses dygraph after options update
-        @viewport.attr 'style', ''
-        
-        if (width = @model.get 'width')  is 'auto'
-            width = @viewport.width()
-        if (height = @model.get 'height') is 'auto'
-            height = @viewport.height()
-        size = { width, height }
-        @viewport.css size
-        console.log 'resizeViewport!', JSON.stringify(size), @viewport
-        # @chart.resize size if forceRedraw
-        size
-    
-    render: ->
-        return this unless @ready
-        
-        # console.log "#this"
-        # console.log do 
-        #     "  .viewport.{ width=%s, height=%s, style=%s }"
-        #     @viewport.css('width')
-        #     @viewport.css('height')
-        #     @viewport.attr 'style'
-        # console.log '  .options:', JSON.stringify options
-        
-        size = @resizeViewport()
-        options = @chartOptions()
-        # @chart?.destroy()
-        unless @chart
-            @chart = new Dygraph do
-                @viewport.0
-                @model.get 'dataset'
-                options
-        else
-            @chart.updateOptions options
-            @chart.resize size
-        
-        path = root.location?.path or '/'
-        url = "#path?#{@toKVPairs()}"
-        # console.log 'History.pushState', url
-        History.pushState url, @model.get('name', root.document?.title or ''), url
-        
-        this
-    
-    renderAll: ->
-        return this unless @ready
-        _.invoke @scaffold.subviews, 'render'
-        @scaffold.render()
-        @render()
-        this
-    
-    onKeypress: (evt) ->
-        $(evt.target).submit() if evt.keyCode is 13
-    
-    onSubmit: ->
-        # console.log "#this.onSubmit!"
-        @render()
-        false
-    
-    toKVPairs: ->
-        @model.toKVPairs.apply @model, arguments
-    
-    toString: -> "#{@ctorName}(#{@model})"
-# }}}
-
 
 
