@@ -97,9 +97,9 @@ BaseView = exports.BaseView = Backbone.View.extend do # {{{
         _.bindAll this, ...@__bind__ if @__bind__.length
         @__super__ = @constructor.__super__
         
-        @build()
         @model.view = this
         @$el.data { @model, view:this }
+        @build()
         @model.on 'change',  @render, this
         @model.on 'destroy', @remove, this
     

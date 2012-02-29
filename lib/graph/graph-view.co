@@ -74,7 +74,7 @@ GraphOptionsScaffold = exports.GraphOptionsScaffold = Scaffold.extend do # {{{
     
     render: ->
         # console.log "#this.render() -> .isotope()"
-        @__super__.render ...
+        # @__super__.render ...
         return this unless @ready
         @$el.find '.options.control-group' .isotope do
             itemSelector    : '.field.option'
