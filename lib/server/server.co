@@ -116,7 +116,7 @@ app.get '/', (req, res) ->
 
 app.get '/graph/:id', (req, res, next) ->
     {id} = req.params
-    console.log req.url
+    # console.log req.url
     if exists("#WWW/graph/#id.yaml") or exists("#WWW/graph/#id.json")
         req.url += '.json'
     next()

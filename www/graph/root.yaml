@@ -1,6 +1,6 @@
 # The root graph, holding defaults inherited by all graphs.
 
-dataset : '/data/pageviews_by.timestamp.language.csv'
+dataset : '/data/pageviews_by.timestamp.mobile.csv'
 width   : 'auto'
 height  : 400
 options : 
