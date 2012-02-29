@@ -74,7 +74,6 @@ Scaffold = exports.Scaffold = BaseView.extend do # {{{
     
     addOne: (field) ->
         # console.log "[S] #this.addOne!", @__super__
-        fields = if @$fields then @$el.find that else @$el
         _.remove @subviews, field.view if field.view
         
         # avoid duplicating event propagation
@@ -86,7 +85,8 @@ Scaffold = exports.Scaffold = BaseView.extend do # {{{
         SubviewType = @subviewType
         view = new SubviewType model:field
         @subviews.push view
-        fields.append view.render().el unless field.get 'ignore'
+        el = if @$fields then @$el.find @$fields else @$el
+        el.append view.render().el unless field.get 'ignore'
         view.on 'update', @change.bind(this, field)
         
         @render()

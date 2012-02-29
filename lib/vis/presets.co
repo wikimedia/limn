@@ -1,0 +1,29 @@
+_ = require 'kraken/underscore'
+{EventEmitter} = require 'events'
+
+Preset = exports.Preset = Backbone.Model.extend do # {{{
+    urlRoot : '/presets'
+    
+    initialize : ->
+        ...
+    
+    defaults : ->
+        {}
+    
+    
+# }}}
+
+
+
+# class exports.Presets extends EventEmitter
+#     
+#     (@root) ->
+#         _.bindAll this, ..._.functions this
+#         @by_id = {root}
+#     
+#     
+#     fetch: (preset, cb) ->
+#         jQuery.ajax do
+#             url: ""
+#     
+
