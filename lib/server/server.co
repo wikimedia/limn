@@ -195,12 +195,14 @@ app.all '/webhook/post-update', (req, res) ->
     # exec the pull async...
     console.log '[/webhook/post-update] $ git pull origin master'
     child = exec 'git pull origin master', (err, stdout, stderr) ->
+        res.contentType '.txt'
         console.log '[/webhook/post-update]  ', stdout
         console.log '[/webhook/post-update]  ', stderr
-        console.error '[/webhook/post-update] ERROR!', err if err
-    
-    # ...but return ok to caller right away
-    res.send 'ok!', 200
+        if err
+            console.error '[/webhook/post-update] ERROR!', err
+            res.send "#stdout\n\n#stderr\n\nERROR! #err", 503
+        else
+            res.send "#stdout\n\n#stderr", 200
 
 
 
