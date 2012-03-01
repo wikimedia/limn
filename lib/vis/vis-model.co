@@ -27,7 +27,7 @@ VisModel = exports.VisModel = BaseModel.extend do # {{{
             slug    : ''
             name    : ''
             desc    : ''
-            dataset : '/data/pageviews_by.timestamp.mobile.csv'
+            dataset : '/data/non_mobile_pageviews_by.timestamp.language.csv'
             # presets : []
             width   : 'auto'
             height  : 320
