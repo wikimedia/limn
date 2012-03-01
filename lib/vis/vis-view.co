@@ -48,10 +48,14 @@ VisView = exports.VisView = BaseView.extend do # {{{
         
         @model.on 'destroy', @remove, this
         @model.on 'change',  @render, this
+        @model.on 'change:dataset', ~>
+            changes = @model.changedAttributes()
+            console.log 'VisModel.changed(dataset) ->', JSON.stringify changes
+            @chart.updateOptions file:that if changes?.dataset
         @model.on 'change:options', ~>
             changes = @model.changedAttributes()
-            # console.log 'Model.changed(options) ->', changes
-            @chartOptions changes, {+silent}
+            console.log 'VisModel.changed(options) ->', JSON.stringify changes
+            @chartOptions that, {+silent} if changes?.options
         
         @viewport = @$el.find '.viewport'
         
@@ -71,7 +75,7 @@ VisView = exports.VisView = BaseView.extend do # {{{
     
     
     onReady: ->
-        console.log 'VisView.ready!'
+        console.log "#this.ready!"
         @ready = @scaffold.ready = true
         @change()
         @renderAll()
@@ -120,7 +124,7 @@ VisView = exports.VisView = BaseView.extend do # {{{
     
     render: ->
         return this unless @ready
-        console.log 'VisView.render!'
+        console.log "#this.render!"
         
         size = @resizeViewport()
         options = @chartOptions() import size
@@ -147,7 +151,7 @@ VisView = exports.VisView = BaseView.extend do # {{{
     
     renderAll: ->
         return this unless @ready
-        console.log 'VisView.renderAll!'
+        console.log "#this.renderAll!"
         _.invoke @scaffold.subviews, 'render'
         @scaffold.render()
         @render()
@@ -161,7 +165,6 @@ VisView = exports.VisView = BaseView.extend do # {{{
         data = _.synthesize do
             @$el.find('form.details').serializeArray()
             -> [it.name, it.value]
-        console.log @$el, JSON.stringify data
         @model.set data
         false
     
