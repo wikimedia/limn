@@ -10,6 +10,7 @@ options :
     colors                         : [ "#FF0097", "#EF8158", "#83BB32", "#182B53", "#4596FF", "#553DC9", "#AD3238", "#00FFBC", "#F1D950" ]
     # colorSaturation              : 1.0
     # colorValue                   : 0.5
+    rightGap                       : 20
     animatedZooms                  : true
     # labels                       : Array
     labelsSeparateLines            : true

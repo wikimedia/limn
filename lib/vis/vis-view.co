@@ -112,9 +112,9 @@ VisView = exports.VisView = BaseView.extend do # {{{
         @viewport.attr 'style', ''
         
         if (width = @model.get 'width')  is 'auto'
-            width = @viewport.width()
+            width = @viewport.innerWidth()
         if (height = @model.get 'height') is 'auto'
-            height = @viewport.height()
+            height = @viewport.innerHeight()
         size = { width, height }
         @viewport.css size
         # console.log 'resizeViewport!', JSON.stringify(size), @viewport
