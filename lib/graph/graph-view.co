@@ -61,7 +61,7 @@ GraphOptionsScaffold = exports.GraphOptionsScaffold = Scaffold.extend do # {{{
     template       : require 'kraken/template/graph-scaffold'
     collectionType : GraphOptionList
     subviewType    : GraphOptionView
-    $fields        : '.fields'
+    fields        : '.fields'
     
     # GraphView will set this
     ready          : false
@@ -76,7 +76,8 @@ GraphOptionsScaffold = exports.GraphOptionsScaffold = Scaffold.extend do # {{{
         # console.log "#this.render() -> .isotope()"
         # @__super__.render ...
         return this unless @ready
-        @$el.find '.options.control-group' .isotope do
+        container = if @fields then @$el.find @fields else @$el
+        container.isotope do
             itemSelector    : '.field.option'
             layoutMode      : 'masonry'
             masonry         : columnWidth : 10

@@ -56,7 +56,7 @@ main = ->
 
 # Load data files
 Seq([   <[ CHART_OPTIONS_SPEC /graph/dygraph-options.json ]>,
-        <[ ROOT_VIS_DATA /graph/root ]>
+        <[ ROOT_VIS_DATA /presets/root.json ]>
 ])
 .parEach_ (next, [key, url]) ->
     jQuery.ajax do

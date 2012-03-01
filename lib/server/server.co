@@ -2,10 +2,14 @@
 
 fs       = require 'fs'
 path     = require 'path'
+{parse}  = require 'url'
 {existsSync:exists} = path
 {exec, spawn} = require 'child_process'
 
 _        = require 'underscore'
+_.str    = require 'underscore.string'
+_.mixin _.str.exports()
+
 Seq      = require 'seq'
 yaml     = require 'js-yaml'
 mime     = require 'mime'
@@ -60,6 +64,9 @@ app.configure ->
     
     app.use express.logger() if LOG_LEVEL is 'DEBUG'
     
+    # Parse URL, fiddle
+    app.use require('./reqinfo')({})
+    
     # Parse form submits into req.params
     app.use express.bodyParser()
     
@@ -109,18 +116,42 @@ app.configure ->
         showStack      : true
 
 
-### Routes
+/* * * *  Routes  * * * {{{ */
 
 app.get '/', (req, res) ->
     res.render 'dashboard'
 
-app.get '/graph/:id', (req, res, next) ->
-    {id} = req.params
-    # console.log req.url
-    if exists("#WWW/graph/#id.yaml") or exists("#WWW/graph/#id.json")
+app.get '/preset/:slug', (req, res, next) ->
+    if exists("#WWW/presets/#slug.yaml") or exists("#WWW/presets/#slug.json")
         req.url += '.json'
     next()
 
+app.get '/graph/:slug/?', (req, res, next) ->
+    {slug} = req.params
+    # console.log '/graph/:slug/?'
+    # console.log '  slug:  ', slug
+    # console.log '  params:', req.params
+    unless _.str.include slug, '.'
+        {pathname, search} = req.info
+        req.url = "#pathname/view#search"
+        req.params.action = 'view'
+    next()
+
+app.get '/graph/:slug/:action/?', (req, res) ->
+    {slug, action} = req.params
+    res.render "graph/#action"
+
+app.get '/:type/:action/?', (req, res, next) ->
+    {type, action} = req.params
+    if path.existsSync "#WWW/#type/#action.jade"
+        res.render "#type/#action"
+    else
+        next()
+
+
+
+# }}}
+/* * * *  Data Source Oracle  * * * {{{ */
 
 YAML_EXT_PAT = /\.ya?ml$/i
 
@@ -175,17 +206,7 @@ app.get '/data/all', (req, res, next) ->
             console.error that if err.stack
             res.send { error:String(err), partial_data:data }
 
-
-app.get '/:type/:action', (req, res, next) ->
-    {type, action} = req.params
-    if path.existsSync "#WWW/#type/#action.jade"
-        res.render "#type/#action"
-    else
-        next()
-
-
-
-
+# }}}
 
 /**
  * Handle webhook notification to pull from origin.

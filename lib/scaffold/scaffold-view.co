@@ -85,8 +85,8 @@ Scaffold = exports.Scaffold = BaseView.extend do # {{{
         SubviewType = @subviewType
         view = new SubviewType model:field
         @subviews.push view
-        el = if @$fields then @$el.find @$fields else @$el
-        el.append view.render().el unless field.get 'ignore'
+        container = if @fields then @$el.find @fields else @$el
+        container.append view.render().el unless field.get 'ignore'
         view.on 'update', @change.bind(this, field)
         
         @render()

@@ -1,0 +1,20 @@
+_   = require 'underscore'
+url = require 'url'
+
+module.exports = exports = (options) ->
+    mw = new ReqInfoMiddleware options
+    mw.respond
+
+class exports.ReqInfoMiddleware
+    
+    (@options={}) ->
+        _.bindAll this, 'respond'
+    
+    parse : url.parse
+    
+    respond : function reqinfo(req, res, next)
+        req.info = @parse req.url
+        next()
+    
+
+
