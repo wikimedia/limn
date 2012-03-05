@@ -19,7 +19,7 @@ _ = require 'kraken/underscore'
  * - Graph metadata, such as name, description, slug
  */
 VisView = exports.VisView = BaseView.extend do # {{{
-    __bind__  : <[ resizeViewport render renderAll onReady ]>
+    __bind__  : <[ resizeViewport render renderAll onReady formatter axisFormatter ]>
     ctorName  : 'VisView'
     tagName   : 'section'
     className : 'graph'
@@ -30,6 +30,7 @@ VisView = exports.VisView = BaseView.extend do # {{{
         'keypress form.options .value'             : 'onKeypress'
         'submit   form.details'                    : 'onDetailsSubmit'
         'submit   form.options'                    : 'onOptionsSubmit'
+        'change   input[type="checkbox"]'          : 'onOptionsSubmit'
     
     ready: false
     
@@ -46,6 +47,8 @@ VisView = exports.VisView = BaseView.extend do # {{{
         # Resize graph on window resize
         $ root .on 'resize', @resizeViewport
         
+        @id = _.domize 'graph', (@model.id or @model.cid)
+        
         @model.on 'destroy', @remove, this
         @model.on 'change',  @render, this
         @model.on 'change:dataset', ~>
@@ -60,7 +63,7 @@ VisView = exports.VisView = BaseView.extend do # {{{
         @viewport = @$el.find '.viewport'
         
         @scaffold = new GraphOptionsScaffold
-        @$el.append @scaffold.el
+        @$el.find '.graph-options-pane' .append @scaffold.el
         @scaffold.collection.reset that if o.graph_spec
         
         @scaffold.on 'change', (scaffold, value, key, field) ~>
@@ -110,9 +113,12 @@ VisView = exports.VisView = BaseView.extend do # {{{
         
         # Remove old style, as it confuses dygraph after options update
         @viewport.attr 'style', ''
+        label = @$el.find '.graph-label'
         
         if (width = @model.get 'width')  is 'auto'
-            width = @viewport.innerWidth()
+            vpWidth = @viewport.innerWidth()
+            labelW = label.outerWidth()
+            width = vpWidth - labelW - 10 - (vpWidth - label.position().left - labelW)
         if (height = @model.get 'height') is 'auto'
             height = @viewport.innerHeight()
         size = { width, height }
@@ -122,13 +128,31 @@ VisView = exports.VisView = BaseView.extend do # {{{
         size
     
     
+    
+    axisFormatter: (n, granularity, opts, g) ->
+        @formatter n, opts, g
+    
+    formatter: (n, opts, g) ->
+        return n if n instanceof Date
+        sigFigs = opts 'sigFigs'
+        maxW    = opts 'maxNumberWidth'
+        digits  = opts 'digitsAfterDecimal'
+        v = Dygraph.round_ n, digits
+        # Dygraph.floatFormat n, sigFigs
+        # console.log n, "->", v, "?= %#{maxW}.#{digits}g (sigFigs=#sigFigs)"
+        v
+    
+    
     render: ->
         return this unless @ready
         console.log "#this.render!"
         
         size = @resizeViewport()
         options = @chartOptions() import size
-        options.labelsDiv = @$el.find '.graph-label' .0
+        options import do
+            labelsDiv          : @$el.find '.graph-label' .0
+            # axisLabelFormatter : @axisFormatter
+            # valueFormatter     : @formatter
         
         # @chart?.destroy()
         unless @chart

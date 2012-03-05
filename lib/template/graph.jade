@@ -1,4 +1,5 @@
-- var id = model.id || model.cid, graph_id = _.domize('graph', id)
+- var id = model.id || model.cid
+- var graph_id = view.id
 section.graph(id=graph_id)
     form.details.form-horizontal
         
@@ -6,30 +7,44 @@ section.graph(id=graph_id)
             //- label.name.control-label(for="#{id}_name"): h3 Graph Name
             input.span6.name(type='text', id="#{id}_name", name="name", placeholder='Graph Name', value=name)
         
-        .viewport
-        .graph-label
-        
         .row-fluid
-            .half.control-group
-                label.slug.control-label(for='slug') Slug
-                .controls
-                    input.span3.slug(type='text', id='slug', name='slug', placeholder='graph_slug', value=slug)
-                    p.help-block The slug uniquely identifies this graph and will be displayed in the URL.
-            .half.control-group
-                label.dataset.control-label(for='dataset') Data Set
-                .controls
-                    input.span3.dataset(type='text', id='dataset', name='dataset', placeholder='URL to dataset file', value=dataset)
-                    p.help-block This dataset filename will soon be replaced by a friendly UI.
+            .viewport
+            .graph-label
         
-        .row-fluid
-            .half.control-group
-                label.width.control-label(for='width') Width
-                .controls
-                    input.span1.width(type='text', id='width', name='width', value=width)
-                    p.help-block Choosing 'auto' will size the graph to the viewport bounds.
-            .half.control-group
-                label.height.control-label(for='height') Height
-                .controls: input.span1.height(type='text', id='height', name='height', value=height)
+        .tabbable
+            ul.nav.subnav.nav-pills
+                li.active:  a(href="#graph-#{graph_id}-info", data-toggle="tab") Info
+                li:         a(href="#graph-#{graph_id}-data", data-toggle="tab") Data
+                li:         a(href="#graph-#{graph_id}-options", data-toggle="tab") Options
+            
+            .tab-content
+                .graph-info-pane.tab-pane.active(id="graph-#{graph_id}-info")
+                    h3 Graph Info
+                    .row-fluid
+                        .half.control-group
+                            label.slug.control-label(for='slug') Slug
+                            .controls
+                                input.span3.slug(type='text', id='slug', name='slug', placeholder='graph_slug', value=slug)
+                                p.help-block The slug uniquely identifies this graph and will be displayed in the URL.
+                        .half.control-group
+                            label.dataset.control-label(for='dataset') Data Set
+                            .controls
+                                input.span3.dataset(type='text', id='dataset', name='dataset', placeholder='URL to dataset file', value=dataset)
+                                p.help-block This dataset filename will soon be replaced by a friendly UI.
+                    .row-fluid
+                        .half.control-group
+                            label.width.control-label(for='width') Width
+                            .controls
+                                input.span1.width(type='text', id='width', name='width', value=width)
+                                p.help-block Choosing 'auto' will size the graph to the viewport bounds.
+                        .half.control-group
+                            label.height.control-label(for='height') Height
+                            .controls: input.span1.height(type='text', id='height', name='height', value=height)
+                
+                .graph-data-pane.tab-pane(id="graph-#{graph_id}-data")
+                
+                .graph-options-pane.tab-pane(id="graph-#{graph_id}-options")
+                
         
     
 

@@ -77,11 +77,14 @@ GraphOptionsScaffold = exports.GraphOptionsScaffold = Scaffold.extend do # {{{
         # @__super__.render ...
         return this unless @ready
         container = if @fields then @$el.find @fields else @$el
+        container
+            .addClass 'isotope'
+            .find '.field.option' .addClass 'isotope-item'
         container.isotope do
+            # itemPositionDataEnabled : true
             itemSelector    : '.field.option'
             layoutMode      : 'masonry'
             masonry         : columnWidth : 10
-            itemPositionDataEnabled : true
             getSortData :
                 category: ($el) ->
                     $el.data 'model' .getCategory()
