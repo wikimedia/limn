@@ -25,7 +25,7 @@ options :
     # xlabel                         : Date
     axisLineColor                   : black
     # axisTickSize                   : 3.0
-    axisLabelColor                  : '#333333'
+    axisLabelColor                  : '#666666'
     # axisLabelFontSize              : 14
     # showRoller                     : false
     # rollPeriod                     : 1

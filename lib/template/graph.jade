@@ -13,13 +13,13 @@ section.graph(id=graph_id)
         
         .tabbable
             ul.nav.subnav.nav-pills
+                li:         h3 Graph
                 li.active:  a(href="#graph-#{graph_id}-info", data-toggle="tab") Info
                 li:         a(href="#graph-#{graph_id}-data", data-toggle="tab") Data
                 li:         a(href="#graph-#{graph_id}-options", data-toggle="tab") Options
             
             .tab-content
                 .graph-info-pane.tab-pane.active(id="graph-#{graph_id}-info")
-                    h3 Graph Info
                     .row-fluid
                         .half.control-group
                             label.slug.control-label(for='slug') Slug
