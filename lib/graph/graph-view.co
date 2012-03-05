@@ -81,7 +81,11 @@ GraphOptionsScaffold = exports.GraphOptionsScaffold = Scaffold.extend do # {{{
             itemSelector    : '.field.option'
             layoutMode      : 'masonry'
             masonry         : columnWidth : 10
-            # itemPositionDataEnabled : true
+            itemPositionDataEnabled : true
+            getSortData :
+                category: ($el) ->
+                    $el.data 'model' .getCategory()
+            sortBy: 'category'
     
     /**
      * Add a GraphOption to this scaffold, rerendering the isotope
