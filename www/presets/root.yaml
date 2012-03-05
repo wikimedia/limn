@@ -4,45 +4,44 @@ dataset : '/data/non_mobile_pageviews_by.timestamp.language.csv'
 width   : 'auto'
 height  : 400
 options : 
-    # visibility                   : true
-    # stackedGraph                 : false
-    # fillGraph                    : false
-    colors                         : [ "#FF0097", "#EF8158", "#83BB32", "#182B53", "#4596FF", "#553DC9", "#AD3238", "#00FFBC", "#F1D950" ]
-    # colorSaturation              : 1.0
-    # colorValue                   : 0.5
-    rightGap                       : 20
-    animatedZooms                  : true
-    # labels                       : Array
-    labelsSeparateLines            : true
-    xlabel                         : Date
-    # logscale                     : false
-    axisLineColor                  : '#333333'
-    # axisTickSize                 : 3.0
-    axisLabelColor                 : '#333333'
-    # axisLabelFontSize            : 14
-    legend                         : always
-    labelsKMB                      : true
-    # labelsKMG2                   : false
-    digitsAfterDecimal             : 2
-    maxNumberWidth                 : 6
-    sigFigs                        : 3
-    # valueFormatter               : function(num or millis, opts, dygraph)
-    # showRoller                   : false
-    # rollPeriod                   : 1
-    # sigma                        : 2.0
-    # wilsonInterval               : true
-    # fillAlpha                    : 0.15
-    # customBars                   : false
-    # errorBars                    : false
-    # fractions                    : false
-    # delimiter                    : ','
-    # xValueParser                 : function(str) -> number
-    # drawXGrid                    : true
-    # drawYGrid                    : true
-    gridLineColor                  : '#eeeeee'
-    # gridLineWidth                : 0.3
-    # showRangeSelector            : false
-    # rangeSelectorHeight          : 40
-    # rangeSelectorPlotFillColor   : '#A7B1C4'
-    # rangeSelectorPlotStrokeColor : '#808FAB'
-    displayAnnotations             : true
+    # visibility                     : true
+    # stackedGraph                   : false
+    # fillGraph                      : false
+    colors                          : [ "#FF0097", "#EF8158", "#83BB32", "#182B53", "#4596FF", "#553DC9", "#AD3238", "#00FFBC", "#F1D950" ]
+    # colorSaturation                : 1.0
+    # colorValue                     : 0.5
+    # logscale                       : false
+    yAxisLabelWidth                 : 50
+    rightGap                        : 20
+    animatedZooms                   : true
+    legend                          : always
+    labelsKMB                       : true
+    # labelsKMG2                     : false
+    sigFigs                         : null
+    digitsAfterDecimal              : 3
+    maxNumberWidth                  : 30
+    # labels                         : Array
+    labelsSeparateLines             : true
+    # xlabel                         : Date
+    axisLineColor                   : black
+    # axisTickSize                   : 3.0
+    axisLabelColor                  : '#333333'
+    # axisLabelFontSize              : 14
+    # showRoller                     : false
+    # rollPeriod                     : 1
+    # sigma                          : 2.0
+    # wilsonInterval                 : true
+    # fillAlpha                      : 0.15
+    # customBars                     : false
+    # errorBars                      : false
+    # fractions                      : false
+    # delimiter                      : ','
+    # drawXGrid                      : true
+    # drawYGrid                      : true
+    gridLineColor                   : '#D8D8D8'
+    # gridLineWidth                  : 0.3
+    # showRangeSelector              : false
+    # rangeSelectorHeight            : 40
+    # rangeSelectorPlotFillColor     : '#A7B1C4'
+    # rangeSelectorPlotStrokeColor   : '#808FAB'
+    # displayAnnotations             : false
