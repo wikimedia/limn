@@ -37,7 +37,7 @@ _obj = do
     
     
     
-    toKVPairs: (o, item_delim='&', kv_delim='=') ->
+    toKV: (o, item_delim='&', kv_delim='=') ->
         _.reduce do
             o
             (acc, v, k) ->
@@ -46,7 +46,7 @@ _obj = do
             []
         .join item_delim
     
-    fromKVPairs: (qs, item_delim='&', kv_delim='=') ->
+    fromKV: (qs, item_delim='&', kv_delim='=') ->
         _.reduce do
             qs.split item_delim
             (acc, pair) ->

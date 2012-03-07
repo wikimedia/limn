@@ -10,9 +10,11 @@ root = do -> this
  * other settings for both its content and presentation.
  */
 VisModel = exports.VisModel = BaseModel.extend do # {{{
+    IGNORE_OPTIONS : <[ width height timingName ]>
     ctorName    : 'VisModel'
     urlRoot     : '/graph'
     idAttribute : 'slug'
+    
     
     
     initialize : ->
@@ -23,7 +25,7 @@ VisModel = exports.VisModel = BaseModel.extend do # {{{
     
     
     defaults: ->
-        {
+        ({
             slug    : ''
             name    : ''
             desc    : ''
@@ -31,8 +33,7 @@ VisModel = exports.VisModel = BaseModel.extend do # {{{
             # presets : []
             width   : 'auto'
             height  : 320
-            options : {} import root.ROOT_VIS_OPTIONS
-        } import root.ROOT_VIS_DATA
+        } import root.ROOT_VIS_DATA) import { options:_.clone root.ROOT_VIS_OPTIONS }
     
     
     parse: (data) ->
@@ -59,19 +60,53 @@ VisModel = exports.VisModel = BaseModel.extend do # {{{
     
     setOption: (key, value, opts={}) ->
         options = @get 'options', {}
-        options[key] = value
-        @set 'options', options, opts
-        @trigger "change:options:#key", this, value, key, opts unless opts.silent
+        unless _.contains @IGNORE_OPTIONS, key
+            options[key] = value
+            @set 'options', options, opts
+            @trigger "change:options:#key", this, value, key, opts unless opts.silent
+        this
     
     unsetOption: (key, opts={}) ->
         options = @get 'options', {}
         delete options[key]
         @set 'options', options, opts
         @trigger "change:options:#key", this, value, key, opts unless opts.silent
+        this
     
     
+    ### URL Serialization
     
-    toString: -> "#{@ctorName}(id=#{@id}, name=#{@get 'name'}, dataset=#{@get 'dataset'})"
+    toJSON: (options={}) ->
+        options = {+keepDefaults} import options
+        
+        json = _.clone(@attributes) import { options:_.clone(@attributes.options) }
+        return json if options.keepDefaults
+        
+        defs = root.CHART_DEFAULT_OPTIONS
+        opts = json.options
+        for k, v in opts
+            delete opts[k] if v is defs[k]
+        json
+    
+    
+    toKVPairs: ->
+        kvo = @toJSON()
+        # console.group 'toKVPairs'
+        # console.log '[IN]', JSON.stringify kvo
+        opts = kvo.options = _.clone kvo.options
+        for k, rootVal in root.ROOT_VIS_OPTIONS
+            v = opts[k]
+            # console.log "  [#k] rootVal:", rootVal, "===", v, "?", _.isEqual(rootVal, v) unless _.isEqual(rootVal, v)
+            if _.isEqual rootVal, v
+                delete opts[k]
+            else
+                opts[k] = @serialize v
+        # console.log '[OUT]', JSON.stringify kvo
+        # console.groupEnd()
+        _.collapseObject kvo
+    
+    
+    toString: -> "#{@ctorName}(id=#{@id})"
 
 # }}}
 

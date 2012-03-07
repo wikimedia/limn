@@ -15,5 +15,17 @@ backbone  = require 'kraken/util/backbone'
 # {crc32}   = require 'kraken/util/crc'
 
 
+## Debug
+_.dump = (o, label='dump') ->
+    if not _.isArray(o) and _.isObject(o)
+        console.group label
+        for k, v in o
+            console.log "#k:", v
+        console.groupEnd()
+    else
+        console.log label, o
+    o
+
+
 exports import { root, _, op, backbone }
 # exports import { root, _, op, HashSet, BitString, crc32, }

@@ -96,7 +96,7 @@ Field = exports.Field = BaseModel.extend do # {{{
         {id:@id} import do
             _.clone(@attributes) import { value:@getValue(), def:@get('default') }
     
-    toKVObject: ->
+    toKVPairs: ->
         { "#{@id}":@serializeValue() }
     
     toString: -> "(#{@id}: #{@serializeValue()})"
@@ -112,19 +112,22 @@ FieldList = exports.FieldList = BaseList.extend do # {{{
      * @returns {Object}
      */
     values: (opts={}) ->
-        opts = {-keepDefaults, -serialize} import opts
+        opts = {+keepDefaults, -serialize} import opts
         _.synthesize do
             if opts.keepDefaults then @models else @models.filter -> not it.isDefault()
             -> [ it.get('name'), if opts.serialize then it.serializeValue() else it.getValue() ]
     
     toJSON: ->
-        @values()
+        @values {+keepDefaults, -serialize}
     
-    toKVObject: ->
-        _.collapseObject @values false, true
+    toKVPairs: ->
+        _.collapseObject @values {+keepDefaults, +serialize}
     
-    toKVPairs: (item_delim='&', kv_delim='=') ->
-        _.toKVPairs @toKVObject(), item_delim, kv_delim
+    toKV: (item_delim='&', kv_delim='=') ->
+        _.toKV @toKVPairs(), item_delim, kv_delim
+    
+    toURL: (item_delim='&', kv_delim='=') ->
+        "?#{@toKV ...}"
     
     toString: -> "#{@ctorName}(length=#{@length})"
 # }}}

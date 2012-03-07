@@ -119,5 +119,4 @@ module.exports = op =
     encode : -> it and $ "<div>#it</div>" .html().replace /"/g, '&quot;'
     decode : -> it and $ "<div>#it</div>" .text()
     
-    
 

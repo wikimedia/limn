@@ -54,7 +54,7 @@ GraphOption = exports.GraphOption = Field.extend do # {{{
         # Ignore functions/callbacks and, ahem, hidden tags.
         type = @get 'type', '' .toLowerCase()
         tags = @get 'tags', []
-        if _.str.include(type, 'function') or _.intersection tags, IGNORED_TAGS .length
+        if _.str.include(type, 'function') or _.intersection(tags, IGNORED_TAGS).length
             @set 'ignore', true
     
     
@@ -103,5 +103,12 @@ GraphOption = exports.GraphOption = Field.extend do # {{{
 GraphOptionList = exports.GraphOptionList = FieldList.extend do # {{{
     ctorName   : 'GraphOptionList'
     model      : GraphOption
+    
+    /**
+     * Override to omit defaults from URL.
+     */
+    toKVPairs: ->
+         _.collapseObject @values {-keepDefaults, +serialize}
+    
 # }}}
 

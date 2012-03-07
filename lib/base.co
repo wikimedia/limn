@@ -16,9 +16,9 @@ BaseModel = exports.BaseModel = Backbone.Model.extend do # {{{
         _.bindAll this, ...@__bind__ if @__bind__.length
     
     serialize: (v) ->
-        if v!?
-            v = ''
-        else if _.isBoolean v
+        # if v!?
+        #     v = ''
+        if _.isBoolean v
             v =  Number v
         else if _.isObject v
             v = JSON.stringify v
@@ -26,11 +26,11 @@ BaseModel = exports.BaseModel = Backbone.Model.extend do # {{{
     
     /**
      * Like `.toJSON()` in that it should return a plain object with no functions,
-     * but for the purpose of `.toKVPairs()`, allowing you to customize the values
+     * but for the purpose of `.toKV()`, allowing you to customize the values
      * included and keys used.
      * @returns {Object}
      */
-    toKVObject: ->
+    toKVPairs: ->
         kvo = _.collapseObject @toJSON()
         for k, v in kvo
             kvo[k] = @serialize v
@@ -41,8 +41,14 @@ BaseModel = exports.BaseModel = Backbone.Model.extend do # {{{
      * a query string or a POST body.
      * @returns {String}
      */
-    toKVPairs: (item_delim='&', kv_delim='=') ->
-        _.toKVPairs @toKVObject(), item_delim, kv_delim
+    toKV: (item_delim='&', kv_delim='=') ->
+        _.toKV @toKVPairs(), item_delim, kv_delim
+    
+    /**
+     * @returns {String} URL identifying this model.
+     */
+    toURL: (item_delim='&', kv_delim='=') ->
+        "?#{@toKV()}"
     
     toString: -> "#{@ctorName}(id=#{@id})"
 
@@ -57,8 +63,8 @@ BaseModel import do
      * @param {String|Object} o Serialized KV-pairs (or a plain object).
      * @returns {BaseModel} An instance of this model.
      */
-    fromKVPairs: (o, item_delim='&', kv_delim='=') ->
-        o   = _.fromKVPairs o, item_delim, kv_delim if typeof o is 'string'
+    fromKV: (o, item_delim='&', kv_delim='=') ->
+        o   = _.fromKV o, item_delim, kv_delim if typeof o is 'string'
         Cls = if typeof this is 'function' then this else this.constructor
         new Cls _.uncollapseObject o
 
@@ -71,11 +77,14 @@ BaseModel import do
 BaseList = exports.BaseList = Backbone.Collection.extend do # {{{
     ctorName : 'BaseList'
     
-    toKVObject: ->
+    toKVPairs: ->
         _.collapseObject @toJSON()
     
-    toKVPairs: (item_delim='&', kv_delim='=') ->
-        _.toKVPairs @toKVObject(), item_delim, kv_delim
+    toKV: (item_delim='&', kv_delim='=') ->
+        _.toKV @toKVPairs(), item_delim, kv_delim
+    
+    toURL: (item_delim='&', kv_delim='=') ->
+        "?#{@toKV ...}"
     
     toString: -> "#{@ctorName}(length=#{@length})"
 # }}}

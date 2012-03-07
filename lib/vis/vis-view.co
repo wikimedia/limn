@@ -19,6 +19,7 @@ _ = require 'kraken/underscore'
  * - Graph metadata, such as name, description, slug
  */
 VisView = exports.VisView = BaseView.extend do # {{{
+    FILTER_CHART_OPTIONS : <[ file labels visibility colors dateWindow  ticker timingName axisLabelFormatter valueFormatter xAxisLabelFormatter yAxisLabelFormatter xValueFormatter yValueFormatter xValueParser ]>
     __bind__  : <[ resizeViewport render renderAll onReady formatter axisFormatter ]>
     ctorName  : 'VisView'
     tagName   : 'section'
@@ -41,11 +42,11 @@ VisView = exports.VisView = BaseView.extend do # {{{
         BaseView::initialize ...
         # console.log "#this.initialize!"
         
-        for name of <[ resizeViewport render renderAll ]>
+        for name of <[ render renderAll ]>
             @[name] = _.debounce @[name], DEBOUNCE_RENDER
         
         # Resize graph on window resize
-        $ root .on 'resize', @resizeViewport
+        $ root .on 'resize', _.debounce(@resizeViewport, DEBOUNCE_RENDER)
         
         @id = _.domize 'graph', (@model.id or @model.cid)
         
@@ -53,11 +54,11 @@ VisView = exports.VisView = BaseView.extend do # {{{
         @model.on 'change',  @render, this
         @model.on 'change:dataset', ~>
             changes = @model.changedAttributes()
-            console.log 'VisModel.changed(dataset) ->', JSON.stringify changes
+            console.log 'VisModel.changed( dataset ) ->', JSON.stringify changes
             @chart.updateOptions file:that if changes?.dataset
         @model.on 'change:options', ~>
             changes = @model.changedAttributes()
-            console.log 'VisModel.changed(options) ->', JSON.stringify changes
+            console.log 'VisModel.changed( options ) ->', JSON.stringify changes
             @chartOptions that, {+silent} if changes?.options
         
         @viewport = @$el.find '.viewport'
@@ -67,8 +68,8 @@ VisView = exports.VisView = BaseView.extend do # {{{
         @scaffold.collection.reset that if o.graph_spec
         
         @scaffold.on 'change', (scaffold, value, key, field) ~>
-            # console.log "scaffold.change!", value, key, field
-            @model.setOption key, value, {+silent} unless field.isDefault()
+            console.log "scaffold.change!", key, value, field
+            @model.setOption key, value, {+silent} #unless field.isDefault()
         
         options = @model.get 'options', {}
         @chartOptions options, {+silent}
@@ -101,7 +102,12 @@ VisView = exports.VisView = BaseView.extend do # {{{
                 options.get(k)?.setValue v, opts
             this
         else
-            options.values() # TODO: pull this from model (must clone), sort out events
+            opts = @model.toJSON({ -keepDefaults })?.options or {}
+            for k of @FILTER_CHART_OPTIONS
+                # console.log "filter #k?", not opts[k]
+                if k in opts and not opts[k]
+                    delete opts[k]
+            opts
     
     
     /**
@@ -109,18 +115,23 @@ VisView = exports.VisView = BaseView.extend do # {{{
      * @return { width, height }
      */
     resizeViewport: ->
-        return this unless @ready
+        modelW = width = @model.get 'width'
+        modelH = height = @model.get 'height'
+        return { width, height } unless @ready
         
         # Remove old style, as it confuses dygraph after options update
         @viewport.attr 'style', ''
         label = @$el.find '.graph-label'
         
-        if (width = @model.get 'width')  is 'auto'
+        if width is 'auto'
             vpWidth = @viewport.innerWidth()
             labelW = label.outerWidth()
             width = vpWidth - labelW - 10 - (vpWidth - label.position().left - labelW)
-        if (height = @model.get 'height') is 'auto'
+        width ?= modelW
+        if height is 'auto'
             height = @viewport.innerHeight()
+        height ?= modelH
+        
         size = { width, height }
         @viewport.css size
         # console.log 'resizeViewport!', JSON.stringify(size), @viewport
@@ -145,29 +156,37 @@ VisView = exports.VisView = BaseView.extend do # {{{
     
     render: ->
         return this unless @ready
-        console.log "#this.render!"
         
         size = @resizeViewport()
-        options = @chartOptions() import size
+        options = @chartOptions() #import size
         options import do
             labelsDiv          : @$el.find '.graph-label' .0
             # axisLabelFormatter : @axisFormatter
             # valueFormatter     : @formatter
+        dataset = @model.get 'dataset'
         
-        # @chart?.destroy()
-        unless @chart
-            @chart = new Dygraph do
-                @viewport.0
-                @model.get 'dataset'
-                options
-        else
-            @chart.updateOptions options
-            @chart.resize size
+        console.log "#this.render!", dataset
+        _.dump options, 'options'
+        
+        @chart?.destroy()
+        @chart = new Dygraph do
+            @viewport.0
+            dataset
+            options
+        
+        # unless @chart
+        #     @chart = new Dygraph do
+        #         @viewport.0
+        #         dataset
+        #         options
+        # else
+        #     @chart.updateOptions options
+        #     @chart.resize size
         
         # path = String(root.location?.path or '/')
         data  = @toJSON()
         title = @model.get('name', root.document?.title or '')
-        url   = "?"+@toKVPairs()
+        url   = @toURL()
         # console.log 'History.pushState', JSON.stringify(data), title, url
         History.pushState data, title, url
         
@@ -200,8 +219,11 @@ VisView = exports.VisView = BaseView.extend do # {{{
     toJSON: ->
         @model.toJSON()
     
-    toKVPairs: ->
-        @model.toKVPairs.apply @model, arguments
+    toKV: ->
+        @model.toKV.apply @model, arguments
+    
+    toURL: ->
+        @model.toURL()
     
     toString: -> "#{@ctorName}(#{@model})"
 # }}}

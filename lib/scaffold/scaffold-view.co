@@ -10,17 +10,24 @@ FieldView = exports.FieldView = BaseView.extend do # {{{
     tagName   : 'div'
     className : 'field'
     
+    type : 'string'
+    
     events :
         'blur .value'   : 'update'
         'submit .value' : 'update'
     
     
-    # initialize: ->
-    #     # console.log "#this.initialize!"
-    #     BaseView::initialize ...
+    initialize: ->
+        # console.log "#this.initialize!"
+        BaseView::initialize ...
+        @type = @model.get('type', 'string').toLowerCase()
     
     update: ->
-        val     = @model.getParser() @$el.find('.value').val()
+        if @type is 'boolean'
+            val = !! @$el.find('.value').attr('checked')
+        else
+            val = @model.getParser() @$el.find('.value').val()
+        
         current = @model.getValue()
         return if _.isEqual val, current
         console.log "#this.update( #current -> #val )"
@@ -111,7 +118,7 @@ Scaffold = exports.Scaffold = BaseView.extend do # {{{
 
 
 # Proxy collection methods
-<[ get at pluck invoke values toJSON toKVObject toKVPairs ]>
+<[ get at pluck invoke values toJSON toKVPairs toKV toURL ]>
     .forEach (methodname) ->
         Scaffold::[methodname] = -> @collection[methodname].apply @collection, arguments
 

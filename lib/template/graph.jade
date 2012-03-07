@@ -27,10 +27,6 @@ section.graph(id=graph_id)
                                 input.span3.slug(type='text', id='slug', name='slug', placeholder='graph_slug', value=slug)
                                 p.help-block The slug uniquely identifies this graph and will be displayed in the URL.
                         .half.control-group
-                            label.dataset.control-label(for='dataset') Data Set
-                            .controls
-                                input.span3.dataset(type='text', id='dataset', name='dataset', placeholder='URL to dataset file', value=dataset)
-                                p.help-block This dataset filename will soon be replaced by a friendly UI.
                     .row-fluid
                         .half.control-group
                             label.width.control-label(for='width') Width
@@ -42,6 +38,11 @@ section.graph(id=graph_id)
                             .controls: input.span1.height(type='text', id='height', name='height', value=height)
                 
                 .graph-data-pane.tab-pane(id="graph-#{graph_id}-data")
+                    .row-fluid
+                        label.dataset.control-label(for='dataset') Data Set
+                        .controls
+                            input.span3.dataset(type='text', id='dataset', name='dataset', placeholder='URL to dataset file', value=dataset)
+                            p.help-block This dataset filename will soon be replaced by a friendly UI.
                 
                 .graph-options-pane.tab-pane(id="graph-#{graph_id}-options")
                 

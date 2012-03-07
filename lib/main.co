@@ -12,26 +12,31 @@ Seq = require 'seq'
 } = require 'kraken/vis'
 
 root = this
-CHART_OPTIONS_SPEC = []
-ROOT_VIS_DATA      = {}
-ROOT_VIS_OPTIONS   = {}
+CHART_OPTIONS_SPEC    = []
+CHART_DEFAULT_OPTIONS = {}
+ROOT_VIS_DATA         = {}
+ROOT_VIS_OPTIONS      = {}
 
 
 # Create the Graph Scaffold
 main = ->
+    opts = root.CHART_DEFAULT_OPTIONS = {}
+    for opt of root.CHART_OPTIONS_SPEC
+        opts[opt.name] = opt.default
+    
     # TODO: create a preset manager
     # Remove chart options from data so we don't have to deepcopy
     ROOT_VIS_OPTIONS := delete root.ROOT_VIS_DATA.options
     
     # Bind to URL changes
     History.Adapter.bind window, 'statechange', ->
-        console.log 'StateChange!', String(root.location)
+        console.log 'StateChange!\n\n', String(root.location), '\n\n'
     
     
     # If we got querystring args, apply them to the graph
     data = {}
     if String(root.location).split '?' .1
-        data = _.uncollapseObject _.fromKVPairs that.replace('#', '%23')
+        data = _.uncollapseObject _.fromKV that.replace('#', '%23')
         
         # # yarr, have to do options separately or everything goes to shit
         # options = delete data.options

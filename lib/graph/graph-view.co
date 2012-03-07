@@ -99,8 +99,8 @@ GraphOptionsScaffold = exports.GraphOptionsScaffold = Scaffold.extend do # {{{
         view.on 'change:collapse render', @render
         view
     
-    toKVPairs: ->
-        @collection.toKVPairs ...
+    toKV: ->
+        @collection.toKV ...
     
 # }}}
 
