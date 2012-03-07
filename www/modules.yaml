@@ -20,7 +20,7 @@ all:
         - backbone
         - showdown.mod
         - jade.runtime.min
-        - dygraph
+        - dygraph.min
 
 -   suffix: .mod.js
     paths:
