@@ -89,8 +89,9 @@ VisModel = exports.VisModel = BaseModel.extend do # {{{
         json
     
     
-    toKVPairs: ->
+    toKVPairs: (keepSlug=false) ->
         kvo = @toJSON()
+        delete kvo.slug unless keepSlug
         # console.group 'toKVPairs'
         # console.log '[IN]', JSON.stringify kvo
         opts = kvo.options = _.clone kvo.options
@@ -105,6 +106,17 @@ VisModel = exports.VisModel = BaseModel.extend do # {{{
         # console.groupEnd()
         _.collapseObject kvo
     
+    toKV: (keepSlug=false) ->
+        _.toKV @toKVPairs keepSlug
+    
+    
+    /**
+     * @returns {String} URL identifying this model.
+     */
+    toURL: ->
+        slug = @get 'slug', ''
+        slug = "/#slug" if slug
+        "/graph#slug?#{@toKV(false)}"
     
     toString: -> "#{@ctorName}(id=#{@id})"
 

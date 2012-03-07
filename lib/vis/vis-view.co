@@ -68,7 +68,7 @@ VisView = exports.VisView = BaseView.extend do # {{{
         @scaffold.collection.reset that if o.graph_spec
         
         @scaffold.on 'change', (scaffold, value, key, field) ~>
-            console.log "scaffold.change!", key, value, field
+            # console.log "scaffold.change!", key, value
             @model.setOption key, value, {+silent} #unless field.isDefault()
         
         options = @model.get 'options', {}

@@ -132,7 +132,7 @@ app.get '/graph/:slug/?', (req, res, next) ->
     # console.log '  slug:  ', slug
     # console.log '  params:', req.params
     unless _.str.include slug, '.'
-        {pathname, search} = req.info
+        {pathname, search or ''} = req.info
         req.url = "#pathname/view#search"
         req.params.action = 'view'
     next()

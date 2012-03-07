@@ -33,22 +33,18 @@ main = ->
         console.log 'StateChange!\n\n', String(root.location), '\n\n'
     
     
-    # If we got querystring args, apply them to the graph
     data = {}
-    if String(root.location).split '?' .1
-        data = _.uncollapseObject _.fromKV that.replace('#', '%23')
-        
-        # # yarr, have to do options separately or everything goes to shit
-        # options = delete data.options
-        # graph.model.set data, {+silent}
-        # graph.chartOptions options, {+silent}
-        # # Flush all changes once the DOM settles
-        # _.delay do
-        #     ->
-        #         graph.change()
-        #         # graph.scaffold.invoke 'change'
-        #     50
     
+    # Process URL
+    loc = String root.location
+    
+    # If we got querystring args, apply them to the graph
+    if loc.split '?' .1
+        data = _.uncollapseObject _.fromKV that.replace('#', '%23')
+    
+    # Extract slug from URL
+    if match = /\/graph\/(?!view)([^\/?]+)/i.exec loc
+        data.slug = match[1]
     
     vis   = root.vis   = new VisModel data
     graph = root.graph = new VisView do
