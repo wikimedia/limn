@@ -121,9 +121,31 @@ app.configure ->
 app.get '/', (req, res) ->
     res.render 'dashboard'
 
+app.post '/graph/save', (req, res, next) ->
+    if not req.body
+        return res.send {result:"error", message:"JSON required!"}, 501
+    
+    data = req.body
+    {slug} = data
+    if not slug
+        return res.send {result:"error", message:"slug required!"}, 501
+    
+    err <- fs.writeFile "#WWW/presets/#slug.json", JSON.stringify(data), "utf8"
+    if err
+        res.send { result:"error", message:err.message or String(err) }, 501
+    else
+        res.send {result:"ok"}
+
+
+app.get '/graph/:slug\.json', (req, res, next) ->
+    req.url .= replace /^\/graph\//i, '/presets/'
+    next()
+
 app.get '/preset/:slug', (req, res, next) ->
+    {slug} = req.params
     if exists("#WWW/presets/#slug.yaml") or exists("#WWW/presets/#slug.json")
-        req.url += '.json'
+        req.url .= replace /^\/preset\/[^\/?]/i, "/presets/#slug.json"
+        # req.url += '.json'
     next()
 
 app.get '/graph/:slug/?', (req, res, next) ->

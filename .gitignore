@@ -32,3 +32,4 @@ dist/
 tmp/
 var/
 static/tmp
+www/presets/*.json
