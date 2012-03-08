@@ -7,17 +7,7 @@ section.graph
     *
         position relative
     
-    .nav
-        li h3
-            line-height 14px
-            margin 2px
-            padding 8px 12px
-            border-radius 5px
-        li
-            margin-right 4px
-    .tab-content
-        padding 0.5em
-    
+    /* * * *  Chart & Viewport  * * * {{{ */
     .graph-label
         position absolute
         z-index 100
@@ -40,7 +30,33 @@ section.graph
         margin-bottom 1.5em
         overflow hidden
     
+    /* }}} */
     
+    
+    /* * * *  Subnav & Tabs  * * * {{{ */
+    .graph-settings.tabbable
+        .nav
+            li h3
+                line-height 14px
+                margin 2px
+                padding 8px 12px
+                border-radius 5px
+            li
+                margin-right 4px
+        
+        .tab-content
+            padding 0.5em
+    
+    .graph-controls
+        float right
+        
+        input[type="button"]
+            min-width 5em
+            margin 0 0.5em
+            text-align center
+    
+    
+    /* * * *  Graph Details  * * * {{{ */
     form.details
         position relative
         
@@ -66,7 +82,10 @@ section.graph
         .help-block
             font-size 11px
             line-height 1.3
+    /* }}} */
     
+    
+    /* * * *  Chart Options  * * * {{{ */
     .options fieldset
         border 0px
     
@@ -192,6 +211,8 @@ section.graph
                 background-color $bg_color
         
         /* }}} */
+        
+    /* }}} End Chart Options */
 
 
 

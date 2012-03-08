@@ -107,9 +107,9 @@ app.configure ->
     app.use express.static STATIC
     
     # Serve directory listings
-    app.use express.directory WWW
-    app.use express.directory VAR
-    app.use express.directory STATIC
+    # app.use express.directory WWW
+    # app.use express.directory VAR
+    # app.use express.directory STATIC
     
     app.use express.errorHandler do
         dumpExceptions : true

@@ -11,41 +11,45 @@ section.graph(id=graph_id)
             .viewport
             .graph-label
         
-        .tabbable
-            ul.nav.subnav.nav-pills
-                li:         h3 Graph
-                li.active:  a(href="#graph-#{graph_id}-info", data-toggle="tab") Info
-                li:         a(href="#graph-#{graph_id}-data", data-toggle="tab") Data
-                li:         a(href="#graph-#{graph_id}-options", data-toggle="tab") Options
-            
-            .tab-content
-                .graph-info-pane.tab-pane.active(id="graph-#{graph_id}-info")
-                    .row-fluid
-                        .half.control-group
-                            label.slug.control-label(for='slug') Slug
+        .row-fluid
+            .graph-settings.tabbable
+                //- nav.navbar: div.navbar-inner: div.container
+                nav
+                    ul.nav.subnav.nav-pills
+                        li:         h3 Graph
+                        li.active:  a(href="#graph-#{graph_id}-info", data-toggle="tab") Info
+                        li:         a(href="#graph-#{graph_id}-data", data-toggle="tab") Data
+                        li: a.graph-options-tab(href="#graph-#{graph_id}-options", data-toggle="tab") Options
+                        li.graph-controls
+                            input.redraw-button.btn(type="button", value="Redraw")
+                            input.load-button.btn(type="button", value="Load")
+                            input.save-button.btn-success(type="button", value="Save")
+                
+                .tab-content
+                    .graph-info-pane.tab-pane.active(id="graph-#{graph_id}-info")
+                        .row-fluid
+                            .half.control-group
+                                label.slug.control-label(for='slug') Slug
+                                .controls
+                                    input.span3.slug(type='text', id='slug', name='slug', placeholder='graph_slug', value=slug)
+                                    p.help-block The slug uniquely identifies this graph and will be displayed in the URL.
+                            .half.control-group
+                        .row-fluid
+                            .half.control-group
+                                label.width.control-label(for='width') Width
+                                .controls
+                                    input.span1.width(type='text', id='width', name='width', value=width)
+                                    p.help-block Choosing 'auto' will size the graph to the viewport bounds.
+                            .half.control-group
+                                label.height.control-label(for='height') Height
+                                .controls: input.span1.height(type='text', id='height', name='height', value=height)
+                    
+                    .graph-data-pane.tab-pane(id="graph-#{graph_id}-data")
+                        .row-fluid
+                            label.dataset.control-label(for='dataset') Data Set
                             .controls
-                                input.span3.slug(type='text', id='slug', name='slug', placeholder='graph_slug', value=slug)
-                                p.help-block The slug uniquely identifies this graph and will be displayed in the URL.
-                        .half.control-group
-                    .row-fluid
-                        .half.control-group
-                            label.width.control-label(for='width') Width
-                            .controls
-                                input.span1.width(type='text', id='width', name='width', value=width)
-                                p.help-block Choosing 'auto' will size the graph to the viewport bounds.
-                        .half.control-group
-                            label.height.control-label(for='height') Height
-                            .controls: input.span1.height(type='text', id='height', name='height', value=height)
-                
-                .graph-data-pane.tab-pane(id="graph-#{graph_id}-data")
-                    .row-fluid
-                        label.dataset.control-label(for='dataset') Data Set
-                        .controls
-                            input.span3.dataset(type='text', id='dataset', name='dataset', placeholder='URL to dataset file', value=dataset)
-                            p.help-block This dataset filename will soon be replaced by a friendly UI.
-                
-                .graph-options-pane.tab-pane(id="graph-#{graph_id}-options")
-                
-        
-    
+                                input.span3.dataset(type='text', id='dataset', name='dataset', placeholder='URL to dataset file', value=dataset)
+                                p.help-block This dataset filename will soon be replaced by a friendly UI.
+                    
+                    .graph-options-pane.tab-pane(id="graph-#{graph_id}-options")
 

@@ -158,6 +158,10 @@ BaseView = exports.BaseView = Backbone.View.extend do # {{{
     toString : -> "#{@ctorName}(model=#{@model})"
 
 
-# }}}
+# Proxy model methods
+<[ get set unset toJSON toKV toURL ]>
+    .forEach (methodname) ->
+        BaseView::[methodname] = -> @model[methodname].apply @model, arguments
 
+# }}}
 
