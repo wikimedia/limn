@@ -148,7 +148,7 @@ app.get '/preset/:slug', (req, res, next) ->
         # req.url += '.json'
     next()
 
-app.get '/graph/:slug/?', (req, res, next) ->
+app.get '/graph(/:slug)?/?', (req, res, next) ->
     {slug} = req.params
     # console.log '/graph/:slug/?'
     # console.log '  slug:  ', slug

@@ -61,7 +61,7 @@ VisView = exports.VisView = BaseView.extend do # {{{
         # Note: can't debounce the method itself, as the debounce wrapper returns undefined
         $ root .on 'resize', _.debounce(@resizeViewport, DEBOUNCE_RENDER)
         
-        @id = _.domize 'graph', (@model.id or @model.cid)
+        @id = _.domize 'graph', (@model.get('slug', @model.id or @model.cid))
         
         @model.on 'destroy', @remove, this
         @model.on 'change',  @render, this
@@ -109,18 +109,18 @@ VisView = exports.VisView = BaseView.extend do # {{{
             [k, v, opts] = arguments
             values = { "#k": v }
         
-        options = @scaffold.collection
+        fields = @scaffold.collection
         if values
             for k, v in values
-                options.get(k)?.setValue v, opts
+                fields.get(k)?.setValue v, opts
             this
         else
-            opts = @model.toJSON({ -keepDefaults })?.options or {}
+            options = @model.toJSON({ -keepDefaults })?.options or {}
             for k of @FILTER_CHART_OPTIONS
-                # console.log "filter #k?", not opts[k]
-                if k in opts and not opts[k]
-                    delete opts[k]
-            opts
+                # console.log "filter #k?", not options[k]
+                if k in options and not options[k]
+                    delete options[k]
+            options
     
     /**
      * Resizes chart according to the model's width and height.

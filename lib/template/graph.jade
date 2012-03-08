@@ -29,20 +29,24 @@ section.graph(id=graph_id)
                     .graph-info-pane.tab-pane.active(id="graph-#{graph_id}-info")
                         .row-fluid
                             .half.control-group
-                                label.slug.control-label(for='slug') Slug
+                                .control-group
+                                    label.slug.control-label(for='slug') Slug
+                                    .controls
+                                        input.span3.slug(type='text', id='slug', name='slug', placeholder='graph_slug', value=slug)
+                                        p.help-block The slug uniquely identifies this graph and will be displayed in the URL.
+                                .control-group
+                                    label.width.control-label(for='width') Size
+                                    .controls
+                                        input.span1.width(type='text', id='width', name='width', value=width)
+                                        |  &times; 
+                                        input.span1.height(type='text', id='height', name='height', value=height)
+                                        p.help-block Choosing 'auto' will size the graph to the viewport bounds.
+                            .half.control-group
+                                label.desc.control-label(for='desc') Description
                                 .controls
-                                    input.span3.slug(type='text', id='slug', name='slug', placeholder='graph_slug', value=slug)
-                                    p.help-block The slug uniquely identifies this graph and will be displayed in the URL.
-                            .half.control-group
-                        .row-fluid
-                            .half.control-group
-                                label.width.control-label(for='width') Width
-                                .controls
-                                    input.span1.width(type='text', id='width', name='width', value=width)
-                                    p.help-block Choosing 'auto' will size the graph to the viewport bounds.
-                            .half.control-group
-                                label.height.control-label(for='height') Height
-                                .controls: input.span1.height(type='text', id='height', name='height', value=height)
+                                    //- textarea.span3.desc(id='desc', name='desc', placeholder='Graph description.') #{desc}
+                                    <textarea class="span3 desc" id="desc" name="desc" placeholder="Graph description.">#{desc}</textarea>
+                                    p.help-block A description of the graph.
                     
                     .graph-data-pane.tab-pane(id="graph-#{graph_id}-data")
                         .row-fluid
