@@ -1,4 +1,12 @@
-all:
+all: []
+
+prod:
+-   suffix: .js
+    paths:
+    - vendor/vendor-bundle.min
+    - js/kraken/app-bundle
+
+dev:
 -   suffix: .js
     paths:
     - vendor:
@@ -52,10 +60,7 @@ all:
                 - vis-model
                 - vis-view
                 - index
-            
 
 # -   suffix: .js
 #     paths:
 #     - js/kraken/main
-prod: []
-dev: []

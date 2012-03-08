@@ -20,15 +20,17 @@ compiler = require 'connect-compiler-extras'
 
 ### Config
 
+# TODO: read KRAKEN_PORT from ENV
 PORT = 8081
 
 CWD    = process.cwd()
 WWW    = "#CWD/www"
 VAR    = "#CWD/var"
 STATIC = "#CWD/static"
+DIST   = "#CWD/dist"
 
-NODE_ENV  = process.env.NODE_ENV or 'development'
-LOG_LEVEL = if NODE_ENV is 'development' then 'INFO' else 'WARN'
+NODE_ENV  = process.env.NODE_ENV or 'dev'
+LOG_LEVEL = if NODE_ENV is 'dev' then 'INFO' else 'WARN'
 
 
 VERSION = 'dev'
@@ -62,7 +64,7 @@ app.configure ->
         version : VERSION
     } import require './view-helpers'
     
-    app.use express.logger() if LOG_LEVEL is 'DEBUG'
+    app.use express.logger()   if LOG_LEVEL is 'DEBUG'
     
     # Parse URL, fiddle
     app.use require('./reqinfo')({})
@@ -99,17 +101,20 @@ app.configure ->
         log_level : LOG_LEVEL
     app.use require('browserify') do
         mount   : '/vendor/browserify.js'
-        require : <[ events seq hashish ]>
+        require : <[ events seq ]>
     
     # Serve static files
     app.use express.static WWW
     app.use express.static VAR
     app.use express.static STATIC
+    # app.use express.static DIST if exists DIST
+    app.use express.static DIST
     
     # Serve directory listings
     # app.use express.directory WWW
     # app.use express.directory VAR
     # app.use express.directory STATIC
+    # app.use express.directory DIST
     
     app.use express.errorHandler do
         dumpExceptions : true
@@ -155,7 +160,7 @@ app.get '/graph(/:slug)?/?', (req, res, next) ->
     # console.log '  params:', req.params
     unless _.str.include slug, '.'
         {pathname, search or ''} = req.info
-        req.url = "#pathname/view#search"
+        req.url = path.join pathname, "view#search"
         req.params.action = 'view'
     next()
 

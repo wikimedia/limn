@@ -34,7 +34,7 @@ NODE_ENV = exports.NODE_ENV = (process.env.NODE_ENV or 'dev').toLowerCase()
 
 sources = exports.sources = (modulesFile, node_env=NODE_ENV) ->
     mods = yaml.load fs.readFileSync modulesFile, 'utf8'
-    modlist = (mods.all or []) .concat (mods[node_env] or [])
+    modlist = (mods.all or []).concat (mods[node_env] or [])
     _.flatten modlist.map ({suffix or '', paths}) -> joinTree('', paths).map -> it+suffix
 
 

@@ -47,4 +47,12 @@ task \test 'Rebuild test files and run tests' ->
 task \clean 'Clean up environment and artifacts' ->
     remove [MODULE_LINK, EXPRESS_DEP_MIME, 'var', 'tmp/dest'], true
 
+task \source_list 'Print a list of the source file paths.' ->
+    invoke \link
+    {sources} = require 'kraken/server/view-helpers'
+    say sources("www/modules.yaml", 'dev').join '\n'
+
+# task \dist 'Assemble a distribution package for deploy' ->
+#     ...
+
 

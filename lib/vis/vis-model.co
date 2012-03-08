@@ -98,7 +98,7 @@ VisModel = exports.VisModel = BaseModel.extend do # {{{
         for k, rootVal in root.ROOT_VIS_OPTIONS
             v = opts[k]
             # console.log "  [#k] rootVal:", rootVal, "===", v, "?", _.isEqual(rootVal, v) unless _.isEqual(rootVal, v)
-            if _.isEqual rootVal, v
+            if v is void or _.isEqual rootVal, v
                 delete opts[k]
             else
                 opts[k] = @serialize v
