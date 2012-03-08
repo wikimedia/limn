@@ -26,10 +26,12 @@ test/*.log
 test/fixtures/*.json
 test/fixtures/logs/*.log
 
+build
+dist
+var
+log
+tmp
+
 lib/version.js
-build/
-dist/
-tmp/
-var/
-static/tmp
-www/presets/*.jsonlog
+www/presets/*.json
+
