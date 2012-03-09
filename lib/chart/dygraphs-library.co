@@ -4,9 +4,10 @@ _ = require 'kraken/underscore'
 
 
 class exports.DygraphsLibrary extends ChartLibrary
+    name : 'dygraphs'
     
-    (name, options) ->
-        super ...
+    (options) ->
+        super 'dygraphs', options
     
     render: ->
         ...

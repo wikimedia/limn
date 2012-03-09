@@ -4,6 +4,8 @@ op = require 'kraken/util/op'
 {Parsers, ParserMixin}  = require 'kraken/util/parser'
 
 
+KNOWN_LIBRARIES = exports.KNOWN_LIBRARIES = {}
+
 /**
  * @class Specification for an option.
  */
@@ -39,6 +41,10 @@ class exports.ChartOption
  * @class Abstraction of a charting library, encapsulating its logic and options.
  */
 class exports.ChartLibrary extends EventEmitter
+    
+    @lookupLibrary = (name) ->
+        KNOWN_LIBRARIES[name]
+    
     /**
      * Ordered ChartOption objects.
      * @type ChartOption[]
@@ -61,7 +67,10 @@ class exports.ChartLibrary extends EventEmitter
      */
     (@name, options) ->
         @options_ordered = _.map options, (opt) ~> new ChartOption this, opt
-        @options = _.synthesize @options, -> [it.name, it]
+        @options = _.synthesize @options_ordered, -> [it.name, it]
+        
+        # register library
+        KNOWN_LIBRARIES[@name] = this
     
     
     /**
@@ -112,7 +121,8 @@ class exports.ChartLibrary extends EventEmitter
     getParserFor: (name) ->
         @getParser @get(name).type
     
-    
+    parseOption: (name, value) ->
+        @getParserFor(name)(value)
     
 
 

@@ -1,12 +1,14 @@
 Seq = require 'seq'
 { _, op,
 } = require 'kraken/util'
+{ ChartLibrary, DygraphsLibrary,
+} = require 'kraken/chart'
 { BaseView, BaseModel, BaseList,
 } = require 'kraken/base'
-{   Field, FieldList, FieldView, Scaffold,
+{ Field, FieldList, FieldView, Scaffold,
 } = require 'kraken/scaffold'
-{   GraphOption, GraphOptionList, GraphOptionView,
-    GraphOptionsScaffold, TagSet,
+{ GraphOption, GraphOptionList, GraphOptionView,
+  GraphOptionsScaffold, TagSet,
 } = require 'kraken/graph'
 { VisView, VisModel,
 } = require 'kraken/vis'
@@ -20,9 +22,11 @@ ROOT_VIS_OPTIONS      = {}
 
 # Create the Graph Scaffold
 main = ->
-    opts = root.CHART_DEFAULT_OPTIONS = {}
-    for opt of root.CHART_OPTIONS_SPEC
-        opts[opt.name] = opt.default
+    # opts = root.CHART_DEFAULT_OPTIONS = {}
+    # for opt of root.CHART_OPTIONS_SPEC
+    #     opts[opt.name] = opt.default
+    
+    dyglib = new DygraphsLibrary CHART_OPTIONS_SPEC
     
     # TODO: create a preset manager
     # Remove chart options from data so we don't have to deepcopy
@@ -41,6 +45,9 @@ main = ->
     # If we got querystring args, apply them to the graph
     if loc.split '?' .1
         data = _.uncollapseObject _.fromKV that.replace('#', '%23')
+        data.options = _.synthesize do
+            data.options or {}
+            (v, k) -> [ k, dyglib.parseOption(k,v) ]
     
     # Extract slug from URL
     if match = /\/graph\/(?!view)([^\/?]+)/i.exec loc

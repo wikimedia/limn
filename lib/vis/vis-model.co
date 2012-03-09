@@ -82,10 +82,10 @@ VisModel = exports.VisModel = BaseModel.extend do # {{{
         json = _.clone(@attributes) import { options:_.clone(@attributes.options) }
         return json if options.keepDefaults
         
-        defs = root.CHART_DEFAULT_OPTIONS
+        dyglib = ChartLibrary.lookupLibrary 'dygraphs'
         opts = json.options
         for k, v in opts
-            delete opts[k] if v is defs[k]
+            delete opts[k] if dyglib.isDefault k, v
         json
     
     
