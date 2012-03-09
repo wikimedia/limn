@@ -42,8 +42,13 @@ dev:
             - util:
                 - op
                 - backbone
+                - parser
                 - index
             - base
+            - chart:
+                - chart-library
+                - dygraphs-library
+                - index
             - template:
                 - graph.jade
                 - graph-option.jade

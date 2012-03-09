@@ -7,9 +7,9 @@ _backbone = do
     /**
      * @returns {Array<Class>} The list of all superclasses for this class or object.
      */
-    getSuperClasses: function getSuperClasses(cls)
-        cls .= constructor if cls and typeof cls is not 'function'
-        if superclass = cls?.__super__?.constructor
+    getSuperClasses: function getSuperClasses(Cls)
+        Cls .= constructor if cls and typeof Cls is not 'function'
+        if superclass = Cls?.__super__?.constructor
             [superclass].concat getSuperClasses superclass
         else
             []

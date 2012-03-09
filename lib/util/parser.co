@@ -1,0 +1,71 @@
+_  = require 'kraken/underscore'
+op = require 'kraken/util/op'
+
+
+/**
+ * @namespace Parsers by type.
+ */
+Parsers = exports.Parsers =
+    
+    parseBoolean: (v) ->
+        op.toBool v
+    
+    parseInteger: (v) ->
+        r = op.toInt v
+        unless isNaN r then r else null
+    
+    parseFloat: (v) ->
+        r = op.toFloat v
+        unless isNaN r then r else null
+    
+    parseString: (v) ->
+        if v? then op.toStr v else null
+    
+    parseArray: (v) ->
+        if v then op.toObject v else null
+    
+    parseObject: (v) ->
+        if v then op.toObject v else null
+    
+    parseFunction: (v) ->
+        if v and _.startswith String(v), 'function'
+            try eval "(#v)" catch err then null
+        else
+            null
+    
+
+
+class exports.ParserMixin
+    this:: import Parsers
+    
+    
+    parse: (v, type) ->
+        @getParser(type)(v)
+    
+    getParser: (type='String') ->
+        # If this is a known type and we have a parser for it, return that
+        fn = @["parse#type"]
+        return fn if typeof fn is 'function'
+        
+        # Handle compound/optional types
+        # XXX: handle 'or' by returning an array of parsers?
+        type = _ String(type).toLowerCase()
+        for t of <[ Integer Float Boolean Object Array Function ]>
+            if type.startsWith t.toLowerCase()
+                return @["parse#t"]
+        @defaultParser or @parseString
+    
+    getParserFromExample: (v) ->
+        return null unless v?
+        type = typeof v
+        
+        if type is not 'object'
+            @getParser type
+        else if _.isArray v
+            @getParser 'Array'
+        else
+            @getParser 'Object'
+    
+    
+
+

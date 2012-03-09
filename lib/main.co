@@ -46,7 +46,7 @@ main = ->
     if match = /\/graph\/(?!view)([^\/?]+)/i.exec loc
         data.slug = match[1]
     
-    vis   = root.vis   = new VisModel data
+    vis   = root.vis   = new VisModel data, {+parse}
     graph = root.graph = new VisView do
         graph_spec : root.CHART_OPTIONS_SPEC
         model      : vis

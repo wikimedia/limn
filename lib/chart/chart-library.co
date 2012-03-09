@@ -1,0 +1,118 @@
+_  = require 'kraken/underscore'
+op = require 'kraken/util/op'
+{EventEmitter} = require 'events'
+{Parsers, ParserMixin}  = require 'kraken/util/parser'
+
+
+/**
+ * @class Specification for an option.
+ */
+class exports.ChartOption
+    SPEC_KEYS : <[ name type default desc tags examples ]>
+    
+    name     : null
+    type     : 'String'
+    default  : null
+    desc     : ''
+    tags     : null
+    examples : null
+    
+    
+    (@library, @spec) ->
+        throw new Error('Each ChartOption requires a name!') unless @spec.name
+        
+        for k of @SPEC_KEYS
+            v = @spec[k]
+            @[k] = v if v?
+        @tags or= []
+        @parse = @library.getParser @type
+    
+    parse : Parsers.parseString
+    
+    isDefault: (v) ->
+        @default is v
+    
+    toString: -> "(#{@name}: #{@type})"
+
+
+/**
+ * @class Abstraction of a charting library, encapsulating its logic and options.
+ */
+class exports.ChartLibrary extends EventEmitter
+    /**
+     * Ordered ChartOption objects.
+     * @type ChartOption[]
+     */
+    options_ordered : null
+    
+    /**
+     * Map of option name to ChartOption objects.
+     * @type { name:ChartOption, ... }
+     */
+    options : null
+    
+    
+    
+    /**
+     * @constructor
+     * @param {String} name Library name.
+     * @param {Array} options List of options objects, each specifying the
+     *  name, type, default, description (etc) of a chart library option.
+     */
+    (@name, options) ->
+        @options_ordered = _.map options, (opt) ~> new ChartOption this, opt
+        @options = _.synthesize @options, -> [it.name, it]
+    
+    
+    /**
+     * @returns {ChartOption} Get an option's spec by name.
+     */
+    get: (name, def) ->
+        @options[name] or def
+    
+    /**
+     * @returns {Array} List of values found at the given attr on each 
+     *  option spec object.
+     */
+    pluck: (attr) ->
+        _.pluck @spec, attr
+    
+    /**
+     * @returns {Object} An object, mapping from option.name to the
+     *  result of the supplied function.
+     */
+    map: (fn, context=this) ->
+        _.synthesize @spec, ~> [it.name, fn.call(context, it, it.name, this)]
+    
+    
+    /**
+     * @returns {Boolean} Whether the supplied value is the same as
+     * the default value for the given key.
+     */
+    isDefault: (name, value) ->
+        @get name .isDefault value
+    
+    
+    serialize: (v, k) ->
+        # if v!?
+        #     v = ''
+        if _.isBoolean v
+            v =  Number v
+        else if _.isObject v
+            v = JSON.stringify v
+        String v
+    
+    
+    /**
+     * When implementing a ChartLibrary, you can add or override parsers
+     * merely by subclassing.
+     */
+    this:: import ParserMixin::
+    
+    getParserFor: (name) ->
+        @getParser @get(name).type
+    
+    
+    
+
+

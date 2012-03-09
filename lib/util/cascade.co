@@ -1,0 +1,130 @@
+_ = require 'kraken/underscore'
+
+/**
+ * @class A mapping of key-value pairs supporting lookup fallback across multiple objects.
+ */
+class Cascade
+    
+    /**
+     * List of objects for lookups.
+     * @type Array
+     * @private
+     */
+    _dicts : null
+    
+    
+    /**
+     * @constructor
+     */
+    ->
+        @_dicts = []
+        @extend ...
+    
+    
+    /**
+     * @returns {Number} Number of real keys in the Dict.
+     */
+    size : ->
+        _.keys @_dicts .length
+    
+    /**
+     * @returns {Cascade} A copy of the dict, including fallbacks as well as data.
+     */
+    clone: ->
+        d = new Cascade
+        _.each @_dicts, (v, k) ->
+            d.setAlias k, v.slice()
+        d
+    
+    
+    
+    ### Value Accessors ###
+    
+    /**
+     * @returns {Boolean} Whether there is a value at the given key.
+     */
+    has : (key) ->
+        (@get key, null)?
+    
+    /**
+     * @returns {*} Ignores aliases, returning the value at key or `undefined`.
+     */
+    getValue : (key) ->
+        prop = _.getNested @_dicts, key
+        prop.value if prop?
+    
+    get : (key, def) ->
+        aliases = @_aliases[key] or [key]
+        val = aliases.reduce do
+            (val, alias) ->
+                return val if val? is not undefined
+                prop = _.getNested @_dicts, alias
+                prop.value if prop?
+            undefined
+        
+        if val is not undefined
+            val
+        else
+            def
+    
+    set : (key, val) ->
+        _.setNested @_dicts, key, val, true
+        val
+    
+    del : (key) ->
+        prop = _.getNestedMeta key
+        if prop
+            delete prop.obj[prop.key]
+            prop.value
+    
+    
+    
+    
+    ### Collection Methods ###
+    
+    toObject: ->
+        _.extend {}, ...@_dicts
+    
+    # XXX: Merge keys from all objects?
+    keys: ->
+        _.keys @_data
+    
+    values: ->
+        _.values @_data
+    
+    extend : (...args) ->
+        for o of args
+            for k,v in o then @set k, v
+        this
+    
+    reduce : (fn, acc, context=this) ->
+        _.reduce @_data, fn, acc, context
+    
+    map : (fn, context=this) ->
+        _.map @_data, fn, context
+    
+    filter: (fn, context=this) ->
+        _.filter @_data, fn, context
+    
+    each : (fn, context=this) ->
+        _.each @_data, fn, context
+        this
+    
+    invoke : (name, ...args) ->
+        _.invoke @_data, name, ...args
+    
+    pluck : (attr) ->
+        _.pluck @_data, attr
+    
+    find: (fn, context=this) ->
+        _.find @_data, fn, context
+    
+    
+    
+    toString: ->
+        Cls = @.constructor
+        "#{Cls.displayName or Cls.name}()"
+
+
+
+module.exports = exports = Cascade

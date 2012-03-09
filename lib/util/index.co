@@ -13,6 +13,7 @@ backbone  = require 'kraken/util/backbone'
 # HashSet   = require 'kraken/util/hashset'
 # BitString = require 'kraken/util/bitstring'
 # {crc32}   = require 'kraken/util/crc'
+parser    = require 'kraken/util/parser'
 
 
 ## Debug
@@ -27,5 +28,5 @@ _.dump = (o, label='dump') ->
     o
 
 
-exports import { root, _, op, backbone }
-# exports import { root, _, op, HashSet, BitString, crc32, }
+exports import { root, _, op, backbone, parser, }
+# exports import { root, _, op, HashSet, BitString, crc32, parser, }

@@ -17,7 +17,7 @@ _array = do
         _.reduce do
             o
             (acc, [k, v], idx) ->
-                if k and filter(v, k)
+                if k and (not filter or filter(v, k))
                     acc[k] = v
                 acc
             {}
@@ -28,10 +28,11 @@ _array = do
      * @param {Function} [fn=I] Transformation function. Defaults to the identity transform.
      * @param {Function} [filter=defined] Optional filter function. If omitted, will 
      *  exclude `undefined` and `null` values.
+     * @param {Object} [context=o] Function context.
      * @return {Object} Transformed result.
      */
-    synthesize : (o, fn=I, filter=defined) ->
-        _array.generate _.map(o, fn), filter
+    synthesize : (o, fn=I, filter=defined, context) ->
+        _array.generate _.map(o, fn, context), filter
     
     
     /**
