@@ -1,40 +1,62 @@
 _ = require 'kraken/underscore'
 
+
 /**
  * @class A mapping of key-value pairs supporting lookup fallback across multiple objects.
  */
 class Cascade
     
     /**
+     * Map holding the object's KV-pairs. It is also the first element of the
+     * cascade lookup.
+     * @type Object
+     * @private
+     */
+    _data : null
+    
+    /**
      * List of objects for lookups.
      * @type Array
      * @private
      */
-    _dicts : null
+    _lookups : null
+    
     
     
     /**
      * @constructor
      */
-    ->
-        @_dicts = []
-        @extend ...
+    (data={}, lookups=[]) ->
+        @_data = {} import data
+        @_lookups = [@_data].concat lookups.slice()
     
     
     /**
-     * @returns {Number} Number of real keys in the Dict.
-     */
-    size : ->
-        _.keys @_dicts .length
-    
-    /**
-     * @returns {Cascade} A copy of the dict, including fallbacks as well as data.
+     * @returns {Cascade} A copy of the lookup chain.
      */
     clone: ->
-        d = new Cascade
-        _.each @_dicts, (v, k) ->
-            d.setAlias k, v.slice()
-        d
+        new Cascade @_data, @_lookups
+    
+    
+    
+    ### Lookups ###
+    
+    /**
+     * Adds a new lookup dictionary to the chain.
+     * @returns {this}
+     */
+    addLookup: (dict) ->
+        @_lookups.push dict
+        this
+    
+    /**
+     * Removes a lookup dictionary from the chain.
+     * @returns {this}
+     */
+    removeLookup: (dict) ->
+        _.remove @_lookups, dict
+        this
+    
     
     
     
@@ -44,85 +66,82 @@ class Cascade
      * @returns {Boolean} Whether there is a value at the given key.
      */
     has : (key) ->
-        (@get key, null)?
+        (@get key, undefined) is not undefined
+    
     
     /**
-     * @returns {*} Ignores aliases, returning the value at key or `undefined`.
+     * @returns {*} First value for the given key found in the lookup chain,
+     * and the default otherwise.
      */
-    getValue : (key) ->
-        prop = _.getNested @_dicts, key
-        prop.value if prop?
-    
     get : (key, def) ->
-        aliases = @_aliases[key] or [key]
-        val = aliases.reduce do
-            (val, alias) ->
-                return val if val? is not undefined
-                prop = _.getNested @_dicts, alias
-                prop.value if prop?
-            undefined
-        
-        if val is not undefined
-            val
-        else
-            def
+        for data of @_lookups
+            val = _.getNested data, key, undefined
+            return val if val is not undefined
+        def
     
+    /**
+     * @param {String} key Key to set.
+     * @param {*} val Non-`undefined` value to set.
+     * @returns {this}
+     */
     set : (key, val) ->
-        _.setNested @_dicts, key, val, true
-        val
+        throw new Error("Value and key cannot be undefined!") unless key and val is not undefined
+        _.setNested @_data, key, val
+        this
     
-    del : (key) ->
-        prop = _.getNestedMeta key
-        if prop
-            delete prop.obj[prop.key]
-            prop.value
     
+    /**
+     * Delete the given key from this object's concrete data. If missing,
+     * does not cascade.
+     * @returns {undefined|*} If found, returns the old value, and otherwise `undefined`.
+     */
+    del: (key) ->
+        _.unsetNested @_data, key, false
     
     
     
     ### Collection Methods ###
-    
-    toObject: ->
-        _.extend {}, ...@_dicts
-    
-    # XXX: Merge keys from all objects?
-    keys: ->
-        _.keys @_data
-    
-    values: ->
-        _.values @_data
     
     extend : (...args) ->
         for o of args
             for k,v in o then @set k, v
         this
     
+    toObject: ->
+        _.extend {}, ...@_lookups
+    
+    keys: ->
+        _.flatten _.map @_lookups, -> _.keys it
+    
+    values: ->
+        _.flatten _.map @_lookups, -> _.values it
+    
     reduce : (fn, acc, context=this) ->
-        _.reduce @_data, fn, acc, context
+        _.reduce @_lookups, fn, acc, context
     
     map : (fn, context=this) ->
-        _.map @_data, fn, context
+        _.map @_lookups, fn, context
     
     filter: (fn, context=this) ->
-        _.filter @_data, fn, context
+        _.filter @_lookups, fn, context
     
     each : (fn, context=this) ->
-        _.each @_data, fn, context
+        _.each @_lookups, fn, context
         this
     
     invoke : (name, ...args) ->
-        _.invoke @_data, name, ...args
+        _.invoke @_lookups, name, ...args
     
     pluck : (attr) ->
-        _.pluck @_data, attr
+        _.pluck @_lookups, attr
     
     find: (fn, context=this) ->
-        _.find @_data, fn, context
+        _.find @_lookups, fn, context
     
     
     
     toString: ->
-        Cls = @.constructor
+        Cls = this.constructor
         "#{Cls.displayName or Cls.name}()"
 
 

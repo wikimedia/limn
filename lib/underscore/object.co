@@ -91,14 +91,16 @@ _obj = do
      * @param {Boolean} [ensure=false] If true, intermediate keys that are `null` or
      *  `undefined` will be filled in with a new empty object `{}`, ensuring the get will
      *   return valid metadata.
-     * @retruns {null|Object} If found, the object is of the form `{ key: Qualified key name, obj: Parent object of key, val: Value at obj[key] }`. Otherwise `null`.
+     * @retruns {undefined|Object} If found, the object is of the form 
+     *  `{ key: Qualified key name, obj: Parent object of key, val: Value at obj[key] }`. 
+     *  Otherwise `undefined`.
      */
     getNestedMeta : (obj, chain, ensure=false) ->
         chain = chain.split('.') if typeof chain is 'string'
         _.reduce do
             chain
             (current, key, idx, chain) ->
-                return null unless current?
+                return undefined unless current?
                 
                 if idx is chain.length-1
                     return
@@ -112,7 +114,7 @@ _obj = do
                 else if ensure 
                     current[key] = {}
                 else
-                    null
+                    undefined
             obj
     
     /**
@@ -138,7 +140,7 @@ _obj = do
      * @param {Boolean} [ensure=false] If true, intermediate keys that are `null` or
      *  `undefined` will be filled in with a new empty object `{}`, ensuring the set
      *  will succeed.
-     * @retruns {null|Any} If found, returns the old value, and otherwise `null`.
+     * @retruns {undefined|Any} If found, returns the old value, and otherwise `undefined`.
      */
     setNested : (obj, chain, value, ensure=false) ->
         meta = _obj.getNestedMeta obj, chain, ensure
@@ -146,7 +148,25 @@ _obj = do
             meta.obj[meta.key] = value
             meta.val
         else
-            null
+            undefined
+    
+    /**
+     * Searches a heirarchical object for a given subkey specified in
+     * dotted-property syntax, removing it if found.
+     * @param {Object} obj The object to serve as the root of the property-chain.
+     * @param {Array|String} chain The property-chain to lookup.
+     * @param {Boolean} [ensure=false] If true, intermediate keys that are `null` or
+     *  `undefined` will be filled in with a new empty object `{}`, ensuring the set
+     *  will succeed.
+     * @retruns {undefined|Any} If found, returns the old value, and otherwise `undefined`.
+     */
+    unsetNested : (obj, chain, ensure=false) ->
+        meta = _obj.getNestedMeta obj, chain, ensure
+        if meta
+            delete meta.obj[meta.key]
+            meta.val
+        else
+            undefined
     
 
 exports import _obj
