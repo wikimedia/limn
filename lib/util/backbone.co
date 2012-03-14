@@ -1,5 +1,8 @@
 _ = require 'underscore'
-# Backbone = require 'backbone'
+window?._ = _
+Backbone = require 'backbone'
+window?.Backbone = Backbone
+Backbone.setDomLibrary that if window? and (window.jQuery or window.Zepto or window.ender)
 
 
 _backbone = do

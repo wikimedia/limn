@@ -1,4 +1,6 @@
-Seq = require 'seq'
+Seq      = require 'seq'
+Backbone = require 'backbone'
+
 { _, op,
 } = require 'kraken/util'
 { ChartLibrary, DygraphsLibrary,
@@ -12,6 +14,7 @@ Seq = require 'seq'
 } = require 'kraken/graph'
 { VisView, VisModel,
 } = require 'kraken/vis'
+
 
 root = this
 CHART_OPTIONS_SPEC    = []
