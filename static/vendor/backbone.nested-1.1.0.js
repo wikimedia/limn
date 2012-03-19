@@ -30,9 +30,9 @@
       }
 
       // check if the result is an Object, Array, etc.
-      if (!opts.silent && _.isObject(result) && window.console){
-        window.console.log("Backbone-Nested syntax is preferred for accesing values of attribute '" + attrStrOrPath + "'.");
-      }
+      // if (!opts.silent && _.isObject(result) && window.console){
+      //   window.console.log("Backbone-Nested syntax is preferred for accesing values of attribute '" + attrStrOrPath + "'.");
+      // }
       // else it's a leaf
 
       return result;
