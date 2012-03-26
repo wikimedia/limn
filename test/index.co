@@ -1,0 +1,4 @@
+coco = require 'coco'
+util = require './util'
+
+exports import util

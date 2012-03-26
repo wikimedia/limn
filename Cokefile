@@ -5,6 +5,9 @@ require 'buildtools/tasks'
 MODULE_LINK      = 'node_modules/kraken'
 EXPRESS_DEP_MIME = 'node_modules/express/node_modules/mime'
 
+
+
+
 task \link 'Link package source to node_modules so the name resolves correctly' ->
     # Browser-based require doens't support relative requires, but things
     # like `require 'kraken/utils'` rarely work in node without this hack.
@@ -23,36 +26,65 @@ task \install 'Install project dependencies.' ->
 task \setup 'Ensure project is set up for development.' ->
     invoke \install
     invoke \link
-    invoke \update_version
+
 
 
 task \server 'Start dev server' ->
     invoke \setup
+    invoke \update_version
     say ''
     run 'lib/server/server.co'
+
 
 task \build 'Build coco sources' ->
     invoke \setup
     coco <[ -bjc package.co ]>
 
+
 task \test 'Rebuild test files and run tests' ->
     invoke \setup
-    tests = glob.globSync 'test/*.co'
-    tests.forEach (file) ->
-        js = file.replace '.co', '.js'
-        fs.unlinkSync js if exists js
-        coco [ '-bc', file ]
-    sh 'expresso'
+    invoke \cleanup_tests
+    
+    # Compile tests to JS so Expresso finds them
+    say "Compiling tests...".white.bold
+    glob 'test/**/*.co', {+sync} .forEach -> coco [ '-bc', it ]
+    say 'ok.\n'
+    
+    say "Running tests...".white.bold
+    err <- sh 'expresso', {-die}
+    say "#{err and 'yep' or 'ok'}.\n"
+    
+    # Clean up JS turds
+    invoke \cleanup_tests
+
+
+task \cleanup_tests 'Removes compiled tests' ->
+    # XXX: erp. only works if no .js files by default :P
+    # say "Cleaning up old test files...".white.bold
+    # js_files = glob 'test/**/*.js', {+sync}
+    # for js of js_files.filter( -> exists it )
+    #     say "unlink #js"
+    #     fs.unlinkSync js
+    # say 'ok.\n'
+    
+    glob 'test/**/*.co', {+sync}
+        .map -> it.replace('.co', '.js')
+        .filter exists
+        .forEach fs.unlinkSync
 
 task \clean 'Clean up environment and artifacts' ->
-    remove [MODULE_LINK, EXPRESS_DEP_MIME, 'var', 'tmp/dest'], true
+    invoke \cleanup_tests
+    remove [MODULE_LINK, EXPRESS_DEP_MIME, 'var', 'tmp/dist'], true
+
+
 
 task \source_list 'Print a list of the source file paths.' ->
-    invoke \link
+    invoke \setup
     {sources} = require 'kraken/server/view-helpers'
     say sources("www/modules.yaml", 'dev').join '\n'
 
 # task \dist 'Assemble a distribution package for deploy' ->
+#     invoke \cleanup_tests
 #     ...
 
 

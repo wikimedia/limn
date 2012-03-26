@@ -16,17 +16,5 @@ backbone  = require 'kraken/util/backbone'
 parser    = require 'kraken/util/parser'
 
 
-## Debug
-_.dump = (o, label='dump') ->
-    if not _.isArray(o) and _.isObject(o)
-        console.group label
-        for k, v in o
-            console.log "#k:", v
-        console.groupEnd()
-    else
-        console.log label, o
-    o
-
-
 exports import { root, _, op, backbone, parser, }
 # exports import { root, _, op, HashSet, BitString, crc32, parser, }

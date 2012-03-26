@@ -13,23 +13,33 @@ dev:
         - es5-shim.min
         - modernizr.min
         - json2.min
-        - jquery.min
+        
+        - jquery
         - jquery.history.min
         - jquery.hotkeys.min
         - jquery.isotope.min
-        # - jquery.tipsy.min # handled by bootstrap now?
-        - spin.min
-        - jquery.spin.min
+        
+        # handled by bootstrap now?
+        # - jquery.tipsy.min
+        
+        # - spin.min
+        # - jquery.spin.min
         - bootstrap.min
+        
+        # Browserify must come before any .mod files
         - browserify
-        # - require
-        - underscore.mod.min
-        - underscore.string.mod.min
-        - backbone.mod.min
-        - backbone.nested.mod.min
+        
+        - underscore.mod
+        - underscore.string.mod
+        
+        - backbone.mod
+        - backbone.nested.mod
+        - synapse.mod
+        
         - showdown.mod.min
         - jade.runtime.min
-        - dygraph.min
+        
+        - dygraph
 
 -   suffix: .mod.js
     paths:
