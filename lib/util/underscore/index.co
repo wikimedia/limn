@@ -2,10 +2,10 @@ _     = require 'underscore'
 _.str = require 'underscore.string'
 _.mixin _.str.exports()
 
-_.mixin require 'kraken/underscore/array'
-_.mixin require 'kraken/underscore/object'
-_.mixin require 'kraken/underscore/kv'
-_.mixin require 'kraken/underscore/string'
+_.mixin require 'kraken/util/underscore/array'
+_.mixin require 'kraken/util/underscore/object'
+_.mixin require 'kraken/util/underscore/kv'
+_.mixin require 'kraken/util/underscore/string'
 
 
 ## Debug

@@ -1,4 +1,4 @@
-_ = require 'kraken/underscore'
+_ = require 'kraken/util/underscore'
 { ChartLibrary, ChartOption,
 } = require 'kraken/chart/chart-library'
 

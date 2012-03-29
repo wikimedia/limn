@@ -1,4 +1,4 @@
-_ = require 'kraken/underscore'
+_ = require 'kraken/util/underscore'
 { BaseModel, BaseView,
 } = require 'kraken/base'
 { Field, FieldList, FieldView, Scaffold,

@@ -1,6 +1,6 @@
 Seq = require 'seq'
 
-_ = require 'kraken/underscore'
+_ = require 'kraken/util/underscore'
 Cascade = require 'kraken/util/cascade'
 { ChartLibrary,
 } = require 'kraken/chart'

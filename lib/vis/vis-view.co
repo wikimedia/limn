@@ -1,6 +1,6 @@
 root = do -> this
 
-_ = require 'kraken/underscore'
+_ = require 'kraken/util/underscore'
 { BaseView,
 } = require 'kraken/base'
 { Field, FieldList, FieldView, Scaffold

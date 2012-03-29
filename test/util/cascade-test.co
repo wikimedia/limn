@@ -1,6 +1,6 @@
 assert  = require 'assert'
 
-_       = require 'kraken/underscore'
+_       = require 'kraken/util/underscore'
 Cascade = require 'kraken/util/cascade'
 
 

@@ -1,4 +1,4 @@
-_  = require 'kraken/underscore'
+_  = require 'kraken/util/underscore'
 
 root = do -> this
 root.console or= _ <[ log info warn error dir table group groupCollapsed groupEnd ]> .synthesize -> [it, nop]
@@ -10,11 +10,10 @@ root.jQuery?.fn.invoke = (method, ...args) ->
 
 op        = require 'kraken/util/op'
 backbone  = require 'kraken/util/backbone'
+parser    = require 'kraken/util/parser'
+exports import { root, _, op, backbone, parser, }
+
 # HashSet   = require 'kraken/util/hashset'
 # BitString = require 'kraken/util/bitstring'
 # {crc32}   = require 'kraken/util/crc'
-parser    = require 'kraken/util/parser'
-
-
-exports import { root, _, op, backbone, parser, }
-# exports import { root, _, op, HashSet, BitString, crc32, parser, }
+# exports import { HashSet, BitString, crc32, }

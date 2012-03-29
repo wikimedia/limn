@@ -1,4 +1,4 @@
-_  = require 'kraken/underscore'
+_  = require 'kraken/util/underscore'
 op = require 'kraken/util/op'
 {EventEmitter} = require 'events'
 {Parsers, ParserMixin}  = require 'kraken/util/parser'
