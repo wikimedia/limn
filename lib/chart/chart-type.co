@@ -1,5 +1,4 @@
 _  = require 'kraken/util/underscore'
-op = require 'kraken/util/op'
 {EventEmitter} = require 'events'
 {Parsers, ParserMixin}  = require 'kraken/util/parser'
 
@@ -7,7 +6,7 @@ op = require 'kraken/util/op'
 /**
  * @class Specification for an option.
  */
-class exports.ChartOption
+class exports.ChartTypeOption
     SPEC_KEYS : <[ name type default desc tags examples ]>
     
     name     : null
@@ -19,13 +18,13 @@ class exports.ChartOption
     
     
     (@chartType, @spec) ->
-        throw new Error('Each ChartOption requires a name!') unless @spec.name
+        throw new Error('Each ChartTypeOption requires a name!') unless @spec.name
         
         for k of @SPEC_KEYS
             v = @spec[k]
             @[k] = v if v?
         @tags or= []
-        @parse = @lookup.getParser @type
+        @parse = @chartType.getParser @type
     
     parse : Parsers.parseString
     
@@ -50,14 +49,14 @@ KNOWN_CHART_TYPES = exports.KNOWN_CHART_TYPES = {}
  */
 class exports.ChartType extends EventEmitter
     /**
-     * Ordered ChartOption objects.
-     * @type ChartOption[]
+     * Ordered ChartTypeOption objects.
+     * @type ChartTypeOption[]
      */
     options_ordered : null
     
     /**
-     * Map of option name to ChartOption objects.
-     * @type { name:ChartOption, ... }
+     * Map of option name to ChartTypeOption objects.
+     * @type { name:ChartTypeOption, ... }
      */
     options : null
     
@@ -70,13 +69,13 @@ class exports.ChartType extends EventEmitter
      *  name, type, default, description (etc) of a chart option.
      */
     (@name, options) ->
-        @options_ordered = _.map options, (opt) ~> new ChartOption this, opt
+        @options_ordered = _.map options, (opt) ~> new ChartTypeOption this, opt
         @options = _.synthesize @options_ordered, -> [it.name, it]
         ChartType.register this
     
     
     /**
-     * @returns {ChartOption} Get an option's spec by name.
+     * @returns {ChartTypeOption} Get an option's spec by name.
      */
     get: (name, def) ->
         @options[name] or def

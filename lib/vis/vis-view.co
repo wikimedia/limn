@@ -3,10 +3,8 @@ root = do -> this
 _ = require 'kraken/util/underscore'
 { BaseView,
 } = require 'kraken/base'
-{ Field, FieldList, FieldView, Scaffold
-} = require 'kraken/scaffold'
-{   GraphOptionsScaffold, GraphOption, GraphOptionList, DEBOUNCE_RENDER,
-} = require 'kraken/graph'
+{ ChartOptionScaffold, ChartOption, ChartOptionList, DEBOUNCE_RENDER,
+} = require 'kraken/chart'
 { VisModel,
 } = require 'kraken/vis/vis-model'
 
@@ -73,7 +71,7 @@ VisView = exports.VisView = BaseView.extend do # {{{
         
         @viewport = @$el.find '.viewport'
         
-        @scaffold = new GraphOptionsScaffold
+        @scaffold = new ChartOptionScaffold
         @$el.find '.graph-options-pane' .append @scaffold.el
         @scaffold.collection.reset that if o.graph_spec
         

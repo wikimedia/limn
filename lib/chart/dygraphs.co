@@ -1,5 +1,5 @@
 _ = require 'kraken/util/underscore'
-{ ChartType, ChartOption,
+{ ChartType, ChartTypeOption,
 } = require 'kraken/chart/chart-type'
 
 

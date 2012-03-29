@@ -11,7 +11,8 @@ root.jQuery?.fn.invoke = (method, ...args) ->
 op        = require 'kraken/util/op'
 backbone  = require 'kraken/util/backbone'
 parser    = require 'kraken/util/parser'
-exports import { root, _, op, backbone, parser, }
+Cascade   = require 'kraken/util/cascade'
+exports import { root, _, op, backbone, parser, Cascade, }
 
 # HashSet   = require 'kraken/util/hashset'
 # BitString = require 'kraken/util/bitstring'

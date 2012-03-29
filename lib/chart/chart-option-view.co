@@ -1,22 +1,21 @@
 _ = require 'kraken/util/underscore'
-{BaseView} = require 'kraken/base'
 { Field, FieldList, FieldView, Scaffold,
 } = require 'kraken/scaffold'
-{ GraphOption, GraphOptionList, TagSet, KNOWN_TAGS,
-} = require 'kraken/graph/graph-model'
+{ ChartOption, ChartOptionList,
+} = require 'kraken/chart/chart-option-model'
 
 DEBOUNCE_RENDER = exports.DEBOUNCE_RENDER = 100ms
 
 
 /**
- * The view for a single configurable option.
+ * @class View for a single configurable option in a chart type.
  */
-GraphOptionView = exports.GraphOptionView = FieldView.extend do # {{{
+ChartOptionView = exports.ChartOptionView = FieldView.extend do # {{{
     # __bind__  : <[ onClick ]>
-    ctorName  : 'GraphOptionView'
+    ctorName  : 'ChartOptionView'
     tagName   : 'div'
     className : 'field option'
-    template  : require 'kraken/template/graph-option'
+    template  : require 'kraken/template/chart-option'
     
     isCollapsed : true
     
@@ -52,15 +51,15 @@ GraphOptionView = exports.GraphOptionView = FieldView.extend do # {{{
 
 
 /**
- * 
+ * @class View for configuring a chart type.
  */
-GraphOptionsScaffold = exports.GraphOptionsScaffold = Scaffold.extend do # {{{
-    ctorName       : 'GraphOptionsScaffold'
+ChartOptionScaffold = exports.ChartOptionScaffold = Scaffold.extend do # {{{
+    ctorName       : 'ChartOptionScaffold'
     tagName        : 'form'
     className      : 'options scaffold'
-    template       : require 'kraken/template/graph-scaffold'
-    collectionType : GraphOptionList
-    subviewType    : GraphOptionView
+    template       : require 'kraken/template/chart-scaffold'
+    collectionType : ChartOptionList
+    subviewType    : ChartOptionView
     fields        : '.fields'
     
     # GraphView will set this
@@ -91,7 +90,7 @@ GraphOptionsScaffold = exports.GraphOptionsScaffold = Scaffold.extend do # {{{
             sortBy: 'category'
     
     /**
-     * Add a GraphOption to this scaffold, rerendering the isotope
+     * Add a ChartOption to this scaffold, rerendering the isotope
      * layout after collapse events.
      */
     addOne: (field) ->

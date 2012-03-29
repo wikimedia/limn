@@ -57,22 +57,24 @@ dev:
                 - cascade
                 - index
             - base
-            - chart:
-                - chart-type
-                - dygraphs
-                - index
-            - template:
-                - graph.jade
-                - graph-option.jade
-                - graph-scaffold.jade
             - scaffold:
                 - scaffold-model
                 - scaffold-view
                 - index
-            - graph:
-                - graph-model
-                - graph-view
+            - chart:
+                - chart-type
+                - dygraphs
+                - chart-option-model
+                - chart-option-view
                 - index
+            - template:
+                - chart-option.jade
+                - chart-scaffold.jade
+                - graph.jade
+            # - graph:
+            #     - graph-model
+            #     - graph-view
+            #     - index
             - vis:
                 - vis-model
                 - vis-view

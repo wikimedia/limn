@@ -1,13 +1,11 @@
 _ = require 'kraken/util/underscore'
-{ BaseModel, BaseView,
-} = require 'kraken/base'
 { Field, FieldList, FieldView, Scaffold,
 } = require 'kraken/scaffold'
 
-IGNORED_TAGS = exports.IGNORED_TAGS = <[ callback deprecated debugging ]>
 
-
-
+/**
+ * @class A set of tags.
+ */
 class exports.TagSet extends Array
     tags : {}
     
@@ -34,14 +32,21 @@ class exports.TagSet extends Array
     toString: -> "TagSet(length=#{@length}, values=[\"#{@join '", "'}\"])"
 
 
+
+/**
+ * @namespace All known tags, for mapping consistently onto colors.
+ */
 KNOWN_TAGS = exports.KNOWN_TAGS = new TagSet()
 
 
+
 /**
- * Field with graph-option-specific handling for validation, parsing, tags, etc.
+ * @class Field with chart-option-specific handling for validation, parsing, tags, etc.
  */
-GraphOption = exports.GraphOption = Field.extend do # {{{
-    ctorName : 'GraphOption'
+ChartOption = exports.ChartOption = Field.extend do # {{{
+    ctorName : 'ChartOption'
+    IGNORED_TAGS : <[ callback deprecated debugging ]>
+    
     
     initialize : ->
         # console.log "#this.initialize!"
@@ -54,7 +59,7 @@ GraphOption = exports.GraphOption = Field.extend do # {{{
         # Ignore functions/callbacks and, ahem, hidden tags.
         type = @get 'type', '' .toLowerCase()
         tags = @get 'tags', []
-        if _.str.include(type, 'function') or _.intersection(tags, IGNORED_TAGS).length
+        if _.str.include(type, 'function') or _.intersection(tags, @IGNORED_TAGS).length
             @set 'ignore', true
     
     
@@ -100,9 +105,13 @@ GraphOption = exports.GraphOption = Field.extend do # {{{
 # }}}
 
 
-GraphOptionList = exports.GraphOptionList = FieldList.extend do # {{{
-    ctorName   : 'GraphOptionList'
-    model      : GraphOption
+
+/**
+ * @class List of ChartOption fields.
+ */
+ChartOptionList = exports.ChartOptionList = FieldList.extend do # {{{
+    ctorName   : 'ChartOptionList'
+    model      : ChartOption
     
     /**
      * Override to omit defaults from URL.

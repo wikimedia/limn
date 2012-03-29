@@ -4,7 +4,7 @@ _ = require 'kraken/util/underscore'
 Cascade = require 'kraken/util/cascade'
 { ChartType,
 } = require 'kraken/chart'
-{ BaseModel, BaseView, BaseList,
+{ BaseModel, BaseList,
 } = require 'kraken/base'
 
 root = do -> this

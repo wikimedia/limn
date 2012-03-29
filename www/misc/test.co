@@ -1,19 +1,16 @@
 Seq      = require 'seq'
 Backbone = require 'backbone'
 
-{ _, op,
+{ _, op, Cascade,
 } = require 'kraken/util'
-Cascade = require 'kraken/util/cascade'
-
-{ ChartLibrary, DygraphsLibrary,
-} = require 'kraken/chart'
 { BaseView, BaseModel, BaseList,
 } = require 'kraken/base'
 { Field, FieldList, FieldView, Scaffold,
 } = require 'kraken/scaffold'
-{ GraphOption, GraphOptionList, GraphOptionView,
-  GraphOptionsScaffold, TagSet,
-} = require 'kraken/graph'
+{ ChartType, DygraphsChartType,
+  ChartOption, ChartOptionList, TagSet,
+  ChartOptionView, ChartOptionScaffold,
+} = require 'kraken/chart'
 { VisView, VisModel, VisList,
 } = require 'kraken/vis'
 
@@ -31,7 +28,7 @@ main = ->
     # for opt of root.CHART_OPTIONS_SPEC
     #     opts[opt.name] = opt.default
     
-    dyglib = new DygraphsLibrary CHART_OPTIONS_SPEC
+    dyglib = new DygraphsChartType CHART_OPTIONS_SPEC
     
     # TODO: create a preset manager
     # Remove chart options from data so we don't have to deepcopy
