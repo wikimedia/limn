@@ -1,0 +1,40 @@
+_ = require 'kraken/underscore'
+
+config = tbody = null
+
+render = (n, settings={}) ->
+    n = Number n
+    unless typeof n is 'number' and not isNaN n
+        console.error 'Supply a number!'
+        return false
+    
+    values = [n].concat do
+        <[ toFixed toPrecision toExponential ]>.map -> n[it] settings[it]
+    # _.dump values, 'values'
+    row = $ "<tr>#{ values.map -> "<td>#it</td>" }</tr>" .prependTo tbody
+    # console.log 'row:', row
+
+$ ->
+    config := $ '#config'
+    tbody  := $ '#results'
+    
+    config.on 'submit', ->
+        settings = _.synthesize do
+            config.serializeArray()
+            ({name, value}) ->
+                [   name,
+                    if name is 'n' then value else if value then Number value else void
+                ]
+        # _.dump settings, 'settings'
+        
+        ns = delete settings.n
+        ns.split /\s+/g .map -> render it, settings
+        false
+    
+    settings = { fixed:3 }
+    render 1234.5,  settings
+    render 123.45,  settings
+    render 12.345,  settings
+    render 1.2345,  settings
+    render 0.12345, settings
+    config.trigger 'submit'

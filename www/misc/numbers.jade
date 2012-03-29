@@ -1,0 +1,57 @@
+extends ../layout
+
+block title
+    title Number Formatting
+
+append styles
+    style
+        #config .options .control-group { display:inline-block; width:33%; }
+
+block content
+    .page-header
+        h1 Number Formatting
+    
+    form#config.well.form-horizontal
+        input.btn-primary(type="submit") Format
+        
+        .control-group
+            label.control-label(for="n") Numbers
+            .controls
+                input#n(name="n", type="text", value="54321.09876")
+                p.help-block You can separate multiple numbers with whitespace.
+        
+        .options
+            .control-group
+                label.control-label(for="toFixed") .toFixed
+                .controls: input#toFixed.span1(type="text", name="toFixed", value="3")
+            
+            .control-group
+                label.control-label(for="toPrecision") .toPrecision
+                .controls: input#toPrecision.span1(type="text", name="toPrecision", value="")
+            
+            .control-group
+                label.control-label(for="toExponential") .toExponential
+                .controls: input#toExponential.span1(type="text", name="toExponential", value="")
+        
+    
+    table#results.table.table-striped.table-bordered.table-condensed
+        thead: tr
+            th n
+            th toFixed
+            th toPre
+            th toExp
+        tbody
+    
+
+block scripts
+    script(src="/vendor/jquery.js")
+    script(src="/vendor/browserify.js")
+    script(src="/vendor/bootstrap.min.js")
+    script(src="/vendor/underscore.mod.js")
+    script(src="/vendor/underscore.string.mod.js")
+    script(src="/js/kraken/underscore/array.mod.js")
+    script(src="/js/kraken/underscore/object.mod.js")
+    script(src="/js/kraken/underscore/string.mod.js")
+    script(src="/js/kraken/underscore/index.mod.js")
+    script(src="numbers.js")
+

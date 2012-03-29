@@ -1,0 +1,85 @@
+Seq      = require 'seq'
+Backbone = require 'backbone'
+
+{ _, op,
+} = require 'kraken/util'
+Cascade = require 'kraken/util/cascade'
+
+{ ChartLibrary, DygraphsLibrary,
+} = require 'kraken/chart'
+{ BaseView, BaseModel, BaseList,
+} = require 'kraken/base'
+{ Field, FieldList, FieldView, Scaffold,
+} = require 'kraken/scaffold'
+{ GraphOption, GraphOptionList, GraphOptionView,
+  GraphOptionsScaffold, TagSet,
+} = require 'kraken/graph'
+{ VisView, VisModel, VisList,
+} = require 'kraken/vis'
+
+
+root = this
+CHART_OPTIONS_SPEC    = []
+CHART_DEFAULT_OPTIONS = {}
+ROOT_VIS_DATA         = {}
+ROOT_VIS_OPTIONS      = {}
+
+
+# Create the Graph Scaffold
+main = ->
+    # opts = root.CHART_DEFAULT_OPTIONS = {}
+    # for opt of root.CHART_OPTIONS_SPEC
+    #     opts[opt.name] = opt.default
+    
+    dyglib = new DygraphsLibrary CHART_OPTIONS_SPEC
+    
+    # TODO: create a preset manager
+    # Remove chart options from data so we don't have to deepcopy
+    ROOT_VIS_OPTIONS := delete root.ROOT_VIS_DATA.options
+    
+    # Bind to URL changes
+    History.Adapter.bind window, 'statechange', ->
+        console.log 'StateChange!\n\n', String(root.location), '\n\n'
+    
+    
+    data = {}
+    
+    # Process URL
+    loc = String root.location
+    
+    # If we got querystring args, apply them to the graph
+    if loc.split '?' .1
+        data = _.uncollapseObject _.fromKV that.replace('#', '%23')
+        data.parents = JSON.parse that if data.parents
+        data.options = _.synthesize do
+            data.options or {}
+            (v, k) -> [ k, dyglib.parseOption(k,v) ]
+    
+    # Extract slug from URL
+    if match = /\/graph\/(?!view)([^\/?]+)/i.exec loc
+        data.slug = match[1]
+    
+    vis   = root.vis   = new VisModel data, {+parse}
+    # graph = root.graph = new VisView do
+    #     graph_spec : root.CHART_OPTIONS_SPEC
+    #     model      : vis
+    # $ '#content .inner' .append graph.el
+
+
+
+# Load data files
+Seq([   <[ CHART_OPTIONS_SPEC /schema/dygraph.json ]>,
+        <[ ROOT_VIS_DATA /presets/root.json ]>
+])
+.parEach_ (next, [key, url]) ->
+    jQuery.ajax do
+        url : url,
+        dataType : 'json'
+        success : (data) ->
+            root[key] = data
+            next.ok()
+        error : (err) -> console.error err
+.seq ->
+    console.log 'All data loaded!'
+    jQuery main
+
