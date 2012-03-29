@@ -3,23 +3,37 @@ _ = require 'underscore'
 OBJ_PROTO = Object.prototype
 getProto = Object.getPrototypeOf
 
+
+/**
+ * Default options for delegate-accessor functions.
+ */
+DEFAULT_DELEGATE_OPTIONS =
+    getter  : 'get'
+    setter  : 'set'
+    deleter : 'unset'
+
+/**
+ * Default options for nested-accessor functions.
+ */
+DEFAULT_NESTED_OPTIONS = {-ensure} import DEFAULT_DELEGATE_OPTIONS
+
+/**
+ * Sentinel for missing values.
+ */
+MISSING = {}
+
+
+/**
+ * @namespace Functions for working with objects and object graphs.
+ */
 _obj = do
     
+    /**
+     * @returns {Boolean} Whether value is a plain object or not.
+     */
     isPlainObject : (o) ->
         !! o and _.isObject(o) and OBJ_PROTO is getProto(o)
     
-    /**
-     * Converts the collection to a list of its items:
-     * - Objects become a list of `[key, value]` pairs.
-     * - Strings become a list of characters.
-     * - Arguments objects become an array.
-     * - Arrays are copied.
-     */
-    items: (obj) ->
-        if _.isObject(obj) and not _.isArguments(obj)
-            _.map obj, (v, k) -> [k, v]
-        else
-            [].slice.call obj
     
     /**
      * In-place removal of a value from an Array or Object.
@@ -36,100 +50,109 @@ _obj = do
         obj
     
     
-    
-    toKV: (o, item_delim='&', kv_delim='=') ->
-        _.reduce do
-            o
-            (acc, v, k) ->
-                acc.push encodeURIComponent(k)+kv_delim+encodeURIComponent(v) if k
-                acc
-            []
-        .join item_delim
-    
-    fromKV: (qs, item_delim='&', kv_delim='=') ->
-        _.reduce do
-            qs.split item_delim
-            (acc, pair) ->
-                idx = pair.indexOf kv_delim
-                if idx is not -1
-                    [k, v] = [pair.slice(0, idx), pair.slice(idx+1)]
-                else
-                    [k, v] = [pair, '']
-                acc[ decodeURIComponent k ] = decodeURIComponent v if k
-                acc
-            {}
-    
     /**
-     * Copies and flattens any sub-objects into namespaced keys on the parent object, such 
-     * that `{ "foo":{ "bar":1 } }` becomes `{ "foo.bar":1 }`.
+     * Converts the collection to a list of its items:
+     * - Objects become a list of `[key, value]` pairs.
+     * - Strings become a list of characters.
+     * - Arguments objects become an array.
+     * - Arrays are copied.
      */
-    collapseObject: (obj, parent={}, prefix='') ->
-        prefix += '.' if prefix
-        _.each obj, (v, k) ->
-            if _.isPlainObject v
-                _.collapseObject v, parent, prefix+k
-            else
-                parent[prefix+k] = v
-        parent
+    items: (obj) ->
+        if _.isObject(obj) and not _.isArguments(obj)
+            _.map obj, (v, k) -> [k, v]
+        else
+            [].slice.call obj
+    
+    
+    
+    ### Delegating Accessors
+    
+    get: (obj, key, def, opts) ->
+        return unless obj?
+        getter = opts?.getter or 'get'
+        if typeof obj[getter] is 'function'
+            obj[getter] key, def, opts
+        else
+            if obj[key] is not void then obj[key] else def
+    
+    set: (obj, key, value, opts) ->
+        return unless obj?
+        if _.isObject(key) and key?
+            [values, opts] = [key, value]
+        else
+            values = { "#key": value }
+        
+        setter = opts?.setter or 'set'
+        if typeof obj[setter] is 'function'
+            for key, value in values
+                obj[setter] key, value, opts
+        else
+            for key, value in values
+                obj[key] = value
+        
+        obj
+    
+    unset: (obj, key, opts) ->
+        return unless obj?
+        deleter = opts?.deleter or 'unset'
+        if typeof obj[deleter] is 'function'
+            obj[deleter] key, opts
+        else
+            delete obj[key]
+    
+    
+    
+    
+    
+    ### Nested Acccessors
     
     /**
-     * Inverse of `.collapseObject()` -- copies and expands any dot-namespaced keys in the object, such
-     * that `{ "foo.bar":1 }` becomes `{ "foo":{ "bar":1 }}`.
-     */
-    uncollapseObject: (obj) ->
-        _.reduce do
-            obj
-            (acc, v, k) ->
-                _.setNested acc, k, v, true
-                acc
-            {}
-    
-    /**
-     * Searches a heirarchical object for a given subkey specified in dotted-property syntax.
+     * Searches a heirarchical object for a given subkey specified in dotted-property syntax,
+     * respecting sub-object accessor-methods (e.g., 'get', 'set') if they exist.
+     * 
      * @param {Object} base The object to serve as the root of the property-chain.
      * @param {Array|String} chain The property-chain to lookup.
-     * @param {Boolean} [ensure=false] If true, intermediate keys that are `null` or
+     * @param {Object} [opts] Options:
+     * @param {Boolean} [opts.ensure=false] If true, intermediate keys that are `null` or
      *  `undefined` will be filled in with a new empty object `{}`, ensuring the get will
      *   return valid metadata.
-     * @retruns {undefined|Object} If found, the object is of the form 
-     *  `{ key: Qualified key name, obj: Parent object of key, val: Value at obj[key] }`. 
+     * @param {String} [opts.getter="get"] Name of the sub-object getter method use if it exists.
+     * @param {String} [opts.setter="set"] Name of the sub-object setter method use if it exists.
+     * @param {String} [opts.deleter="unset"] Name of the sub-object deleter method use if it exists.
+     * @returns {undefined|Object} If found, the object is of the form 
+     *  `{ key: Qualified key name, obj: Parent object of key, val: Value at obj[key], opts: Options }`. 
      *  Otherwise `undefined`.
      */
-    getNestedMeta : (obj, chain, ensure=false) ->
+    getNestedMeta : (obj, chain, opts) ->
         chain = chain.split('.') if typeof chain is 'string'
+        len   = chain.length - 1
+        opts  = _.clone(DEFAULT_NESTED_OPTIONS) import (opts or {})
+        
         _.reduce do
             chain
-            (current, key, idx, chain) ->
-                return undefined unless current?
-                
-                if idx is chain.length-1
-                    return
-                        obj : current
-                        key : key
-                        val : current[key]
-                
-                val = current[key]
-                if val?
-                    val
-                else if ensure 
-                    current[key] = {}
-                else
-                    undefined
+            (obj, key, idx, chain) ->
+                return void unless obj?
+                val = _.get obj, key, void, opts
+                if idx is len
+                    return { key, val, obj, opts }
+                if not val? and opts.ensure
+                    val = {}
+                    _.set obj, key, val, opts
+                val
             obj
     
     /**
      * Searches a heirarchical object for a given subkey specified in dotted-property syntax.
      * @param {Object} obj The object to serve as the root of the property-chain.
      * @param {Array|String} chain The property-chain to lookup.
-     * @param {Any} def Value to return if lookup fails.
-     * @retruns {null|Object} If found, returns the value, and otherwise `default`.
+     * @param {Any} [def=undefined] Value to return if lookup fails.
+     * @param {Object} [opts] Options to pass to `{@link #getNestedMeta}`.
+     * @returns {null|Object} If found, returns the value, and otherwise `default`.
      */
-    getNested : (obj, chain, def=null) ->
-        meta = _obj.getNestedMeta obj, chain
-        if meta
-            meta.val
-        else
-            def
+    getNested : (obj, chain, def, opts) ->
+        {opts} = meta = _.getNestedMeta obj, chain, opts
+        return def if meta?.val is void
+        meta.val
     
     /**
      * Searches a heirarchical object for a given subkey specified in
@@ -137,36 +160,33 @@ _obj = do
      * @param {Object} obj The object to serve as the root of the property-chain.
      * @param {Array|String} chain The property-chain to lookup.
      * @param {Any} value The value to set.
-     * @param {Boolean} [ensure=false] If true, intermediate keys that are `null` or
-     *  `undefined` will be filled in with a new empty object `{}`, ensuring the set
-     *  will succeed.
-     * @retruns {undefined|Any} If found, returns the old value, and otherwise `undefined`.
+     * @param {Object} [opts] Options to pass to `{@link #getNestedMeta}`.
+     * @returns {undefined|Any} If found, returns the old value, and otherwise `undefined`.
      */
-    setNested : (obj, chain, value, ensure=false) ->
-        meta = _obj.getNestedMeta obj, chain, ensure
-        if meta
-            meta.obj[meta.key] = value
-            meta.val
-        else
-            undefined
+    setNested : (obj, chain, value, opts) ->
+        {opts} = meta = _.getNestedMeta obj, chain, opts
+        return unless meta
+        _.set meta.obj, meta.key, value, opts
+        meta.val
     
     /**
-     * Searches a heirarchical object for a given subkey specified in
-     * dotted-property syntax, removing it if found.
-     * @param {Object} obj The object to serve as the root of the property-chain.
-     * @param {Array|String} chain The property-chain to lookup.
-     * @param {Boolean} [ensure=false] If true, intermediate keys that are `null` or
-     *  `undefined` will be filled in with a new empty object `{}`, ensuring the set
-     *  will succeed.
-     * @retruns {undefined|Any} If found, returns the old value, and otherwise `undefined`.
+     * Searches a heirarchical object for a potentially-nested key and removes it.
+     * 
+     * @param {Object} obj The root of the lookup chain.
+     * @param {String|Array<String>} chain The chain of property-keys to navigate.
+     *  Nested keys can be supplied as a dot-delimited string (e.g., `_.unsetNested(obj, 'user.name')`),
+     *  or an array of strings, allowing for keys with dots (eg.,
+     *  `_.unsetNested(obj, ['products', 'by_price', '0.99'])`).
+     * @param {Object} [opts] Options to pass to `{@link #getNestedMeta}`.
+     * @returns {undefined|Any} The old value if found; otherwise `undefined`.
      */
-    unsetNested : (obj, chain, ensure=false) ->
-        meta = _obj.getNestedMeta obj, chain, ensure
-        if meta
-            delete meta.obj[meta.key]
-            meta.val
-        else
-            undefined
+    unsetNested : (obj, chain, opts) ->
+        {opts} = meta = _.getNestedMeta obj, chain, opts
+        return unless meta
+        _.unset meta.obj, meta.key, opts
+        meta.val
     
+
+
 
 exports import _obj

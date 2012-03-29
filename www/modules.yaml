@@ -33,8 +33,7 @@ dev:
         - underscore.string.mod
         
         - backbone.mod
-        - backbone.nested.mod
-        - synapse.mod
+        # - synapse.mod
         
         - showdown.mod.min
         - jade.runtime.min
@@ -48,6 +47,7 @@ dev:
             - underscore:
                 - array
                 - object
+                - kv
                 - string
                 - index
             - util:

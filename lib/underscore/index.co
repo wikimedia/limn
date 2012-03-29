@@ -4,7 +4,21 @@ _.mixin _.str.exports()
 
 _.mixin require 'kraken/underscore/array'
 _.mixin require 'kraken/underscore/object'
+_.mixin require 'kraken/underscore/kv'
 _.mixin require 'kraken/underscore/string'
+
+
+## Debug
+_.dump = (o, label='dump') ->
+    if not _.isArray(o) and _.isObject(o)
+        console.group label
+        for k, v in o
+            console.log "#k:", v
+        console.groupEnd()
+    else
+        console.log label, o
+    o
+
 
 module.exports = exports = _
 

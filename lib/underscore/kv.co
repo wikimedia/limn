@@ -1,0 +1,60 @@
+_ = require 'underscore'
+
+
+_kv = do
+    
+    /**
+     * Transforms an object to a string of URL-encoded KV-pairs (aka "www-form-encoding").
+     */
+    toKV: (o, item_delim='&', kv_delim='=') ->
+        _.reduce do
+            o
+            (acc, v, k) ->
+                acc.push encodeURIComponent(k)+kv_delim+encodeURIComponent(v) if k
+                acc
+            []
+        .join item_delim
+    
+    /**
+     * Restores an object from a string of URL-encoded KV-pairs (aka "www-form-encoding").
+     */
+    fromKV: (qs, item_delim='&', kv_delim='=') ->
+        _.reduce do
+            qs.split item_delim
+            (acc, pair) ->
+                idx = pair.indexOf kv_delim
+                if idx is not -1
+                    [k, v] = [pair.slice(0, idx), pair.slice(idx+1)]
+                else
+                    [k, v] = [pair, '']
+                acc[ decodeURIComponent k ] = decodeURIComponent v if k
+                acc
+            {}
+    
+    /**
+     * Copies and flattens any sub-objects into namespaced keys on the parent object, such 
+     * that `{ "foo":{ "bar":1 } }` becomes `{ "foo.bar":1 }`.
+     */
+    collapseObject: (obj, parent={}, prefix='') ->
+        prefix += '.' if prefix
+        _.each obj, (v, k) ->
+            if _.isPlainObject v
+                _.collapseObject v, parent, prefix+k
+            else
+                parent[prefix+k] = v
+        parent
+    
+    /**
+     * Inverse of `.collapseObject()` -- copies and expands any dot-namespaced keys in the object, such
+     * that `{ "foo.bar":1 }` becomes `{ "foo":{ "bar":1 }}`.
+     */
+    uncollapseObject: (obj) ->
+        _.reduce do
+            obj
+            (acc, v, k) ->
+                _.setNested acc, k, v, {+ensure}
+                acc
+            {}
+
+
+exports import _kv
