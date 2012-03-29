@@ -131,7 +131,7 @@ app.configure ->
 app.get '/', (req, res) ->
     res.render 'dashboard'
 
-app.post '/graph/save', (req, res, next) ->
+saveGraph = (req, res, next) ->
     if not req.body
         return res.send {result:"error", message:"JSON required!"}, 501
     
@@ -149,6 +149,9 @@ app.post '/graph/save', (req, res, next) ->
     else
         res.send { result:"ok" }
 
+
+app.post '/graph/save', saveGraph
+app.put '/graph/:slug\.json', saveGraph
 
 app.get '/graph/:slug\.json', (req, res, next) ->
     req.url .= replace /^\/graph\//i, '/presets/'
