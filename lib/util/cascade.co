@@ -1,5 +1,10 @@
 _ = require 'kraken/underscore'
 
+hasOwn = ({}).hasOwnProperty
+
+# Sentinel for missing values.
+MISSING = void
+
 
 /**
  * @class A mapping of key-value pairs supporting lookup fallback across multiple objects.
@@ -41,6 +46,9 @@ class Cascade
     
     ### Data & Lookups ###
     
+    getData: ->
+        @_data
+    
     setData: (data) ->
         @_data = @_lookups[0] = data
         this
@@ -51,7 +59,7 @@ class Cascade
      */
     addLookup: (dict) ->
         return this unless dict?
-        throw new Error "Lookup dictionary must be an object! dict=#dict" unless dict
+        throw new Error "Lookup dictionary must be an object! dict=#dict" unless _.isObject dict
         @_lookups.push dict
         this
     
@@ -64,10 +72,38 @@ class Cascade
         this
     
     /**
-     * @returns {Boolean} Whether the value at `key` belongs to this object or exists in the cascade.
+     * @returns {Boolean} Whether `key` belongs to this object (not inherited
+     *  from the cascade).
+     */
+    hasOwnProperty: (key) ->
+        meta = _.getNestedMeta(@_data, key)
+        meta?.obj and hasOwn.call meta.obj, key
+    
+    /**
+     * @returns {Boolean} Whether `key` belongs to this object (not inherited
+     *  from the cascade) and is defined.
      */
     isOwnValue: (key) ->
-        @_data[key] is not void
+        @hasOwnProperty(key) and _.getNested(@_data, key, MISSING) is not MISSING
+    
+    /**
+     * @returns {Boolean} Whether the value at `key` is different from that
+     *  inherited by from the cascade.
+     */
+    isChangedValue: (key, strict=false) ->
+        val = @get key
+        cVal = @_getInCascade key, MISSING, 1
+        if strict
+            val is not cVal
+        else
+            not _.isEqual val, cVal
+    
+    /**
+     * @returns {Boolean} Whether the value at `key` is the same as that
+     *  inherited by from the cascade.
+     */
+    isInheritedValue: (key, strict=false) ->
+        not @isChangedValue key, strict
     
     /**
      * @returns {Number} Number of lookup dictionaries.
@@ -80,36 +116,46 @@ class Cascade
     ### Value Accessors ###
     
     /**
+     * @private
+     * @param {String} key Key to look up.
+     * @param {*} [def=undefined] Value to return if lookup fails.
+     * @param {Number} [idx=0] Index into lookup list to begin search.
+     * @returns {*} First value for `key` found in the lookup chain starting at `idx`,
+     *  and `def` otherwise.
+     */
+    _getInCascade : (key, def, idx=0) ->
+        for data of @_lookups.slice(idx)
+            val = _.getNested data, key, MISSING
+            return val unless val is MISSING
+        def
+    
+    /**
      * @returns {Boolean} Whether there is a value at the given key.
      */
     has : (key) ->
-        (@get key, void) is not void
+        @get(key, MISSING) is not MISSING
     
     /**
-     * @returns {*} First value for the given key found in the lookup chain,
-     * and the default otherwise.
+     * @param {String} key Key to look up.
+     * @param {*} [def=undefined] Value to return if lookup fails.
+     * @returns {*} First value for `key` found in the lookup chain,
+     *  and `def` otherwise.
      */
     get : (key, def) ->
-        for data of @_lookups
-            if typeof data.get is 'function'
-                val = data.get key, void
-            else
-                val = _.getNested data, key, void
-            return val if val is not void
-        def
+        @_getInCascade key, def
     
     /**
      * Sets a key to a value, accepting nested keys and creating intermediary objects as necessary.
      * @public
      * @name set
      * @param {String} key Key to set.
-     * @param {*} val Non-`undefined` value to set.
+     * @param {*} value Non-`undefined` value to set.
      * @returns {this}
      */
     /**
      * @public
      * @name set
-     * @param {Object} values Map of KV pairs to set. No value may be `undefined`.
+     * @param {Object} values Map of pairs to set. No value may be `undefined`.
      * @returns {this}
      */
     set : (values) ->
@@ -119,12 +165,9 @@ class Cascade
             throw new Error("Value and key cannot be undefined!") if not key or val is void
             values = { "#key": val }
         
-        # Trailing `true` in call to `set()` and `setNested()` is to ensure the
-        # creation of missing intermediate objects.
-        if typeof @_data.set is 'function'
-            for key, val in values then @_data.set key, val, true
-        else
-            for key, val in values then _.setNested @_data, key, val, true
+        # Set and ensure the creation of missing intermediate objects.
+        for key, val in values
+            _.setNested @_data, key, val, {+ensure}
         
         this
     
@@ -141,14 +184,14 @@ class Cascade
     
     ### Collection Methods ###
     
-    extend : (...args) ->
-        for o of args
-            for k, v in o then @set k, v
+    extend : ->
+        for o of arguments then @set o
         this
     
     toObject: ->
-        _.extend {}, ...@_lookups
+        _.extend {}, ...@_lookups.slice().reverse()
     
+    # XXX: should unique? but then won't map 1:1 to @values()...
     keys: ->
         _.flatten _.map @_lookups, -> _.keys it
     
