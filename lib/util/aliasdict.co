@@ -76,7 +76,7 @@ class AliasDict
             def
     
     set : (key, val) ->
-        _.setNested @_data, key, val, true
+        _.setNested @_data, key, val, {+ensure}
         val
     
     del : (key) ->

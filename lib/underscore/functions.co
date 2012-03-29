@@ -120,7 +120,7 @@ _.mixin
         for key in o
             ; # semicolon **on new line** is required by coffeescript to denote empty statement.
         
-        return key is undefined or hasOwn.call(o, key)
+        return key is void or hasOwn.call(o, key)
     
 
 ## Arrays
@@ -139,7 +139,7 @@ _.mixin
 
 
 ## Functions
-_ofArity = _.memoize(
+_ofArity = _.memoize do
     (n, limit) ->
         args       = ( '$'+i for i from 0 til n ).join(',')
         name       = ( if limit then 'limited' else 'artized' )
@@ -150,95 +150,67 @@ _ofArity = _.memoize(
                 _fn.__wraps__ = fn;
                 return _(_fn);
             })"
-    )
 
-_.mixin
-    methodize: methodize
+_.mixin do
+    methodize
     
     unwrap: (fn) ->
         (fn and _.isFunction(fn) and _.unwrap(fn.__wraps__)) or fn
     
     
-    partial: (fn, args...) ->
-        partially =  ->
-            fn.apply this, args.concat(slice.call(arguments))
-        partially.__wraps__ = fn
-        return _ partially
+    partial: (fn, ...args) ->
+        partially = ->
+            fn.apply this, args.concat slice.call(arguments)
+        _ partially import { __wraps__:fn }
     
     
     genericize: (fn) ->
-        g = fn.__genericized__
-        return g if g
+        return that if fn.__genericized__
+        return that if fn.__methodized__?.__wraps__
         
-        m = fn.__methodized__
-        return m.__wraps__ if m and m.__wraps__
-
-        g = fn.__genericized__ = (args...) ->
-                fn.apply args.shift(), args
+        fn.__genericized__ = (...args) ->
+            fn.apply args.shift(), args
         
-        g.__wraps__ = fn
-        return _ g
+        _ fn.__genericized__ import { __wraps__:fn }
     
     
-    curry: (fn, args...) ->
-        if not _.isFunction fn
-            return fn
-        
-        if fn.__curried__
-            return fn.apply this, args
+    curry: (fn, ...args) ->
+        return fn unless _.isFunction fn
+        return fn.apply this, args if fn.__curried__
         
         L = fn.length or _.unwrap(fn).length
-        if args.length >= L
-            return fn.apply this, args
+        return fn.apply this, args if args.length >= L
         
-        curried =  ->
+        curried = ->
             _args = args.concat slice.call(arguments)
-            if _args.length >= L
-                return fn.apply this, _args
+            return fn.apply this, _args if _args.length >= L
             _args.unshift fn
-            return _.curry.apply this, _args
+            _.curry.apply this, _args
         
-        curried.__wraps__ = fn
-        curried.__curried__ = args
-        return _ curried
+        _ curried import
+            __wraps__   : fn
+            __curried__ : args
     
     
     flip: (fn) ->
-        f = fn.__flipped__
-        return f if f
+        return that if fn.__flipped__
         
-        f = fn.__flipped__ = \
-            flipped =  ->
-                args    = arguments
-                hd      = args[0]
-                args[0] = args[1]
-                args[1] = hd
-                return fn.apply this, args
+        fn.__flipped__ = ->
+            [arguments[0], arguments[1]] = [arguments[1], arguments[0]]
+            fn ...
         
-        f.__wraps__ = fn
-        return _ f
+        _ fn.__flipped__ import { __wraps__:fn }
     
     
     aritize: (fn, n) ->
         return fn if fn.length is n
-        
-        cache = fn.__aritized__
-        if not cache
-            cache = fn.__aritized__ = {}
-        else if cache[n]
-            return cache[n]
-        
-        return ( cache[n] = _ofArity(n, false)(fn) )
+        fn.__aritized__ or= {}
+        fn.__aritized__[n] or= _ofArity(n, false)(fn)
     
     
     limit: (fn, n) ->
-        cache = fn.__limited__
-        if not cache
-            cache = fn.__limited__ = {}
-        else if cache[n]
-            return cache[n]
-        
-        return ( cache[n] = _ofArity(n, true)(fn) )
+        fn.__limited__ or= {}
+        fn.__limited__[n] or= _ofArity(n, true)(fn)
     
     
     
