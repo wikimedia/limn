@@ -27,6 +27,7 @@ GraphEditView = exports.GraphEditView = BaseView.extend do # {{{
     ]>
     __bind__  : <[ 
         render renderAll resizeViewport
+        numberFormatter numberFormatterHTML
         onReady onSync
         onModelChange onScaffoldChange onFirstClickRenderOptionsTab
     ]>
@@ -190,14 +191,14 @@ GraphEditView = exports.GraphEditView = BaseView.extend do # {{{
         options = @chartOptions() #import size
         options import do
             labelsDiv          : @$el.find '.graph-label' .0
-            valueFormatter     : @numberFormatter
+            valueFormatter     : @numberFormatterHTML
             axes:
                 x:
                     axisLabelFormatter : @axisDateFormatter
                     valueFormatter     : @dateFormatter
                 y:
                     axisLabelFormatter : @axisFormatter @numberFormatter
-                    valueFormatter     : @numberFormatter
+                    valueFormatter     : @numberFormatterHTML
         
         # console.log "#this.render!", dataset
         _.dump options, 'options'
@@ -253,16 +254,28 @@ GraphEditView = exports.GraphEditView = BaseView.extend do # {{{
     dateFormatter: (n, opts, g) ->
         moment(n).format 'DD MMM YYYY'
     
-    numberFormatter: (n, opts, g) ->
-        digits = opts('digitsAfterDecimal') ? 2
+    _numberFormatter: (n, digits=2) ->
         for [suffix, d] of [['B', 1000000000], ['M', 1000000], ['K', 1000], ['', NaN]]
             if n >= d
                 n = n / d
                 break
-        s = n.toFixed(digits) + suffix
+        s = n.toFixed(digits)
         parts = s.split '.'
-        parts[0] = _.rchop parts[0], 3 .join ','
-        parts.join '.'
+        whole = _.rchop parts[0], 3 .join ','
+        fraction = '.' + parts.slice(1).join '.'
+        { n, digits, whole, fraction, suffix }
+    
+    numberFormatter: (n, opts, g) ->
+        digits = opts('digitsAfterDecimal') ? 2
+        { whole, fraction, suffix } = @_numberFormatter n, digits
+        "#whole#fraction#suffix"
+    
+    numberFormatterHTML: (n, opts, g) ->
+        digits = opts('digitsAfterDecimal') ? 2
+        { whole, fraction, suffix } = @_numberFormatter n, digits
+        """
+        <span class="value"><span class="whole">#whole</span><span class="fraction">#fraction</span><span class="suffix">#suffix</span></span>
+        """
     
     ### }}}
     ### Event Handlers {{{
