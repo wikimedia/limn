@@ -1,8 +1,14 @@
+Seq = require 'seq'
+
 _ = require 'kraken/underscore'
-{ BaseModel, BaseView,
+Cascade = require 'kraken/util/cascade'
+{ ChartLibrary,
+} = require 'kraken/chart'
+{ BaseModel, BaseView, BaseList,
 } = require 'kraken/base'
 
 root = do -> this
+
 
 
 /**
@@ -10,104 +16,222 @@ root = do -> this
  * other settings for both its content and presentation.
  */
 VisModel = exports.VisModel = BaseModel.extend do # {{{
+    ctorName       : 'VisModel'
     IGNORE_OPTIONS : <[ width height timingName ]>
-    ctorName    : 'VisModel'
-    urlRoot     : '/graph'
-    idAttribute : 'slug'
+    
+    urlRoot        : '/graph'
+    idAttribute    : 'slug'
+    ready          : false
+    
+    /**
+     * The chart type backing this graph.
+     * @type ChartLibrary
+     */
+    library : null
+    
+    /**
+     * List of graph parents.
+     * @type VisList
+     */
+    parents : null
+    
+    /**
+     * Cascade of objects for options lookup (includes own options).
+     * @type Cascade
+     * @private
+     */
+    optionCascade : null
     
     
     
-    initialize : ->
-        BaseModel::initialize ...
-        name = @get 'name'
-        if name and not @get 'slug', @id
-            @set 'slug', _.underscored name
-    
-    
+    /**
+     * Attribute defaults.
+     */
     defaults: ->
-        ({
+        {
             slug    : ''
             name    : ''
             desc    : ''
             dataset : '/data/non_mobile_pageviews_by.timestamp.language.csv'
-            # presets : []
             width   : 'auto'
             height  : 320
-        } import root.ROOT_VIS_DATA) import { options:_.clone root.ROOT_VIS_OPTIONS }
+            library : 'dygraphs'
+            parents : <[ root ]>
+            options : {}
+        }
+    
+    url: ->
+        "#{@urlRoot}/#{@get('slug')}.json"
     
     
-    parse: (data) ->
-        data = JSON.parse data if typeof data is 'string'
-        for k, v in data
-            data[k] = Number v if _.contains(<[ width height ]>, k) and v is not 'auto'
-        data
     
-    set: (values, opts) ->
-        if arguments.length > 1 and typeof values is 'string'
-            [k, v, opts] = arguments
-            values = { "#k": v }
-        BaseModel::set.call this, @parse(values), opts
+    
+    constructor : (attributes={}, options) ->
+        # @on 'ready', ~> console.log "(#this via VisModel).ready!"
+        attributes.options or= {}
+        @optionCascade = new Cascade attributes.options
+        BaseModel.call this, attributes, options
+    
+    
+    initialize : ->
+        @__super__.initialize ...
+        
+        @parents = new VisList
+        # TODO: Load on-demand
+        @library = ChartLibrary.lookupLibrary @get('library')
+        
+        # unless @id or @get('id') or @get('slug')
+        #     @set 'slug', "unsaved_graph_#{@cid}"
+        
+        @constructor.register this
+        @trigger 'init', this
+        @load()
+    
+    
+    load: (opts={}) ->
+        return this if @ready and not opts.force
+        
+        @trigger 'load', this
+        Seq @get('parents')
+            .seqMap -> VisModel.lookup it, this
+            .seqEach_ (next, parent) ~>
+                @parents.add parent
+                @optionCascade.addLookup parent.get('options')
+                next.ok()
+            .seq ~>
+                @ready = true
+                @trigger 'ready', this
+    
+    
+    ### Accessors
+    
+    get: (key) ->
+        if _.startsWith key, 'options.'
+            @getOption key.slice(8)
+        else
+            (@__super__ or BaseModel::).get.call this, key
+    
+    
+    set: (key, value, opts) ->
+        # Handle @set(values, opts)
+        if _.isObject(key) and key?
+            [values, opts] = [key, value]
+        else
+            values = { "#key": value }
+        values = @parse values
+        
+        if @ready and values.options
+            options = delete values.options
+            @setOption options, opts
+        
+        (@__super__ or BaseModel::).set.call this, values, opts
+    
     
     
     ### Chart Option Accessors ###
     
     hasOption: (key) ->
-        options = @get 'options', {}
-        options[key]?
+        @getOption(key) is void
     
     getOption: (key, def) ->
-        @get('options', {})[key] ? def
+        @optionCascade.get key, def
     
     setOption: (key, value, opts={}) ->
-        options = @get 'options', {}
-        unless _.contains @IGNORE_OPTIONS, key
-            options[key] = value
-            @set 'options', options, opts
-            @trigger "change:options:#key", this, value, key, opts unless opts.silent
+        if _.isObject(key) and key?
+            [values, opts] = [key, value or {}]
+        else
+            values = { "#key": value }
+        
+        _.dump values, "#this.setOption"
+        options = @get('options')
+        changed = false
+        for key, value in values
+            continue if _.contains @IGNORE_OPTIONS, key
+            changed = true
+            _.setNested options, key, value, {+ensure}
+            @trigger "change:options.#key", this, value, key, opts unless opts.silent
+        
+        if changed and not opts.silent
+            @trigger "change:options", this, options, 'options', opts
         this
     
     unsetOption: (key, opts={}) ->
-        options = @get 'options', {}
-        delete options[key]
-        @set 'options', options, opts
-        @trigger "change:options:#key", this, value, key, opts unless opts.silent
+        unless @optionCascade.unset(key) is void or opts.silent
+            @trigger "change:options.#key", this, void, key, opts
+            @trigger "change:options", this, @get('options'), 'options', opts
         this
     
+    getOptions: (opts={}) ->
+        opts = {+keepDefaults, +keepUnchanged} import opts
+        options = @optionCascade.toObject()
+        for k, v in options
+            delete options[k] if v is void or
+                (not opts.keepDefaults  and @isDefaultOption k) or
+                (not opts.keepUnchanged and not @isChangedOption k)
+        options
     
-    ### URL Serialization
     
-    toJSON: (options={}) ->
-        options = {+keepDefaults} import options
+    ### Serialization
+    
+    parse: (data) ->
+        data = JSON.parse data if typeof data is 'string'
+        for k, v in data
+            data[k] = Number v if v is not 'auto' and _.contains <[ width height ]>, k
+            # data[k] = JSON.stringify v if k is 'parents'
+        data
+    
+    /**
+     * @returns {Boolean} Whether the value for option `k` is inherited or not.
+     */
+    isOwnOption: (k) ->
+        @optionCascade.isOwnValue k
+    
+    /**
+     * @returns {Boolean} Whether the value for option `k` is the graph default or not.
+     */
+    isDefaultOption: (k) ->
+        @library.isDefault k, @getOption k
+    
+    /**
+     * Whether the value for option `k` differs from that of its parent graphs.
+     * @returns {Boolean}
+     */
+    isChangedOption: (k) ->
+        @optionCascade.isChangedValue k
+        and not @isDefaultOption k
+    
+    toJSON: (opts={}) ->
+        opts = {+keepDefaults} import opts
         
-        json = _.clone(@attributes) import { options:_.clone(@attributes.options) }
-        return json if options.keepDefaults
+        # use jQuery's deep-copy implementation
+        json = $.extend true, {}, @attributes
+        # json = _.clone(@attributes) import { options:_.clone(@attributes.options) }
+        return json if opts.keepDefaults
         
-        dyglib = ChartLibrary.lookupLibrary 'dygraphs'
-        opts = json.options
-        for k, v in opts
-            delete opts[k] if dyglib.isDefault k, v
+        for k, v in json.options
+            delete json.options[k] if v is void or @isDefaultOption k
         json
     
     
-    toKVPairs: (keepSlug=false) ->
-        kvo = @toJSON()
-        delete kvo.slug unless keepSlug
+    toKVPairs: (opts={}) ->
+        opts = {-keepSlug, -keepDefaults, -keepUnchanged} import opts
+        
+        # use jQuery's deep-copy implementation
+        kvo = $.extend true, {}, @attributes
+        kvo.parents = JSON.stringify kvo.parents
+        delete kvo.slug unless opts.keepSlug
+        
         # console.group 'toKVPairs'
         # console.log '[IN]', JSON.stringify kvo
-        opts = kvo.options = _.clone kvo.options
-        for k, rootVal in root.ROOT_VIS_OPTIONS
-            v = opts[k]
-            # console.log "  [#k] rootVal:", rootVal, "===", v, "?", _.isEqual(rootVal, v) unless _.isEqual(rootVal, v)
-            if v is void or _.isEqual rootVal, v
-                delete opts[k]
-            else
-                opts[k] = @serialize v
+        kvo.options = @getOptions opts
+        for k, v in kvo.options
+            kvo.options[k] = @serialize v
         # console.log '[OUT]', JSON.stringify kvo
         # console.groupEnd()
         _.collapseObject kvo
     
-    toKV: (keepSlug=false) ->
-        _.toKV @toKVPairs keepSlug
+    toKV: (opts) ->
+        _.toKV @toKVPairs opts
     
     
     /**
@@ -116,10 +240,54 @@ VisModel = exports.VisModel = BaseModel.extend do # {{{
     toURL: ->
         slug = @get 'slug', ''
         slug = "/#slug" if slug
-        "/graph#slug?#{@toKV(false)}"
+        "/graph#slug?#{@toKV { keepSlug: !!slug }}"
     
-    toString: -> "#{@ctorName}(id=#{@id})"
-
+    toString: -> "#{@ctorName}(id=#{@id}, cid=#{@cid})"
 # }}}
 
 
+VisList = exports.VisList = BaseList.extend do # {{{
+    ctorName : 'VisList'
+    urlRoot  : '/graph'
+    model    : VisModel
+    
+    initialize : ->
+        BaseList::initialize ...
+    
+    toString: ->
+        modelIds = _.pluck @models, 'id' 
+            .map -> "\"#it\""
+            .join ', '
+        "#{@ctorName}(#modelIds)"
+# }}}
+
+
+/* * * *  Visualization Cache for parent-lookup  * * * {{{ */
+
+VIS_CACHE = exports.VIS_CACHE = new VisList
+
+VisModel import do
+    CACHE : VIS_CACHE
+    
+    register: (model) ->
+        # console.log "#{@CACHE}.register(#{model.id or model.get('id')})", model
+        unless @CACHE.contains model
+            @CACHE.add model
+        model
+    
+    get: (id) ->
+        @CACHE.get id
+    
+    lookup: (id, cb) ->
+        # console.log "#{@CACHE}.lookup(#id, #{typeof cb})"
+        if @CACHE.get id
+            cb null, that
+        else
+            Cls = this
+            new Cls { id, slug:id } .fetch do
+                success : -> cb null, it
+                error   : cb
+    
+
+
+/* }}} */

@@ -20,8 +20,8 @@ _ = require 'kraken/underscore'
  */
 VisView = exports.VisView = BaseView.extend do # {{{
     FILTER_CHART_OPTIONS : <[ 
-        file labels visibility colors dateWindow  ticker timingName xValueParser 
-        axisLabelFormatter xAxisLabelFormatter yAxisLabelFormatter 
+        file labels visibility colors dateWindow ticker timingName xValueParser
+        axisLabelFormatter xAxisLabelFormatter yAxisLabelFormatter
         valueFormatter xValueFormatter yValueFormatter
     ]>
     __bind__  : <[ 
@@ -79,7 +79,7 @@ VisView = exports.VisView = BaseView.extend do # {{{
         
         @scaffold.on 'change', @onScaffoldChange
         
-        options = @model.get 'options', {}
+        options = @model.getOptions()
         @chartOptions options, {+silent}
         
         @resizeViewport()
@@ -115,7 +115,7 @@ VisView = exports.VisView = BaseView.extend do # {{{
                 fields.get(k)?.setValue v, opts
             this
         else
-            options = @model.toJSON({ -keepDefaults })?.options or {}
+            options = @model.getOptions {-keepDefaults, +keepUnchanged}
             for k of @FILTER_CHART_OPTIONS
                 # console.log "filter #k?", not options[k]
                 if k in options and not options[k]
@@ -166,7 +166,7 @@ VisView = exports.VisView = BaseView.extend do # {{{
             # valueFormatter     : @formatter
         
         # console.log "#this.render!", dataset
-        # _.dump options, 'options'
+        _.dump options, 'options'
         
         # Always rerender the chart to sidestep the case where we need to push defaults into
         # dygraphs to reset the current option state.
@@ -189,7 +189,7 @@ VisView = exports.VisView = BaseView.extend do # {{{
     
     renderAll: ->
         return this unless @ready
-        console.log "#this.renderAll!"
+        # console.log "#this.renderAll!"
         _.invoke @scaffold.subviews, 'render'
         @scaffold.render()
         @render()
@@ -227,9 +227,10 @@ VisView = exports.VisView = BaseView.extend do # {{{
     ### Event Handlers {{{
     
     onReady: ->
-        console.log "#this.ready!"
+        # console.log "(#this via VisView).ready!"
         @ready = @scaffold.ready = true
-        @change()
+        # @change()
+        @model.change()
         @renderAll()
     
     onModelChange: ->
@@ -239,8 +240,21 @@ VisView = exports.VisView = BaseView.extend do # {{{
         @chartOptions that, {+silent} if changes?.options
     
     onScaffoldChange: (scaffold, value, key, field) ->
-        # console.log "scaffold.change!", key, value
-        @model.setOption key, value, {+silent} #unless field.isDefault()
+        current = @model.getOption(key)
+        # console.log do
+        #     "scaffold.change! #key:"
+        #     current
+        #     '-->'
+        #     value
+        #     " ( isDefault?"
+        #     (current is void and field.isDefault())
+        #     "isEqual?"
+        #     _.isEqual(value, current)
+        #     ")   --> "
+        #     unless _.isEqual(value, current) or (current is void and field.isDefault()) then 'CHANGE' else 'SQUELCH'
+        
+        unless _.isEqual(value, current) or (current is void and field.isDefault())
+            @model.setOption(key, value, {+silent})
     
     onFirstClickRenderOptionsTab: ->
         @$el.off 'click', '.graph-options-tab', @onFirstClickRenderOptionsTab

@@ -12,7 +12,7 @@ Backbone = require 'backbone'
 { GraphOption, GraphOptionList, GraphOptionView,
   GraphOptionsScaffold, TagSet,
 } = require 'kraken/graph'
-{ VisView, VisModel,
+{ VisView, VisModel, VisList,
 } = require 'kraken/vis'
 
 
@@ -48,6 +48,7 @@ main = ->
     # If we got querystring args, apply them to the graph
     if loc.split '?' .1
         data = _.uncollapseObject _.fromKV that.replace('#', '%23')
+        data.parents = JSON.parse that if data.parents
         data.options = _.synthesize do
             data.options or {}
             (v, k) -> [ k, dyglib.parseOption(k,v) ]
@@ -56,6 +57,7 @@ main = ->
     if match = /\/graph\/(?!view)([^\/?]+)/i.exec loc
         data.slug = match[1]
     
+    # _.dump _.clone(data.options), 'data.options'
     vis   = root.vis   = new VisModel data, {+parse}
     graph = root.graph = new VisView do
         graph_spec : root.CHART_OPTIONS_SPEC
@@ -73,8 +75,8 @@ Seq([   <[ CHART_OPTIONS_SPEC /schema/dygraph.json ]>,
     jQuery.ajax do
         url : url,
         dataType : 'json'
-        success : (data) ->
-            root[key] = data
+        success : (res) ->
+            root[key] = res
             next.ok()
         error : (err) -> console.error err
 .seq ->

@@ -4,8 +4,6 @@ op = require 'kraken/util/op'
 {Parsers, ParserMixin}  = require 'kraken/util/parser'
 
 
-KNOWN_LIBRARIES = exports.KNOWN_LIBRARIES = {}
-
 /**
  * @class Specification for an option.
  */
@@ -32,19 +30,24 @@ class exports.ChartOption
     parse : Parsers.parseString
     
     isDefault: (v) ->
-        @default is v
+        # @default is v
+        _.isEqual @default, v
     
     toString: -> "(#{@name}: #{@type})"
+
+
+
+/**
+ * Map of known libraries by name.
+ * @type Object
+ */
+KNOWN_LIBRARIES = exports.KNOWN_LIBRARIES = {}
 
 
 /**
  * @class Abstraction of a charting library, encapsulating its logic and options.
  */
 class exports.ChartLibrary extends EventEmitter
-    
-    @lookupLibrary = (name) ->
-        KNOWN_LIBRARIES[name]
-    
     /**
      * Ordered ChartOption objects.
      * @type ChartOption[]
@@ -68,9 +71,7 @@ class exports.ChartLibrary extends EventEmitter
     (@name, options) ->
         @options_ordered = _.map options, (opt) ~> new ChartOption this, opt
         @options = _.synthesize @options_ordered, -> [it.name, it]
-        
-        # register library
-        KNOWN_LIBRARIES[@name] = this
+        ChartLibrary.register this
     
     
     /**
@@ -80,7 +81,7 @@ class exports.ChartLibrary extends EventEmitter
         @options[name] or def
     
     /**
-     * @returns {Array} List of values found at the given attr on each 
+     * @returns {Array} List of values found at the given attr on each
      *  option spec object.
      */
     pluck: (attr) ->
@@ -112,6 +113,8 @@ class exports.ChartLibrary extends EventEmitter
         String v
     
     
+    ### Parsers
+    
     /**
      * When implementing a ChartLibrary, you can add or override parsers
      * merely by subclassing.
@@ -124,5 +127,29 @@ class exports.ChartLibrary extends EventEmitter
     parseOption: (name, value) ->
         @getParserFor(name)(value)
     
+    parseOptions: (options) ->
+        out = {}
+        for k, v in options
+            out[k] = @parseOption k, v
+        out
+    
+    
+    
+    ### Class Methods
+    
+    /**
+     * Register a new library.
+     */
+    @register = (library) ->
+        KNOWN_LIBRARIES[library.name] = library
+    
+    /**
+     * Look up a library by name.
+     */
+    @lookupLibrary = (name) ->
+        KNOWN_LIBRARIES[name]
+    
+    
+
 
 
