@@ -12,18 +12,18 @@ html, body
     color $body_text
     background-color $foot_bgcolor
 
-a, a:link, a:visited, a:active
-    color $body_link
-    text-decoration underline
-    &:hover
-        text-decoration none
+// a:not(.btn)
+//     color $body_link
+//     text-decoration underline
+//     &:hover
+//         text-decoration none
 
 h1, h2, h3
     font-family $fonts_headers
     color $body_text
     font-weight 300
     
-    a, a:link, a:visited, a:active
+    a:not(.btn)
         color $body_text
         text-decoration none
         &:hover
@@ -32,7 +32,7 @@ h1, h2, h3
 footer
     color $foot_text
     
-    a, a:link, a:visited, a:active
+    a:not(.btn)
         color $foot_link
     
 

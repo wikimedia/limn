@@ -15,15 +15,27 @@ section.graph.graph-edit(id=graph_id)
             .graph-settings.tabbable
                 //- nav.navbar: div.navbar-inner: div.container
                 nav
+                    .graph-controls.pull-right
+                        .btn-group
+                            a.redraw-button.btn(href="#")
+                                i.icon-refresh
+                                |  Redraw
+                        .btn-group
+                            a.load-button.btn(href="#")
+                                i.icon-download
+                                |  Revert
+                            a.save-button.btn(href="#")
+                                i.icon-upload
+                                |  Save
+                            a.done-button.btn-primary.btn(href="#")
+                                i.icon-ok-sign.icon-white
+                                |  Done
                     ul.nav.subnav.nav-pills
                         li:         h3 Graph
                         li.active:  a(href="#graph-#{graph_id}-info", data-toggle="tab") Info
                         li:         a(href="#graph-#{graph_id}-data", data-toggle="tab") Data
                         li: a.graph-options-tab(href="#graph-#{graph_id}-options", data-toggle="tab") Options
-                        li.graph-controls
-                            input.redraw-button.btn(type="button", value="Redraw")
-                            input.load-button.btn(type="button", value="Load")
-                            input.save-button.btn-success(type="button", value="Save")
+                    
                 
                 .tab-content
                     .graph-info-pane.tab-pane.active(id="graph-#{graph_id}-info")

@@ -62,12 +62,19 @@ section.graph
             padding 0.5em
     
     .graph-controls
-        float right
+        z-index 100
+        margin-top 2px
+        
+        & > .btn, & > .btn-group
+            margin 0 0.5em
+        
+        .btn-group
+            display inline-block
         
         input[type="button"]
             min-width 5em
-            margin 0 0.5em
             text-align center
+        
     
     
     /* * * *  Graph Details  * * * {{{ */
