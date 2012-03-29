@@ -25,7 +25,7 @@ options   :
     customBars                      : false
     dateWindow                      : null
     delimiter                       : ","
-    digitsAfterDecimal              : 3
+    digitsAfterDecimal              : 2
     displayAnnotations              : false
     drawPoints                      : false
     drawXAxis                       : true
@@ -40,7 +40,7 @@ options   :
     gridLineColor                   : "#D8D8D8"
     gridLineWidth                   : 0.3
     hideOverlayOnMouseOut           : true
-    highlightCircleSize             : 3
+    highlightCircleSize             : 4
     includeZero                     : false
     interactionModel                : null
     isZoomedIgnoreProgrammaticZoom  : false
@@ -53,7 +53,7 @@ options   :
     labelsSeparateLines             : true
     labelsShowZeroValues            : true
     legend                          : always
-    logscale                        : false
+    logscale                        : true
     maxNumberWidth                  : 30
     panEdgeFraction                 : null
     pixelsPerLabel                  : null
@@ -73,7 +73,7 @@ options   :
     stackedGraph                    : false
     stepPlot                        : false
     strokePattern                   : null
-    strokeWidth                     : 1
+    strokeWidth                     : 2
     ticker                          : null
     timingName                      : null
     title                           : null
@@ -84,7 +84,7 @@ options   :
     wilsonInterval                  : true
     xAxisHeight                     : null
     xAxisLabelFormatter             : null
-    xAxisLabelWidth                 : 50
+    xAxisLabelWidth                 : 55
     xLabelHeight                    : 18
     xValueFormatter                 : null
     xValueParser                    : null

@@ -1,5 +1,7 @@
 root = do -> this
 
+moment = require 'moment'
+
 _ = require 'kraken/util/underscore'
 { BaseView,
 } = require 'kraken/base'
@@ -25,7 +27,6 @@ GraphEditView = exports.GraphEditView = BaseView.extend do # {{{
     ]>
     __bind__  : <[ 
         render renderAll resizeViewport
-        formatter axisFormatter
         onReady onSync
         onModelChange onScaffoldChange onFirstClickRenderOptionsTab
     ]>
@@ -189,8 +190,14 @@ GraphEditView = exports.GraphEditView = BaseView.extend do # {{{
         options = @chartOptions() #import size
         options import do
             labelsDiv          : @$el.find '.graph-label' .0
-            # axisLabelFormatter : @axisFormatter
-            # valueFormatter     : @formatter
+            valueFormatter     : @numberFormatter
+            axes:
+                x:
+                    axisLabelFormatter : @axisDateFormatter
+                    valueFormatter     : @dateFormatter
+                y:
+                    axisLabelFormatter : @axisFormatter @numberFormatter
+                    valueFormatter     : @numberFormatter
         
         # console.log "#this.render!", dataset
         _.dump options, 'options'
@@ -237,19 +244,25 @@ GraphEditView = exports.GraphEditView = BaseView.extend do # {{{
     
     ### Formatters {{{
     
-    axisFormatter: (n, granularity, opts, g) ->
-        @formatter n, opts, g
+    axisFormatter: (fmttr) ->
+        (n, granularity, opts, g) -> fmttr n, opts, g
     
-    formatter: (n, opts, g) ->
-        return n if n instanceof Date
-        sigFigs = opts 'sigFigs'
-        maxW    = opts 'maxNumberWidth'
-        digits  = opts 'digitsAfterDecimal'
-        v = Dygraph.round_ n, digits
-        # Dygraph.floatFormat n, sigFigs
-        # console.log n, "->", v, "?= %#{maxW}.#{digits}g (sigFigs=#sigFigs)"
-        v
+    axisDateFormatter: (n, granularity, opts, g) ->
+        moment(n).format 'MM/YYYY'
     
+    dateFormatter: (n, opts, g) ->
+        moment(n).format 'DD MMM YYYY'
+    
+    numberFormatter: (n, opts, g) ->
+        digits = opts('digitsAfterDecimal') ? 2
+        for [suffix, d] of [['B', 1000000000], ['M', 1000000], ['K', 1000], ['', NaN]]
+            if n >= d
+                n = n / d
+                break
+        s = n.toFixed(digits) + suffix
+        parts = s.split '.'
+        parts[0] = _.rchop parts[0], 3 .join ','
+        parts.join '.'
     
     ### }}}
     ### Event Handlers {{{

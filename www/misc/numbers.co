@@ -2,6 +2,31 @@ _ = require 'kraken/util/underscore'
 
 config = tbody = null
 
+Number::fmtFixed = (digits=2) ->
+    n = this
+    pairs = [['B', 1000000000], ['M', 1000000], ['K', 1000]].filter -> n >= it[1]
+    for [suffix, d] of pairs
+        s = ( n / d ).toFixed(digits) + suffix
+        break
+    else
+        s = n.toFixed digits
+    parts = s.split '.'
+    parts[0] = _.rchop parts[0], 3 .join ','
+    parts.join '.'
+
+Number::fmtPre = (digits=2) ->
+    n = this
+    pairs = [['B', 1000000000], ['M', 1000000], ['K', 1000]].filter -> n >= it[1]
+    for [suffix, d] of pairs
+        s = ( n / d ).toPrecision(digits) + suffix
+        break
+    else
+        s = n.toPrecision digits
+    parts = s.split '.'
+    parts[0] = _.rchop parts[0], 3 .join ','
+    parts.join '.'
+
+
 render = (n, settings={}) ->
     n = Number n
     unless typeof n is 'number' and not isNaN n
@@ -9,7 +34,7 @@ render = (n, settings={}) ->
         return false
     
     values = [n].concat do
-        <[ toFixed toPrecision toExponential ]>.map -> n[it] settings[it]
+        <[ toFixed fmtFixed toPrecision fmtPre ]>.map -> n[it] settings[it]
     # _.dump values, 'values'
     row = $ "<tr>#{ values.map -> "<td>#it</td>" }</tr>" .prependTo tbody
     # console.log 'row:', row
@@ -32,9 +57,14 @@ $ ->
         false
     
     settings = { fixed:3 }
+    render 1234567890123.456,  settings
+    render 1234567.89012,  settings
+    render 12345.678,  settings
     render 1234.5,  settings
     render 123.45,  settings
     render 12.345,  settings
     render 1.2345,  settings
     render 0.12345, settings
+    render 0.012345, settings
+    render 0.0012345, settings
     config.trigger 'submit'

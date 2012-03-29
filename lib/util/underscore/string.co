@@ -3,6 +3,23 @@ _str = require 'underscore.string'
 
 _string = do
     
+    
+    
+    /**
+     * As _.str.chop but from the right.
+     */
+    rchop : (s, step) ->
+        s    = String s
+        i    = s.length
+        step = Number step
+        out  = []
+        return [s] if step <= 0
+        while i > 0
+            out.unshift s.slice Math.max(0, i-step), i
+            i -= step
+        out
+    
+    
     drop : (s, ...parts) ->
         do
             starting = s

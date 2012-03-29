@@ -37,7 +37,7 @@ dev:
         
         - showdown.mod.min
         - jade.runtime.min
-        
+        - moment.mod.min
         - dygraph
 
 -   suffix: .mod.js
