@@ -1,3 +1,0 @@
-models = require 'kraken/vis/vis-model'
-views  = require 'kraken/vis/vis-view'
-exports import models import views

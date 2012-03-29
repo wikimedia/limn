@@ -1,0 +1,30 @@
+root = do -> this
+
+_ = require 'kraken/util/underscore'
+{ BaseView,
+} = require 'kraken/base'
+{ ChartType, DEBOUNCE_RENDER,
+} = require 'kraken/chart'
+{ Graph,
+} = require 'kraken/graph/graph-model'
+
+
+
+GraphDisplayView = exports.GraphDisplayView = BaseView.extend do # {{{
+    ctorName  : 'GraphDisplayView'
+    tagName   : 'section'
+    className : 'graph'
+    template  : require 'kraken/template/graph-display'
+    
+    # events :
+    #     'blur .value'   : 'update'
+    #     'submit .value' : 'update'
+    
+    
+    initialize: ->
+        @model or= new Graph
+        BaseView::initialize ...
+    
+    
+    toString: -> "#{@ctorName}(#{@model})"
+# }}}

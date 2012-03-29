@@ -3,20 +3,21 @@ root = do -> this
 _ = require 'kraken/util/underscore'
 { BaseView,
 } = require 'kraken/base'
-{ ChartOptionScaffold, ChartOption, ChartOptionList, DEBOUNCE_RENDER,
+{ ChartOptionScaffold, DEBOUNCE_RENDER,
 } = require 'kraken/chart'
-{ VisModel,
-} = require 'kraken/vis/vis-model'
+{ Graph,
+} = require 'kraken/graph/graph-model'
 
 
 
 
 
 /**
- * View for a graph visualization encapsulating the UI for:
+ * @class View for a graph visualization encapsulating the editing UI for:
  * - Graph metadata, such as name, description, slug
+ * - Chart options, using ChartOptionScaffold
  */
-VisView = exports.VisView = BaseView.extend do # {{{
+GraphEditView = exports.GraphEditView = BaseView.extend do # {{{
     FILTER_CHART_OPTIONS : <[ 
         file labels visibility colors dateWindow ticker timingName xValueParser
         axisLabelFormatter xAxisLabelFormatter yAxisLabelFormatter
@@ -25,18 +26,19 @@ VisView = exports.VisView = BaseView.extend do # {{{
     __bind__  : <[ 
         render renderAll resizeViewport
         formatter axisFormatter
-        onReady onModelChange onScaffoldChange onFirstClickRenderOptionsTab
+        onReady onSync
+        onModelChange onScaffoldChange onFirstClickRenderOptionsTab
     ]>
     __debounce__: <[ render renderAll ]>
-    ctorName  : 'VisView'
+    ctorName  : 'GraphEditView'
     tagName   : 'section'
-    className : 'graph'
-    template  : require 'kraken/template/graph'
+    className : 'graph graph-edit'
+    template  : require 'kraken/template/graph-edit'
     
     events:
         'click    .redraw-button'                  : 'render'
         'click    .save-button'                    : 'save'
-        # 'click    .load-button'                    : 'load'
+        'click    .load-button'                    : 'load'
         'keypress form.details input[type="text"]' : 'onKeypress'
         'keypress form.options .value'             : 'onKeypress'
         'submit   form.details'                    : 'onDetailsSubmit'
@@ -48,7 +50,7 @@ VisView = exports.VisView = BaseView.extend do # {{{
     
     
     initialize : (o={}) ->
-        @model or= new VisModel
+        @model or= new Graph
         BaseView::initialize ...
         # console.log "#this.initialize!"
         
@@ -59,12 +61,18 @@ VisView = exports.VisView = BaseView.extend do # {{{
         # Note: can't debounce the method itself, as the debounce wrapper returns undefined
         $ root .on 'resize', _.debounce(@resizeViewport, DEBOUNCE_RENDER)
         
-        @id = _.domize 'graph', (@model.get('slug', @model.id or @model.cid))
+        @id = _.domize 'graph', (@model.get('slug') or @model.id or @model.cid)
         
-        @model.on 'destroy', @remove, this
-        @model.on 'change',  @render, this
-        @model.on 'change:dataset', @onModelChange
-        @model.on 'change:options', @onModelChange
+        @model
+            .on 'ready',            @onReady
+            .on 'sync',             @onSync
+            .on 'destroy',          @remove,  this
+            .on 'change',           @render,  this
+            .on 'change:dataset',   @onModelChange
+            .on 'change:options',   @onModelChange
+            .on 'error', ~>
+                console.error "#this.error!", arguments
+                # TODO: UI alert
         
         # Rerender the options boxes once the tab is visible
         @$el.on 'click', '.graph-options-tab', @onFirstClickRenderOptionsTab
@@ -74,32 +82,29 @@ VisView = exports.VisView = BaseView.extend do # {{{
         @scaffold = new ChartOptionScaffold
         @$el.find '.graph-options-pane' .append @scaffold.el
         @scaffold.collection.reset that if o.graph_spec
-        
         @scaffold.on 'change', @onScaffoldChange
         
-        options = @model.getOptions()
-        @chartOptions options, {+silent}
-        
+        @chartOptions @model.getOptions(), {+silent}
         @resizeViewport()
-        _.delay @onReady, DEBOUNCE_RENDER
+        # _.delay @onReady, DEBOUNCE_RENDER
+    
+    
+    
+    
+    load: ->
+        console.log "#this.load!"
+        @model.fetch()
+    
+    save: ->
+        console.log "#this.save!"
+        id = @model.id or @model.get('slug')
+        @model.save {id}, {+wait}
     
     
     change: ->
         @model.change()
         @scaffold.invoke 'change'
         this
-    
-    save: ->
-        console.log "#this.save!"
-        $.ajax do
-            url  : '/graph/save'
-            type : 'POST'
-            data : @toJSON()
-            success : (response) ->
-                console.log 'saved!'
-            error : (err) ->
-                console.error "error!", arguments
-    
     
     chartOptions: (values, opts) ->
         # Handle @chartOptions(k, v, opts)
@@ -119,6 +124,13 @@ VisView = exports.VisView = BaseView.extend do # {{{
                 if k in options and not options[k]
                     delete options[k]
             options
+    
+    
+    toTemplateLocals: ->
+        attrs = _.clone @model.attributes
+        delete attrs.options
+        { $, _, op, @model, view:this } import attrs
+    
     
     /**
      * Resizes chart according to the model's width and height.
@@ -149,9 +161,26 @@ VisView = exports.VisView = BaseView.extend do # {{{
         size
     
     
+    # Repopulate UI from Model
+    renderDetails: ->
+        form = @$el.find 'form.details'
+        for k, v in @model.attributes
+            continue if k is 'options'
+            txt = @model.serialize v
+            
+            el = form.find "input[name=#k]"
+            if el.attr('type') is 'checkbox'
+                el.attr 'checked', if v then 'checked' else ''
+            else
+                el.val txt
+            
+            form.find "textarea[name=#k]" .text txt
+        this
+    
     
     render: ->
         return this unless @ready
+        @renderDetails()
         
         dataset = @model.get 'dataset'
         size    = @resizeViewport()
@@ -183,6 +212,7 @@ VisView = exports.VisView = BaseView.extend do # {{{
         #     @chart.resize size
         
         @updateURL()
+        @trigger 'render', this
         this
     
     renderAll: ->
@@ -225,17 +255,25 @@ VisView = exports.VisView = BaseView.extend do # {{{
     ### Event Handlers {{{
     
     onReady: ->
-        # console.log "(#this via VisView).ready!"
+        console.log "(#this via GraphEditView).ready!"
         @ready = @scaffold.ready = true
+        @onSync()
+    
+    onSync: ->
+        return unless @ready
+        console.info "#this.sync() --> success!"
+        # TODO: UI alert
         # @change()
-        @model.change()
+        # @model.change()
+        @chartOptions @model.getOptions(), {+silent}
         @renderAll()
     
     onModelChange: ->
         changes = @model.changedAttributes()
-        # console.log 'VisModel.changed( options ) ->', JSON.stringify changes
+        options = @model.getOptions()
+        # console.log "Graph.changed( options ) ->\n\tchanges: #{JSON.stringify changes}\n\toptions: #{JSON.stringify options}" #"\n\t^opts: #{JSON.stringify _.intersection _.keys(changes), _.keys(options)}"
         @chart.updateOptions file:that if changes?.dataset
-        @chartOptions that, {+silent} if changes?.options
+        @chartOptions options, {+silent} if changes?.options
     
     onScaffoldChange: (scaffold, value, key, field) ->
         current = @model.getOption(key)

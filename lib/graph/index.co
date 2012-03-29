@@ -1,3 +1,4 @@
-# models = require 'kraken/graph/graph-model'
-# views  = require 'kraken/graph/graph-view'
-# exports import models import views
+models        = require 'kraken/graph/graph-model'
+display_views = require 'kraken/graph/graph-display-view'
+edit_views    = require 'kraken/graph/graph-edit-view'
+exports import models import display_views import edit_views

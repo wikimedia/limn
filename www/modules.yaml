@@ -70,14 +70,12 @@ dev:
             - template:
                 - chart-option.jade
                 - chart-scaffold.jade
-                - graph.jade
-            # - graph:
-            #     - graph-model
-            #     - graph-view
-            #     - index
-            - vis:
-                - vis-model
-                - vis-view
+                - graph-edit.jade
+                - graph-display.jade
+            - graph:
+                - graph-model
+                - graph-edit-view
+                - graph-display-view
                 - index
 
 # -   suffix: .js

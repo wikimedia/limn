@@ -15,12 +15,11 @@ root = do -> this
  * Represents a Graph, including its charting options, dataset, annotations, and all
  * other settings for both its content and presentation.
  */
-VisModel = exports.VisModel = BaseModel.extend do # {{{
-    ctorName       : 'VisModel'
+Graph = exports.Graph = BaseModel.extend do # {{{
+    ctorName       : 'Graph'
     IGNORE_OPTIONS : <[ width height timingName ]>
     
     urlRoot        : '/graph'
-    idAttribute    : 'slug'
     ready          : false
     
     /**
@@ -31,7 +30,7 @@ VisModel = exports.VisModel = BaseModel.extend do # {{{
     
     /**
      * List of graph parents.
-     * @type VisList
+     * @type GraphList
      */
     parents : null
     
@@ -66,34 +65,51 @@ VisModel = exports.VisModel = BaseModel.extend do # {{{
     
     
     
-    constructor : (attributes={}, options) ->
-        # @on 'ready', ~> console.log "(#this via VisModel).ready!"
+    constructor : (attributes={}, opts) ->
+        @on 'ready', ~> console.log "(#this via Graph).ready!"
         attributes.options or= {}
         @optionCascade = new Cascade attributes.options
-        BaseModel.call this, attributes, options
+        BaseModel.call this, attributes, opts
     
     
-    initialize : ->
+    initialize : (attributes, opts) ->
         @__super__.initialize ...
+        opts = {+autoLoad} import (opts or {})
         
-        @parents = new VisList
+        @constructor.register this
+        @parents = new GraphList
         # TODO: Load on-demand
         @chartType = ChartType.lookup @get('chartType')
         
         # unless @id or @get('id') or @get('slug')
         #     @set 'slug', "unsaved_graph_#{@cid}"
         
-        @constructor.register this
         @trigger 'init', this
-        @load()
+        @load() if opts.autoLoad
     
     
     load: (opts={}) ->
         return this if @ready and not opts.force
         
+        self = this
         @trigger 'load', this
-        Seq @get('parents')
-            .seqMap -> VisModel.lookup it, this
+        Seq()
+            .seq_ (next) ~>
+                if @isNew()
+                    next.ok()
+                else
+                    console.log "#{this}.fetch()..."
+                    @fetch do
+                        error : (err) ~>
+                            console.error "#{this}.fetch() --> error! #arguments"
+                            next.ok()
+                        success : (model, res) ~>
+                            console.log "#{this}.fetch() --> success!", res
+                            next.ok res
+            .seq_ (next) ~>
+                next.ok @get('parents')
+            .flatten()
+            .seqMap -> Graph.lookup it, this
             .seqEach_ (next, parent) ~>
                 @parents.add parent
                 @optionCascade.addLookup parent.get('options')
@@ -101,6 +117,8 @@ VisModel = exports.VisModel = BaseModel.extend do # {{{
             .seq ~>
                 @ready = true
                 @trigger 'ready', this
+        
+        this
     
     
     ### Accessors
@@ -120,11 +138,23 @@ VisModel = exports.VisModel = BaseModel.extend do # {{{
             values = { "#key": value }
         values = @parse values
         
-        if @ready and values.options
+        setter = (@__super__ or BaseModel::).set
+        
+        # Merge options in, firing granulated change events
+        if values.options
+            # Remove from values to prevent the super call to `set()` from
+            # replacing the object wholesale.
             options = delete values.options
+            
+            # ...Unless we don't have one yet.
+            if not @attributes.options
+                setter.call this, {options}, {+silent}
+            
+            # Now delegate `setOption()` to do the nested merging.
             @setOption options, opts
         
-        (@__super__ or BaseModel::).set.call this, values, opts
+        # Deal with everything else
+        setter.call this, values, opts
     
     
     
@@ -200,34 +230,29 @@ VisModel = exports.VisModel = BaseModel.extend do # {{{
         @optionCascade.isChangedValue k
         and not @isDefaultOption k
     
+    
     toJSON: (opts={}) ->
-        opts = {+keepDefaults} import opts
-        
-        # use jQuery's deep-copy implementation
-        json = $.extend true, {}, @attributes
-        # json = _.clone(@attributes) import { options:_.clone(@attributes.options) }
-        return json if opts.keepDefaults
-        
-        for k, v in json.options
-            delete json.options[k] if v is void or @isDefaultOption k
-        json
+        opts = {+keepDefaults, +keepUnchanged} import opts
+        # use jQuery's deep-copy implementation -- XXX: Deep-copy no longer necessary thanks to @getOptions()
+        # json = $.extend true, {}, @attributes
+        json = _.clone(@attributes) import { options:@getOptions(opts) }
     
     
     toKVPairs: (opts={}) ->
         opts = {-keepSlug, -keepDefaults, -keepUnchanged} import opts
         
         # use jQuery's deep-copy implementation
-        kvo = $.extend true, {}, @attributes
+        kvo = @toJSON opts
         kvo.parents = JSON.stringify kvo.parents
         delete kvo.slug unless opts.keepSlug
         
         # console.group 'toKVPairs'
         # console.log '[IN]', JSON.stringify kvo
-        kvo.options = @getOptions opts
         for k, v in kvo.options
             kvo.options[k] = @serialize v
         # console.log '[OUT]', JSON.stringify kvo
         # console.groupEnd()
+        
         _.collapseObject kvo
     
     toKV: (opts) ->
@@ -246,10 +271,10 @@ VisModel = exports.VisModel = BaseModel.extend do # {{{
 # }}}
 
 
-VisList = exports.VisList = BaseList.extend do # {{{
-    ctorName : 'VisList'
+GraphList = exports.GraphList = BaseList.extend do # {{{
+    ctorName : 'GraphList'
     urlRoot  : '/graph'
-    model    : VisModel
+    model    : Graph
     
     initialize : ->
         BaseList::initialize ...
@@ -264,15 +289,16 @@ VisList = exports.VisList = BaseList.extend do # {{{
 
 /* * * *  Visualization Cache for parent-lookup  * * * {{{ */
 
-VIS_CACHE = exports.VIS_CACHE = new VisList
+GRAPH_CACHE = exports.GRAPH_CACHE = new GraphList
 
-VisModel import do
-    CACHE : VIS_CACHE
+Graph import do
+    CACHE : GRAPH_CACHE
     
     register: (model) ->
-        # console.log "#{@CACHE}.register(#{model.id or model.get('id')})", model
-        unless @CACHE.contains model
-            @CACHE.add model
+        console.log "#{@CACHE}.register(#{model.id or model.get('id')})", model
+        if @CACHE.contains model
+            @CACHE.remove model, {+silent}
+        @CACHE.add model
         model
     
     get: (id) ->
@@ -284,9 +310,8 @@ VisModel import do
             cb null, that
         else
             Cls = this
-            new Cls { id, slug:id } .fetch do
-                success : -> cb null, it
-                error   : cb
+            @register new Cls { id, slug:id }
+                .on 'ready', -> cb null, it
     
 
 
