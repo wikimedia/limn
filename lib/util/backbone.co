@@ -1,7 +1,13 @@
+
+# Expose Underscore so Backbone can find it
 _ = require 'underscore'
 window?._ = _
+
+# Expose Backbone so plugins can find it
 Backbone = require 'backbone'
 window?.Backbone = Backbone
+
+# Pass jQuery to Backbone, as it only looks on its module if `require` is defined
 Backbone.setDomLibrary that if window? and (window.jQuery or window.Zepto or window.ender)
 
 

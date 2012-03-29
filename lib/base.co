@@ -1,19 +1,64 @@
 _  = require 'kraken/underscore'
 op = require 'kraken/util/op'
 
+Backbone = require 'backbone'
+
+
 
 /**
  * @class Base model, extending Backbone.Model, used by scaffold and others.
  * @extends Backbone.Model
  */
 BaseModel = exports.BaseModel = Backbone.Model.extend do # {{{
-    # A list of method-names to bind on initialize; set this on a subclass to override.
-    __bind__ : []
     ctorName : 'BaseModel'
     
+    # A list of method-names to bind on initialize; set this on a subclass to override.
+    __bind__ : []
+    
+    
+    
+    constructor : function BaseModel
+        @__class__      = @constructor
+        @__super__      = @constructor.__super__
+        @__superclass__ = @__super__.constructor
+        # Backbone.NestedModel.apply this, arguments
+        Backbone.Model.apply this, arguments
+        # @trigger 'create', this
+    
     initialize: ->
-        @__super__ = @constructor.__super__
         _.bindAll this, ...@__bind__ if @__bind__.length
+    
+    
+    ### Accessors
+    
+    has: (key) ->
+        @get(key)?
+    
+    get: (key) ->
+        _.getNested @attributes, key
+    
+    # set: (key, value, opts) ->
+    #     if _.isObject(key) and key?
+    #         [values, opts] = [key, value]
+    #     else
+    #         values = { "#key": value }
+    #     
+    #     # TODO: Validation
+    #     @_changed or= {}
+    #     
+    #     for key, value in values
+    #         if _.str.contains key, '.'
+    #             _.setNested @attributes, key, value, opts
+    #         else
+    #             @__super__.set.call this, key, value, opts
+    #     
+    #     this
+    # 
+    # unset : (key, opts) ->
+    #     
+    
+    
+    ### Serialization
     
     serialize: (v) ->
         # if v!?
@@ -47,8 +92,8 @@ BaseModel = exports.BaseModel = Backbone.Model.extend do # {{{
     /**
      * @returns {String} URL identifying this model.
      */
-    toURL: (item_delim='&', kv_delim='=') ->
-        "?#{@toKV()}"
+    toURL: ->
+        "?#{@toKV ...}"
     
     toString: -> "#{@ctorName}(id=#{@id})"
 
@@ -77,6 +122,15 @@ BaseModel import do
 BaseList = exports.BaseList = Backbone.Collection.extend do # {{{
     ctorName : 'BaseList'
     
+    # A list of method-names to bind on initialize; set this on a subclass to override.
+    __bind__ : []
+    
+    
+    initialize : ->
+        @__super__ = @constructor.__super__
+        _.bindAll this, ...@__bind__ if @__bind__.length
+    
+    
     toKVPairs: ->
         _.collapseObject @toJSON()
     
@@ -97,14 +151,14 @@ BaseList = exports.BaseList = Backbone.Collection.extend do # {{{
 BaseView = exports.BaseView = Backbone.View.extend do # {{{
     ctorName : 'BaseView'
     
-    # List of methods to bind on initialize; set on subclass
+    # A list of method-names to bind on initialize; set this on a subclass to override.
     __bind__ : []
     
     
     
     initialize: ->
-        _.bindAll this, ...@__bind__ if @__bind__.length
         @__super__ = @constructor.__super__
+        _.bindAll this, ...@__bind__ if @__bind__.length
         
         @model.view = this
         @$el.data { @model, view:this }
