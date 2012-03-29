@@ -17,21 +17,11 @@ html
             link(type="image/x-icon", rel="shortcut icon", href="/favicon.ico")
             
             block title
-                title Kraken
+                title GraphKit
     
     body
         block body
-            //- 
-                header
-                    block header
-                        h1: a(href="/") Kraken
-                        block nav
-                            nav#menu: ul
-                                block menu-items
-                                    li.home Home
-            
             section#content
-                //- .spacer
                 .inner
                     block content
             
@@ -44,11 +34,13 @@ html
                         var VERSION = !{ JSON.stringify(version)  };
                         var ENV     = !{ JSON.stringify(NODE_ENV) };
                     
-                    for src in sources(WWW+'/modules.yaml')
-                        script(src=src+"?"+version)
+                    block lib-scripts
+                        for src in sources(WWW+'/modules.yaml')
+                            script(src=src+"?"+version)
                     
                     block page-scripts
                     
-                    script(src="/js/kraken/main.js?"+version)
+                    block main-scripts
+                        script(src="/js/kraken/main.js?"+version)
             
 
