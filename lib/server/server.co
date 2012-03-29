@@ -136,12 +136,14 @@ app.post '/graph/save', (req, res, next) ->
         return res.send {result:"error", message:"JSON required!"}, 501
     
     data = req.body
-    {slug} = data
+    {id, slug} = data
     if not slug
         return res.send {result:"error", message:"slug required!"}, 501
     mkdirp "#VAR/presets" if not exists "#VAR/presets"
     
-    err <- fs.writeFile "#VAR/presets/#slug.json", JSON.stringify(data), "utf8"
+    id or= slug
+    data.id = id
+    err <- fs.writeFile "#VAR/presets/#id.json", JSON.stringify(data), "utf8"
     if err
         res.send { result:"error", message:err.message or String(err) }, 501
     else
