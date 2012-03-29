@@ -1,11 +1,11 @@
-name                            : 'kraken-ui'
+name                            : 'kraken'
 version                         : '0.1.0'
-description                     : 'kraken-ui'
+description                     : 'A charting toolkit and dashboard.'
 homepage                        : 'http://git.less.ly/?p=kraken-ui.git'
 keywords                        : <[ util server client browser visualization graph ]>
 author                          : 'David Schoonover <dsc@less.ly> (http://less.ly)'
 
-# main                            : './lib/kraken-ui.js'
+# main                            : './lib'
 # directories                   : lib: './lib', bin:'./bin', doc:'./doc', man:'./man'
 
 dependencies                    : 
