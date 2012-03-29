@@ -31,7 +31,7 @@ STATIC = "#CWD/static"
 DIST   = "#CWD/dist"
 
 NODE_ENV  = process.env.NODE_ENV or 'dev'
-LOG_LEVEL = if NODE_ENV is 'dev' then 'INFO' else 'WARN'
+LOG_LEVEL = if _.startsWith NODE_ENV, 'dev' then 'INFO' else 'WARN'
 
 
 VERSION = 'dev'
