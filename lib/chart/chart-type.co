@@ -18,14 +18,14 @@ class exports.ChartOption
     examples : null
     
     
-    (@library, @spec) ->
+    (@chartType, @spec) ->
         throw new Error('Each ChartOption requires a name!') unless @spec.name
         
         for k of @SPEC_KEYS
             v = @spec[k]
             @[k] = v if v?
         @tags or= []
-        @parse = @library.getParser @type
+        @parse = @lookup.getParser @type
     
     parse : Parsers.parseString
     
@@ -41,13 +41,14 @@ class exports.ChartOption
  * Map of known libraries by name.
  * @type Object
  */
-KNOWN_LIBRARIES = exports.KNOWN_LIBRARIES = {}
+KNOWN_CHART_TYPES = exports.KNOWN_CHART_TYPES = {}
 
 
 /**
- * @class Abstraction of a charting library, encapsulating its logic and options.
+ * @class Abstraction of a chart-type or charting library, encapsulating its
+ *  logic and options.
  */
-class exports.ChartLibrary extends EventEmitter
+class exports.ChartType extends EventEmitter
     /**
      * Ordered ChartOption objects.
      * @type ChartOption[]
@@ -66,12 +67,12 @@ class exports.ChartLibrary extends EventEmitter
      * @constructor
      * @param {String} name Library name.
      * @param {Array} options List of options objects, each specifying the
-     *  name, type, default, description (etc) of a chart library option.
+     *  name, type, default, description (etc) of a chart option.
      */
     (@name, options) ->
         @options_ordered = _.map options, (opt) ~> new ChartOption this, opt
         @options = _.synthesize @options_ordered, -> [it.name, it]
-        ChartLibrary.register this
+        ChartType.register this
     
     
     /**
@@ -116,7 +117,7 @@ class exports.ChartLibrary extends EventEmitter
     ### Parsers
     
     /**
-     * When implementing a ChartLibrary, you can add or override parsers
+     * When implementing a ChartType, you can add or override parsers
      * merely by subclassing.
      */
     this:: import ParserMixin::
@@ -138,16 +139,16 @@ class exports.ChartLibrary extends EventEmitter
     ### Class Methods
     
     /**
-     * Register a new library.
+     * Register a new chart type.
      */
-    @register = (library) ->
-        KNOWN_LIBRARIES[library.name] = library
+    @register = (chartType) ->
+        KNOWN_CHART_TYPES[chartType.name] = chartType
     
     /**
-     * Look up a library by name.
+     * Look up a chart type by name.
      */
-    @lookupLibrary = (name) ->
-        KNOWN_LIBRARIES[name]
+    @lookup = (name) ->
+        KNOWN_CHART_TYPES[name]
     
     
 

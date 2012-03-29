@@ -2,7 +2,7 @@ Seq = require 'seq'
 
 _ = require 'kraken/util/underscore'
 Cascade = require 'kraken/util/cascade'
-{ ChartLibrary,
+{ ChartType,
 } = require 'kraken/chart'
 { BaseModel, BaseView, BaseList,
 } = require 'kraken/base'
@@ -25,9 +25,9 @@ VisModel = exports.VisModel = BaseModel.extend do # {{{
     
     /**
      * The chart type backing this graph.
-     * @type ChartLibrary
+     * @type ChartType
      */
-    library : null
+    chartType : null
     
     /**
      * List of graph parents.
@@ -55,7 +55,7 @@ VisModel = exports.VisModel = BaseModel.extend do # {{{
             dataset : '/data/non_mobile_pageviews_by.timestamp.language.csv'
             width   : 'auto'
             height  : 320
-            library : 'dygraphs'
+            chartType : 'dygraphs'
             parents : <[ root ]>
             options : {}
         }
@@ -78,7 +78,7 @@ VisModel = exports.VisModel = BaseModel.extend do # {{{
         
         @parents = new VisList
         # TODO: Load on-demand
-        @library = ChartLibrary.lookupLibrary @get('library')
+        @chartType = ChartType.lookup @get('chartType')
         
         # unless @id or @get('id') or @get('slug')
         #     @set 'slug', "unsaved_graph_#{@cid}"
@@ -190,7 +190,7 @@ VisModel = exports.VisModel = BaseModel.extend do # {{{
      * @returns {Boolean} Whether the value for option `k` is the graph default or not.
      */
     isDefaultOption: (k) ->
-        @library.isDefault k, @getOption k
+        @chartType.isDefault k, @getOption k
     
     /**
      * Whether the value for option `k` differs from that of its parent graphs.

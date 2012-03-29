@@ -1,3 +1,3 @@
-library  = require 'kraken/chart/chart-library'
-dygraphs = require 'kraken/chart/dygraphs-library'
-exports import library import dygraphs
+chart_type  = require 'kraken/chart/chart-type'
+dygraphs = require 'kraken/chart/dygraphs'
+exports import chart_type import dygraphs

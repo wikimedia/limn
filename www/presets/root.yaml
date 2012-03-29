@@ -1,13 +1,13 @@
 # The root graph, holding defaults inherited by all graphs.
 
-id      : root
-slug    : root
-dataset : '/data/non_mobile_pageviews_by.timestamp.language.csv'
-width   : 'auto'
-height  : 400
-library : 'dygraphs'
-parents : []
-options : 
+id        : root
+slug      : root
+dataset   : '/data/non_mobile_pageviews_by.timestamp.language.csv'
+width     : 'auto'
+height    : 400
+chartType : 'dygraphs'
+parents   : []
+options   : 
     animatedZooms                   : true
     avoidMinZero                    : false
     axis                            : null

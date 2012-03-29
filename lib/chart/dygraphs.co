@@ -1,9 +1,9 @@
 _ = require 'kraken/util/underscore'
-{ ChartLibrary, ChartOption,
-} = require 'kraken/chart/chart-library'
+{ ChartType, ChartOption,
+} = require 'kraken/chart/chart-type'
 
 
-class exports.DygraphsLibrary extends ChartLibrary
+class exports.DygraphsChartType extends ChartType
     name : 'dygraphs'
     
     (options) ->

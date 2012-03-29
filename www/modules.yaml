@@ -58,8 +58,8 @@ dev:
                 - index
             - base
             - chart:
-                - chart-library
-                - dygraphs-library
+                - chart-type
+                - dygraphs
                 - index
             - template:
                 - graph.jade
