@@ -11,6 +11,12 @@ _ = require 'kraken/util/underscore'
 } = require 'kraken/graph/graph-model'
 
 
+/**
+ * Helper that wraps a function to return false.
+ */
+stopEventAnd = (fn) ->
+    ~> fn ...; false
+
 
 
 
@@ -26,10 +32,9 @@ GraphEditView = exports.GraphEditView = BaseView.extend do # {{{
         valueFormatter xValueFormatter yValueFormatter
     ]>
     __bind__  : <[ 
-        render renderAll resizeViewport
+        render renderAll stopAndRender stopAndRenderAll resizeViewport
         numberFormatter numberFormatterHTML
-        onReady onSync
-        onModelChange onScaffoldChange onFirstClickRenderOptionsTab
+        onReady onSync onModelChange onScaffoldChange onFirstClickRenderOptionsTab
     ]>
     __debounce__: <[ render renderAll ]>
     ctorName  : 'GraphEditView'
@@ -38,9 +43,10 @@ GraphEditView = exports.GraphEditView = BaseView.extend do # {{{
     template  : require 'kraken/template/graph-edit'
     
     events:
-        'click    .redraw-button'                  : 'render'
-        'click    .save-button'                    : 'save'
+        'click    .redraw-button'                  : 'stopAndRender'
         'click    .load-button'                    : 'load'
+        'click    .save-button'                    : 'save'
+        'click    .done-button'                    : 'done'
         'keypress form.details input[type="text"]' : 'onKeypress'
         'keypress form.options .value'             : 'onKeypress'
         'submit   form.details'                    : 'onDetailsSubmit'
@@ -96,12 +102,16 @@ GraphEditView = exports.GraphEditView = BaseView.extend do # {{{
     load: ->
         console.log "#this.load!"
         @model.fetch()
+        false
     
     save: ->
         console.log "#this.save!"
         id = @model.id or @model.get('slug')
         @model.save {id}, {+wait}
+        false
     
+    done: ->
+        @save()
     
     change: ->
         @model.change()
@@ -221,7 +231,7 @@ GraphEditView = exports.GraphEditView = BaseView.extend do # {{{
         
         @updateURL()
         @trigger 'render', this
-        this
+        false
     
     renderAll: ->
         return this unless @ready
@@ -229,7 +239,6 @@ GraphEditView = exports.GraphEditView = BaseView.extend do # {{{
         _.invoke @scaffold.subviews, 'render'
         @scaffold.render()
         @render()
-        this
     
     /**
      * Update the page URL using HTML5 History API
@@ -279,6 +288,7 @@ GraphEditView = exports.GraphEditView = BaseView.extend do # {{{
     
     ### }}}
     ### Event Handlers {{{
+    
     
     onReady: ->
         console.log "(#this via GraphEditView).ready!"
@@ -336,6 +346,15 @@ GraphEditView = exports.GraphEditView = BaseView.extend do # {{{
     onOptionsSubmit: ->
         console.log "#this.onOptionsSubmit!"
         @render()
+        false
+    
+    # Needed because (sigh) _.debounce returns undefined
+    stopAndRender: ->
+        @render ...
+        false
+    
+    stopAndRenderAll: ->
+        @renderAll ...
         false
     
     # }}}

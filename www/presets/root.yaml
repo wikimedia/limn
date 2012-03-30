@@ -15,7 +15,7 @@ options   :
     axisLabelFontSize               : 14
     axisLabelFormatter              : null
     axisLabelWidth                  : 50
-    axisLineColor                   : black
+    axisLineColor                   : "#AAAAAA"
     axisLineWidth                   : 0.3
     axisTickSize                    : 3.0
     colorSaturation                 : 1.0
