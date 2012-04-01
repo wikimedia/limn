@@ -6,6 +6,8 @@ Cascade = require 'kraken/util/cascade'
 } = require 'kraken/chart'
 { BaseModel, BaseList,
 } = require 'kraken/base'
+{ DataSet
+} = require 'kraken/dataset'
 
 root = do -> this
 
@@ -18,9 +20,14 @@ root = do -> this
 Graph = exports.Graph = BaseModel.extend do # {{{
     ctorName       : 'Graph'
     IGNORE_OPTIONS : <[ width height timingName ]>
+    urlRoot        : '/graphs'
     
-    urlRoot        : '/graph'
-    ready          : false
+    /**
+     * Whether this Graph has loaded all assets, parent-graphs, and related
+     * resources.
+     * @type Boolean
+     */
+    ready : false
     
     /**
      * The chart type backing this graph.
@@ -43,6 +50,7 @@ Graph = exports.Graph = BaseModel.extend do # {{{
     
     
     
+    
     /**
      * Attribute defaults.
      */
@@ -51,7 +59,8 @@ Graph = exports.Graph = BaseModel.extend do # {{{
             slug    : ''
             name    : ''
             desc    : ''
-            dataset : '/data/non_mobile_pageviews_by.timestamp.language.csv'
+            # dataset : '/data/datasources/non_mobile_pageviews_by.timestamp.language.csv'
+            dataset : null
             width   : 'auto'
             height  : 320
             chartType : 'dygraphs'
@@ -84,14 +93,15 @@ Graph = exports.Graph = BaseModel.extend do # {{{
         # unless @id or @get('id') or @get('slug')
         #     @set 'slug', "unsaved_graph_#{@cid}"
         
+        # Insert submodels in place of JSON
+        @set 'dataset', new DataSet(@get('dataset')), {+silent}
+        
         @trigger 'init', this
         @load() if opts.autoLoad
     
     
     load: (opts={}) ->
         return this if @ready and not opts.force
-        
-        self = this
         @trigger 'load', this
         Seq()
             .seq_ (next) ~>
@@ -117,8 +127,8 @@ Graph = exports.Graph = BaseModel.extend do # {{{
             .seq ~>
                 @ready = true
                 @trigger 'ready', this
-        
         this
+    
     
     
     ### Accessors
@@ -265,7 +275,7 @@ Graph = exports.Graph = BaseModel.extend do # {{{
     toURL: ->
         slug = @get 'slug', ''
         slug = "/#slug" if slug
-        "/graph#slug?#{@toKV { keepSlug: !!slug }}"
+        "#{@urlRoot}#slug?#{@toKV { keepSlug: !!slug }}"
     
     toString: -> "#{@ctorName}(id=#{@id}, cid=#{@cid})"
 # }}}
@@ -273,7 +283,7 @@ Graph = exports.Graph = BaseModel.extend do # {{{
 
 GraphList = exports.GraphList = BaseList.extend do # {{{
     ctorName : 'GraphList'
-    urlRoot  : '/graph'
+    urlRoot  : '/graphs'
     model    : Graph
     
     initialize : ->

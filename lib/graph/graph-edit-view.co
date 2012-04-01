@@ -1,5 +1,3 @@
-root = do -> this
-
 moment = require 'moment'
 
 _ = require 'kraken/util/underscore'
@@ -9,13 +7,10 @@ _ = require 'kraken/util/underscore'
 } = require 'kraken/chart'
 { Graph,
 } = require 'kraken/graph/graph-model'
+{ DataSetView,
+} = require 'kraken/dataset'
 
-
-/**
- * Helper that wraps a function to return false.
- */
-stopEventAnd = (fn) ->
-    ~> fn ...; false
+root = do -> this
 
 
 
@@ -31,10 +26,10 @@ GraphEditView = exports.GraphEditView = BaseView.extend do # {{{
         axisLabelFormatter xAxisLabelFormatter yAxisLabelFormatter
         valueFormatter xValueFormatter yValueFormatter
     ]>
-    __bind__  : <[ 
+    __bind__  : <[
         render renderAll stopAndRender stopAndRenderAll resizeViewport
         numberFormatter numberFormatterHTML
-        onReady onSync onModelChange onScaffoldChange onFirstClickRenderOptionsTab
+        onReady onSync onModelChange onScaffoldChange onDataChange onFirstClickRenderOptionsTab
     ]>
     __debounce__: <[ render renderAll ]>
     ctorName  : 'GraphEditView'
@@ -53,11 +48,13 @@ GraphEditView = exports.GraphEditView = BaseView.extend do # {{{
         'submit   form.options'                    : 'onOptionsSubmit'
         'change   input[type="checkbox"]'          : 'onOptionsSubmit'
     
+    subviews: []
     ready: false
     
     
     
     initialize : (o={}) ->
+        @subviews = []
         @model or= new Graph
         BaseView::initialize ...
         # console.log "#this.initialize!"
@@ -65,12 +62,9 @@ GraphEditView = exports.GraphEditView = BaseView.extend do # {{{
         for name of @__debounce__
             @[name] = _.debounce @[name], DEBOUNCE_RENDER
         
-        # Resize graph on window resize
-        # Note: can't debounce the method itself, as the debounce wrapper returns undefined
-        $ root .on 'resize', _.debounce(@resizeViewport, DEBOUNCE_RENDER)
-        
         @id = _.domize 'graph', (@model.get('slug') or @model.id or @model.cid)
         
+        ### Model Events
         @model
             .on 'ready',            @onReady
             .on 'sync',             @onSync
@@ -82,19 +76,29 @@ GraphEditView = exports.GraphEditView = BaseView.extend do # {{{
                 console.error "#this.error!", arguments
                 # TODO: UI alert
         
-        # Rerender the options boxes once the tab is visible
-        @$el.on 'click', '.graph-options-tab', @onFirstClickRenderOptionsTab
+        ### Graph Data UI
+        @subviews.push @dataset = new DataSetView { model:@model.get 'dataset' }
+        @$el.find '.graph-data-pane' .append @dataset.el
+        @dataset.on 'change', @onDataChange
         
-        @viewport = @$el.find '.viewport'
-        
+        ### Chart Options Tab, Scaffold
         @scaffold = new ChartOptionScaffold
         @$el.find '.graph-options-pane' .append @scaffold.el
         @scaffold.collection.reset that if o.graph_spec
-        @scaffold.on 'change', @onScaffoldChange
         
+        @scaffold.on 'change', @onScaffoldChange
         @chartOptions @model.getOptions(), {+silent}
+        
+        # Rerender the options boxes once the tab is visible
+        @$el.on 'click', '.graph-options-tab', @onFirstClickRenderOptionsTab
+        
+        ### Chart Viewport
+        @viewport = @$el.find '.viewport'
         @resizeViewport()
-        # _.delay @onReady, DEBOUNCE_RENDER
+        
+        # Resize chart on window resize
+        # Note: can't debounce the method itself, as the debounce wrapper returns undefined
+        $ root .on 'resize', _.debounce @resizeViewport, DEBOUNCE_RENDER
     
     
     
@@ -141,6 +145,7 @@ GraphEditView = exports.GraphEditView = BaseView.extend do # {{{
     toTemplateLocals: ->
         attrs = _.clone @model.attributes
         delete attrs.options
+        delete attrs.dataset
         { $, _, op, @model, view:this } import attrs
     
     
@@ -189,13 +194,10 @@ GraphEditView = exports.GraphEditView = BaseView.extend do # {{{
             form.find "textarea[name=#k]" .text txt
         this
     
-    
-    render: ->
-        return this unless @ready
-        @renderDetails()
-        
-        dataset = @model.get 'dataset'
-        size    = @resizeViewport()
+    # Redraw chart inside viewport.
+    renderChart: ->
+        data = @model.get 'dataset' .getData()
+        size = @resizeViewport()
         
         # XXX: use @model.changedAttributes() to calculate what to update
         options = @chartOptions() #import size
@@ -218,17 +220,26 @@ GraphEditView = exports.GraphEditView = BaseView.extend do # {{{
         @chart?.destroy()
         @chart = new Dygraph do
             @viewport.0
-            dataset
+            data
             options
+        
         # unless @chart
         #     @chart = new Dygraph do
         #         @viewport.0
-        #         dataset
+        #         data
         #         options
         # else
         #     @chart.updateOptions options
         #     @chart.resize size
         
+        this
+    
+    
+    render: ->
+        return this unless @ready
+        @renderDetails()
+        _.invoke @subviews, 'render'
+        @renderChart()
         @updateURL()
         @trigger 'render', this
         false
@@ -327,6 +338,9 @@ GraphEditView = exports.GraphEditView = BaseView.extend do # {{{
         
         unless _.isEqual(value, current) or (current is void and field.isDefault())
             @model.setOption(key, value, {+silent})
+    
+    onDataChange: ->
+        ...
     
     onFirstClickRenderOptionsTab: ->
         @$el.off 'click', '.graph-options-tab', @onFirstClickRenderOptionsTab

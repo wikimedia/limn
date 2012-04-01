@@ -18,15 +18,12 @@ dev:
         - jquery.history.min
         - jquery.hotkeys.min
         - jquery.isotope.min
-        
-        # handled by bootstrap now?
-        # - jquery.tipsy.min
-        
+        - bootstrap.min
         # - spin.min
         # - jquery.spin.min
-        - bootstrap.min
         
-        # Browserify must come before any .mod files
+        ### CommonJS Support Starts Here:
+        ### Browserify must come before any .mod files
         - browserify
         
         - underscore.mod
@@ -35,6 +32,7 @@ dev:
         - backbone.mod
         # - synapse.mod
         
+        - colorbrewer.mod
         - showdown.mod.min
         - jade.runtime.min
         - moment.mod.min
@@ -61,21 +59,33 @@ dev:
                 - scaffold-model
                 - scaffold-view
                 - index
-            - chart:
-                - chart-type
-                - dygraphs
-                - chart-option-model
-                - chart-option-view
-                - index
             - template:
                 - chart-option.jade
                 - chart-scaffold.jade
+                - metric.jade
+                - datasource.jade
+                - dataset-metric.jade
+                - dataset.jade
                 - graph-edit.jade
                 - graph-display.jade
+            - chart:
+                - chart-type
+                - dygraphs
+                - chart-option-view
+                - chart-option-model
+                - index
+            - dataset:
+                - metric-model
+                - metric-view
+                - datasource-model
+                - datasource-view
+                - dataset-model
+                - dataset-view
+                - index
             - graph:
                 - graph-model
-                - graph-edit-view
                 - graph-display-view
+                - graph-edit-view
                 - index
 
 # -   suffix: .js

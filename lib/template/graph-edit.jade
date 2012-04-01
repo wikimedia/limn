@@ -1,5 +1,5 @@
-- var id = model.id || model.cid
-- var graph_id = view.id
+- var id = model.id || model.cid || view.id
+- var graph_id = view.id || id
 section.graph.graph-edit(id=graph_id)
     form.details.form-horizontal
         
@@ -61,11 +61,12 @@ section.graph.graph-edit(id=graph_id)
                                     p.help-block A description of the graph.
                     
                     .graph-data-pane.tab-pane(id="graph-#{graph_id}-data")
-                        .row-fluid
-                            label.dataset.control-label(for="#{id}_dataset") Data Set
-                            .controls
-                                input.span3.dataset(type='text', id="#{id}_dataset", name='dataset', placeholder='URL to dataset file', value=dataset)
-                                p.help-block This dataset filename will soon be replaced by a friendly UI.
+                        //- 
+                            .row-fluid
+                                label.dataset.control-label(for="#{id}_dataset") Data Set
+                                .controls
+                                    input.span3.dataset(type='text', id="#{id}_dataset", name='dataset', placeholder='URL to dataset file', value=dataset)
+                                    p.help-block This dataset filename will soon be replaced by a friendly UI.
                     
                     .graph-options-pane.tab-pane(id="graph-#{graph_id}-options")
 

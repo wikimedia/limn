@@ -50,6 +50,8 @@ section.graph
     /* * * *  Subnav & Tabs  * * * {{{ */
     .graph-settings.tabbable
         .nav
+            margin-bottom 0
+            
             li h3
                 line-height 14px
                 margin 2px
@@ -58,8 +60,13 @@ section.graph
             li
                 margin-right 4px
         
-        .tab-content
+        .tab-pane
             padding 0.5em
+            margin-top 18px
+            
+            &.graph-data-pane
+                margin-top 0
+                padding 0
     
     .graph-controls
         z-index 100
@@ -74,7 +81,8 @@ section.graph
         input[type="button"]
             min-width 5em
             text-align center
-        
+    
+    /* }}} */
     
     
     /* * * *  Graph Details  * * * {{{ */

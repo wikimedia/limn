@@ -21,9 +21,9 @@ BaseModel = exports.BaseModel = Backbone.Model.extend do # {{{
         @__class__      = @constructor
         @__super__      = @constructor.__super__
         @__superclass__ = @__super__.constructor
-        # Backbone.NestedModel.apply this, arguments
-        Backbone.Model.apply this, arguments
-        # @trigger 'create', this
+        # Backbone.NestedModel ...
+        Backbone.Model ...
+        @trigger 'create', this
     
     initialize: ->
         _.bindAll this, ...@__bind__ if @__bind__.length
