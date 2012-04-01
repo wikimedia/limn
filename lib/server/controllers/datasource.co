@@ -1,0 +1,74 @@
+fs         = require 'fs'
+Seq        = require 'seq'
+Controller = require '../controller'
+
+YAML_EXT_PAT = /\.ya?ml$/i
+
+
+
+/**
+ * @class Resource controller for graph requests.
+ */
+class DataSourceController extends Controller
+    name    : 'datasources'
+    dataDir : 'data/graphs'
+    
+    mapping :
+        all : 'getAllData'
+    
+    -> super ...
+    
+    /**
+     * Returns a JSON listing of the datasource metadata files.
+     */
+    index : (req, res, next) ->
+        fs.readdir @dataDir, (err, files) ->
+            res.send do
+                files.filter -> /\.(json|ya?ml)$/i.test it
+                     .map    -> "/#{@dataDir}#it".replace YAML_EXT_PAT, '.json'
+    
+    /**
+     * Returns the aggregated JSON content of the datasource metadata files.
+     */
+    allData : (req, res, next) ->
+        data = {}
+        files = []
+        Seq()
+            .seq fs.readdir, @dataDir, Seq
+            .flatten()
+            .filter -> /\.(json|ya?ml)$/.test it
+            .seq ->
+                files := @stack.slice()
+                # console.log 'files:', files
+                @ok files
+            .flatten()
+            .parMap_ (next, f) ~>
+                # console.log "fs.readFile '#CWD/data/#f'"
+                fs.readFile "#{@dataDir}/#f", 'utf8', next
+            .parMap (text, i) ->
+                f = files[i]
+                # console.log "parsing file[#i]: '#f' -> text[#{text.length}]..."
+                k = f.replace YAML_EXT_PAT, '.json'
+                v = data[k] = {}
+                try
+                    if YAML_EXT_PAT.test f
+                        v = data[k] = yaml.load text
+                    else
+                        v = data[k] = JSON.parse text
+                    # console.log "#f ok!", data
+                    @ok v
+                catch err
+                    console.error "[/data/all] catch! #err"
+                    console.error err
+                    console.error that if err.stack
+                    res.send { error:String(err), partial_data:data }
+            .seq -> res.send data
+            .catch (err) ->
+                console.error '[/data/all] catch!'
+                console.error err
+                console.error that if err.stack
+                res.send { error:String(err), partial_data:data }
+
+
+
+module.exports = exports = DataSourceController

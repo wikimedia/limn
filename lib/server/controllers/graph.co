@@ -1,0 +1,107 @@
+_        = require 'underscore'
+fs       = require 'fs'
+path     = require 'path'
+yaml     = require 'js-yaml'
+
+{existsSync:exists} = path
+{mkdirp, mkdirpAsync} = require '../mkdirp'
+Controller = require '../controller'
+
+
+/**
+ * @class Resource controller for graph requests.
+ */
+class GraphController extends Controller
+    name    : 'graphs'
+    dataDir : 'data/graphs'
+    -> super ...
+    
+    
+    toFile: (id) -> "#{@dataDir}/#id.json"
+    
+    /**
+     * Auto-load :id for related requests.
+     */
+    autoload: (id, cb) ->
+        file = @toFile id
+        parser = JSON.parse
+        
+        yamlFile = file.replace /\.json$/i, '.yaml'
+        if exists yamlFile 
+            file = yamlFile
+            parser = yaml.load
+        
+        err, data <- fs.readFile file, 'utf8'
+        if err
+            console.error "GraphController.autoload(#id, #{typeof cb}) -->\nerr"
+            return cb err
+        try
+            cb null, parser data
+        catch err
+            console.error "GraphController.autoload(#id, #{typeof cb}) -->\nerr"
+            cb err
+    
+    # GET /graphs
+    index: (req, res) ->
+        res.render 'dashboard'
+    
+    # GET /graphs/:graph
+    show: (req, res) ->
+        res.send req.graph
+    
+    # GET /graphs/:graph/edit
+    edit: (req, res) ->
+        res.send req.graph
+    
+    # GET /graphs/new
+    new: (req, res) ->
+        ...
+    
+    # POST /graphs
+    create: (req, res) ->
+        return unless data = @processBody req, res
+        file = @toFile data.id
+        if exists file
+            return res.send { result:"error", message:"Graph already exists!" }
+        else
+            fs.writeFile file, JSON.stringify(data), "utf8", @errorHandler(res, "Error writing graph!")
+    
+    # PUT /graphs/:graph
+    update: (req, res) ->
+        return unless data = @processBody req, res
+        fs.writeFile @toFile(data.id), JSON.stringify(data), "utf8", @errorHandler(res, "Error writing graph!")
+    
+    # DELETE /graphs/:graph
+    destroy: (req, res) ->
+        fs.unlink @toFile(req.param.graph), @errorHandler(res, "Graph does not exist!")
+    
+    
+    ### Helpers
+    
+    processBody: (req, res) ->
+        if not req.body
+            res.send {result:"error", message:"Data required!"}, 501
+            return false
+        
+        data = req.body
+        data.slug or= data.id
+        data.id or= data.slug
+        
+        if not data.slug
+            res.send {result:"error", message:"Slug required!"}, 501
+            return false
+        
+        mkdirp @dataDir if not exists @dataDir
+        return data
+    
+    errorHandler: (res, msg) ->
+        (err) ->
+            if err
+                msg or= err.message or String(err)
+                console.error msg
+                res.send { result:"error", message:msg }, 501
+            else
+                res.send { result:"ok" }
+    
+
+module.exports = exports = GraphController

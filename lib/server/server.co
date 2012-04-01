@@ -2,7 +2,6 @@
 
 fs       = require 'fs'
 path     = require 'path'
-{parse}  = require 'url'
 {existsSync:exists} = path
 {exec, spawn} = require 'child_process'
 {mkdirp, mkdirpAsync} = require './mkdirp'
@@ -15,8 +14,8 @@ Seq      = require 'seq'
 yaml     = require 'js-yaml'
 mime     = require 'mime'
 express  = require 'express'
+Resource = require 'express-resource'
 compiler = require 'connect-compiler-extras'
-
 
 
 ### Config
@@ -29,9 +28,11 @@ WWW    = "#CWD/www"
 VAR    = "#CWD/var"
 STATIC = "#CWD/static"
 DIST   = "#CWD/dist"
+DATA   = "#CWD/data"
 
 NODE_ENV  = process.env.NODE_ENV or 'dev'
 LOG_LEVEL = if _.startsWith NODE_ENV, 'dev' then 'INFO' else 'WARN'
+# LOG_LEVEL = 'DEBUG'
 
 
 VERSION = 'dev'
@@ -66,6 +67,7 @@ app.configure ->
     } import require './view-helpers'
     
     app.use express.logger()   if LOG_LEVEL is 'DEBUG'
+    # app.use express.logger()
     
     # Parse URL, fiddle
     app.use require('./reqinfo')({})
@@ -85,6 +87,12 @@ app.configure ->
         src     : WWW
         dest    : VAR
         options : stylus : { nib:true, include:"#WWW/css" }
+        log_level : LOG_LEVEL
+    
+    app.use compiler do
+        enabled : 'yaml'
+        src     : DATA
+        dest    : "#VAR/data"
         log_level : LOG_LEVEL
     
     # wrap modules in commonjs closure for browser
@@ -113,7 +121,7 @@ app.configure ->
     app.use express.static VAR
     app.use express.static STATIC
     # app.use express.static DIST if exists DIST
-    app.use express.static DIST
+    app.use express.static DIST if NODE_ENV is 'prod'
     
     # Serve directory listings
     # app.use express.directory WWW
@@ -126,58 +134,15 @@ app.configure ->
         showStack      : true
 
 
-/* * * *  Routes  * * * {{{ */
+
+/* * * *  Routes and Controllers  * * * {{{ */
+
+Controller   = require './controller'
+app.controller require './controllers/graph'
+app.controller require './controllers/datasource'
 
 app.get '/', (req, res) ->
     res.render 'dashboard'
-
-saveGraph = (req, res, next) ->
-    if not req.body
-        return res.send {result:"error", message:"JSON required!"}, 501
-    
-    data = req.body
-    {id, slug} = data
-    if not slug
-        return res.send {result:"error", message:"slug required!"}, 501
-    mkdirp "#VAR/presets" if not exists "#VAR/presets"
-    
-    id or= slug
-    data.id = id
-    err <- fs.writeFile "#VAR/presets/#id.json", JSON.stringify(data), "utf8"
-    if err
-        res.send { result:"error", message:err.message or String(err) }, 501
-    else
-        res.send { result:"ok" }
-
-
-app.post '/graph/save', saveGraph
-app.put '/graph/:slug\.json', saveGraph
-
-app.get '/graph/:slug\.json', (req, res, next) ->
-    req.url .= replace /^\/graph\//i, '/presets/'
-    next()
-
-app.get '/preset/:slug', (req, res, next) ->
-    {slug} = req.params
-    if exists("#VAR/presets/#slug.yaml") or exists("#VAR/presets/#slug.json")
-        req.url .= replace /^\/preset\/[^\/?]/i, "/presets/#slug.json"
-        # req.url += '.json'
-    next()
-
-app.get '/graph(/:slug)?/?', (req, res, next) ->
-    {slug} = req.params
-    # console.log '/graph/:slug/?'
-    # console.log '  slug:  ', slug
-    # console.log '  params:', req.params
-    unless _.str.include slug, '.'
-        {pathname, search or ''} = req.info
-        req.url = path.join pathname, "view#search"
-        req.params.action = 'view'
-    next()
-
-app.get '/graph/:slug/:action/?', (req, res) ->
-    {slug, action} = req.params
-    res.render "graph/#action"
 
 app.get '/:type/:action/?', (req, res, next) ->
     {type, action} = req.params
@@ -186,85 +151,26 @@ app.get '/:type/:action/?', (req, res, next) ->
     else
         next()
 
-
-
-# }}}
-/* * * *  Data Source Oracle  * * * {{{ */
-
-YAML_EXT_PAT = /\.ya?ml$/i
-
-/**
- * Returns a JSON listing of the datasource metadata files.
- */
-app.get '/data/list', (req, res, next) ->
-    fs.readdir "#CWD/data", (err, files) ->
-        res.send do
-            files.filter -> /\.(json|ya?ml)$/i.test it
-                 .map    -> "/data/#it".replace YAML_EXT_PAT, '.json'
-
-/**
- * Returns the aggregated JSON content of the datasource metadata files.
- */
-app.get '/data/all', (req, res, next) ->
-    data = {}
-    files = []
-    Seq()
-        .seq fs.readdir, "#CWD/data", Seq
-        .flatten()
-        .filter -> /\.(json|ya?ml)$/.test it
-        .seq ->
-            files := @stack.slice()
-            # console.log 'files:', files
-            @ok files
-        .flatten()
-        .parMap (f) ->
-            # console.log "fs.readFile '#CWD/data/#f'"
-            fs.readFile "#CWD/data/#f", 'utf8', this
-        .parMap (text, i) ->
-            f = files[i]
-            # console.log "parsing file[#i]: '#f' -> text[#{text.length}]..."
-            k = f.replace YAML_EXT_PAT, '.json'
-            v = data[k] = {}
-            try
-                if YAML_EXT_PAT.test f
-                    v = data[k] = yaml.load text
-                else
-                    v = data[k] = JSON.parse text
-                # console.log "#f ok!", data
-                @ok v
-            catch err
-                console.error "[/data/all] catch! #err"
-                console.error err
-                console.error that if err.stack
-                res.send { error:String(err), partial_data:data }
-        .seq -> res.send data
-        .catch (err) ->
-            console.error '[/data/all] catch!'
-            console.error err
-            console.error that if err.stack
-            res.send { error:String(err), partial_data:data }
-
-# }}}
-
 /**
  * Handle webhook notification to pull from origin.
  */
 app.all '/webhook/post-update', (req, res) ->
-    
+
     # exec the pull async...
-    console.log '[/webhook/post-update] $ git pull origin master'
-    child = exec 'git pull origin master', (err, stdout, stderr) ->
+    cmd = 'git pull origin master'
+    console.log "[/webhook/post-update] $ #cmd"
+    child = exec cmd, (err, stdout, stderr) ->
         res.contentType '.txt'
         console.log '[/webhook/post-update]  ', stdout
         console.log '[/webhook/post-update]  ', stderr
         if err
             console.error '[/webhook/post-update] ERROR!', err
-            res.send "#stdout\n\n#stderr\n\nERROR! #err", 503
+            res.send "$ #cmd\n\n#stdout\n\n#stderr\n\nERROR! #err", 503
         else
-            res.send "#stdout\n\n#stderr", 200
+            res.send "$ #cmd\n\n#stdout\n\n#stderr", 200
 
 
-
+# }}}
 
 exports import {
     CWD, WWW, VAR, STATIC,
