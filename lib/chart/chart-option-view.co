@@ -28,8 +28,11 @@ ChartOptionView = exports.ChartOptionView = FieldView.extend do # {{{
         'click .collapsed'                   : 'onClick'
     
     
+    constructor: function ChartOptionView
+        FieldView ...
+    
     render: ->
-        @__super__.render ...
+        FieldView::render ...
         @$el.addClass 'collapsed' if @isCollapsed
         this
     
@@ -60,12 +63,14 @@ ChartOptionScaffold = exports.ChartOptionScaffold = Scaffold.extend do # {{{
     template       : require 'kraken/template/chart-scaffold'
     collectionType : ChartOptionList
     subviewType    : ChartOptionView
-    fields        : '.fields'
+    fields         : '.fields'
     
     # GraphView will set this
     ready          : false
     
     
+    constructor: function ChartOptionScaffold
+        Scaffold ...
     
     initialize : ->
         @render = _.debounce @render.bind(this), DEBOUNCE_RENDER
@@ -73,7 +78,7 @@ ChartOptionScaffold = exports.ChartOptionScaffold = Scaffold.extend do # {{{
     
     render: ->
         # console.log "#this.render() -> .isotope()"
-        # @__super__.render ...
+        # Scaffold::render ...
         return this unless @ready
         container = if @fields then @$el.find @fields else @$el
         container
@@ -94,7 +99,7 @@ ChartOptionScaffold = exports.ChartOptionScaffold = Scaffold.extend do # {{{
      * layout after collapse events.
      */
     addOne: (field) ->
-        view = @__super__.addOne ...
+        view = Scaffold::addOne ...
         view.on 'change:collapse render', @render
         view
     

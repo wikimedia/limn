@@ -17,6 +17,9 @@ FieldView = exports.FieldView = BaseView.extend do # {{{
         'submit .value' : 'update'
     
     
+    constructor: function FieldView
+        BaseView ...
+    
     initialize: ->
         # console.log "#this.initialize!"
         BaseView::initialize ...
@@ -66,11 +69,12 @@ Scaffold = exports.Scaffold = BaseView.extend do # {{{
     subviewType    : FieldView
     
     
+    constructor: function Scaffold
+        BaseView ...
+    
     initialize: ->
-        @subviews = []
         CollectionType = @collectionType
         @model = @collection or= new CollectionType
-        
         BaseView::initialize ...
         
         @collection.on 'add',   @addOne
@@ -80,7 +84,7 @@ Scaffold = exports.Scaffold = BaseView.extend do # {{{
     
     
     addOne: (field) ->
-        # console.log "[S] #this.addOne!", @__super__
+        # console.log "[S] #this.addOne!", @..__super__
         _.remove @subviews, field.view if field.view
         
         # avoid duplicating event propagation

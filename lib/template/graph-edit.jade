@@ -1,11 +1,10 @@
-- var id = model.id || model.cid || view.id
-- var graph_id = view.id || id
+- var graph_id = view.id || model.id || model.cid
 section.graph.graph-edit(id=graph_id)
     form.details.form-horizontal
         
         .name-row.row-fluid.control-group
             //- label.name.control-label(for="#{id}_name"): h3 Graph Name
-            input.span6.name(type='text', id="#{id}_name", name="name", placeholder='Graph Name', value=name)
+            input.span6.name(type='text', id="#{graph_id}_name", name="name", placeholder='Graph Name', value=name)
         
         .row-fluid
             .viewport
@@ -32,41 +31,40 @@ section.graph.graph-edit(id=graph_id)
                                 |  Done
                     ul.nav.subnav.nav-pills
                         li:         h3 Graph
-                        li.active:  a(href="#graph-#{graph_id}-info", data-toggle="tab") Info
-                        li:         a(href="#graph-#{graph_id}-data", data-toggle="tab") Data
-                        li: a.graph-options-tab(href="#graph-#{graph_id}-options", data-toggle="tab") Options
+                        li.active:  a(href="##{graph_id}-tab-info", data-toggle="tab") Info
+                        li:         a(href="##{graph_id}-tab-data", data-toggle="tab") Data
+                        li: a.graph-options-tab(href="##{graph_id}-tab-options", data-toggle="tab") Options
                     
                 
                 .tab-content
-                    .graph-info-pane.tab-pane.active(id="graph-#{graph_id}-info")
+                    .graph-info-pane.tab-pane.active(id="#{graph_id}-tab-info")
                         .row-fluid
                             .half.control-group
                                 .control-group
-                                    label.slug.control-label(for="#{id}_slug") Slug
+                                    label.slug.control-label(for="#{graph_id}_slug") Slug
                                     .controls
-                                        input.span3.slug(type='text', id="#{id}_slug", name='slug', placeholder='graph_slug', value=slug)
+                                        input.span3.slug(type='text', id="#{graph_id}_slug", name='slug', placeholder='graph_slug', value=slug)
                                         p.help-block The slug uniquely identifies this graph and will be displayed in the URL.
                                 .control-group
-                                    label.width.control-label(for="#{id}_width") Size
+                                    label.width.control-label(for="#{graph_id}_width") Size
                                     .controls
-                                        input.span1.width(type='text', id="#{id}_width", name='width', value=width)
+                                        input.span1.width(type='text', id="#{graph_id}_width", name='width', value=width)
                                         |  &times; 
-                                        input.span1.height(type='text', id="#{id}_height", name='height', value=height)
+                                        input.span1.height(type='text', id="#{graph_id}_height", name='height', value=height)
                                         p.help-block Choosing 'auto' will size the graph to the viewport bounds.
                             .half.control-group
-                                label.desc.control-label(for="#{id}_desc") Description
+                                label.desc.control-label(for="#{graph_id}_desc") Description
                                 .controls
                                     //- textarea.span3.desc(id='desc', name='desc', placeholder='Graph description.') #{desc}
-                                    <textarea class="span3 desc" id="#{id}_desc" name="desc" placeholder="Graph description.">#{desc}</textarea>
+                                    <textarea class="span3 desc" id="#{graph_id}_desc" name="desc" placeholder="Graph description.">#{desc}</textarea>
                                     p.help-block A description of the graph.
                     
-                    .graph-data-pane.tab-pane(id="graph-#{graph_id}-data")
-                        //- 
-                            .row-fluid
-                                label.dataset.control-label(for="#{id}_dataset") Data Set
-                                .controls
-                                    input.span3.dataset(type='text', id="#{id}_dataset", name='dataset', placeholder='URL to dataset file', value=dataset)
-                                    p.help-block This dataset filename will soon be replaced by a friendly UI.
+                    .graph-data-pane.tab-pane(id="#{graph_id}-tab-data")
+                        .row-fluid
+                            //- 
+                                label.dataset.control-label(for="#{graph_id}_dataset") Data Set
+                                input.span3.dataset(type='text', id="#{graph_id}_dataset", name='dataset', placeholder='URL to dataset file', value=dataset)
+                                p.help-block This dataset filename will soon be replaced by a friendly UI.
                     
-                    .graph-options-pane.tab-pane(id="graph-#{graph_id}-options")
+                    .graph-options-pane.tab-pane(id="#{graph_id}-tab-options")
 

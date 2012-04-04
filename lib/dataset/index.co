@@ -1,0 +1,14 @@
+metric_model       = require 'kraken/dataset/metric-model'
+metric_view        = require 'kraken/dataset/metric-view'
+metric_edit_view   = require 'kraken/dataset/metric-edit-view'
+datasource_model   = require 'kraken/dataset/datasource-model'
+datasource_view    = require 'kraken/dataset/datasource-view'
+datasource_ui_view = require 'kraken/dataset/datasource-ui-view'
+dataset_model      = require 'kraken/dataset/dataset-model'
+dataset_view       = require 'kraken/dataset/dataset-view'
+data_view          = require 'kraken/dataset/data-view'
+
+exports import metric_model     import metric_view      import metric_edit_view     \
+        import datasource_model import datasource_view  import datasource_ui_view   \
+        import dataset_model    import dataset_view                                 \
+                                import data_view

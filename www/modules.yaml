@@ -62,10 +62,13 @@ dev:
             - template:
                 - chart-option.jade
                 - chart-scaffold.jade
-                - metric.jade
-                - datasource.jade
-                - dataset-metric.jade
                 - dataset.jade
+                - dataset-metric.jade
+                - metric.jade
+                - metric-edit.jade
+                - datasource.jade
+                - datasource-ui.jade
+                - data.jade
                 - graph-edit.jade
                 - graph-display.jade
             - chart:
@@ -77,10 +80,13 @@ dev:
             - dataset:
                 - metric-model
                 - metric-view
+                - metric-edit-view
                 - datasource-model
                 - datasource-view
+                - datasource-ui-view
                 - dataset-model
                 - dataset-view
+                - data-view
                 - index
             - graph:
                 - graph-model

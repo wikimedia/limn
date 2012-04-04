@@ -16,6 +16,7 @@ module.exports = op =
     # values
     val     : (def,o) -> o ? def
     ok      : (o)     -> o?
+    notOk   : (o)     -> o!?
     
     first   : (a)     -> a
     second  : (_,a)   -> a

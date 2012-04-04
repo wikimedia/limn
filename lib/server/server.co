@@ -139,7 +139,49 @@ app.configure ->
 
 Controller   = require './controller'
 app.controller require './controllers/graph'
-app.controller require './controllers/datasource'
+ds = app.controller require './controllers/datasource'
+# ds.map 'get', 'all', ds.allData.bind(ds)
+
+YAML_EXT_PAT = /\.ya?ml$/i
+app.get '/datasources/all', (req, res, next) ->
+    data = {}
+    files = []
+    Seq()
+        .seq fs.readdir, 'data/datasources', Seq
+        .flatten()
+        .filter -> /\.(json|ya?ml)$/.test it
+        .seq ->
+            files := @stack.slice()
+            # console.log 'files:', files
+            @ok files
+        .flatten()
+        .parMap (f) ->
+            # console.log "fs.readFile '#CWD/data/#f'"
+            fs.readFile "data/datasources/#f", 'utf8', this
+        .parMap (text, i) ->
+            f = files[i]
+            # console.log "parsing file[#i]: '#f' -> text[#{text.length}]..."
+            k = f.replace YAML_EXT_PAT, '.json'
+            v = data[k] = {}
+            try
+                if YAML_EXT_PAT.test f
+                    v = data[k] = yaml.load text
+                else
+                    v = data[k] = JSON.parse text
+                # console.log "#f ok!", data
+                @ok v
+            catch err
+                console.error "[/data/all] catch! #err"
+                console.error err
+                console.error that if err.stack
+                res.send { error:String(err), partial_data:data }
+        .seq -> res.send data
+        .catch (err) ->
+            console.error '[/data/all] catch!'
+            console.error err
+            console.error that if err.stack
+            res.send { error:String(err), partial_data:data }
+
 
 app.get '/', (req, res) ->
     res.render 'dashboard'

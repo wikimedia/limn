@@ -1,0 +1,105 @@
+@import 'nib'
+@import 'colors'
+@import 'bootstrap-variables'
+
+
+
+section.graph section.data-ui
+    h4
+        display none
+    
+    .dataset-controls
+        padding 1em
+    
+    /* * * *  DataSet UI  * * * */
+    section.dataset-ui
+        width 40%
+        border-right 1px solid #ccc
+        
+        .inner
+            padding 1em 0 1em 1em
+        
+        .dataset-buttons
+            margin-bottom 1em
+        
+        .dataset-metrics
+            thead
+                display none
+            td
+                line-height 1
+                vertical-align middle
+            tr:last-child td
+                border-bottom 1px solid #ddd
+            
+            .col-label
+                width 40%
+            .col-source
+                width 25%
+            .col-time
+                width 25%
+            .col-actions
+                padding-right 14px
+            
+            .col-source, .col-time
+                font-size 80%
+                color $dark
+            
+            .dataset-metric
+                cursor pointer
+                // &:hover
+                //     cursor pointer
+                
+                &.metric-active
+                    font-weight bold
+                    td
+                        border 1px solid #ccc
+                        border-width 1px 0
+                    .activity-arrow
+                        display block
+            
+            .activity-arrow
+                display none
+                absolute top -1px right -1px
+                width 0
+                height 0
+                border-top    0.5em  solid transparent
+                // border-right  0.25em solid #ccc
+                border-right  10px   solid #ccc
+                border-bottom 0.5em  solid transparent
+                .inner
+                    absolute top -0.5em left 1px
+                    width 0
+                    height 0
+                    padding 0
+                    border-top    0.5em  solid transparent
+                    // border-right  0.25em solid white
+                    border-right  10px   solid white
+                    border-bottom 0.5em  solid transparent
+            
+            .delete-metric-button
+                color $dark
+                &:hover
+                    color $boot_red
+                    opacity 1
+            
+            
+            
+        
+        
+        .dataset-metrics-empty
+            display none
+    
+    
+    
+    /* * * *  Edit Metric UI * * * */
+    section.metric-edit-ui
+        position absolute
+        top 0
+        left 40%
+        
+        .inner
+            padding 1em
+        
+        
+    
+

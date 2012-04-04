@@ -1,5 +1,5 @@
-_  = require 'kraken/util/underscore'
-op = require 'kraken/util/op'
+{ _, op,
+} = require 'kraken/util'
 
 Backbone = require 'backbone'
 
@@ -19,9 +19,7 @@ BaseModel = exports.BaseModel = Backbone.Model.extend do # {{{
     
     constructor : function BaseModel
         @__class__      = @constructor
-        @__super__      = @constructor.__super__
-        @__superclass__ = @__super__.constructor
-        # Backbone.NestedModel ...
+        @__superclass__ = @..__super__.constructor
         Backbone.Model ...
         @trigger 'create', this
     
@@ -50,7 +48,7 @@ BaseModel = exports.BaseModel = Backbone.Model.extend do # {{{
     #         if _.str.contains key, '.'
     #             _.setNested @attributes, key, value, opts
     #         else
-    #             @__super__.set.call this, key, value, opts
+    #             Backbone.Model::set.call this, key, value, opts
     #     
     #     this
     # 
@@ -126,8 +124,14 @@ BaseList = exports.BaseList = Backbone.Collection.extend do # {{{
     __bind__ : []
     
     
+    
+    constructor : function BaseList
+        @__class__      = @constructor
+        @__superclass__ = @..__super__.constructor
+        Backbone.Collection ...
+        @trigger 'create', this
+    
     initialize : ->
-        @__super__ = @constructor.__super__
         _.bindAll this, ...@__bind__ if @__bind__.length
     
     
@@ -151,13 +155,27 @@ BaseList = exports.BaseList = Backbone.Collection.extend do # {{{
 BaseView = exports.BaseView = Backbone.View.extend do # {{{
     ctorName : 'BaseView'
     
-    # A list of method-names to bind on initialize; set this on a subclass to override.
+    /**
+     * A list of method-names to bind on initialize; set this on a subclass to override.
+     * @type Array<String>
+     */
     __bind__ : []
     
+    /**
+     * @type Array<BaseView>
+     */
+    subviews : []
     
+    
+    
+    constructor : function BaseView
+        @__class__      = @constructor
+        @__superclass__ = @..__super__.constructor
+        @subviews       = []
+        Backbone.View ...
+        @trigger 'create', this
     
     initialize: ->
-        @__super__ = @constructor.__super__
         _.bindAll this, ...@__bind__ if @__bind__.length
         
         @model.view = this

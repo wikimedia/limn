@@ -1,0 +1,61 @@
+Seq = require 'seq'
+ColorBrewer = require 'colorbrewer'
+
+{ _, op,
+} = require 'kraken/util'
+{ BaseModel, BaseList,
+} = require 'kraken/base'
+{ Metric, MetricList,
+} = require 'kraken/dataset/metric-model'
+{ DataSource, DataSourceList,
+} = require 'kraken/dataset/datasource-model'
+
+
+
+/**
+ * @class
+ */
+DataSet = exports.DataSet = BaseModel.extend do # {{{
+    ctorName : 'DataSet'
+    urlRoot : '/datasets'
+    
+    /**
+     * @type DataSourceList
+     */
+    sources : []
+    
+    /**
+     * @type MetricList
+     */
+    metrics : []
+    
+    
+    constructor: function DataSet
+        BaseModel ...
+    
+    initialize : ->
+        BaseModel::initialize ...
+        @sources = new DataSourceList @attributes.sources
+        @metrics = new MetricList     @attributes.metrics
+    
+    
+    defaults : ->
+        sources : [] # XXX: needed? metrics now implies this info
+        metrics : []
+        # lines   : []
+    
+    
+    /**
+     * @returns {Array} The reified dataset, materialized to an array of data-series arrays.
+     */
+    getData: ->
+        '/data/datasources/non_mobile_pageviews_by.timestamp.language.csv'
+    
+    newMetric: ->
+        index = @metrics.length
+        @metrics.add m = new Metric { index, color:ColorBrewer.Spectral[11][index] }
+        m
+    
+    
+# }}}
+

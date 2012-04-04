@@ -59,8 +59,8 @@ Graph = exports.Graph = BaseModel.extend do # {{{
             slug    : ''
             name    : ''
             desc    : ''
-            # dataset : '/data/datasources/non_mobile_pageviews_by.timestamp.language.csv'
-            dataset : null
+            dataset : '/data/datasources/non_mobile_pageviews_by.timestamp.language.csv'
+            # dataset : null
             width   : 'auto'
             height  : 320
             chartType : 'dygraphs'
@@ -73,31 +73,28 @@ Graph = exports.Graph = BaseModel.extend do # {{{
     
     
     
-    
-    constructor : (attributes={}, opts) ->
-        @on 'ready', ~> console.log "(#this via Graph).ready!"
+    constructor: function Graph (attributes={}, opts)
+        # @on 'ready', ~> console.log "(#this via Graph).ready!"
         attributes.options or= {}
         @optionCascade = new Cascade attributes.options
         BaseModel.call this, attributes, opts
     
     
-    initialize : (attributes, opts) ->
-        @__super__.initialize ...
-        opts = {+autoLoad} import (opts or {})
+    initialize: (attributes, opts) ->
+        BaseModel::initialize ...
+        opts = {+autoload} import (opts or {})
         
         @constructor.register this
         @parents = new GraphList
+        
         # TODO: Load on-demand
         @chartType = ChartType.lookup @get('chartType')
         
-        # unless @id or @get('id') or @get('slug')
-        #     @set 'slug', "unsaved_graph_#{@cid}"
-        
         # Insert submodels in place of JSON
-        @set 'dataset', new DataSet(@get('dataset')), {+silent}
+        # @set 'dataset', new DataSet(@get('dataset')), {+silent}
         
         @trigger 'init', this
-        @load() if opts.autoLoad
+        @load() if opts.autoload
     
     
     load: (opts={}) ->
@@ -114,7 +111,7 @@ Graph = exports.Graph = BaseModel.extend do # {{{
                             console.error "#{this}.fetch() --> error! #arguments"
                             next.ok()
                         success : (model, res) ~>
-                            console.log "#{this}.fetch() --> success!", res
+                            # console.log "#{this}.fetch() --> success!", res
                             next.ok res
             .seq_ (next) ~>
                 next.ok @get('parents')
@@ -137,7 +134,7 @@ Graph = exports.Graph = BaseModel.extend do # {{{
         if _.startsWith key, 'options.'
             @getOption key.slice(8)
         else
-            (@__super__ or BaseModel::).get.call this, key
+            (@..__super__ or BaseModel::).get.call this, key
     
     
     set: (key, value, opts) ->
@@ -148,7 +145,7 @@ Graph = exports.Graph = BaseModel.extend do # {{{
             values = { "#key": value }
         values = @parse values
         
-        setter = (@__super__ or BaseModel::).set
+        setter = (@..__super__ or BaseModel::).set
         
         # Merge options in, firing granulated change events
         if values.options
@@ -182,7 +179,7 @@ Graph = exports.Graph = BaseModel.extend do # {{{
         else
             values = { "#key": value }
         
-        _.dump values, "#this.setOption"
+        # _.dump values, "#this.setOption"
         options = @get('options')
         changed = false
         for key, value in values
@@ -305,7 +302,7 @@ Graph import do
     CACHE : GRAPH_CACHE
     
     register: (model) ->
-        console.log "#{@CACHE}.register(#{model.id or model.get('id')})", model
+        # console.log "#{@CACHE}.register(#{model.id or model.get('id')})", model
         if @CACHE.contains model
             @CACHE.remove model, {+silent}
         @CACHE.add model

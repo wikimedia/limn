@@ -14,7 +14,7 @@ class DataSourceController extends Controller
     dataDir : 'data/graphs'
     
     mapping :
-        all : 'getAllData'
+        all : 'allData'
     
     -> super ...
     

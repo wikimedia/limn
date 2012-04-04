@@ -48,6 +48,9 @@ ChartOption = exports.ChartOption = Field.extend do # {{{
     IGNORED_TAGS : <[ callback deprecated debugging ]>
     
     
+    constructor: function ChartOption
+        Field ...
+    
     initialize : ->
         # console.log "#this.initialize!"
         Field::initialize ...
@@ -112,6 +115,10 @@ ChartOption = exports.ChartOption = Field.extend do # {{{
 ChartOptionList = exports.ChartOptionList = FieldList.extend do # {{{
     ctorName   : 'ChartOptionList'
     model      : ChartOption
+    
+    
+    constructor: function ChartOptionList
+        FieldList ...
     
     /**
      * Override to omit defaults from URL.

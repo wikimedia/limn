@@ -1,0 +1,201 @@
+// Bootstrap Variables
+// Auto-translated to Stylus from LESS
+// -----------------------------------------------------
+
+
+
+// GLOBAL VALUES
+// --------------------------------------------------
+
+
+// Grays
+// -------------------------
+$boot_black                         = #000
+$boot_grayDarker                    = #222
+$boot_grayDark                      = #333
+$boot_gray                          = #555
+$boot_grayLight                     = #999
+$boot_grayLighter                   = #eee
+$boot_white                         = #fff
+
+
+// Accent colors
+// -------------------------
+$boot_blue                          = #049cdb
+$boot_blueDark                      = #0064cd
+$boot_green                         = #46a546
+$boot_red                           = #9d261d
+$boot_yellow                        = #ffc40d
+$boot_orange                        = #f89406
+$boot_pink                          = #c3325f
+$boot_purple                        = #7a43b6
+
+
+// Scaffolding
+// -------------------------
+$boot_bodyBackground                = $boot_white
+$boot_textColor                     = $boot_grayDark
+
+
+// Links
+// -------------------------
+$boot_linkColor                     = #08c
+$boot_linkColorHover                = darken($boot_linkColor, 15%)
+
+
+// Typography
+// -------------------------
+$boot_baseFontSize                  = 13px
+$boot_baseFontFamily                = "Helvetica Neue", Helvetica, Arial, sans-serif
+$boot_baseLineHeight                = 18px
+$boot_altFontFamily                 = Georgia, "Times New Roman", Times, serif
+
+$boot_headingsFontFamily            = inherit // empty to use BS default, $boot_baseFontFamily
+$boot_headingsFontWeight            = bold    // instead of browser default, bold
+$boot_headingsColor                 = inherit // empty to use BS default, $boot_textColor
+
+
+// Tables
+// -------------------------
+$boot_tableBackground               = transparent // overall background-color
+$boot_tableBackgroundAccent         = #f9f9f9 // for striping
+$boot_tableBackgroundHover          = #f5f5f5 // for hover
+$boot_tableBorder                   = #ddd // table and cell border
+
+
+// Buttons
+// -------------------------
+$boot_btnBackground                 = $boot_white
+$boot_btnBackgroundHighlight        = darken($boot_white, 10%)
+$boot_btnBorder                     = darken($boot_white, 20%)
+
+$boot_btnPrimaryBackground          = $boot_linkColor
+$boot_btnPrimaryBackgroundHighlight = spin($boot_btnPrimaryBackground, 15%)
+
+$boot_btnInfoBackground             = #5bc0de
+$boot_btnInfoBackgroundHighlight    = #2f96b4
+
+$boot_btnSuccessBackground          = #62c462
+$boot_btnSuccessBackgroundHighlight = #51a351
+
+$boot_btnWarningBackground          = lighten($boot_orange, 15%)
+$boot_btnWarningBackgroundHighlight = $boot_orange
+
+$boot_btnDangerBackground           = #ee5f5b
+$boot_btnDangerBackgroundHighlight  = #bd362f
+
+$boot_btnInverseBackground          = $boot_gray
+$boot_btnInverseBackgroundHighlight = $boot_grayDarker
+
+
+// Forms
+// -------------------------
+$boot_inputBackground               = $boot_white
+$boot_inputBorder                   = #ccc
+$boot_inputDisabledBackground       = $boot_grayLighter
+
+
+// Dropdowns
+// -------------------------
+$boot_dropdownBackground            = $boot_white
+$boot_dropdownBorder                = rgba(0,0,0,.2)
+$boot_dropdownLinkColor             = $boot_grayDark
+$boot_dropdownLinkColorHover        = $boot_white
+$boot_dropdownLinkBackgroundHover   = $boot_linkColor
+
+
+
+
+// COMPONENT VARIABLES
+// --------------------------------------------------
+
+// Z-index master list
+// -------------------------
+// Used for a bird's eye view of components dependent on the z-axis
+// Try to avoid customizing these :)
+$boot_zindexDropdown                = 1000
+$boot_zindexPopover                 = 1010
+$boot_zindexTooltip                 = 1020
+$boot_zindexFixedNavbar             = 1030
+$boot_zindexModalBackdrop           = 1040
+$boot_zindexModal                   = 1050
+
+
+// Sprite icons path
+// -------------------------
+$boot_iconSpritePath                = "../img/glyphicons-halflings.png"
+$boot_iconWhiteSpritePath           = "../img/glyphicons-halflings-white.png"
+
+
+// Input placeholder text color
+// -------------------------
+$boot_placeholderText               = $boot_grayLight
+
+
+// Hr border color
+// -------------------------
+$boot_hrBorder                      = $boot_grayLighter
+
+
+// Navbar
+// -------------------------
+$boot_navbarHeight                  = 40px
+$boot_navbarBackground              = $boot_grayDarker
+$boot_navbarBackgroundHighlight     = $boot_grayDark
+
+$boot_navbarText                    = $boot_grayLight
+$boot_navbarLinkColor               = $boot_grayLight
+$boot_navbarLinkColorHover          = $boot_white
+$boot_navbarLinkColorActive         = $boot_navbarLinkColorHover
+$boot_navbarLinkBackgroundHover     = transparent
+$boot_navbarLinkBackgroundActive    = $boot_navbarBackground
+
+$boot_navbarSearchBackground        = lighten($boot_navbarBackground, 25%)
+$boot_navbarSearchBackgroundFocus   = $boot_white
+$boot_navbarSearchBorder            = darken($boot_navbarSearchBackground, 30%)
+$boot_navbarSearchPlaceholderColor  = #ccc
+
+
+// Hero unit
+// -------------------------
+$boot_heroUnitBackground            = $boot_grayLighter
+$boot_heroUnitHeadingColor          = inherit
+$boot_heroUnitLeadColor             = inherit
+
+
+// Form states and alerts
+// -------------------------
+$boot_warningText                   = #c09853
+$boot_warningBackground             = #fcf8e3
+$boot_warningBorder                 = darken(spin($boot_warningBackground, -10), 3%)
+
+$boot_errorText                     = #b94a48
+$boot_errorBackground               = #f2dede
+$boot_errorBorder                   = darken(spin($boot_errorBackground, -10), 3%)
+
+$boot_successText                   = #468847
+$boot_successBackground             = #dff0d8
+$boot_successBorder                 = darken(spin($boot_successBackground, -10), 5%)
+
+$boot_infoText                      = #3a87ad
+$boot_infoBackground                = #d9edf7
+$boot_infoBorder                    = darken(spin($boot_infoBackground, -10), 7%)
+
+
+
+
+// GRID
+// --------------------------------------------------
+
+// Default 940px grid
+// -------------------------
+$boot_gridColumns                   = 12
+$boot_gridColumnWidth               = 60px
+$boot_gridGutterWidth               = 20px
+$boot_gridRowWidth                  = ($boot_gridColumns * $boot_gridColumnWidth) + ($boot_gridGutterWidth * ($boot_gridColumns - 1))
+
+
+// Fluid grid
+// -------------------------
+$boot_fluidGridColumnWidth          = 6.382978723%
+$boot_fluidGridGutterWidth          = 2.127659574%

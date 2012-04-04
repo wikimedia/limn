@@ -21,6 +21,9 @@ GraphDisplayView = exports.GraphDisplayView = BaseView.extend do # {{{
     #     'submit .value' : 'update'
     
     
+    constructor: function GraphDisplayView
+        BaseView ...
+    
     initialize: ->
         @model or= new Graph
         BaseView::initialize ...

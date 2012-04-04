@@ -13,6 +13,9 @@ Field = exports.Field = BaseModel.extend do # {{{
     valueAttribute : 'value'
     
     
+    constructor: function Field
+        BaseModel ...
+    
     initialize: ->
         _.bindAll this, ...(_.functions this .filter -> _.startsWith(it, 'parse'))
         @set 'value', @get('default'), {+silent} if not @has 'value'
@@ -106,6 +109,9 @@ Field = exports.Field = BaseModel.extend do # {{{
 FieldList = exports.FieldList = BaseList.extend do # {{{
     ctorName : 'FieldList'
     model    : Field
+    
+    
+    constructor: function FieldList then BaseList ...
     
     /**
      * Collects a map of fields to their values, excluding those set to `null` or their default.

@@ -1,0 +1,47 @@
+{ _, op,
+} = require 'kraken/util'
+{ BaseModel, BaseList, BaseView,
+} = require 'kraken/base'
+
+
+/**
+ * @class
+ */
+DataSource = exports.DataSource = BaseModel.extend do # {{{
+    ctorName : 'DataSource'
+    urlRoot  : '/datasources'
+    
+    
+    constructor: function DataSource
+        BaseModel ...
+    
+    initialize: ->
+        BaseModel::initialize ...
+        
+    
+    defaults: ->
+        {}
+    
+    url: ->
+        "/data/#{@id}.json"
+    
+# }}}
+
+
+
+/**
+ * @class
+ */
+DataSourceList = exports.DataSourceList = BaseList.extend do # {{{
+    ctorName : 'DataSourceList'
+    urlRoot  : '/datasources'
+    model    : DataSource
+    
+    constructor: function DataSourceList
+        BaseList ...
+    
+    initialize : ->
+        BaseList::initialize ...
+    
+    
+# }}}

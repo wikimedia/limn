@@ -1,0 +1,25 @@
+{ _, op,
+} = require 'kraken/util'
+{ BaseModel, BaseList, BaseView,
+} = require 'kraken/base'
+
+
+/**
+ * @class
+ */
+DataSourceView = exports.DataSourceView = BaseView.extend do # {{{
+    __bind__       : <[  ]>
+    ctorName       : 'DataSourceView'
+    tagName        : 'section'
+    className      : 'datasource'
+    template       : require 'kraken/template/datasource'
+    
+    
+    
+    constructor: function DataSourceView
+        BaseView ...
+    
+    initialize: ->
+        BaseView::initialize ...
+    
+# }}}

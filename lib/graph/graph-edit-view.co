@@ -7,7 +7,7 @@ _ = require 'kraken/util/underscore'
 } = require 'kraken/chart'
 { Graph,
 } = require 'kraken/graph/graph-model'
-{ DataSetView,
+{ DataView, DataSetView, DataSet,
 } = require 'kraken/dataset'
 
 root = do -> this
@@ -45,29 +45,33 @@ GraphEditView = exports.GraphEditView = BaseView.extend do # {{{
         'keypress form.details input[type="text"]' : 'onKeypress'
         'keypress form.options .value'             : 'onKeypress'
         'submit   form.details'                    : 'onDetailsSubmit'
+        'change   select'                          : 'onDetailsSubmit'
         'submit   form.options'                    : 'onOptionsSubmit'
         'change   input[type="checkbox"]'          : 'onOptionsSubmit'
     
-    subviews: []
-    ready: false
+    data  : {}
+    ready : false
     
     
+    constructor: function GraphEditView
+        BaseView ...
     
     initialize : (o={}) ->
-        @subviews = []
+        @data = {}
         @model or= new Graph
+        @id = _.domize 'graph', (@model.id or @model.get('slug') or @model.cid)
         BaseView::initialize ...
         # console.log "#this.initialize!"
         
         for name of @__debounce__
             @[name] = _.debounce @[name], DEBOUNCE_RENDER
         
-        @id = _.domize 'graph', (@model.get('slug') or @model.id or @model.cid)
+        @viewport = @$el.find '.viewport'
         
         ### Model Events
         @model
-            .on 'ready',            @onReady
-            .on 'sync',             @onSync
+            .on 'ready',            @onReady, this
+            .on 'sync',             @onSync,  this
             .on 'destroy',          @remove,  this
             .on 'change',           @render,  this
             .on 'change:dataset',   @onModelChange
@@ -75,11 +79,6 @@ GraphEditView = exports.GraphEditView = BaseView.extend do # {{{
             .on 'error', ~>
                 console.error "#this.error!", arguments
                 # TODO: UI alert
-        
-        ### Graph Data UI
-        @subviews.push @dataset = new DataSetView { model:@model.get 'dataset' }
-        @$el.find '.graph-data-pane' .append @dataset.el
-        @dataset.on 'change', @onDataChange
         
         ### Chart Options Tab, Scaffold
         @scaffold = new ChartOptionScaffold
@@ -92,8 +91,13 @@ GraphEditView = exports.GraphEditView = BaseView.extend do # {{{
         # Rerender the options boxes once the tab is visible
         @$el.on 'click', '.graph-options-tab', @onFirstClickRenderOptionsTab
         
+        ### Graph Data UI
+        # @subviews.push @data = new DataView { model:@model.get('dataset'), graph_id:@id }
+        @subviews.push @data = new DataView { model:new DataSet, graph_id:@id }
+        @$el.find '.graph-data-pane' .append @data.render().el
+        @data.on 'change', @onDataChange
+        
         ### Chart Viewport
-        @viewport = @$el.find '.viewport'
         @resizeViewport()
         
         # Resize chart on window resize
@@ -145,7 +149,8 @@ GraphEditView = exports.GraphEditView = BaseView.extend do # {{{
     toTemplateLocals: ->
         attrs = _.clone @model.attributes
         delete attrs.options
-        delete attrs.dataset
+        # delete attrs.dataset
+        attrs.data = @data
         { $, _, op, @model, view:this } import attrs
     
     
@@ -196,7 +201,7 @@ GraphEditView = exports.GraphEditView = BaseView.extend do # {{{
     
     # Redraw chart inside viewport.
     renderChart: ->
-        data = @model.get 'dataset' .getData()
+        data = @model.get 'dataset' #.getData()
         size = @resizeViewport()
         
         # XXX: use @model.changedAttributes() to calculate what to update
@@ -302,9 +307,11 @@ GraphEditView = exports.GraphEditView = BaseView.extend do # {{{
     
     
     onReady: ->
-        console.log "(#this via GraphEditView).ready!"
-        @ready = @scaffold.ready = true
-        @onSync()
+        return if @ready
+        $.getJSON '/datasources/all', (@data) ~>
+            console.log "(#this via GraphEditView).ready!"
+            @ready = @scaffold.ready = true
+            @onSync()
     
     onSync: ->
         return unless @ready
@@ -340,7 +347,7 @@ GraphEditView = exports.GraphEditView = BaseView.extend do # {{{
             @model.setOption(key, value, {+silent})
     
     onDataChange: ->
-        ...
+        console.log 'onDataChange!'
     
     onFirstClickRenderOptionsTab: ->
         @$el.off 'click', '.graph-options-tab', @onFirstClickRenderOptionsTab

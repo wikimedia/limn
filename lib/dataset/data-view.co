@@ -1,0 +1,63 @@
+Seq = require 'seq'
+{ _, op,
+} = require 'kraken/util'
+{ BaseView,
+} = require 'kraken/base'
+{ DataSetView,
+} = require 'kraken/dataset/dataset-view'
+{ MetricEditView,
+} = require 'kraken/dataset/metric-edit-view'
+
+
+/**
+ * @class
+ */
+DataView = exports.DataView = BaseView.extend do # {{{
+    ctorName       : 'DataView'
+    tagName        : 'section'
+    className      : 'data-ui'
+    template       : require 'kraken/template/data'
+    
+    data : {}
+    
+    
+    
+    constructor: function DataView
+        BaseView ...
+    
+    initialize: ->
+        @graph_id = @options.graph_id
+        BaseView::initialize ...
+        
+        @load()
+        
+        # @subviews.push @dataset_view = new DataSetView {@model, @graph_id}
+        # @$el.append @dataset_view.render().el
+        # @dataset_view.on 'edit-metric', @editMetric, this
+        # 
+        # @subviews.push @metric_edit_view  = new MetricEditView  {dataset:@model, @graph_id}
+        # @$el.append @metric_edit_view.render().hide().el
+        
+    
+    toTemplateLocals: ->
+        attrs = _.clone @model.attributes
+        { $, _, op, @model, view:this, @data, @graph_id } import attrs
+    
+    
+    load: ->
+        $.getJSON '/datasources/all', (@data) ~>
+            @ready = true
+            @render()
+            @trigger 'ready', this
+    
+    # Don't rebuild HTML, simply notify subviews
+    render: ->
+        BaseView::render ...
+        
+        # _.invoke @subviews, 'render'
+        this
+    
+    editMetric: (metric) ->
+        @metric_edit_view.editMetric metric
+    
+# }}}

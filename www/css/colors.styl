@@ -4,8 +4,8 @@ invert($v)
     hsla( 180deg * hue($v), 100% - saturation($v), 100% - lightness($v), alpha($v) )
 
 contrast_direction($v)
-    // ((lightness($v) * (100% - saturation($v))) < 50%) ? 1 : -1
     (lightness($v) < 50%) ? 1 : -1
+    // ((lightness($v) * (100% - saturation($v))) < 50%) ? 1 : -1
 
 
 /** Project Colors **/
