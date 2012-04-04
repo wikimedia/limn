@@ -28,7 +28,8 @@
     "underscore.string": ">= 2.0.0",
     "js-yaml": ">= 0.3.5",
     "hashish": ">= 0.0.4",
-    "backbone": ">= 0.9.1"
+    "backbone": ">= 0.9.1",
+    "findit": ">= 0.1.2"
   },
   "devDependencies": {
     "buildtools": "https://github.com/dsc/node-buildtools/tarball/master",

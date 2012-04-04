@@ -1,7 +1,8 @@
 #!/usr/bin/env coco
 
-fs       = require 'fs'
-path     = require 'path'
+fs     = require 'fs'
+path   = require 'path'
+findit = require 'findit'
 {existsSync:exists} = path
 {exec, spawn} = require 'child_process'
 {mkdirp, mkdirpAsync} = require './mkdirp'
@@ -146,9 +147,9 @@ YAML_EXT_PAT = /\.ya?ml$/i
 app.get '/datasources/all', (req, res, next) ->
     data = {}
     files = []
-    Seq()
-        .seq fs.readdir, 'data/datasources', Seq
-        .flatten()
+    Seq(findit.sync 'data/datasources')
+        # .seq fs.readdir, 'data/datasources', Seq
+        # .flatten()
         .filter -> /\.(json|ya?ml)$/.test it
         .seq ->
             files := @stack.slice()
@@ -157,7 +158,7 @@ app.get '/datasources/all', (req, res, next) ->
         .flatten()
         .parMap (f) ->
             # console.log "fs.readFile '#CWD/data/#f'"
-            fs.readFile "data/datasources/#f", 'utf8', this
+            fs.readFile f, 'utf8', this
         .parMap (text, i) ->
             f = files[i]
             # console.log "parsing file[#i]: '#f' -> text[#{text.length}]..."

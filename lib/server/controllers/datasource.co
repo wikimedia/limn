@@ -1,5 +1,6 @@
 fs         = require 'fs'
 Seq        = require 'seq'
+findit     = require 'findit'
 Controller = require '../controller'
 
 YAML_EXT_PAT = /\.ya?ml$/i
@@ -11,7 +12,7 @@ YAML_EXT_PAT = /\.ya?ml$/i
  */
 class DataSourceController extends Controller
     name    : 'datasources'
-    dataDir : 'data/graphs'
+    dataDir : 'data/datasources'
     
     mapping :
         all : 'allData'
@@ -22,10 +23,11 @@ class DataSourceController extends Controller
      * Returns a JSON listing of the datasource metadata files.
      */
     index : (req, res, next) ->
-        fs.readdir @dataDir, (err, files) ->
-            res.send do
-                files.filter -> /\.(json|ya?ml)$/i.test it
-                     .map    -> "/#{@dataDir}#it".replace YAML_EXT_PAT, '.json'
+        files = findit.sync @dataDir
+        # fs.readdir @dataDir, (err, files) ->
+        res.send do
+            files.filter -> /\.(json|ya?ml)$/i.test it
+                 .map    -> "#it".replace YAML_EXT_PAT, '.json'
     
     /**
      * Returns the aggregated JSON content of the datasource metadata files.
@@ -33,9 +35,9 @@ class DataSourceController extends Controller
     allData : (req, res, next) ->
         data = {}
         files = []
-        Seq()
-            .seq fs.readdir, @dataDir, Seq
-            .flatten()
+        Seq(findit.sync @dataDir)
+            # .seq ~> @ok findit.sync @dataDir
+            # .flatten()
             .filter -> /\.(json|ya?ml)$/.test it
             .seq ->
                 files := @stack.slice()
@@ -44,7 +46,7 @@ class DataSourceController extends Controller
             .flatten()
             .parMap_ (next, f) ~>
                 # console.log "fs.readFile '#CWD/data/#f'"
-                fs.readFile "#{@dataDir}/#f", 'utf8', next
+                fs.readFile f, 'utf8', next
             .parMap (text, i) ->
                 f = files[i]
                 # console.log "parsing file[#i]: '#f' -> text[#{text.length}]..."
