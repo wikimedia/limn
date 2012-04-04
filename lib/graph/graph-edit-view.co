@@ -114,7 +114,7 @@ GraphEditView = exports.GraphEditView = BaseView.extend do # {{{
     
     save: ->
         console.log "#this.save!"
-        id = @model.id or @model.get('slug')
+        id = @model.get('slug') or @model.id
         @model.save {id}, {+wait}
         false
     
@@ -326,7 +326,7 @@ GraphEditView = exports.GraphEditView = BaseView.extend do # {{{
         changes = @model.changedAttributes()
         options = @model.getOptions()
         # console.log "Graph.changed( options ) ->\n\tchanges: #{JSON.stringify changes}\n\toptions: #{JSON.stringify options}" #"\n\t^opts: #{JSON.stringify _.intersection _.keys(changes), _.keys(options)}"
-        @chart.updateOptions file:that if changes?.dataset
+        @chart?.updateOptions file:that if changes?.dataset
         @chartOptions options, {+silent} if changes?.options
     
     onScaffoldChange: (scaffold, value, key, field) ->

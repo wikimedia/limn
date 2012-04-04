@@ -45,7 +45,7 @@ main = ->
             (v, k) -> [ k, dyglib.parseOption(k,v) ]
     
     # Extract id from URL
-    if match = /\/graph\/(?!view)([^\/?]+)/i.exec loc
+    if match = /\/graphs\/([^\/?]+)/i.exec loc
         data.id = data.slug = match[1]
     
     # _.dump _.clone(data.options), 'data.options'

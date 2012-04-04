@@ -32,6 +32,8 @@ class GraphController extends Controller
             parser = yaml.load
         
         err, data <- fs.readFile file, 'utf8'
+        if 'ENOENT' is err?.code
+            return cb null, {}
         if err
             console.error "GraphController.autoload(#id, #{typeof cb}) -->\nerr"
             return cb err
@@ -47,11 +49,17 @@ class GraphController extends Controller
     
     # GET /graphs/:graph
     show: (req, res) ->
-        res.send req.graph
+        if req.format is 'json'
+            res.send req.graph
+        else
+            res.render 'graph/view'
     
     # GET /graphs/:graph/edit
     edit: (req, res) ->
-        res.send req.graph
+        if req.format is 'json'
+            res.send req.graph
+        else
+            res.render 'graph/edit'
     
     # GET /graphs/new
     new: (req, res) ->
