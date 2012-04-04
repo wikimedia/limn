@@ -93,7 +93,7 @@ GraphEditView = exports.GraphEditView = BaseView.extend do # {{{
         
         ### Graph Data UI
         # @subviews.push @data = new DataView { model:@model.get('dataset'), graph_id:@id }
-        @subviews.push @data = new DataView { model:new DataSet, graph_id:@id }
+        @subviews.push @data = new DataView { @model, graph_id:@id }
         @$el.find '.graph-data-pane' .append @data.render().el
         @data.on 'change', @onDataChange
         
