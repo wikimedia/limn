@@ -59,7 +59,7 @@ Graph = exports.Graph = BaseModel.extend do # {{{
             slug    : ''
             name    : ''
             desc    : ''
-            dataset : '/data/datasources/non_mobile_pageviews_by.timestamp.language.csv'
+            dataset : '/data/datasources/rc/rc_comscore_region_uv.csv'
             # dataset : null
             width   : 'auto'
             height  : 320

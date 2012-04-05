@@ -49,7 +49,7 @@ DataSet = exports.DataSet = BaseModel.extend do # {{{
      * @returns {Array} The reified dataset, materialized to an array of data-series arrays.
      */
     getData: ->
-        '/data/datasources/non_mobile_pageviews_by.timestamp.language.csv'
+        '/data/datasources/rc/rc_comscore_region_uv.csv'
     
     newMetric: ->
         index = @metrics.length
