@@ -1,10 +1,12 @@
-- if (typeof version == 'undefined' || version == null || !version || version === 'dev') { version = String(new Date().getTime()); }
+- root = (function(){ return this; })();
+- if (typeof version == 'undefined') root.version = 'dev';
+- if (version == null || !version || version === 'dev') { version = String(new Date().getTime()); }
 
-mixin css(href, media, root)
+mixin css(href, media, path_root)
     - media = media || 'screen'
-    - root = root || '/css'
-    - var ver = (version ? '?'+version : '')
-    - href = ((root && href.charAt(0) !== '/') ? root+'/' : '') + href + ver
+    - path_root = path_root || '/css'
+    - var ver = ((typeof version != 'undefined' && version) ? '?'+version : '')
+    - href = ((path_root && href.charAt(0) !== '/') ? path_root+'/' : '') + href + ver
     link(type='text/css', rel='stylesheet', media=media, href=href)
 
 
