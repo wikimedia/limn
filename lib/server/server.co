@@ -116,6 +116,7 @@ app.configure ->
     app.use require('browserify') do
         mount   : '/vendor/browserify.js'
         require : <[ events seq ]>
+        cache   : "#CWD/.cache/browserify/cache.json"
     
     # Serve static files
     app.use express.static WWW

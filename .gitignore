@@ -35,3 +35,4 @@ tmp
 lib/version.js
 www/presets/*.json
 
+.cache
