@@ -1,6 +1,8 @@
 require 'buildtools'
 require 'buildtools/tasks'
 
+{removeSync:remove} = require 'remove'
+
 
 MODULE_LINK      = 'node_modules/kraken'
 EXPRESS_DEP_MIME = 'node_modules/express/node_modules/mime'
@@ -21,7 +23,7 @@ task \install 'Install project dependencies.' ->
     
     # Remove express's copy of node-mime so we can add our own extensions
     # and have it pick them up by default.
-    remove EXPRESS_DEP_MIME, true if exists EXPRESS_DEP_MIME
+    remove EXPRESS_DEP_MIME, {+ignoreMissing, +verbose}
 
 task \setup 'Ensure project is set up for development.' ->
     invoke \install
