@@ -44,7 +44,7 @@
     "url": "git://git@less.ly:kraken-ui.git"
   },
   "engine": {
-    "node": ">=0.6.2"
+    "node": ">=0.6.x"
   },
   "license": "MIT"
 }
