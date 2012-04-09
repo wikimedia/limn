@@ -67,7 +67,7 @@ app.configure ->
         version : VERSION
     } import require './view-helpers'
     
-    app.use express.logger()   if LOG_LEVEL is 'DEBUG'
+    app.use express.logger()   if LOG_LEVEL is 'DEBUG' or NODE_ENV is 'prod'
     # app.use express.logger()
     
     # Parse URL, fiddle
@@ -116,6 +116,7 @@ app.configure ->
     app.use require('browserify') do
         mount   : '/vendor/browserify.js'
         require : <[ events seq ]>
+        cache   : "#CWD/.cache/browserify/cache.json"
     
     # Serve static files
     app.use express.static WWW

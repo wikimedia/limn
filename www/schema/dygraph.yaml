@@ -1,1 +1,1455 @@
-../../msc/dygraph-options/data.yaml
+
+-   name: dateWindow
+    tags:
+    - interactivity
+    - axes
+    type: Array of two Dates or numbers
+    default: null
+    desc: Initially zoom in on a section of the graph. Is of the form [earliest, latest],
+        where earliest/latest are milliseconds since epoch. If the data for the x-axis
+        is numeric, the values in dateWindow must also be numbers. By default, the
+        full range of the input is shown.
+    examples:
+    - dateWindow
+    - drawing
+    - is-zoomed-ignore-programmatic-zoom
+    - link-interaction
+    - synchronize
+    - zoom
+
+-   name: visibility
+    tags:
+    - lines
+    - data
+    - display
+    - graph
+    type: Array of booleans
+    default: null
+    desc: Which series should initially be visible? Once the Dygraph has been constructed,
+        you can access and modify the visibility of each series using the visibility
+        and setVisibility methods.
+    examples:
+    - color-visibility
+    - no-visibility
+    - visibility
+
+-   name: strokeWidth
+    tags:
+    - lines
+    - data
+    - display
+    - line
+    - standard
+    type: Integer
+    default: 1
+    desc: The width of the lines connecting data points. This can be used to increase
+        the contrast or some graphs.
+    examples:
+    - linear-regression-addseries
+    - drawing
+    - grid_dot
+    - layout-options
+    - linear-regression-fractions
+    - linear-regression
+    - per-series
+    - unboxed-spark
+    - styled-chart-labels
+
+-   name: drawPoints
+    tags:
+    - lines
+    - points
+    - data
+    - display
+    - standard
+    type: Boolean
+    default: false
+    desc: Draw a small dot at each point, in addition to a line going through the
+        point. This makes the individual data points easier to see, but can increase
+        visual clutter in the chart.
+    examples:
+    - linear-regression-addseries
+    - draw-points
+    - dynamic-update
+    - independent-series
+    - interaction
+    - linear-regression-fractions
+    - linear-regression
+    - per-series
+
+-   name: pointSize
+    tags:
+    - lines
+    - data
+    - display
+    - points
+    - standard
+    type: Integer
+    default: 1
+    desc: The size of the dot to draw on each point in pixels (see drawPoints). A
+        dot is always drawn when a point is "isolated", i.e. there is a missing point
+        on either side of it. This also controls the size of those dots.
+    examples:
+    - per-series
+
+-   name: stackedGraph
+    tags:
+    - lines
+    - data
+    - display
+    - graph
+    - standard
+    type: Boolean
+    default: false
+    desc: If set, stack series on top of one another rather than drawing them independently.
+    examples:
+    - stacked
+
+-   name: fillGraph
+    tags:
+    - lines
+    - data
+    - display
+    - graph
+    - standard
+    type: Boolean
+    default: false
+    desc: Should the area underneath the graph be filled? This option is not compatible
+        with error bars.
+    examples:
+    - fillGraph
+    - two-axes
+    - steps
+
+-   name: strokePattern
+    tags:
+    - lines
+    - data
+    - display
+    type: Array
+    default: null
+    desc: A custom pattern array where the even index is a draw and odd is a space
+        in pixels. If null then it draws a solid line. The array should have a even
+        length as any odd lengthed array could be expressed as a smaller even length
+        array.
+    examples:
+    - per-series
+
+-   name: stepPlot
+    tags:
+    - lines
+    - data
+    - display
+    - graph
+    - standard
+    type: Boolean
+    default: false
+    desc: When set, display the graph as a step plot instead of a line plot.
+    examples:
+    - avoidMinZero
+    - steps
+    - y-axis-formatter
+
+-   name: connectSeparatedPoints
+    tags:
+    - lines
+    - points
+    - data
+    - display
+    type: Boolean
+    default: false
+    desc: Usually, when Dygraphs encounters a missing value in a data series, it interprets
+        this as a gap and draws it as such. If, instead, the missing values represents
+        an x-value for which only a different series has data, then you'll want to
+        connect the dots by setting this to true. To explicitly include a gap with
+        this option set, use a value of NaN.
+    examples:
+    - connect-separated
+    - independent-series
+
+-   name: rightGap
+    tags:
+    - display
+    - data
+    - lines
+    - points
+    - graph
+    type: Integer
+    default: 5
+    desc: Number of pixels to leave blank at the right edge of the Dygraph. This makes
+        it easier to highlight the right-most data point.
+
+-   name: colors
+    tags:
+    - color
+    - data
+    - display
+    type: Array
+    default: null
+    desc: List of colors for the data series. These can be of the form "#AABBCC" or
+        "rgb(255,100,200)" or "yellow", etc. If not specified, equally-spaced points
+        around a color wheel are used.
+    examples:
+    - century-scale
+    - color-visibility
+    - demo
+    - reverse-y-axis
+    - color-cycle
+
+-   name: colorSaturation
+    tags:
+    - color
+    - data
+    - display
+    type: Float (0.0 - 1.0)
+    default: 1.0
+    desc: If colors is not specified, saturation of the automatically-generated data
+        series colors.
+
+-   name: colorValue
+    tags:
+    - color
+    - data
+    - display
+    type: Float (0.0 - 1.0)
+    default: 0.5
+    desc: If colors is not specified, value of the data series colors, as in hue/saturation/value.
+        (0.0-1.0, default 0.5)
+
+-   name: animatedZooms
+    tags:
+    - interactivity
+    - zoom
+    type: Boolean
+    default: false
+    desc: Set this option to animate the transition between zoom windows. Applies
+        to programmatic and interactive zooms. Note that if you also set a drawCallback,
+        it will be called several times on each zoom. If you set a zoomCallback, it
+        will only be called after the animation is complete.
+    examples:
+    - highlighted-region
+    - link-interaction
+
+-   name: highlightCircleSize
+    tags:
+    - interactivity
+    - graph
+    type: Integer
+    default: 3
+    desc: The size in pixels of the dot drawn over highlighted points.
+    examples:
+    - dygraph-many-points-benchmark
+    - grid_dot
+    - per-series
+    - unboxed-spark
+
+-   name: interactionModel
+    ignore: true
+    tags:
+    - interactivity
+    type: Object
+    default: null
+    desc: 'TODO(konigsberg): document this'
+    examples:
+    - drawing
+    - interaction
+
+-   name: isZoomedIgnoreProgrammaticZoom
+    tags:
+    - interactivity
+    - zoom
+    type: Boolean
+    default: false
+    desc: When this option is passed to updateOptions() along with either the dateWindow
+        or valueRange options, the zoom flags are not changed to reflect a zoomed
+        state. This is primarily useful for when the display area of a chart is changed
+        programmatically and also where manual zooming is allowed and use is made
+        of the isZoomed method to determine this.
+    examples:
+    - is-zoomed-ignore-programmatic-zoom
+
+-   name: labels
+    tags:
+    - labels
+    - display
+    type: Array
+    default: null
+    desc: A name for each data series, including the independent (X) series. For CSV
+        files and DataTable objections, this is determined by context. For raw data,
+        this must be specified. If it is not, default values are supplied and a warning
+        is logged. By default, labels roughly follow ["X", "Y1", "Y2", ...]*
+    examples:
+    - linear-regression-addseries
+    - connect-separated
+    - drawing
+    - dygraph
+    - dygraph-many-points-benchmark
+    - dynamic-update
+    - highlighted-region
+    - independent-series
+    - isolated-points
+    - label-div
+    - link-interaction
+    - linear-regression
+    - negative
+    - missing-data
+    - native-format
+    - two-axes
+    - perf
+    - small-range-zero
+    - steps
+    - y-axis-formatter
+    - annotation-native
+    - multi-scale
+    - two-axes-vr
+    - value-axis-formatters
+
+-   name: xlabel
+    tags:
+    - labels
+    - x-axis
+    - display
+    - axes
+    - standard
+    type: String
+    default: null
+    desc: Text to display below the chart's x-axis. You can supply any HTML for this
+        value, not just text. If you wish to style it using CSS, use the 'dygraph-label'
+        or 'dygraph-xlabel' classes.
+    examples:
+    - border
+    - demo
+    - styled-chart-labels
+    - multi-scale
+
+-   name: ylabel
+    tags:
+    - labels
+    - y-axis
+    - display
+    - axes
+    - standard
+    type: String
+    default: null
+    desc: Text to display to the left of the chart's y-axis. You can supply any HTML
+        for this value, not just text. If you wish to style it using CSS, use the
+        'dygraph-label' or 'dygraph-ylabel' classes. The text will be rotated 90 degrees
+        by default, so CSS rules may behave in unintuitive ways. No additional space
+        is set aside for a y-axis label. If you need more space, increase the width
+        of the y-axis tick labels using the yAxisLabelWidth option. If you need a
+        wider div for the y-axis label, either style it that way with CSS (but remember
+        that it's rotated, so width is controlled by the 'height' property) or set
+        the yLabelWidth option.
+    examples:
+    - border
+    - demo
+    - two-axes
+    - noise
+    - styled-chart-labels
+    - multi-scale
+    - range-selector
+    - temperature-sf-ny
+    - two-axes-vr
+
+-   name: y2label
+    tags:
+    - labels
+    - y-axis
+    - display
+    - standard
+    type: String
+    default: null
+    desc: Text to display to the right of the chart's secondary y-axis. This label
+        is only displayed if a secondary y-axis is present. See this test for an example
+        of how to do this. The comments for the 'ylabel' option generally apply here
+        as well. This label gets a 'dygraph-y2label' instead of a 'dygraph-ylabel'
+        class.
+    examples:
+    - two-axes
+    - two-axes-vr
+
+-   name: legend
+    tags:
+    - legend
+    - labels
+    - display
+    type: String
+    default: onmouseover
+    desc: When to display the legend. By default, it only appears when a user mouses
+        over the chart. Set it to "always" to always display a legend of some sort.
+    examples:
+    - demo
+    - noise
+    - per-series
+    - styled-chart-labels
+    - multi-scale
+    - range-selector
+    - temperature-sf-ny
+
+-   name: labelsSeparateLines
+    tags:
+    - legend
+    - labels
+    - display
+    type: Boolean
+    default: false
+    desc: Put &lt;br/&gt; between lines in the label string. Often used in conjunction with
+        labelsDiv.
+    examples:
+    - century-scale
+    - customLabel
+    - demo
+    - reverse-y-axis
+
+-   name: labelsShowZeroValues
+    tags:
+    - legend
+    - labels
+    - display
+    type: Boolean
+    default: true
+    desc: Show zero value labels in the labelsDiv.
+    examples:
+    - label-div
+
+-   name: hideOverlayOnMouseOut
+    tags:
+    - interactivity
+    - legend
+    - labels
+    - display
+    type: Boolean
+    default: true
+    desc: Whether to hide the legend when the mouse leaves the chart area.
+    examples:
+    - gviz-selection
+
+-   name: showLabelsOnHighlight
+    tags:
+    - interactivity
+    - legend
+    - labels
+    - display
+    type: Boolean
+    default: true
+    desc: Whether to show the legend upon mouseover.
+    examples:
+    - callback
+
+-   name: labelsDiv
+    ignore: true
+    tags:
+    - legend
+    - labels
+    - display
+    type: DOM element or string
+    default: null
+    desc: Show data labels in an external div, rather than on the graph.  This value
+        can either be a div element or a div id.
+    examples:
+    - century-scale
+    - demo
+    - label-div
+    - reverse-y-axis
+    - unboxed-spark
+
+-   name: labelsDivStyles
+    ignore: true
+    tags:
+    - legend
+    - labels
+    - display
+    type: Object
+    default: null
+    desc: 'Additional styles to apply to the currently-highlighted points div. For
+        example, { ''font-weight'': ''bold'' } will make the labels bold.'
+    examples:
+    - border
+    - customLabel
+    - noise
+    - styled-chart-labels
+    - range-selector
+    - temperature-sf-ny
+
+-   name: labelsDivWidth
+    ignore: true
+    tags:
+    - legend
+    - labels
+    - display
+    type: Integer
+    default: 250
+    desc: Width (in pixels) of the div which shows information on the currently-highlighted
+        points.
+    examples:
+    - customLabel
+    - noise
+
+-   name: logscale
+    tags:
+    - axes
+    - y-axis
+    - display
+    - standard
+    type: Boolean
+    default: false
+    desc: When set for a y-axis, the graph shows that axis in log scale. Any values
+        less than or equal to zero are not displayed. Not compatible with showZero,
+        and ignores connectSeparatedPoints. Also, showing log scale with valueRanges
+        that are less than zero will result in an unviewable graph.
+    examples:
+    - logscale
+    - stock
+
+-   name: axis
+    tags:
+    - axes
+    type: String or Object
+    default: null
+    desc: Set to either an object ({}) filled with options for this axis or to the
+        name of an existing data series with its own axis to re-use that axis. See
+        tests for usage.
+    examples:
+    - two-axes
+    - steps
+    - two-axes-vr
+    - value-axis-formatters
+
+-   name: valueRange
+    tags:
+    - axes
+    - y-axis
+    - range
+    - interactivity
+    type: Array of two numbers
+    default: null
+    desc: Explicitly set the vertical range of the graph to [low, high]. This may
+        be set on a per-axis basis to define each y-axis separately. By default, the
+        full range of the input is shown.
+    examples:
+    - drawing
+    - dynamic-update
+    - is-zoomed-ignore-programmatic-zoom
+    - no-visibility
+    - reverse-y-axis
+    - synchronize
+    - zoom
+    - two-axes-vr
+
+-   name: drawXAxis
+    tags:
+    - axes
+    - x-axis
+    - display
+    type: Boolean
+    default: true
+    desc: Whether to draw the x-axis. Setting this to false also prevents x-axis ticks
+        from being drawn and reclaims the space for the chart grid/lines.
+    examples:
+    - unboxed-spark
+
+-   name: drawYAxis
+    tags:
+    - axes
+    - y-axis
+    - display
+    type: Boolean
+    default: true
+    desc: Whether to draw the y-axis. Setting this to false also prevents y-axis ticks
+        from being drawn and reclaims the space for the chart grid/lines.
+    examples:
+    - drawing
+    - unboxed-spark
+
+-   name: avoidMinZero
+    tags:
+    - axes
+    - y-axis
+    type: Boolean
+    default: false
+    desc: "When set, the heuristic that fixes the Y axis at zero for a data set with\
+        \ the minimum Y value of zero is disabled. \nThis is particularly useful for\
+        \ data sets that contain many zero values, especially for step plots which\
+        \ may otherwise have lines not visible running along the bottom axis."
+    examples:
+    - avoidMinZero
+
+-   name: includeZero
+    tags:
+    - axes
+    - y-axis
+    - display
+    type: Boolean
+    default: false
+    desc: Usually, dygraphs will use the range of the data plus some padding to set
+        the range of the y-axis. If this option is set, the y-axis will always include
+        zero, typically as the lowest value. This can be used to avoid exaggerating
+        the variance in the data
+    examples:
+    - no-range
+    - numeric-gviz
+    - small-range-zero
+
+-   name: axisLineWidth
+    tags:
+    - axes
+    - stroke
+    - display
+    type: Float
+    default: 0.3
+    desc: Thickness (in pixels) of the x- and y-axis lines.
+
+-   name: axisLineColor
+    tags:
+    - axes
+    - color
+    type: String
+    default: black
+    desc: Color of the x- and y-axis lines. Accepts any value which the HTML canvas
+        strokeStyle attribute understands, e.g. 'black' or 'rgb(0, 100, 255)'.
+    examples:
+    - demo
+
+-   name: axisTickSize
+    tags:
+    - axes
+    type: Float
+    default: 3.0
+    desc: The size of the line to display next to each tick mark on x- or y-axes.
+
+-   name: xAxisHeight
+    tags:
+    - axes
+    - x-axis
+    - display
+    type: Integer
+    default: null
+    desc: Height, in pixels, of the x-axis. If not set explicitly, this is computed
+        based on axisLabelFontSize and axisTickSize.
+
+-   name: axisLabelColor
+    tags:
+    - axes
+    - color
+    - labels
+    type: String
+    default: black
+    desc: Color for x- and y-axis labels. This is a CSS color string.
+
+-   name: axisLabelFontSize
+    tags:
+    - axes
+    - labels
+    - fonts
+    - standard
+    type: Integer
+    default: 14
+    desc: Size of the font (in pixels) to use in the axis labels, both x- and y-axis.
+
+-   name: axisLabelFormatter
+    tags:
+    - formatting
+    - axes
+    - labels
+    type: function(number or Date, granularity, opts, dygraph)
+    default: null
+    desc: Function to call to format the tick values that appear along an axis. This
+        is usually set on a per-axis basis. The first parameter is either a number
+        (for a numeric axis) or a Date object (for a date axis). The second argument
+        specifies how fine-grained the axis is. For date axes, this is a reference
+        to the time granularity enumeration, defined in dygraph-tickers.js, e.g. Dygraph.WEEKLY.
+        opts is a function which provides access to various options on the dygraph,
+        e.g. opts('labelsKMB').
+    examples:
+    - x-axis-formatter
+    - y-axis-formatter
+    - value-axis-formatters
+
+-   name: axisLabelWidth
+    tags:
+    - axes
+    - labels
+    type: Integer
+    default: 50
+    desc: Width (in pixels) of the containing divs for x- and y-axis labels. For the
+        y-axis, this also controls
+
+-   name: xLabelHeight
+    tags:
+    - labels
+    - axes
+    - x-axis
+    - display
+    type: Integer
+    default: 18
+    desc: Height of the x-axis label, in pixels. This also controls the default font
+        size of the x-axis label. If you style the label on your own, this controls
+        how much space is set aside below the chart for the x-axis label's div.
+
+-   name: yLabelWidth
+    tags:
+    - labels
+    - axes
+    - y-axis
+    - display
+    type: Integer
+    default: 18
+    desc: Width of the div which contains the y-axis label. Since the y-axis label
+        appears rotated 90 degrees, this actually affects the height of its div.
+
+-   name: pixelsPerLabel
+    tags:
+    - axes
+    - grid
+    - labels
+    type: Integer
+    default: null
+    desc: Number of pixels to require between each x- and y-label. Larger values will
+        yield a sparser axis with fewer ticks. This is set on a per-axis basis. By
+        default, values are 60 (x-axis) or 30 (y-axes).
+    examples:
+    - value-axis-formatters
+
+-   name: xAxisLabelWidth
+    tags:
+    - axes
+    - x-axis
+    - labels
+    type: Integer
+    default: 50
+    desc: Width, in pixels, of the x-axis labels.
+    examples:
+    - x-axis-formatter
+    - value-axis-formatters
+
+-   name: yAxisLabelWidth
+    tags:
+    - axes
+    - y-axis
+    - labels
+    type: Integer
+    default: 50
+    desc: Width, in pixels, of the y-axis labels. This also affects the amount of
+        space available for a y-axis chart label.
+    examples:
+    - customLabel
+    - two-axes
+    - multi-scale
+    - two-axes-vr
+    - value-axis-formatters
+
+-   name: ticker
+    tags:
+    - axes
+    - formatting
+    - callback
+    type: 'function(min, max, pixels, opts, dygraph, vals) -> [{v: ..., label: ...},
+        ...]'
+    default: null
+    desc: This lets you specify an arbitrary function to generate tick marks on an
+        axis. The tick marks are an array of (value, label) pairs. The built-in functions
+        go to great lengths to choose good tick marks so, if you set this option,
+        you'll most likely want to call one of them and modify the result. By default,
+        uses Dygraph.dateTicker or Dygraph.numericTicks, but see dygraph-tickers.js
+        for an extensive discussion. This is set on a per-axis basis.
+
+-   name: labelsKMB
+    tags:
+    - formatting
+    - labels
+    - y-axis
+    - display
+    type: Boolean
+    default: false
+    desc: Show K/M/B for thousands/millions/billions on y-axis.
+    examples:
+    - annotation-gviz
+    - century-scale
+    - demo
+    - labelsKMB
+    - no-range
+    - two-axes
+    - reverse-y-axis
+    - two-axes-vr
+
+-   name: labelsKMG2
+    tags:
+    - formatting
+    - labels
+    - y-axis
+    - display
+    type: Boolean
+    default: false
+    desc: Show k/M/G for kilo/Mega/Giga on y-axis. This is different than labelsKMB
+        in that it uses base 2, not 10.
+    examples:
+    - labels
+    - formatting
+
+-   name: digitsAfterDecimal
+    tags:
+    - formatting
+    - y-axis
+    - display
+    type: Integer
+    default: 2
+    desc: Unless it's run in scientific mode (see the sigFigs option), dygraphs displays
+        numbers with digitsAfterDecimal digits after the decimal point. Trailing zeros
+        are not displayed, so with a value of 2 you'll get '0', '0.1', '0.12', '123.45'
+        but not '123.456' (it will be rounded to '123.46'). Numbers with absolute
+        value less than 0.1^digitsAfterDecimal (i.e. those which would show up as
+        '0.00') will be displayed in scientific notation.
+    examples:
+    - number-display
+
+-   name: maxNumberWidth
+    tags:
+    - formatting
+    - y-axis
+    - display
+    type: Integer
+    default: 6
+    desc: When displaying numbers in normal (not scientific) mode, large numbers will
+        be displayed with many trailing zeros (e.g. 100000000 instead of 1e9). This
+        can lead to unwieldy y-axis labels. If there are more than maxNumberWidth
+        digits to the left of the decimal in a number, dygraphs will switch to scientific
+        notation, even when not operating in scientific mode. If you'd like to see
+        all those digits, set this to something large, like 20 or 30.
+    examples:
+    - number-display
+
+-   name: sigFigs
+    tags:
+    - formatting
+    - y-axis
+    - display
+    type: Integer
+    default: null
+    desc: By default, dygraphs displays numbers with a fixed number of digits after
+        the decimal point. If you'd prefer to have a fixed number of significant figures,
+        set this option to that number of sig figs. A value of 2, for instance, would
+        cause 1 to be display as 1.0 and 1234 to be displayed as 1.23e+3.
+    examples:
+    - number-display
+
+-   name: valueFormatter
+    tags:
+    - formatting
+    - callback
+    - labels
+    - display
+    - legend
+    type: function(num or millis, opts, dygraph)
+    default: null
+    desc: Function to provide a custom display format for the values displayed on
+        mouseover. This does not affect the values that appear on tick marks next
+        to the axes. To format those, see `axisLabelFormatter`. This is usually set
+        on a per-axis basis. For date axes, you can call new Date(millis) to get a
+        Date object. opts is a function you can call to access various options (e.g.
+        opts('labelsKMB')). Default formatter will depend on the type of your data.
+    examples:
+    - y-axis-formatter
+    - value-axis-formatters
+
+-   name: title
+    ignore: true
+    tags:
+    - labels
+    - title
+    - display
+    - chart
+    - standard
+    type: String
+    default: null
+    desc: Text to display above the chart. You can supply any HTML for this value,
+        not just text. If you wish to style it using CSS, use the 'dygraph-label'
+        or 'dygraph-title' classes.
+    examples:
+    - border
+    - demo
+    - noise
+    - styled-chart-labels
+    - multi-scale
+    - range-selector
+    - temperature-sf-ny
+
+-   name: titleHeight
+    ignore: true
+    tags:
+    - labels
+    - display
+    - title
+    - fonts
+    - chart
+    type: Integer
+    default: 18
+    desc: Height of the chart title, in pixels. This also controls the default font
+        size of the title. If you style the title on your own, this controls how much
+        space is set aside above the chart for the title's div.
+    examples:
+    - styled-chart-labels
+
+-   name: showRoller
+    tags:
+    - statistics
+    - interactivity
+    - rolling averages
+    - summary data
+    type: Boolean
+    default: false
+    desc: If the rolling average period text box should be shown.
+    examples:
+    - annotation
+    - callback
+    - crosshair
+    - dynamic-update
+    - fractions
+    - isolated-points
+    - missing-data
+    - numeric-gviz
+    - steps
+    - underlay-callback
+    - range-selector
+    - temperature-sf-ny
+
+-   name: rollPeriod
+    tags:
+    - statistics
+    - rolling averages
+    - error bars
+    - summary data
+    type: Integer >= 1
+    default: 1
+    desc: Number of days over which to average data. Discussed extensively above.
+    examples:
+    - annotation
+    - callback
+    - century-scale
+    - crosshair
+    - customLabel
+    - draw-points
+    - dygraph-many-points-benchmark
+    - grid_dot
+    - link-interaction
+    - missing-data
+    - resize
+    - no-visibility
+    - noise
+    - perf
+    - reverse-y-axis
+    - unboxed-spark
+    - spacing
+    - styled-chart-labels
+    - synchronize
+    - two-series
+    - underlay-callback
+    - visibility
+    - range-selector
+    - temperature-sf-ny
+
+-   name: sigma
+    tags:
+    - statistics
+    - error bars
+    - summary data
+    type: Float
+    default: 2.0
+    desc: When errorBars is set, shade this many standard deviations above/below each
+        point.
+
+-   name: wilsonInterval
+    tags:
+    - statistics
+    - error bars
+    - summary data
+    type: Boolean
+    default: true
+    desc: Use in conjunction with the "fractions" option. Instead of plotting +/-
+        N standard deviations, dygraphs will compute a Wilson confidence interval
+        and plot that. This has more reasonable behavior for ratios close to 0 or
+        1.
+
+-   name: fillAlpha
+    tags:
+    - statistics
+    - error bars
+    - color
+    - data
+    - display
+    - summary data
+    type: Float (0.0 - 1.0)
+    default: 0.15
+    desc: Error bars (or custom bars) for each series are drawn in the same color
+        as the series, but with partial transparency. This sets the transparency.
+        A value of 0.0 means that the error bars will not be drawn, whereas a value
+        of 1.0 means that the error bars will be as dark as the line for the series
+        itself. This can be used to produce chart lines whose thickness varies at
+        each point.
+
+-   name: customBars
+    tags:
+    - statistics
+    - source
+    - error bars
+    - csv
+    - parsing
+    - summary data
+    type: Boolean
+    default: false
+    desc: When set, parse each CSV cell as "low;middle;high". Error bars will be drawn
+        for each point between low and high, with the series itself going through
+        middle.
+    examples:
+    - custom-bars
+    - zero-series
+    - stock
+    - range-selector
+    - temperature-sf-ny
+
+-   name: errorBars
+    tags:
+    - statistics
+    - source
+    - error bars
+    - csv
+    - parsing
+    - summary data
+    type: Boolean
+    default: false
+    desc: Does the data contain standard deviations? Setting this to true alters the
+        input format (see above).
+    examples:
+    - callback
+    - crosshair
+    - custom-bars
+    - customLabel
+    - draw-points
+    - fillGraph
+    - fractions
+    - grid_dot
+    - interaction
+    - is-zoomed-ignore-programmatic-zoom
+    - link-interaction
+    - linear-regression-fractions
+    - missing-data
+    - resize
+    - no-visibility
+    - noise
+    - numeric-gviz
+    - perf
+    - steps
+    - synchronize
+    - underlay-callback
+    - visibility
+    - zoom
+
+-   name: fractions
+    tags:
+    - statistics
+    - source
+    - error bars
+    - csv
+    - parsing
+    - summary data
+    type: Boolean
+    default: false
+    desc: When set, attempt to parse each cell in the CSV file as "a/b", where a and
+        b are integers. The ratio will be plotted. This allows computation of Wilson
+        confidence intervals (see below).
+    examples:
+    - fractions
+    - linear-regression-fractions
+
+-   name: delimiter
+    tags:
+    - source
+    - csv
+    type: String
+    default: ','
+    desc: The delimiter to look for when separating fields of a CSV file. Setting
+        this to a tab is not usually necessary, since tab-delimited data is auto-detected.
+
+-   name: xValueParser
+    tags:
+    - source
+    - csv
+    - x-axis
+    type: function(str) -> number
+    default: null
+    desc: "A function which parses x-values (i.e. the dependent series). Must return
+        a number, even when the values are dates. In this case, millis since epoch
+        are used. This is used primarily for parsing CSV data. \n\n * Dygraphs is 
+        slightly more accepting in the dates which it will parse."
+
+-   name: drawXGrid
+    tags:
+    - grid
+    - x-axis
+    - standard
+    type: Boolean
+    default: true
+    desc: Whether to display vertical gridlines under the chart.
+    examples:
+    - demo
+    - unboxed-spark
+
+-   name: drawYGrid
+    tags:
+    - grid
+    - y-axis
+    - standard
+    type: Boolean
+    default: true
+    desc: Whether to display horizontal gridlines under the chart.
+    examples:
+    - drawing
+    - unboxed-spark
+
+-   name: gridLineColor
+    tags:
+    - grid
+    - color
+    - lines
+    - graph
+    type: String
+    default: rgb(128,128,128)
+    desc: The color of the gridlines. This can be of the form "#AABBCC" or "rgb(255,100,200)"
+        or "yellow".
+    examples:
+    - drawing
+    - grid_dot
+
+-   name: gridLineWidth
+    tags:
+    - grid
+    - stroke
+    - graph
+    type: Float
+    default: 0.3
+    desc: Thickness (in pixels) of the gridlines drawn under the chart. The vertical/horizontal
+        gridlines can be turned off entirely by using the drawXGrid and drawYGrid
+        options.
+
+-   name: showRangeSelector
+    tags:
+    - range
+    - interactivity
+    - graph
+    type: Boolean
+    default: false
+    desc: Show the range selector widget. This option can only be specified at Dygraph
+        creation time.
+    examples:
+    - range-selector
+
+-   name: rangeSelectorHeight
+    tags:
+    - range
+    - interactivity
+    - graph
+    type: Integer
+    default: 40
+    desc: Height, in pixels, of the range selector widget. This option can only be
+        specified at Dygraph creation time.
+    examples:
+    - range-selector
+
+-   name: rangeSelectorPlotFillColor
+    tags:
+    - range
+    - interactivity
+    - color
+    - graph
+    type: String
+    default: '#A7B1C4'
+    desc: The range selector mini plot fill color. This can be of the form "#AABBCC"
+        or "rgb(255,100,200)" or "yellow". You can also specify null or "" to turn
+        off fill.
+    examples:
+    - range-selector
+
+-   name: rangeSelectorPlotStrokeColor
+    tags:
+    - range
+    - interactivity
+    - color
+    - graph
+    type: String
+    default: '#808FAB'
+    desc: The range selector mini plot stroke color. This can be of the form "#AABBCC"
+        or "rgb(255,100,200)" or "yellow". You can also specify null or "" to turn
+        off stroke.
+    examples:
+    - range-selector
+
+-   name: panEdgeFraction
+    tags:
+    - interactivity
+    - axes
+    - pan
+    - graph
+    type: Float
+    default: null
+    desc: A value representing the farthest a graph may be panned, in percent of the
+        display. For example, a value of 0.1 means that the graph can only be panned
+        10% pased the edges of the displayed values. null means no bounds.
+    examples:
+    - zoom
+
+-   name: displayAnnotations
+    tags:
+    - annotations
+    - display
+    - data
+    type: Boolean
+    default: false
+    desc: Only applies when Dygraphs is used as a GViz chart. Causes string columns
+        following a data series to be interpreted as annotations on points in that
+        series. This is the same format used by Google's AnnotatedTimeLine chart.
+    examples:
+    - annotation-gviz
+
+-   name: annotationClickHandler
+    tags:
+    - annotations
+    - callback
+    type: function(annotation, point, dygraph, event)
+    default: null
+    desc: If provided, this function is called whenever the user clicks on an annotation.
+    examples:
+    - annotation
+
+-   name: annotationDblClickHandler
+    tags:
+    - annotations
+    - callback
+    type: function(annotation, point, dygraph, event)
+    default: null
+    desc: If provided, this function is called whenever the user double-clicks on
+        an annotation.
+    examples:
+    - annotation
+
+-   name: annotationMouseOutHandler
+    tags:
+    - annotations
+    - callback
+    type: function(annotation, point, dygraph, event)
+    default: null
+    desc: If provided, this function is called whenever the user mouses out of an
+        annotation.
+    examples:
+    - annotation
+
+-   name: annotationMouseOverHandler
+    tags:
+    - annotations
+    - callback
+    type: function(annotation, point, dygraph, event)
+    default: null
+    desc: If provided, this function is called whenever the user mouses over an annotation.
+    examples:
+    - annotation
+
+-   name: timingName
+    tags:
+    - debugging
+    type: String
+    default: null
+    desc: Set this option to log timing information. The value of the option will
+        be logged along with the timing, so that you can distinguish multiple dygraphs
+        on the same page.
+    examples:
+    - dygraph-many-points-benchmark
+
+-   name: clickCallback
+    tags:
+    - callback
+    type: function(e, x, points)
+    default: null
+    desc: "A function to call when the canvas is clicked. The function should take\
+        \ three arguments, the event object for the click, the x-value that was clicked\
+        \ (for dates this is millis since epoch), and the closest points along that\
+        \ date. The points have these properties:\n * xval/yval: The data coordinates\
+        \ of the point (with dates/times as millis since epoch) \n * canvasx/canvasy:\
+        \ The canvas coordinates at which the point is drawn. \n name: The name of\
+        \ the data series to which the point belongs"
+    examples:
+    - callback
+
+-   name: drawCallback
+    tags:
+    - callback
+    type: function(dygraph, is_initial)
+    default: null
+    desc: When set, this callback gets called every time the dygraph is drawn. This
+        includes the initial draw, after zooming and repeatedly while panning. The
+        first parameter is the dygraph being drawn. The second is a boolean value
+        indicating whether this is the initial draw.
+    examples:
+    - linear-regression-addseries
+    - annotation
+    - callback
+    - is-zoomed
+    - is-zoomed-ignore-programmatic-zoom
+    - synchronize
+    - zoom
+
+-   name: highlightCallback
+    tags:
+    - callback
+    type: function(event, x, points,row)
+    default: null
+    desc: 'When set, this callback gets called every time a new point is highlighted.
+        The parameters are the JavaScript mousemove event, the x-coordinate of the
+        highlighted points and an array of highlighted points: [ {name: ''series'',
+        yval: y-value}, ... ]'
+    examples:
+    - callback
+    - crosshair
+
+-   name: underlayCallback
+    tags:
+    - callback
+    type: function(canvas, area, dygraph)
+    default: null
+    desc: When set, this callback gets called before the chart is drawn. It details
+        on how to use this.
+    examples:
+    - highlighted-region
+    - interaction
+    - linear-regression-fractions
+    - linear-regression
+    - underlay-callback
+
+-   name: unhighlightCallback
+    tags:
+    - callback
+    type: function(event)
+    default: null
+    desc: When set, this callback gets called every time the user stops highlighting
+        any point by mousing out of the graph.  The parameter is the mouseout event.
+    examples:
+    - callback
+    - crosshair
+
+-   name: zoomCallback
+    tags:
+    - callback
+    - interactivity
+    - zoom
+    type: function(minDate, maxDate, yRanges)
+    default: null
+    desc: A function to call when the zoom window is changed (either by zooming in
+        or out). minDate and maxDate are milliseconds since epoch. yRanges is an array
+        of [bottom, top] pairs, one for each y-axis.
+    examples:
+    - callback
+    - is-zoomed-ignore-programmatic-zoom
+    - zoom
+
+-   name: pointClickCallback
+    tags:
+    - callback
+    - interactivity
+    type: function(e, point)
+    default: null
+    desc: "A function to call when a data point is clicked. The function should take
+        two arguments, the event object for the click, and the point that was clicked.
+        The 'point' argument has these properties:\n * xval/yval: The data coordinates
+        of the point (with dates/times as millis since epoch) \n * canvasx/canvasy:
+        The canvas coordinates at which the point is drawn. \n * name: The name of
+        the data series to which the point belongs."
+    examples:
+    - annotation
+    - callback
+
+-   name: pixelsPerXLabel
+    tags:
+    - deprecated
+    - labels
+    - x-axis
+    type: Integer
+    default: null
+    desc: 'Prefer axes { x: { pixelsPerLabel } }'
+
+-   name: pixelsPerYLabel
+    tags:
+    - deprecated
+    - labels
+    - y-axis
+    type: Integer
+    default: null
+    desc: 'Prefer axes: { y: { pixelsPerLabel } }'
+    examples:
+    - spacing
+
+-   name: xAxisLabelFormatter
+    tags:
+    - deprecated
+    - labels
+    - x-axis
+    type: function
+    default: null
+    desc: 'Prefer axes { x: { axisLabelFormatter } }'
+
+-   name: xValueFormatter
+    tags:
+    - deprecated
+    - x-axis
+    type: function
+    default: null
+    desc: 'Prefer axes: { x: { valueFormatter } }'
+
+-   name: yAxisLabelFormatter
+    tags:
+    - deprecated
+    - labels
+    - y-axis
+    type: function
+    default: null
+    desc: 'Prefer axes: { y: { axisLabelFormatter } }'
+
+-   name: yValueFormatter
+    tags:
+    - deprecated
+    - y-axis
+    type: function
+    default: null
+    desc: 'Prefer axes: { y: { valueFormatter } }'
+    examples:
+    - labelsKMB
+    - multi-scale
+
+
+-   name: width
+    ignore: true
+    tags:
+    - display
+    - graph
+    type: Integer
+    default: 480
+    desc: Width, in pixels, of the chart. If the container div has been explicitly
+        sized, this will be ignored.
+
+-   name: height
+    ignore: true
+    tags:
+    - display
+    - graph
+    type: Integer
+    default: 320
+    desc: Height, in pixels, of the chart. If the container div has been explicitly
+        sized, this will be ignored.
+
+-   name: file
+    ignore: true
+    tags:
+    - source
+    - data
+    type: String
+    default: null
+    desc: Sets the data being displayed in the chart. This can only be set when calling
+        updateOptions; it cannot be set from the constructor. For a full description
+        of valid data formats, see the Data Formats page. String can be a URL of CSV
+        or CSV, GViz DataTable or 2D Array.
