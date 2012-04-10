@@ -1,59 +1,18 @@
-- var id = model.id || model.cid
+include browser-helpers
 - var graph_id = view.id
-section.graph(id=graph_id)
-    form.details.form-horizontal
+section.graph.graph-display(id=view.id)
         
-        .name-row.row-fluid.control-group
-            //- label.name.control-label(for="#{id}_name"): h3 Graph Name
-            input.span6.name(type='text', id="#{id}_name", name="name", placeholder='Graph Name', value=name)
+        .graph-name-row.page-header.row-fluid
+            h1.graph-name #{name}
         
-        .row-fluid
+        .graph-viewport-row.row-fluid
             .viewport
-            .graph-label
+            .graph-legend
         
-        .row-fluid
-            .graph-settings.tabbable
-                //- nav.navbar: div.navbar-inner: div.container
-                nav
-                    ul.nav.subnav.nav-pills
-                        li:         h3 Graph
-                        li.active:  a(href="#graph-#{graph_id}-info", data-toggle="tab") Info
-                        li:         a(href="#graph-#{graph_id}-data", data-toggle="tab") Data
-                        li: a.graph-options-tab(href="#graph-#{graph_id}-options", data-toggle="tab") Options
-                        li.graph-controls
-                            input.redraw-button.btn(type="button", value="Redraw")
-                            input.load-button.btn(type="button", value="Load")
-                            input.save-button.btn-success(type="button", value="Save")
-                
-                .tab-content
-                    .graph-info-pane.tab-pane.active(id="graph-#{graph_id}-info")
-                        .row-fluid
-                            .half.control-group
-                                .control-group
-                                    label.slug.control-label(for='slug') Slug
-                                    .controls
-                                        input.span3.slug(type='text', id='slug', name='slug', placeholder='graph_slug', value=slug)
-                                        p.help-block The slug uniquely identifies this graph and will be displayed in the URL.
-                                .control-group
-                                    label.width.control-label(for='width') Size
-                                    .controls
-                                        input.span1.width(type='text', id='width', name='width', value=width)
-                                        |  &times; 
-                                        input.span1.height(type='text', id='height', name='height', value=height)
-                                        p.help-block Choosing 'auto' will size the graph to the viewport bounds.
-                            .half.control-group
-                                label.desc.control-label(for='desc') Description
-                                .controls
-                                    //- textarea.span3.desc(id='desc', name='desc', placeholder='Graph description.') #{desc}
-                                    <textarea class="span3 desc" id="desc" name="desc" placeholder="Graph description.">#{desc}</textarea>
-                                    p.help-block A description of the graph.
-                    
-                    .graph-data-pane.tab-pane(id="graph-#{graph_id}-data")
-                        .row-fluid
-                            label.dataset.control-label(for='dataset') Data Set
-                            .controls
-                                input.span3.dataset(type='text', id='dataset', name='dataset', placeholder='URL to dataset file', value=dataset)
-                                p.help-block This dataset filename will soon be replaced by a friendly UI.
-                    
-                    .graph-options-pane.tab-pane(id="graph-#{graph_id}-options")
-
+        .graph-details-row.row-fluid
+            .graph-desc
+                != jade.filters.markdown(desc)
+            
+            //- 
+                .graph-notes.span6
+                    != jade.filters.markdown(notes)

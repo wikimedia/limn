@@ -1,0 +1,73 @@
+Seq      = require 'seq'
+Backbone = require 'backbone'
+
+{ _, op,
+} = require 'kraken/util'
+{ BaseView, BaseModel, BaseList,
+} = require 'kraken/base'
+{ ChartType, DygraphsChartType,
+} = require 'kraken/chart'
+{ Graph, GraphList, GraphDisplayView,
+} = require 'kraken/graph'
+
+
+root = this
+CHART_OPTIONS_SPEC    = []
+CHART_DEFAULT_OPTIONS = {}
+
+
+# Create the Graph Scaffold
+main = ->
+    # Set up Dygraph chart type spec
+    # TODO: load this on-demand
+    dyglib = new DygraphsChartType CHART_OPTIONS_SPEC
+    
+    # Bind to URL changes
+    History.Adapter.bind window, 'statechange', ->
+        console.log 'StateChange!\n\n', String(root.location), '\n\n'
+    
+    
+    
+    # Process URL
+    loc = String root.location
+    data = {}
+    
+    # If we got querystring args, apply them to the graph
+    if loc.split '?' .1
+        data = _.uncollapseObject _.fromKV that.replace('#', '%23')
+        data.parents = JSON.parse that if data.parents
+        data.options = _.synthesize do
+            data.options or {}
+            (v, k) -> [ k, dyglib.parseOption(k,v) ]
+    
+    # Extract id from URL
+    if match = /\/graphs\/([^\/?]+)/i.exec loc
+        data.id = data.slug = match[1]
+    
+    # _.dump _.clone(data.options), 'data.options'
+    
+    # Instantiate model & view
+    graph = root.graph = new Graph data, {+parse}
+    view  = root.view  = new GraphDisplayView do
+        graph_spec : root.CHART_OPTIONS_SPEC # FIXME: necessary?
+        model      : graph
+    
+    $ '#content .inner' .append view.el
+
+
+
+# Load data files
+Seq([   <[ CHART_OPTIONS_SPEC /schema/dygraph.json ]>
+])
+.parEach_ (next, [key, url]) ->
+    jQuery.ajax do
+        url : url,
+        dataType : 'json'
+        success : (res) ->
+            root[key] = res
+            next.ok()
+        error : (err) -> console.error err
+.seq ->
+    console.log 'All data loaded!'
+    jQuery main
+

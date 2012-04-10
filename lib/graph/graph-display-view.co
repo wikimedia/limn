@@ -1,33 +1,268 @@
-root = do -> this
+moment = require 'moment'
 
-_ = require 'kraken/util/underscore'
+{ _, op,
+} = require 'kraken/util'
 { BaseView,
 } = require 'kraken/base'
-{ ChartType, DEBOUNCE_RENDER,
-} = require 'kraken/chart'
 { Graph,
 } = require 'kraken/graph/graph-model'
 
+root = do -> this
+DEBOUNCE_RENDER = 100ms
 
 
+
+/**
+ * @class View for a graph visualization encapsulating.
+ */
 GraphDisplayView = exports.GraphDisplayView = BaseView.extend do # {{{
-    ctorName  : 'GraphDisplayView'
+    FILTER_CHART_OPTIONS : <[ 
+        file labels visibility colors dateWindow ticker timingName xValueParser
+        axisLabelFormatter xAxisLabelFormatter yAxisLabelFormatter
+        valueFormatter xValueFormatter yValueFormatter
+    ]>
+    __bind__  : <[
+        render stopAndRender resizeViewport
+        numberFormatter numberFormatterHTML
+        onReady onSync onModelChange 
+    ]>
+    __debounce__: <[ render ]>
+    
     tagName   : 'section'
-    className : 'graph'
+    className : 'graph graph-display'
     template  : require 'kraken/template/graph-display'
     
-    # events :
-    #     'blur .value'   : 'update'
-    #     'submit .value' : 'update'
+    # events:
+    #     'click    .redraw-button'                  : 'stopAndRender'
+    #     'click    .load-button'                    : 'load'
+    
+    data  : {}
+    ready : false
     
     
     constructor: function GraphDisplayView
         BaseView ...
     
-    initialize: ->
+    initialize : (o={}) ->
+        @data = {}
         @model or= new Graph
+        @id = _.domize 'graph', (@model.id or @model.get('slug') or @model.cid)
         BaseView::initialize ...
+        # console.log "#this.initialize!"
+        
+        for name of @__debounce__
+            @[name] = _.debounce @[name], DEBOUNCE_RENDER
+        
+        @viewport = @$el.find '.viewport'
+        
+        ### Model Events
+        @model
+            .on 'ready',            @onReady, this
+            .on 'sync',             @onSync,  this
+            .on 'destroy',          @remove,  this
+            .on 'change',           @render,  this
+            .on 'change:dataset',   @onModelChange
+            .on 'change:options',   @onModelChange
+            .on 'error', ~>
+                console.error "#this.error!", arguments
+                # TODO: UI alert
+        
+        @chartOptions @model.getOptions(), {+silent}
+        
+        ### Chart Viewport
+        @resizeViewport()
+        
+        # Resize chart on window resize
+        # Note: can't debounce the method itself, as the debounce wrapper returns undefined
+        $ root .on 'resize', _.debounce @resizeViewport, DEBOUNCE_RENDER
     
     
-    toString: -> "#{@ctorName}(#{@model})"
+    
+    
+    load: ->
+        console.log "#this.load!"
+        @model.fetch()
+        false
+    
+    change: ->
+        @model.change()
+        this
+    
+    chartOptions: (values, opts) ->
+        # Handle @chartOptions(k, v, opts)
+        if arguments.length > 1 and typeof values is 'string'
+            [k, v, opts] = arguments
+            values = { "#k": v }
+        
+        options = @model.getOptions {-keepDefaults, +keepUnchanged}
+        for k of @FILTER_CHART_OPTIONS
+            # console.log "filter #k?", not options[k]
+            if k in options and not options[k]
+                delete options[k]
+        options
+    
+    
+    toTemplateLocals: ->
+        attrs = _.clone @model.attributes
+        delete attrs.options
+        # delete attrs.dataset
+        attrs.data = @data
+        { $, _, op, @model, view:this } import attrs
+    
+    
+    /**
+     * Resizes chart according to the model's width and height.
+     * @return { width, height }
+     */
+    resizeViewport: ->
+        modelW = width  = @model.get 'width'
+        modelH = height = @model.get 'height'
+        return { width, height } unless @ready
+        
+        # Remove old style, as it confuses dygraph after options update
+        @viewport.attr 'style', ''
+        label = @$el.find '.graph-legend'
+        
+        if width is 'auto'
+            vpWidth = @viewport.innerWidth()
+            labelW = label.outerWidth()
+            width = vpWidth - labelW - 10 - (vpWidth - label.position().left - labelW)
+        width ?= modelW
+        if height is 'auto'
+            height = @viewport.innerHeight()
+        height ?= modelH
+        
+        size = { width, height }
+        @viewport.css size
+        # console.log 'resizeViewport!', JSON.stringify(size), @viewport
+        # @chart.resize size if forceRedraw
+        size
+    
+    
+    # Redraw chart inside viewport.
+    renderChart: ->
+        data = @model.get 'dataset' #.getData()
+        size = @resizeViewport()
+        
+        # XXX: use @model.changedAttributes() to calculate what to update
+        options = @chartOptions() #import size
+        options import do
+            labelsDiv          : @$el.find '.graph-legend' .0
+            valueFormatter     : @numberFormatterHTML
+            axes:
+                x:
+                    axisLabelFormatter : @axisDateFormatter
+                    valueFormatter     : @dateFormatter
+                y:
+                    axisLabelFormatter : @axisFormatter @numberFormatter
+                    valueFormatter     : @numberFormatterHTML
+        
+        # console.log "#this.render!", dataset
+        _.dump options, 'options'
+        
+        # Always rerender the chart to sidestep the case where we need to push defaults into
+        # dygraphs to reset the current option state.
+        @chart?.destroy()
+        @chart = new Dygraph do
+            @viewport.0
+            data
+            options
+        
+        # unless @chart
+        #     @chart = new Dygraph do
+        #         @viewport.0
+        #         data
+        #         options
+        # else
+        #     @chart.updateOptions options
+        #     @chart.resize size
+        
+        this
+    
+    update: ->
+        locals = @toTemplateLocals()
+        @$el.find '.graph-name' .text(locals.name or '')
+        @$el.find '.graph-desc' .html jade.filters.markdown locals.desc or ''
+        this
+    
+    render: ->
+        return this unless @ready
+        root.title = "#{@get 'name'} | GraphKit"
+        @update()
+        _.invoke @subviews, 'render'
+        @renderChart()
+        @trigger 'render', this
+        false
+    
+    
+    
+    
+    ### Formatters {{{
+    
+    axisFormatter: (fmttr) ->
+        (n, granularity, opts, g) -> fmttr n, opts, g
+    
+    axisDateFormatter: (n, granularity, opts, g) ->
+        moment(n).format 'MM/YYYY'
+    
+    dateFormatter: (n, opts, g) ->
+        moment(n).format 'DD MMM YYYY'
+    
+    _numberFormatter: (n, digits=2) ->
+        for [suffix, d] of [['B', 1000000000], ['M', 1000000], ['K', 1000], ['', NaN]]
+            if n >= d
+                n = n / d
+                break
+        s = n.toFixed(digits)
+        parts = s.split '.'
+        whole = _.rchop parts[0], 3 .join ','
+        fraction = '.' + parts.slice(1).join '.'
+        { n, digits, whole, fraction, suffix }
+    
+    numberFormatter: (n, opts, g) ->
+        digits = opts('digitsAfterDecimal') ? 2
+        { whole, fraction, suffix } = @_numberFormatter n, digits
+        "#whole#fraction#suffix"
+    
+    numberFormatterHTML: (n, opts, g) ->
+        digits = opts('digitsAfterDecimal') ? 2
+        { whole, fraction, suffix } = @_numberFormatter n, digits
+        """
+        <span class="value"><span class="whole">#whole</span><span class="fraction">#fraction</span><span class="suffix">#suffix</span></span>
+        """
+    
+    ### }}}
+    ### Event Handlers {{{
+    
+    
+    onReady: ->
+        return if @ready
+        $.getJSON '/datasources/all', (@data) ~>
+            console.log "(#this via GraphDisplayView).ready!"
+            @ready = true
+            @onSync()
+    
+    onSync: ->
+        return unless @ready
+        console.info "#this.sync() --> success!"
+        # TODO: UI alert
+        # @change()
+        # @model.change()
+        @render()
+    
+    onModelChange: ->
+        changes = @model.changedAttributes()
+        options = @model.getOptions()
+        # console.log "Graph.changed( options ) ->\n\tchanges: #{JSON.stringify changes}\n\toptions: #{JSON.stringify options}" #"\n\t^opts: #{JSON.stringify _.intersection _.keys(changes), _.keys(options)}"
+        @chart?.updateOptions file:that if changes?.dataset
+    
+    
+    # Needed because (sigh) _.debounce returns undefined
+    stopAndRender: ->
+        @render ...
+        false
+    
+    
+    # }}}
 # }}}
+
