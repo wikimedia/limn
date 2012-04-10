@@ -262,7 +262,7 @@ GraphEditView = exports.GraphEditView = BaseView.extend do # {{{
     updateURL: ->
         data  = @toJSON()
         title = "#{@model.get('name') or 'New Graph'} | Edit Graph | GraphKit"
-        url   = @toURL()
+        url   = @toURL('edit')
         # console.log 'History.pushState', JSON.stringify(data), title, url
         History.pushState data, title, url
     
