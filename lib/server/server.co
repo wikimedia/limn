@@ -18,11 +18,11 @@ express  = require 'express'
 Resource = require 'express-resource'
 compiler = require 'connect-compiler-extras'
 
+op       = require '../util/op'
+
+
 
 ### Config
-
-# TODO: read KRAKEN_PORT from ENV
-PORT = 8081
 
 CWD    = process.cwd()
 WWW    = "#CWD/www"
@@ -31,18 +31,21 @@ STATIC = "#CWD/static"
 DIST   = "#CWD/dist"
 DATA   = "#CWD/data"
 
+PORT = 8081
+PORT = parseInt(that, 10) if process.env.KRAKEN_PORT
+
 NODE_ENV  = process.env.NODE_ENV or 'dev'
-LOG_LEVEL = if _.startsWith NODE_ENV, 'dev' then 'INFO' else 'WARN'
-# LOG_LEVEL = 'DEBUG'
 
+LOG_LEVEL = process.env.KRAKEN_LOG_LEVEL
+LOG_LEVEL or= if _.startsWith NODE_ENV, 'dev' then 'INFO' else 'WARN'
+LOG_LEVEL .= toUpperCase()
 
-VERSION = 'dev'
+USE_LOGGER = op.parseBool(process.env.KRAKEN_USE_LOGGER) or LOG_LEVEL is 'DEBUG' or NODE_ENV is 'prod'
+
+VERSION = process.env.KRAKEN_VERSION or 'dev'
 err, stdout, stderr <- exec 'git rev-parse --short HEAD', {cwd:CWD, env:process.env}
 throw err if err
 VERSION = stdout.trim!
-
-# err <- fs.writeFile 'lib/version.js', "module.exports = exports = '#{VERSION}';\n", 'utf8'
-# try VERSION = require '../version' catch e
 
 
 ### Setup
@@ -50,8 +53,8 @@ VERSION = stdout.trim!
 app = express.createServer()
 
 app.start = ->
-    console.log "starting Kraken dev server (port=#PORT, env=#NODE_ENV, version=#VERSION)"
-    console.log "========================================================================"
+    console.log s = "Kraken Server (port=#PORT, env=#NODE_ENV, version=#VERSION)"
+    console.log '=' * s.length
     app.listen PORT
     app
 
@@ -67,8 +70,7 @@ app.configure ->
         version : VERSION
     } import require './view-helpers'
     
-    app.use express.logger()   if LOG_LEVEL is 'DEBUG' or NODE_ENV is 'prod'
-    # app.use express.logger()
+    app.use express.logger() if USE_LOGGER
     
     # Parse URL, fiddle
     app.use require('./reqinfo')({})
