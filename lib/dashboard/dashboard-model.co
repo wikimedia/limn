@@ -1,0 +1,29 @@
+{ _, op,
+} = require 'kraken/util'
+{ BaseView,
+} = require 'kraken/base'
+{ Graph,
+} = require 'kraken/graph/graph-model'
+
+
+/**
+ * @class
+ */
+Dashboard = exports.Dashboard = BaseModel.extend do # {{{
+    urlRoot  : '/dashboards'
+    graphs : []
+    
+    
+    constructor: function Dashboard
+        BaseModel ...
+    
+    initialize: ->
+        @graphs = []
+        BaseModel::initialize ...
+        
+    
+    defaults: ->
+        {}
+    
+    
+# }}}

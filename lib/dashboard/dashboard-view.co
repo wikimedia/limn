@@ -1,0 +1,84 @@
+Seq = require 'seq'
+
+{ _, op,
+} = require 'kraken/util'
+{ BaseView,
+} = require 'kraken/base'
+{ Graph, GraphList, GraphDisplayView,
+} = require 'kraken/graph'
+{ Dashboard,
+} = require 'kraken/dashboard/dashboard-model'
+
+
+/**
+ * @class
+ */
+DashboardView = exports.DashboardView = BaseView.extend do # {{{
+    __bind__       : <[  ]>
+    tagName        : 'section'
+    className      : 'dashboard'
+    template       : require 'kraken/template/dashboard'
+    
+    graph_ids : <[
+        unique_visitors
+        pageviews
+        pageviews_mobile
+        reach
+        commons
+        articles
+        articles_per_day
+        edits
+        new_editors
+        active_editors
+        active_editors_target
+        very_active_editors
+    ]>
+    subviews : []
+    graphs   : null
+    ready    : false
+    
+    
+    constructor: function DashboardView
+        @subviews = []
+        @graphs   = new GraphList
+        Backbone.View ...
+    
+    initialize: ->
+        @model or= new Dashboard
+        BaseView::initialize ...
+        @graphs.on 'add', @attachGraphs, this
+        @load()
+    
+    
+    load: ->
+        self = this
+        Seq(@graph_ids)
+            .parMap_ (next_phase, id) ->
+                Seq()
+                    .seq Graph.lookup, id, Seq
+                    .seq (graph) ->
+                        view = new GraphDisplayView {model:graph}
+                        view.on 'ready', @ok
+                        self.graphs.add graph
+                    .seq next_phase.ok
+            .seq_ (next) ~>
+                console.log "#this.ready!"
+                @ready = true
+                @attachGraphs()
+                @trigger 'ready', this
+    
+    attachGraphs: ->
+        graphs_el = @$el.find '#graphs'
+        for id of @graph_ids
+            break unless graph = @graphs.get id
+            continue if graph.view.isAttached
+            graphs_el.append graph.view.el
+            @subviews.push graph.view
+            graph.view.isAttached = true
+            graph.on 'ready', ->
+                graph.off 'ready', arguments.callee
+                graph.view.renderChart()
+        this
+    
+# }}}
+

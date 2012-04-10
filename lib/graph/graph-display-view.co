@@ -53,7 +53,6 @@ GraphDisplayView = exports.GraphDisplayView = BaseView.extend do # {{{
         for name of @__debounce__
             @[name] = _.debounce @[name], DEBOUNCE_RENDER
         
-        @viewport = @$el.find '.viewport'
         
         ### Model Events
         @model
@@ -75,6 +74,8 @@ GraphDisplayView = exports.GraphDisplayView = BaseView.extend do # {{{
         # Resize chart on window resize
         # Note: can't debounce the method itself, as the debounce wrapper returns undefined
         $ root .on 'resize', _.debounce @resizeViewport, DEBOUNCE_RENDER
+        
+        _.delay (~> @onReady()), 100 if @model.ready
     
     
     
@@ -120,21 +121,22 @@ GraphDisplayView = exports.GraphDisplayView = BaseView.extend do # {{{
         return { width, height } unless @ready
         
         # Remove old style, as it confuses dygraph after options update
-        @viewport.attr 'style', ''
+        viewport = @$el.find '.viewport'
+        viewport.attr 'style', ''
         label = @$el.find '.graph-legend'
         
         if width is 'auto'
-            vpWidth = @viewport.innerWidth()
+            vpWidth = viewport.innerWidth()
             labelW = label.outerWidth()
             width = vpWidth - labelW - 10 - (vpWidth - label.position().left - labelW)
         width ?= modelW
         if height is 'auto'
-            height = @viewport.innerHeight()
+            height = viewport.innerHeight()
         height ?= modelH
         
         size = { width, height }
-        @viewport.css size
-        # console.log 'resizeViewport!', JSON.stringify(size), @viewport
+        viewport.css size
+        # console.log 'resizeViewport!', JSON.stringify(size), viewport
         # @chart.resize size if forceRedraw
         size
     
@@ -143,6 +145,7 @@ GraphDisplayView = exports.GraphDisplayView = BaseView.extend do # {{{
     renderChart: ->
         data = @model.get 'dataset' #.getData()
         size = @resizeViewport()
+        viewport = @$el.find '.viewport'
         
         # XXX: use @model.changedAttributes() to calculate what to update
         options = @chartOptions() #import size
@@ -164,13 +167,13 @@ GraphDisplayView = exports.GraphDisplayView = BaseView.extend do # {{{
         # dygraphs to reset the current option state.
         @chart?.destroy()
         @chart = new Dygraph do
-            @viewport.0
+            viewport.0
             data
             options
         
         # unless @chart
         #     @chart = new Dygraph do
-        #         @viewport.0
+        #         viewport.0
         #         data
         #         options
         # else

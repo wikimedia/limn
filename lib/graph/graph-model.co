@@ -323,4 +323,6 @@ Graph import do
     
 
 
+_.bindAll Graph, 'register', 'get', 'lookup'
+
 /* }}} */

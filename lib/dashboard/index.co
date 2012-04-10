@@ -1,0 +1,3 @@
+models = require 'kraken/dashboard/dashboard-model'
+views  = require 'kraken/dashboard/dashboard-view'
+exports import models import views

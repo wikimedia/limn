@@ -1,18 +1,18 @@
 include browser-helpers
 - var graph_id = view.id
 section.graph.graph-display(id=view.id)
+    
+    .graph-name-row.page-header.row-fluid
+        h2.graph-name #{name}
+    
+    .graph-viewport-row.row-fluid
+        .viewport
+        .graph-legend
+    
+    .graph-details-row.row-fluid
+        .graph-desc
+            != jade.filters.markdown(desc)
         
-        .graph-name-row.page-header.row-fluid
-            h1.graph-name #{name}
-        
-        .graph-viewport-row.row-fluid
-            .viewport
-            .graph-legend
-        
-        .graph-details-row.row-fluid
-            .graph-desc
-                != jade.filters.markdown(desc)
-            
-            //- 
-                .graph-notes.span6
-                    != jade.filters.markdown(notes)
+        //- 
+            .graph-notes.span6
+                != jade.filters.markdown(notes)

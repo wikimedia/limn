@@ -178,11 +178,23 @@ BaseView = exports.BaseView = Backbone.View.extend do # {{{
     initialize: ->
         _.bindAll this, ...@__bind__ if @__bind__.length
         
-        @model.view = this
-        @$el.data { @model, view:this }
+        @setModel @model
         @build()
-        @model.on 'change',  @render, this
-        @model.on 'destroy', @remove, this
+    
+    setModel: (model) ->
+        if @model
+            @model.off 'change',  @render, this
+            @model.off 'destroy', @remove, this
+            delete @model.view
+            data = @$el.data()
+            delete data.model
+            delete data.view
+        if @model = model
+            @model.view = this
+            @$el.data { @model, view:this }
+            @model.on 'change',  @render, this
+            @model.on 'destroy', @remove, this
+        @model
     
     toTemplateLocals: ->
         json = {value:v} = @model.toJSON()

@@ -1,1 +1,11 @@
-include graph/edit
+extends layout
+
+block title
+    title Wikimedia Report Card - February 2012
+
+append styles
+    mixin css('graph-display.css')
+    mixin css('dashboard.css')
+
+block main-scripts
+    script(src="/js/kraken/main-dashboard.js?"+version)

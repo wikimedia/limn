@@ -69,8 +69,9 @@ dev:
                 - datasource.jade
                 - datasource-ui.jade
                 - data.jade
-                - graph-edit.jade
                 - graph-display.jade
+                - graph-edit.jade
+                - dashboard.jade
             - chart:
                 - chart-type
                 - dygraphs
@@ -92,6 +93,10 @@ dev:
                 - graph-model
                 - graph-display-view
                 - graph-edit-view
+                - index
+            - dashboard:
+                - dashboard-model
+                - dashboard-view
                 - index
 
 # -   suffix: .js
