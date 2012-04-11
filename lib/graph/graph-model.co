@@ -276,10 +276,10 @@ Graph = exports.Graph = BaseModel.extend do # {{{
     /**
      * @returns {String} URL identifying this model.
      */
-    toURL: ->
-        slug = @get('slug') or ''
-        slug = "/#slug" if slug
-        "#{@urlRoot}#slug?#{@toKV { keepSlug: !!slug }}"
+    toURL: (action) ->
+        slug = @get 'slug'
+        path = _.compact [ @urlRoot, slug, action ] .join '/'
+        "#path?#{@toKV { keepSlug: !!slug }}"
     
 # }}}
 

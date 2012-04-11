@@ -12,6 +12,22 @@ Controller = require '../controller'
  * @class Resource controller for graph requests.
  */
 class GraphController extends Controller
+    PROTECTED_GRAPH_IDS : <[
+        unique_visitors
+        pageviews
+        pageviews_mobile
+        reach
+        commons
+        articles
+        articles_per_day
+        edits
+        new_editors
+        active_editors
+        active_editors_target
+        very_active_editors
+    ]>
+    PROTECT_GRAPHS : true
+    
     name    : 'graphs'
     dataDir : 'data/graphs'
     -> super ...
@@ -63,25 +79,30 @@ class GraphController extends Controller
     
     # GET /graphs/new
     new: (req, res) ->
-        ...
+        res.render 'graph/edit'
     
     # POST /graphs
     create: (req, res) ->
         return unless data = @processBody req, res
         file = @toFile data.id
         if exists file
-            return res.send { result:"error", message:"Graph already exists!" }
+            return res.send { result:"error", message:"Graph '#{data.id}' already exists!" }
         else
             fs.writeFile file, JSON.stringify(data), "utf8", @errorHandler(res, "Error writing graph!")
     
     # PUT /graphs/:graph
     update: (req, res) ->
         return unless data = @processBody req, res
+        if @PROTECT_GRAPHS and _ @PROTECTED_GRAPH_IDS .contains data.id
+            return res.send {result:"error", message:"Graph '#{data.id}' is read-only."}, 403
         fs.writeFile @toFile(data.id), JSON.stringify(data), "utf8", @errorHandler(res, "Error writing graph!")
     
     # DELETE /graphs/:graph
     destroy: (req, res) ->
-        fs.unlink @toFile(req.param.graph), @errorHandler(res, "Graph does not exist!")
+        id = req.param.graph
+        if @PROTECT_GRAPHS and _ @PROTECTED_GRAPH_IDS .contains id
+            return res.send {result:"error", message:"Graph '#{id}' is read-only."}, 403
+        fs.unlink @toFile(id), @errorHandler(res, "Graph '#{id}' does not exist!")
     
     
     ### Helpers
