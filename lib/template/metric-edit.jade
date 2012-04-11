@@ -1,14 +1,14 @@
 section.metric-edit-ui
     .inner: form.form-horizontal
         
-        .metric-header.control-group.row-fluid
-            .color-picker
+        .metric-header.control-group
+            .color-swatch(style="background-color: #{color};")
             input.metric-color(type='hidden', id="#{graph_id}_metric", name="color", value=color)
             input.metric-label(type='text', id="#{graph_id}_metric_label", name='label', placeholder='Metric Label', value=label)
         
-        .metric-datasource.row-fluid
+        .metric-datasource.control-group
         
-        .metric-actions.row-fluid
+        .metric-actions.control-group
             a.delete-button.btn.btn-danger(href="#")
                 i.icon-remove.icon-white
                 |  Delete

@@ -9,24 +9,36 @@
  */
 DataSourceUIView = exports.DataSourceUIView = BaseView.extend do # {{{
     __bind__       : <[  ]>
-    ctorName       : 'DataSourceUIView'
     tagName        : 'section'
     className      : 'datasource-ui'
     template       : require 'kraken/template/datasource-ui'
+    
+    events :
+        'click .datasource-summary': 'onHeaderClick'
+    
+    graph_id           : null
+    dataset            : null
+    datasources        : null
+    
     
     
     constructor: function DataSourceUIView
         BaseView ...
     
     initialize: ->
-        @graph_id = @options.graph_id
+        this import @options.{graph_id, dataset, datasources}
         BaseView::initialize ...
     
     toTemplateLocals: ->
         locals = @model.toJSON()
-        locals import
-            graph_id         : @graph_id
-            source_summary   : 'Source Summary'
-            metric_summary   : 'Metric Summary'
-            timespan_summary : 'Timespan Summary'
+        locals import {
+            @graph_id, @dataset, @datasources,
+            source_summary   : '<Select Source>'
+            metric_summary   : '<Select Metric>'
+            timespan_summary : '<Select Timespan>'
+        }
+    
+    onHeaderClick: ->
+        @$el.toggleClass 'in'
+    
 # }}}

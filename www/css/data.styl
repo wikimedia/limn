@@ -5,6 +5,10 @@
 
 
 section.graph section.data-ui
+    height 100%
+    min-height 300px
+    clearfix()
+    
     h4
         display none
     
@@ -13,7 +17,10 @@ section.graph section.data-ui
     
     /* * * *  DataSet UI  * * * */
     section.dataset-ui
+        absolute 0 0
         width 40%
+        height 100%
+        min-height 300px
         border-right 1px solid #ccc
         
         .inner
@@ -93,13 +100,102 @@ section.graph section.data-ui
     
     /* * * *  Edit Metric UI * * * */
     section.metric-edit-ui
-        position absolute
-        top 0
-        left 40%
+        display none
+        float right
+        width 60%
+        min-height 100%
         
         .inner
             padding 1em
         
+        .metric-header
+            min-height 38px
+            font-size 18px
+            line-height 25px
+            
+            .color-swatch
+                absolute top 3px right 0
+                width 30px
+                height 30px
+                border 1px solid #333
+                border-color #ddd #333 #333 #ddd
+                border-radius 3px
+                cursor pointer
+            
+            input
+                display block
+                absolute top 0 left 0
+                right 38px
+                width auto
+                font-size 18px
+                line-height 25px
+                height 25px
+                padding 6px
         
+    
+    /* * * *  DataSource UI  * * * */
+    section.datasource-ui
+        
+        // Collapse/Expand icon
+        i
+            z-index 100
+        .expand-datasource-ui-button
+            display block
+        .collapse-datasource-ui-button
+            display none
+        &.in
+            .expand-datasource-ui-button
+                display none
+            .collapse-datasource-ui-button
+                display block
+        
+        // Summary Header
+        .datasource-summary
+            &, &:hover
+                cursor pointer
+            i
+                absolute top 50% right 14px
+                margin-top -7px
+            .breadcrumb
+                margin-bottom 0
+                font-weight bold
+            // &, .breadcrumb
+            //     color #3a87ad
+            //     background-color #d9edf7
+            //     border-color #bce8f1
+            //     background-image linear-gradient(top, #d9edf7, darken(#d9edf7, 10%))
+        
+        // Selector UI (with tabs per-source, info, etc)
+        .datasource-selector
+            .datasource-tabs
+                top -1px
+                padding 7px
+                border 1px solid #ddd
+                border-top 0
+                border-radius 3px
+            
+            h1, h2, h3, h4, h5, h6
+                margin 0 -1px 3px 0
+                padding 8px 12px
+                min-width 74px
+            
+            .datasource-sources-list
+                height 100%
+                display table-cell
+                float none
+                max-width 200px
+            
+            .datasource-sources-details
+                display table-cell
+                padding 1em
+                width auto
+            
+            
+        
+    
+    
+    .data-ui
+        clearfix()
+    
     
 

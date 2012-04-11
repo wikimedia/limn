@@ -13,13 +13,13 @@
  * @class
  */
 MetricEditView = exports.MetricEditView = BaseView.extend do # {{{
-    ctorName       : 'MetricEditView'
     tagName        : 'section'
     className      : 'metric-edit-ui'
     template       : require 'kraken/template/metric-edit'
     
     graph_id           : null
     dataset            : null
+    datasources        : null
     datasource_ui_view : null
     
     
@@ -27,16 +27,16 @@ MetricEditView = exports.MetricEditView = BaseView.extend do # {{{
         BaseView ...
     
     initialize: ->
-        this import @options.{graph_id, dataset}
+        this import @options.{graph_id, dataset, datasources}
         @model or= new Metric
         BaseView::initialize ...
-        @subviews.push @datasource_ui_view = new DataSourceUIView {@model, @graph_id}
+        @datasource_ui_view = @addSubview '.metric-datasource', new DataSourceUIView {@model, @graph_id, @dataset, @datasources}
         @$el.find '.metric-datasource' .append @datasource_ui_view.render().el
     
     
     toTemplateLocals: ->
         locals = BaseView::toTemplateLocals ...
-        locals import {@graph_id}
+        locals import { @graph_id, @dataset, @datasources, }
     
     build: ->
         BaseView::build ...

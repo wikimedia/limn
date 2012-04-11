@@ -1,23 +1,43 @@
 section.datasource-ui
     
     section.datasource-summary(data-toggle="collapse", data-target="##{graph_id} .datasource-ui .datasource-selector")
-        ul.breadcrumb
-            li #{source_summary}
-                span.divider
-            li #{metric_summary}
-                span.divider
-            li #{timespan_summary}
+        i.expand-datasource-ui-button.icon-chevron-down
+        i.collapse-datasource-ui-button.icon-chevron-up
         
-        i.icon-chevron-down.pull-right
-        i.icon-chevron-up.pull-right
+        ul.breadcrumb
+            li #{source_summary} 
+                span.divider /
+            li #{metric_summary} 
+                span.divider /
+            li #{timespan_summary}
     
-    section.datasource-selector.collapse.in
-        .tabbable.tabs-left
-            ul.datasource-sources-list.nav.nav-tabs
-                li: h4 Data Sources
-                //- li: a(href="#", data-toggle="tab", data-target="")
-            .datasource-sources-details.tab-content
-                .datasource-source.tab
-                    .datasource-source-details
-                    .datasource-source-time
-                    .datasource-source-metrics
+    section.datasource-selector.collapse
+        .datasource-tabs
+            .tabbable.tabs-left
+                ul.datasource-sources-list.nav.nav-tabs
+                    li: h6 Data Sources
+                    for ds, k in datasources
+                        - var ds_target = "#"+graph_id+" .datasource-ui .datasource-selector .datasource-source.datasource-source-"+ds.id
+                        li: a(href="#datasource-selector_datasource-source-#{ds.id}", data-toggle="tab", data-target=ds_target) #{ds.shortName}
+                
+                .datasource-sources-details.tab-content
+                    for ds, k in datasources
+                        .datasource-source.tab-pane(class="datasource-source-#{ds.id}")
+                            .datasource-source-details
+                                .source-name #{ds.name}
+                                .source-id #{ds.id}
+                                .source-url #{ds.url}
+                                .source-format #{ds.format}
+                                .source-charttype #{ds.chart.chartType}
+                            .datasource-source-time
+                                .source-time-start #{ds.timespan.start}
+                                .source-time-end #{ds.timespan.end}
+                                .source-time-step #{ds.timespan.step}
+                            ol.datasource-source-metrics
+                                for m, idx in ds.metrics.slice(1)
+                                    li.datasource-source-metric
+                                        span.source-metric-idx #{m.idx}
+                                        |  
+                                        span.source-metric-label #{m.label}
+                                        |  
+                                        span.source-metric-type #{m.type}

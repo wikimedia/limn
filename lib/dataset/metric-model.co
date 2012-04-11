@@ -8,7 +8,6 @@
  * @class
  */
 Metric = exports.Metric = BaseModel.extend do # {{{
-    ctorName : 'Metric'
     urlRoot  : '/metrics'
     
     /**
@@ -65,7 +64,6 @@ Metric = exports.Metric = BaseModel.extend do # {{{
  * @class
  */
 MetricList = exports.MetricList = BaseList.extend do # {{{
-    ctorName : 'MetricList'
     urlRoot  : '/metrics'
     model    : Metric
     

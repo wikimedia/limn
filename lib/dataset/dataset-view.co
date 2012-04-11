@@ -8,7 +8,6 @@
  * @class
  */
 DataSetView = exports.DataSetView = BaseView.extend do # {{{
-    ctorName  : 'DataSetView'
     tagName   : 'section'
     className : 'dataset-ui dataset'
     template  : require 'kraken/template/dataset'
@@ -32,6 +31,7 @@ DataSetView = exports.DataSetView = BaseView.extend do # {{{
     
     
     newMetric: ->
+        console.log "#this.newMetric!"
         # triggers 'add' on @model.metrics
         @model.newMetric()
         false
@@ -39,27 +39,33 @@ DataSetView = exports.DataSetView = BaseView.extend do # {{{
     addMetric: (metric) ->
         console.log "#this.addMetric!", metric
         if metric.view
-            _.remove @subviews, metric.view
+            @removeSubview metric.view
             delete @views_by_cid[metric.cid]
         
-        @subviews.push view = new DataSetMetricView {model:metric, @graph_id}
+        view = @addSubview new DataSetMetricView {model:metric, @graph_id}
         @views_by_cid[metric.cid] = view
         @$el.find '.metrics' .append view.render().el
         
         # @render()
+        @trigger 'add-metric', metric, view, this
         view
     
     editMetric: (metric) ->
         console.log "#this.editMetric!", metric
         if metric instanceof [jQuery.Event, Event]
             metric = $ metric.currentTarget .data 'model'
-        view = @views_by_cid[metric.cid]
+        view = @active_view = @views_by_cid[metric.cid]
         console.log '  --> metric:', metric, 'view:', view
         
-        @$el.find '.metrics' .removeClass 'metric-active'
+        @$el.find '.metrics .dataset-metric' .removeClass 'metric-active'
         view.$el.addClass 'metric-active'
         view.$el.find '.activity-arrow' .css 'font-size', 2+view.$el.height()
-        @trigger 'edit-metric', metric
+        
+        @trigger 'edit-metric', metric, view, this
+        this
+    
+    render: ->
+        this
     
 # }}}
 
@@ -69,7 +75,6 @@ DataSetView = exports.DataSetView = BaseView.extend do # {{{
  * @class
  */
 DataSetMetricView = exports.DataSetMetricView = BaseView.extend do # {{{
-    ctorName  : 'DataSetMetricView'
     tagName   : 'tr'
     className : 'dataset-metric metric'
     template  : require 'kraken/template/dataset-metric'

@@ -13,12 +13,12 @@ Seq = require 'seq'
  * @class
  */
 DataView = exports.DataView = BaseView.extend do # {{{
-    ctorName       : 'DataView'
+    __bind__       : <[ onReady ]>
     tagName        : 'section'
     className      : 'data-ui'
     template       : require 'kraken/template/data'
     
-    data : {}
+    datasources : {}
     
     
     
@@ -28,36 +28,77 @@ DataView = exports.DataView = BaseView.extend do # {{{
     initialize: ->
         @graph_id = @options.graph_id
         BaseView::initialize ...
-        
+        @on 'ready', @onReady
         @load()
-        
-        # @subviews.push @dataset_view = new DataSetView {@model, @graph_id}
-        # @$el.append @dataset_view.render().el
-        # @dataset_view.on 'edit-metric', @editMetric, this
-        # 
-        # @subviews.push @metric_edit_view  = new MetricEditView  {dataset:@model, @graph_id}
-        # @$el.append @metric_edit_view.render().hide().el
-        
-    
-    toTemplateLocals: ->
-        attrs = _.clone @model.attributes
-        { $, _, op, @model, view:this, @data, @graph_id } import attrs
     
     
     load: ->
-        $.getJSON '/datasources/all', (@data) ~>
+        $.getJSON '/datasources/all', (@datasources) ~>
+            @canonicalizeDataSources @datasources
             @ready = true
             @render()
             @trigger 'ready', this
     
+    /**
+     * Transform the `columns` field to ensure an Array of {label, type} objects.
+     */
+    canonicalizeDataSources: (datasources) ->
+        _.each datasources, (ds) ->
+            ds.shortName    or= ds.name
+            ds.title        or= ds.name
+            ds.subtitle     or= ''
+            
+            cols = ds.columns
+            if _.isArray cols
+                ds.metrics = _.map cols, (col, idx) ->
+                    if _.isArray col
+                        [label, type] = col
+                        {idx, label, type or 'int'}
+                    else
+                        col
+            else
+                ds.metrics = _.map cols.labels, (label, idx) ->
+                    {idx, label, type:cols.types[idx] or 'int'}
+        datasources
+    
+    
+    onReady: ->
+        @metric_edit_view = @addSubview new MetricEditView  {@graph_id, dataset:@model, @datasources}
+        @metric_edit_view
+            .on 'update',           @onUpdateMetric,      this
+        
+        @dataset_view = @addSubview new DataSetView {@model, @graph_id, @dataset, @datasources}
+        @dataset_view
+            .on 'add-metric',       @onMetricsChanged,  this
+            .on 'remove-metric',    @onMetricsChanged,  this
+            .on 'edit-metric',      @editMetric,        this
+        
+        @attachSubviews()
+        this
+    
+    
+    toTemplateLocals: ->
+        attrs = _.clone @model.attributes
+        { $, _, op, @model, view:this, @graph_id, @datasources, } import attrs
+    
+    # attachSubviews: ->
+    #     @$el.empty()
+    #     BaseView::attachSubviews ...
+    #     @$el.append '<div class="clearer"/>'
+    #     this
+    
     # Don't rebuild HTML, simply notify subviews
     render: ->
-        BaseView::render ...
-        
-        # _.invoke @subviews, 'render'
+        @renderSubviews()
+        @trigger 'render', this
         this
     
     editMetric: (metric) ->
         @metric_edit_view.editMetric metric
     
+    onMetricsChanged: ->
+        @$el.css 'min-height', @dataset_view.$el.height()
+    
+    onUpdateMetric: ->
+        @renderSubviews()
 # }}}

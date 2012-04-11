@@ -1,50 +1,55 @@
 - var graph_id = view.id || model.id || model.cid
 section.graph.graph-edit(id=graph_id)
-    form.details.form-horizontal
-        
-        .name-row.row-fluid.control-group
-            //- label.name.control-label(for="#{id}_name"): h3 Graph Name
-            input.span6.name(type='text', id="#{graph_id}_name", name="name", placeholder='Graph Name', value=name)
-        
-        .row-fluid
-            .viewport
-            .graph-label
-        
-        .row-fluid
-            .graph-settings.tabbable
-                //- nav.navbar: div.navbar-inner: div.container
-                nav
-                    .graph-controls.pull-right
-                        .btn-group
-                            a.redraw-button.btn(href="#")
-                                i.icon-refresh
-                                |  Redraw
-                        .btn-group
-                            a.load-button.btn(href="#")
-                                i.icon-download
-                                |  Revert
-                            a.save-button.btn(href="#")
-                                i.icon-upload
-                                |  Save
-                            a.done-button.btn-primary.btn(href="#")
-                                i.icon-ok-sign.icon-white
-                                |  Done
-                    ul.nav.subnav.nav-pills
-                        li:         h3 Graph
-                        li.active:  a(href="##{graph_id}-tab-info", data-toggle="tab") Info
-                        li:         a(href="##{graph_id}-tab-data", data-toggle="tab") Data
-                        li: a.graph-options-tab(href="##{graph_id}-tab-options", data-toggle="tab") Options
-                    
+    
+    //- Graph Name field is not part of the form due to the layout.
+    .graph-name-row.row-fluid.control-group
+        //- label.name.control-label(for="#{id}_name"): h3 Graph Name
+        input.span6.graph-name(type='text', id="#{graph_id}_name", name="name", placeholder='Graph Name', value=name)
+    
+    .graph-viewport-row.row-fluid
+        .viewport
+        .graph-label
+    
+    .graph-settings-row.row-fluid
+        .graph-settings.tabbable
+            
+            //--- Main Tabs ---//
+            nav.graph-settings-nav
+                .graph-controls.pull-right
+                    .btn-group
+                        a.redraw-button.btn(href="#")
+                            i.icon-refresh
+                            |  Redraw
+                    .btn-group
+                        a.load-button.btn(href="#")
+                            i.icon-download
+                            |  Revert
+                        a.save-button.btn(href="#")
+                            i.icon-upload
+                            |  Save
+                        a.done-button.btn-primary.btn(href="#")
+                            i.icon-ok-sign.icon-white
+                            |  Done
+                ul.nav.subnav.nav-pills
+                    li
+                        .graph-spinner
+                        h3 Graph
+                    li.active:  a(href="##{graph_id}-tab-info", data-toggle="tab") Info
+                    li:         a(href="##{graph_id}-tab-data", data-toggle="tab") Data
+                    li: a.graph-options-tab(href="##{graph_id}-tab-options", data-toggle="tab") Options
                 
-                .tab-content
-                    .graph-info-pane.tab-pane.active(id="#{graph_id}-tab-info")
+            
+            //--- Tab Panes ---//
+            .graph-tab-content.tab-content
+                .graph-info-pane.tab-pane.active(id="#{graph_id}-tab-info")
+                    form.graph-details.form-horizontal
                         .row-fluid
                             .half.control-group
                                 .control-group
                                     label.slug.control-label(for="#{graph_id}_slug") Slug
                                     .controls
                                         input.span3.slug(type='text', id="#{graph_id}_slug", name='slug', placeholder='graph_slug', value=slug)
-                                        p.help-block The slug uniquely identifies this graph and will be displayed in the URL.
+                                        p.help-block The slug uniquely identifies this graph and will be displayed in the URL once saved.
                                 .control-group
                                     label.width.control-label(for="#{graph_id}_width") Size
                                     .controls
@@ -58,13 +63,13 @@ section.graph.graph-edit(id=graph_id)
                                     //- textarea.span3.desc(id='desc', name='desc', placeholder='Graph description.') #{desc}
                                     <textarea class="span3 desc" id="#{graph_id}_desc" name="desc" placeholder="Graph description.">#{desc}</textarea>
                                     p.help-block A description of the graph.
-                    
-                    .graph-data-pane.tab-pane(id="#{graph_id}-tab-data")
+                
+                .graph-data-pane.tab-pane(id="#{graph_id}-tab-data")
+                    //- 
                         .row-fluid
-                            //- 
-                                label.dataset.control-label(for="#{graph_id}_dataset") Data Set
-                                input.span3.dataset(type='text', id="#{graph_id}_dataset", name='dataset', placeholder='URL to dataset file', value=dataset)
-                                p.help-block This dataset filename will soon be replaced by a friendly UI.
-                    
-                    .graph-options-pane.tab-pane(id="#{graph_id}-tab-options")
+                            label.dataset.control-label(for="#{graph_id}_dataset") Data Set
+                            input.span3.dataset(type='text', id="#{graph_id}_dataset", name='dataset', placeholder='URL to dataset file', value=dataset)
+                            p.help-block This dataset filename will soon be replaced by a friendly UI.
+                
+                .graph-options-pane.tab-pane(id="#{graph_id}-tab-options")
 

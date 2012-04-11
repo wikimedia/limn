@@ -44,7 +44,6 @@ KNOWN_TAGS = exports.KNOWN_TAGS = new TagSet()
  * @class Field with chart-option-specific handling for validation, parsing, tags, etc.
  */
 ChartOption = exports.ChartOption = Field.extend do # {{{
-    ctorName : 'ChartOption'
     IGNORED_TAGS : <[ callback deprecated debugging ]>
     
     
@@ -113,7 +112,6 @@ ChartOption = exports.ChartOption = Field.extend do # {{{
  * @class List of ChartOption fields.
  */
 ChartOptionList = exports.ChartOptionList = FieldList.extend do # {{{
-    ctorName   : 'ChartOptionList'
     model      : ChartOption
     
     

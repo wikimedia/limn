@@ -18,9 +18,8 @@ dev:
         - jquery.history.min
         - jquery.hotkeys.min
         - jquery.isotope.min
+        - jquery.spin.min
         - bootstrap.min
-        # - spin.min
-        # - jquery.spin.min
         
         ### CommonJS Support Starts Here:
         ### Browserify must come before any .mod files

@@ -1,4 +1,4 @@
-Seq = require 'seq'
+Seq = require "seq"
 
 _ = require 'kraken/util/underscore'
 Cascade = require 'kraken/util/cascade'
@@ -18,7 +18,6 @@ root = do -> this
  * other settings for both its content and presentation.
  */
 Graph = exports.Graph = BaseModel.extend do # {{{
-    ctorName       : 'Graph'
     IGNORE_OPTIONS : <[ width height timingName ]>
     urlRoot        : '/graphs'
     
@@ -60,7 +59,7 @@ Graph = exports.Graph = BaseModel.extend do # {{{
             name    : ''
             desc    : ''
             notes   : ''
-            dataset : '/data/datasources/rc/rc_comscore_region_uv.csv'
+            # dataset : '/data/datasources/rc/rc_comscore_region_uv.csv'
             # dataset : null
             width   : 'auto'
             height  : 320
@@ -92,7 +91,7 @@ Graph = exports.Graph = BaseModel.extend do # {{{
         @chartType = ChartType.lookup @get('chartType')
         
         # Insert submodels in place of JSON
-        # @set 'dataset', new DataSet(@get('dataset')), {+silent}
+        @set 'dataset', new DataSet(@get('dataset')), {+silent}
         
         @trigger 'init', this
         @load() if opts.autoload
@@ -100,6 +99,7 @@ Graph = exports.Graph = BaseModel.extend do # {{{
     
     load: (opts={}) ->
         return this if @ready and not opts.force
+        @wait()
         @trigger 'load', this
         Seq()
             .seq_ (next) ~>
@@ -107,24 +107,29 @@ Graph = exports.Graph = BaseModel.extend do # {{{
                     next.ok()
                 else
                     console.log "#{this}.fetch()..."
+                    @wait()
                     @fetch do
-                        error : (err) ~>
+                        error : @unwaitAnd (err) ~>
                             console.error "#{this}.fetch() --> error! #arguments"
                             next.ok()
-                        success : (model, res) ~>
+                        success : @unwaitAnd (model, res) ~>
                             # console.log "#{this}.fetch() --> success!", res
                             next.ok res
             .seq_ (next) ~>
                 next.ok @get('parents')
             .flatten()
-            .seqMap -> Graph.lookup it, this
+            .seqMap_ (next, parent_id) ~>
+                @wait()
+                Graph.lookup parent_id, next
             .seqEach_ (next, parent) ~>
                 @parents.add parent
                 @optionCascade.addLookup parent.get('options')
+                @unwait()
                 next.ok()
             .seq ~>
                 @ready = true
                 @trigger 'ready', this
+                @unwait() # terminates the `load` wait
         this
     
     
@@ -209,6 +214,7 @@ Graph = exports.Graph = BaseModel.extend do # {{{
         options
     
     
+    
     ### Serialization
     
     parse: (data) ->
@@ -271,16 +277,14 @@ Graph = exports.Graph = BaseModel.extend do # {{{
      * @returns {String} URL identifying this model.
      */
     toURL: ->
-        slug = @get 'slug', ''
+        slug = @get('slug') or ''
         slug = "/#slug" if slug
         "#{@urlRoot}#slug?#{@toKV { keepSlug: !!slug }}"
     
-    toString: -> "#{@ctorName}(id=#{@id}, cid=#{@cid})"
 # }}}
 
 
 GraphList = exports.GraphList = BaseList.extend do # {{{
-    ctorName : 'GraphList'
     urlRoot  : '/graphs'
     model    : Graph
     
@@ -291,7 +295,7 @@ GraphList = exports.GraphList = BaseList.extend do # {{{
         modelIds = _.pluck @models, 'id' 
             .map -> "\"#it\""
             .join ', '
-        "#{@ctorName}(#modelIds)"
+        "#{@..name or @..displayName}(#modelIds)"
 # }}}
 
 

@@ -8,7 +8,6 @@
  * @class
  */
 DataSource = exports.DataSource = BaseModel.extend do # {{{
-    ctorName : 'DataSource'
     urlRoot  : '/datasources'
     
     
@@ -33,7 +32,6 @@ DataSource = exports.DataSource = BaseModel.extend do # {{{
  * @class
  */
 DataSourceList = exports.DataSourceList = BaseList.extend do # {{{
-    ctorName : 'DataSourceList'
     urlRoot  : '/datasources'
     model    : DataSource
     

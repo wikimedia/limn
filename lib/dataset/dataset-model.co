@@ -16,7 +16,6 @@ ColorBrewer = require 'colorbrewer'
  * @class
  */
 DataSet = exports.DataSet = BaseModel.extend do # {{{
-    ctorName : 'DataSet'
     urlRoot : '/datasets'
     
     /**

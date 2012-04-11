@@ -12,7 +12,6 @@ DEBOUNCE_RENDER = exports.DEBOUNCE_RENDER = 100ms
  */
 ChartOptionView = exports.ChartOptionView = FieldView.extend do # {{{
     # __bind__  : <[ onClick ]>
-    ctorName  : 'ChartOptionView'
     tagName   : 'div'
     className : 'field option'
     template  : require 'kraken/template/chart-option'
@@ -36,18 +35,39 @@ ChartOptionView = exports.ChartOptionView = FieldView.extend do # {{{
         @$el.addClass 'collapsed' if @isCollapsed
         this
     
+    
+    /**
+     * Sets the state of `isCollapsed` and updates the UI. If the state changed,
+     * a `'change:collapse`` event will be fired.`
+     * 
+     * @param {Boolean} [makeCollapsed=true] If true, set state to collapsed.
+     * @returns {Boolean} Whether the state changed.
+     */
+    collapse: (state=true) ->
+        state        = !! state
+        @isCollapsed = @$el.hasClass 'collapsed'
+        
+        return this if state is @isCollapsed
+        if state
+            @$el.addClass 'collapsed'
+        else
+            @$el.removeClass 'collapsed'
+        @isCollapsed = state
+        @trigger 'change:collapse', this, @isCollapsed
+        true
+    
+    /**
+     * Toggles the collapsed state, updating the UI and firing a `'change:collapse'` event.
+     * @returns {this}
+     */
+    toggleCollapsed: ->
+        @collapse not @$el.hasClass 'collapsed'
+        this
+    
     onClick: (evt) ->
         target = $ evt.target
-        # console.log "#this.onClick()", target
         @toggleCollapsed() if @$el.hasClass('collapsed') and not target.hasClass('close')
     
-    toggleCollapsed: ->
-        starting = @$el.hasClass 'collapsed' #@isCollapsed
-        @$el.toggleClass 'collapsed'
-        @isCollapsed = not starting
-        # console.log "#this.toggleCollapsed!", starting, '->', @isCollapsed
-        @trigger 'change:collapse', this, @isCollapsed
-        this
     
 # }}}
 
@@ -57,16 +77,23 @@ ChartOptionView = exports.ChartOptionView = FieldView.extend do # {{{
  * @class View for configuring a chart type.
  */
 ChartOptionScaffold = exports.ChartOptionScaffold = Scaffold.extend do # {{{
-    ctorName       : 'ChartOptionScaffold'
+    __bind__       : <[ collapseAll expandAll ]>
     tagName        : 'form'
     className      : 'options scaffold'
     template       : require 'kraken/template/chart-scaffold'
+    
     collectionType : ChartOptionList
     subviewType    : ChartOptionView
     fields         : '.fields'
     
+    events:
+        'click .options-filter-button'       : 'onFilterOptions'
+        'click .collapse-all-options-button' : 'collapseAll'
+        'click .expand-all-options-button'   : 'expandAll'
+    
     # GraphView will set this
-    ready          : false
+    ready  : false
+    
     
     
     constructor: function ChartOptionScaffold
@@ -76,8 +103,9 @@ ChartOptionScaffold = exports.ChartOptionScaffold = Scaffold.extend do # {{{
         @render = _.debounce @render.bind(this), DEBOUNCE_RENDER
         Scaffold::initialize ...
     
+    
     render: ->
-        # console.log "#this.render() -> .isotope()"
+        console.log "#this.render(ready=#{@ready}) -> .isotope()"
         # Scaffold::render ...
         return this unless @ready
         container = if @fields then @$el.find @fields else @$el
@@ -86,13 +114,35 @@ ChartOptionScaffold = exports.ChartOptionScaffold = Scaffold.extend do # {{{
             .find '.field.option' .addClass 'isotope-item'
         container.isotope do
             # itemPositionDataEnabled : true
-            itemSelector    : '.field.option'
-            layoutMode      : 'masonry'
-            masonry         : columnWidth : 10
-            getSortData :
+            itemSelector : '.field.option'
+            layoutMode   : 'masonry'
+            masonry      : { columnWidth:10 }
+            filter       : @getOptionsFilter()
+            sortBy       : 'category'
+            getSortData  : 
                 category: ($el) ->
                     $el.data 'model' .getCategory()
-            sortBy: 'category'
+        this
+    
+    getOptionsFilter: ->
+        data = @$el.find '.options-filter-button.active' .toArray().map -> $ it .data()
+        sel = data.reduce do
+            (sel, d) ->
+                sel += that if d.filter
+                sel
+            ''
+        sel
+    
+    collapseAll: ->
+        _.invoke @_subviews, 'collapse', true
+        # @renderSubviews()
+        false
+    
+    expandAll: ->
+        _.invoke @_subviews, 'collapse', false
+        # @renderSubviews()
+        false
+    
     
     /**
      * Add a ChartOption to this scaffold, rerendering the isotope
@@ -100,11 +150,16 @@ ChartOptionScaffold = exports.ChartOptionScaffold = Scaffold.extend do # {{{
      */
     addOne: (field) ->
         view = Scaffold::addOne ...
-        view.on 'change:collapse render', @render
+        view.on 'change:collapse render', @render, this
         view
     
     toKV: ->
         @collection.toKV ...
+    
+    
+    onFilterOptions: (evt) ->
+        evt.preventDefault()
+        _.defer @render
     
 # }}}
 

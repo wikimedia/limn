@@ -70,11 +70,12 @@ Scaffold = exports.Scaffold = BaseView.extend do # {{{
     
     
     constructor: function Scaffold
+        @_subviews = []
         BaseView ...
     
     initialize: ->
         CollectionType = @collectionType
-        @model = @collection or= new CollectionType
+        @model = (@collection or= new CollectionType)
         BaseView::initialize ...
         
         @collection.on 'add',   @addOne
@@ -83,9 +84,13 @@ Scaffold = exports.Scaffold = BaseView.extend do # {{{
         @$el.data { model:@collection, view:this } .addClass @className
     
     
+    renderSubviews: ->
+        _.invoke @_subviews, 'render'
+        this
+    
     addOne: (field) ->
         # console.log "[S] #this.addOne!", @..__super__
-        _.remove @subviews, field.view if field.view
+        _.remove @_subviews, field.view if field.view
         
         # avoid duplicating event propagation
         field.off 'change:value', @change, this
@@ -95,7 +100,7 @@ Scaffold = exports.Scaffold = BaseView.extend do # {{{
         
         SubviewType = @subviewType
         view = new SubviewType model:field
-        @subviews.push view
+        @_subviews.push view
         container = if @fields then @$el.find @fields else @$el
         container.append view.render().el unless field.get 'ignore'
         view.on 'update', @change.bind(this, field)
@@ -104,8 +109,8 @@ Scaffold = exports.Scaffold = BaseView.extend do # {{{
         view
     
     addAll: ->
-        # _.invoke @subviews, 'remove'
-        # @subviews = []
+        _.invoke @_subviews, 'remove'
+        @_subviews = []
         @collection.each @addOne
         this
     
@@ -117,7 +122,6 @@ Scaffold = exports.Scaffold = BaseView.extend do # {{{
         this
     
     
-    toString: -> "#{@ctorName}(collection=#{@collection})"
 
 
 

@@ -8,7 +8,6 @@ op = require 'kraken/util/op'
 ### Scaffold Models
 
 Field = exports.Field = BaseModel.extend do # {{{
-    ctorName       : 'Field'
     idAttribute    : 'name'
     valueAttribute : 'value'
     
@@ -107,7 +106,6 @@ Field = exports.Field = BaseModel.extend do # {{{
 
 
 FieldList = exports.FieldList = BaseList.extend do # {{{
-    ctorName : 'FieldList'
     model    : Field
     
     
@@ -135,6 +133,5 @@ FieldList = exports.FieldList = BaseList.extend do # {{{
     toURL: (item_delim='&', kv_delim='=') ->
         "?#{@toKV ...}"
     
-    toString: -> "#{@ctorName}(length=#{@length})"
 # }}}
 

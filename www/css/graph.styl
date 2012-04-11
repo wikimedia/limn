@@ -3,13 +3,29 @@
 
 section.graph
     position relative
-    max-width 900px
     margin 0 auto
+    min-width 640px
+    max-width 960px
     
     *
         position relative
     
+    .graph-details > *
+        margin-left auto
+        margin-right auto
+    
+    
     /* * * *  Chart & Viewport  * * * {{{ */
+    .graph-viewport-row
+        // margin 1em 1em 3em
+        margin-bottom 3em
+    
+    .viewport
+        position relative
+        min-width 200px
+        min-height 320px
+        overflow hidden
+    
     .graph-label
         position absolute
         z-index 100
@@ -18,9 +34,10 @@ section.graph
         width 200px
         
         padding 1em
-        border-radius 5px
         background-color rgba(255,255,255, 0.75)
         font 12px/1.5 "helvetica neue", helvetica, arial, sans-serif
+        border 1px solid $light
+        border-radius 5px
         
         b
             display inline-block
@@ -37,67 +54,22 @@ section.graph
     .viewport:hover + .graph-label
         border 1px solid $light
     
-    .viewport
-        position relative
-        min-width 200px
-        min-height 320px
-        margin-bottom 1.5em
-        overflow hidden
-    
     /* }}} */
     
     
-    /* * * *  Subnav & Tabs  * * * {{{ */
-    .graph-settings.tabbable
-        .nav
-            margin-bottom 0
-            
-            li h3
-                line-height 14px
-                margin 2px
-                padding 8px 12px
-                border-radius 5px
-            li
-                margin-right 4px
-        
-        .tab-pane
-            padding 0.5em
-            margin-top 18px
-            
-            &.graph-data-pane
-                margin-top 0
-                padding 0
-    
-    .graph-controls
-        z-index 100
-        margin-top 2px
-        
-        & > .btn, & > .btn-group
-            margin 0 0.5em
-        
-        .btn-group
-            display inline-block
-        
-        input[type="button"]
-            min-width 5em
-            text-align center
-    
-    /* }}} */
-    
-    
-    /* * * *  Graph Details  * * * {{{ */
-    form.details
-        position relative
-        
-        .name-row
+    /* * * *  Graph Details & Info Pane  * * * {{{ */
+    .graph-name-row
+        // margin 0 1em 1em
+        // max-width 900px
+        font-size 120%
+        line-height 2em
+        input.graph-name
             font-size 120%
-            line-height 2em
-            input.name
-                font-size 120%
-                line-height 1.2
-                height 1.2em
-                border-color $light
-                width 98%
+            line-height 1.2
+            height 1.2em
+            border-color $light
+            width 98%
+    .graph-info-pane
         .row-fluid
             .half.control-group
                 width 50%
@@ -114,9 +86,72 @@ section.graph
     /* }}} */
     
     
+    /* * * *  Subnav & Tabs  * * * {{{ */
+    .graph-settings-row
+        max-width 900px
+    
+    .graph-settings.tabbable
+        .graph-settings-nav > .nav
+            margin-bottom 0
+            
+            li h3
+                line-height 14px
+                margin 2px
+                padding 8px 12px
+                border-radius 5px
+            li
+                margin-right 4px
+        
+        .graph-tab-content > .tab-pane
+            padding 0.5em
+            margin-top 1em
+            height 100%
+            
+            &.graph-data-pane
+                margin-top 0
+                padding 0
+                border-bottom 1px solid #ddd
+    
+    .graph-controls
+        z-index 100
+        margin-top 2px
+        
+        & > .btn, & > .btn-group
+            margin 0 0.5em
+        
+        .btn-group
+            display inline-block
+        
+        input[type="button"]
+            min-width 5em
+            text-align center
+    
+    .graph-spinner
+        display none
+        absolute bottom 3px left 0
+        margin-left -2.0em
+        width  2.5em
+        height 2.5em
+    
+    /* }}} */
+    
+    
     /* * * *  Chart Options  * * * {{{ */
-    .options fieldset
-        border 0px
+    .graph-options
+        
+        .graph-options-controls
+            font-size 11px
+            
+            .control-group, .btn-group
+                display inline-block
+                font-size 11px
+            
+            .btn
+                font-size 11px
+                padding 3px 9px 3px
+            & > .btn, & :not(.btn-group) .btn
+                margin-right 0.75em
+            
     
     .field.option
         float left
