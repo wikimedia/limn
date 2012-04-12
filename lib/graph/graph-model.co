@@ -275,6 +275,19 @@ Graph = exports.Graph = BaseModel.extend do # {{{
         path = _.compact [ @urlRoot, slug, action ] .join '/'
         "#path?#{@toKV { keepSlug: !!slug }}"
     
+    /**
+     * @returns {String} Path portion of slug URL, e.g.  /graphs/:slug
+     */
+    toLink: ->
+        "#{@urlRoot}/#{@get('slug')}"
+    
+    /**
+     * @returns {String} Permalinked URI, e.g. http://reportcard.wmflabs.org/:slug
+     */
+    toPermalink: ->
+        "#{window.location.protocol}//#{window.location.host}#{@toLink()}"
+    
+
     toString: -> "#{@ctorName}(id=#{@id}, cid=#{@cid})"
 # }}}
 
