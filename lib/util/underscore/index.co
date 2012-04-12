@@ -9,9 +9,12 @@ _.mixin require 'kraken/util/underscore/string'
 
 
 ## Debug
-_.dump = (o, label='dump') ->
+_.dump = (o, label='dump', expanded=false) ->
     if not _.isArray(o) and _.isObject(o)
-        console.group label
+        if expanded
+            console.group label
+        else
+            console.groupCollapsed label
         for k, v in o
             console.log "#k:", v
         console.groupEnd()

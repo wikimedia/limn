@@ -17,16 +17,17 @@ ColorBrewer = require 'colorbrewer'
  */
 DataSet = exports.DataSet = BaseModel.extend do # {{{
     urlRoot : '/datasets'
+    ready : false
     
     /**
      * @type DataSourceList
      */
-    sources : []
+    sources : null
     
     /**
      * @type MetricList
      */
-    metrics : []
+    metrics : null
     
     
     constructor: function DataSet
@@ -34,14 +35,29 @@ DataSet = exports.DataSet = BaseModel.extend do # {{{
     
     initialize : ->
         BaseModel::initialize ...
-        @sources = new DataSourceList @attributes.sources
-        @metrics = new MetricList     @attributes.metrics
+        @sources = new DataSourceList
+        if @attributes.metrics
+            @metrics = that.columns = new MetricList that.columns
     
     
     defaults : ->
-        sources : [] # XXX: needed? metrics now implies this info
-        metrics : []
-        # lines   : []
+        palette : null
+        lines   : []
+        metrics :
+            defaults : {}
+            columns  : []
+    
+    
+    load: (opts={}) ->
+        return this if @ready and not opts.force
+        @wait()
+        @trigger 'load', this
+        Seq()
+            .seq ~>
+                @ready = true
+                @trigger 'ready', this
+                @unwait() # terminates the `load` wait
+        this
     
     
     /**

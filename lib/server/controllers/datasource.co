@@ -1,10 +1,17 @@
 fs         = require 'fs'
-Seq        = require 'seq'
+path       = require 'path'
+{existsSync:exists} = path
+
+_          = require 'underscore'
+yaml       = require 'js-yaml'
 findit     = require 'findit'
+Seq        = require 'seq'
+
 Controller = require '../controller'
 
-YAML_EXT_PAT = /\.ya?ml$/i
-
+EXT_PAT          = /\.[^\.]*$/i
+YAML_EXT_PAT     = /\.ya?ml$/i
+YAML_OR_JSON_PAT = /\.(json|ya?ml)$/i
 
 
 /**
@@ -19,15 +26,53 @@ class DataSourceController extends Controller
     
     -> super ...
     
+    
+    toFile: (id) -> "#{@dataDir}/#id.json"
+    
     /**
-     * Returns a JSON listing of the datasource metadata files.
+     * Auto-load :id for related requests.
+     */
+    autoload: (id, cb) ->
+        file = @toFile id
+        parser = JSON.parse
+        
+        yamlFile = file.replace /\.json$/i, '.yaml'
+        if exists yamlFile 
+            file = yamlFile
+            parser = yaml.load
+        
+        err, data <- fs.readFile file, 'utf8'
+        if 'ENOENT' is err?.code
+            return cb null, {}
+        if err
+            console.error "DataSourceController.autoload(#id, #{typeof cb}) -->\nerr"
+            return cb err
+        try
+            cb null, parser data
+        catch err
+            console.error "DataSourceController.autoload(#id, #{typeof cb}) -->\nerr"
+            cb err
+    
+    /**
+     * GET /datasources
+     * @returns {Object} JSON listing of the datasource metadata files.
      */
     index : (req, res, next) ->
         files = findit.sync @dataDir
         # fs.readdir @dataDir, (err, files) ->
         res.send do
-            files.filter -> /\.(json|ya?ml)$/i.test it
+            files.filter -> YAML_OR_JSON_PAT.test it
                  .map    -> "#it".replace YAML_EXT_PAT, '.json'
+    
+    /**
+     * GET /datasources/:datasource
+     */
+    show: (req, res) ->
+        res.send req.datasource
+        # if req.format is 'json'
+        #     res.send req.datasource
+        # else
+        #     res.render 'datasource/view'
     
     /**
      * Returns the aggregated JSON content of the datasource metadata files.
@@ -38,7 +83,7 @@ class DataSourceController extends Controller
         Seq(findit.sync @dataDir)
             # .seq ~> @ok findit.sync @dataDir
             # .flatten()
-            .filter -> /\.(json|ya?ml)$/.test it
+            .filter -> YAML_OR_JSON_PAT.test it
             .seq ->
                 files := @stack.slice()
                 # console.log 'files:', files
@@ -60,13 +105,13 @@ class DataSourceController extends Controller
                     # console.log "#f ok!", data
                     @ok v
                 catch err
-                    console.error "[/data/all] catch! #err"
+                    console.error "[/datasources] catch! #err"
                     console.error err
                     console.error that if err.stack
                     res.send { error:String(err), partial_data:data }
             .seq -> res.send data
             .catch (err) ->
-                console.error '[/data/all] catch!'
+                console.error '[/datasources] catch!'
                 console.error err
                 console.error that if err.stack
                 res.send { error:String(err), partial_data:data }

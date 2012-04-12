@@ -1,10 +1,11 @@
-_        = require 'underscore'
-fs       = require 'fs'
-path     = require 'path'
-yaml     = require 'js-yaml'
-
+fs         = require 'fs'
+path       = require 'path'
 {existsSync:exists} = path
+
+_          = require 'underscore'
+yaml       = require 'js-yaml'
 {mkdirp, mkdirpAsync} = require '../mkdirp'
+
 Controller = require '../controller'
 
 

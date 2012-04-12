@@ -109,7 +109,7 @@ GraphEditView = exports.GraphEditView = BaseView.extend do # {{{
         @$el.on 'click', '.graph-options-tab', @onFirstClickRenderOptionsTab
         
         ### Graph Data UI
-        @data = @addSubview '.graph-data-pane', new DataView { model:@model.get('dataset'), graph_id:@id }
+        @data = @addSubview '.graph-data-pane', new DataView { model:@model.get('data'), graph_id:@id }
         @$el.find '.graph-data-pane' .append @data.render().el
         @data
             .on 'change',        @onDataChange, this
@@ -279,9 +279,10 @@ GraphEditView = exports.GraphEditView = BaseView.extend do # {{{
         @checkWaiting()
     
     render: ->
-        return this unless @ready
+        return this unless @ready and not @_rendering
+        @_rendering = true
         @wait()
-        @checkWaiting() # fix up the spinner element as the DOM is now settled
+        @checkWaiting()
         @renderDetails()
         @attachSubviews()
         # _.invoke @subviews, 'render'
@@ -289,6 +290,7 @@ GraphEditView = exports.GraphEditView = BaseView.extend do # {{{
         @updateURL()
         @trigger 'render', this
         @unwait()
+        @_rendering = false
         this
     
     renderAll: ->

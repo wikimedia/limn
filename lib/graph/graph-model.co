@@ -91,7 +91,7 @@ Graph = exports.Graph = BaseModel.extend do # {{{
         @chartType = ChartType.lookup @get('chartType')
         
         # Insert submodels in place of JSON
-        @set 'dataset', new DataSet(@get('dataset')), {+silent}
+        @set 'data', new DataSet(@get('data') or @get('dataset')), {+silent}
         
         @trigger 'init', this
         @load() if opts.autoload

@@ -187,6 +187,12 @@ section.graph
             &:hover
                 opacity 0.6
         
+        input.value:not([type="checkbox"])
+            width 240px
+            font-family menlo, monospace
+        textarea
+            resize none
+        
         .shortname
             font-weight bold
             color white
@@ -196,9 +202,6 @@ section.graph
             font-weight bold
             // line-height 1.5
             // font-size 100%
-        input.value:not([type="checkbox"])
-            width 240px
-            font-family menlo, monospace
         .type
             &::before
                 content "Type: "

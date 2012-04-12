@@ -16,13 +16,33 @@ DataSource = exports.DataSource = BaseModel.extend do # {{{
     
     initialize: ->
         BaseModel::initialize ...
-        
+    
     
     defaults: ->
-        {}
+        id            : ''
+        url           : ''
+        format        : 'json'
+        
+        name          : ''
+        shortName     : ''
+        title         : ''
+        subtitle      : ''
+        desc          : ''
+        notes         : ''
+        
+        timespan : 
+            start     : null
+            stop      : null
+            step      : '1mo'
+        
+        columns       : []
+        
+        chart : 
+            chartType : 'dygraphs'
+            options   : {}
     
     url: ->
-        "/data/#{@id}.json"
+        "/datasources/#{@id}.json"
     
 # }}}
 
