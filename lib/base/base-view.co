@@ -1,0 +1,149 @@
+Backbone = require 'backbone'
+
+{ _, op,
+} = require 'kraken/util'
+{ BaseBackboneMixin, mixinBase,
+} = require 'kraken/base/base-mixin'
+
+
+
+/**
+ * @class Base view, extending Backbone.View, used by scaffold and others.
+ * @extends Backbone.View
+ */
+BaseView = exports.BaseView = Backbone.View.extend mixinBase do # {{{
+    tagName : 'section'
+    
+    /**
+     * Array of [view, selector]-pairs.
+     * @type Array<[BaseView, String]>
+     */
+    subviews : []
+    
+    
+    
+    constructor : function BaseView
+        @__class__      = @constructor
+        @__superclass__ = @..__super__.constructor
+        @waitingOn      = 0
+        @subviews       = []
+        Backbone.View ...
+        @trigger 'create', this
+    
+    initialize: ->
+        @__apply_bind__()
+        
+        @setModel @model
+        @build()
+    
+    setModel: (model) ->
+        if @model
+            @model.off 'change',  @render, this
+            @model.off 'destroy', @remove, this
+            delete @model.view
+            data = @$el.data()
+            delete data.model
+            delete data.view
+        if @model = model
+            @model.view = this
+            @$el.data { @model, view:this }
+            @model.on 'change',  @render, this
+            @model.on 'destroy', @remove, this
+        @model
+    
+    
+    
+    ### Subviews
+    
+    addSubview: (selector, view) ->
+        [view, selector] = [selector, null] unless view
+        @subviews.push [view, selector]
+        view
+    
+    removeSubview: (view) ->
+        for [v, sel], idx of @subviews
+            if v is view
+                @subviews.splice(idx, 1)
+                return [v, sel]
+        null
+    
+    hasSubview: (view) ->
+        _.any @subviews, ([v]) -> v is view
+    
+    attachSubviews: ->
+        for [view, selector] of @subviews
+            return unless view
+            view.undelegateEvents()
+            return unless el = view.render()?.el
+            if selector
+                @$el.find selector .append el
+            else
+                @$el.append el
+            view.delegateEvents()
+        this
+    
+    
+    ### Rendering Chain
+    
+    toTemplateLocals: ->
+        json = {value:v} = @model.toJSON()
+        if _.isArray(v) or _.isObject(v)
+            json.value = JSON.stringify v
+        json
+    
+    $template: (locals={}) ->
+        $ @template do
+            { $, _, op, @model, view:this } import @toTemplateLocals() import locals
+    
+    build: ->
+        return this unless @template
+        outer = @$template()
+        @$el.html outer.html()
+            .attr do
+                id    : outer.attr 'id'
+                class : outer.attr('class')
+        @attachSubviews()
+        this
+    
+    render: ->
+        @build()
+        @trigger 'render', this
+        this
+    
+    renderSubviews: ->
+        _.invoke _.pluck(@subviews, 0), 'render'
+        this
+    
+    
+    
+    
+    ### UI Utilities
+    
+    hide   : -> @$el.hide();      this
+    show   : -> @$el.show();      this
+    remove : -> @$el.remove();    this
+    clear  : -> @model.destroy(); @remove()
+    
+    
+    # remove : ->
+    #     if (p = @$el.parent()).length
+    #         @$parent or= p
+    #         # @parent_index = p.children().indexOf @$el
+    #     @$el.remove()
+    #     this
+    # 
+    # reparent : (parent=@$parent) ->
+    #     parent = $ parent
+    #     @$el.appendTo parent if parent?.length
+    #     this
+    
+    toString : -> "#{@..name or @..displayName}(model=#{@model})"
+
+
+# Proxy model methods
+<[ get set unset toJSON toKV toURL ]>
+    .forEach (methodname) ->
+        BaseView::[methodname] = -> @model[methodname].apply @model, arguments
+
+# }}}
+

@@ -53,7 +53,12 @@ dev:
                 - parser
                 - cascade
                 - index
-            - base
+            - base:
+                - base-mixin
+                - base-model
+                - base-view
+                - cascading-model
+                - index
             - scaffold:
                 - scaffold-model
                 - scaffold-view

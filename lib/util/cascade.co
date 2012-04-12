@@ -53,6 +53,13 @@ class Cascade
         @_data = @_lookups[0] = data
         this
     
+    
+    /**
+     * @returns {Number} Number of lookup dictionaries.
+     */
+    size: ->
+        @_lookups.length
+    
     /**
      * Adds a new lookup dictionary to the chain.
      * @returns {this}
@@ -64,18 +71,46 @@ class Cascade
         this
     
     /**
-     * Removes a lookup dictionary from the chain.
+     * Removes a lookup dictionary from the chain (but will not remove the data object).
      * @returns {this}
      */
     removeLookup: (dict) ->
-        _.remove @_lookups, dict if dict
+        _.remove @_lookups, dict if dict and dict is not @_data
         this
+    
+    /**
+     * Pops the last dictionary off the lookup chain and returns it.
+     * @returns {*} The last dictionary, or `undefined` if there are no additional lookups.
+     */
+    popLookup: ->
+        return if @size() <= 1
+        @_lookups.pop()
+    
+    /**
+     * Shifts the first additional lookup dictionary off the chain and returns it.
+     * @returns {*} The first dictionary, or `undefined` if there are no additional lookups.
+     */
+    shiftLookup: ->
+        return if @size() <= 1
+        @_lookups.splice(1, 1)[0]
+    
+    /**
+     * Adds a lookup dictionary to the front of the chain, just after the Cascade's own data
+     * object.
+     * @returns {this}
+     */
+    unshiftLookup: (dict) ->
+        return this unless dict?
+        throw new Error "Lookup dictionary must be an object! dict=#dict" unless _.isObject dict
+        @_lookups.splice 1, 0, dict
+        this
+    
     
     /**
      * @returns {Boolean} Whether `key` belongs to this object (not inherited
      *  from the cascade).
      */
-    hasOwnProperty: (key) ->
+    isOwnProperty: (key) ->
         meta = _.getNestedMeta(@_data, key)
         meta?.obj and hasOwn.call meta.obj, key
     
@@ -84,32 +119,26 @@ class Cascade
      *  from the cascade) and is defined.
      */
     isOwnValue: (key) ->
-        @hasOwnProperty(key) and _.getNested(@_data, key, MISSING) is not MISSING
+        @isOwnProperty(key) and _.getNested(@_data, key, MISSING) is not MISSING
     
     /**
      * @returns {Boolean} Whether the value at `key` is different from that
      *  inherited by from the cascade.
      */
-    isChangedValue: (key, strict=false) ->
-        val = @get key
-        cVal = @_getInCascade key, MISSING, 1
-        if strict
-            val is not cVal
-        else
-            not _.isEqual val, cVal
+    isModifiedValue: (key, strict=false) ->
+        not @isInheritedValue key, strict
     
     /**
      * @returns {Boolean} Whether the value at `key` is the same as that
      *  inherited by from the cascade.
      */
     isInheritedValue: (key, strict=false) ->
-        not @isChangedValue key, strict
-    
-    /**
-     * @returns {Number} Number of lookup dictionaries.
-     */
-    size: ->
-        @_lookups.length
+        val = @get key
+        cVal = @_getInCascade key, MISSING, 1
+        if strict
+            val is cVal
+        else
+            _.isEqual val, cVal
     
     
     

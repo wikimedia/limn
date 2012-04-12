@@ -1,0 +1,144 @@
+Backbone = require 'backbone'
+
+{ _, op,
+} = require 'kraken/util'
+{ BaseBackboneMixin, mixinBase,
+} = require 'kraken/base/base-mixin'
+
+
+
+/**
+ * @class Base model, extending Backbone.Model, used by scaffold and others.
+ * @extends Backbone.Model
+ */
+BaseModel = exports.BaseModel = Backbone.Model.extend mixinBase do # {{{
+    
+    constructor : function BaseModel
+        @__class__      = @constructor
+        @__superclass__ = @..__super__.constructor
+        @waitingOn      = 0
+        Backbone.Model ...
+        @trigger 'create', this
+    
+    
+    
+    
+    ### Accessors
+    
+    has: (key) ->
+        @get(key)?
+    
+    get: (key) ->
+        _.getNested @attributes, key
+    
+    # set: (key, value, opts) ->
+    #     if _.isObject(key) and key?
+    #         [values, opts] = [key, value]
+    #     else
+    #         values = { "#key": value }
+    #     
+    #     # TODO: Validation
+    #     @_changed or= {}
+    #     
+    #     for key, value in values
+    #         if _.str.contains key, '.'
+    #             _.setNested @attributes, key, value, opts
+    #         else
+    #             Backbone.Model::set.call this, key, value, opts
+    #     
+    #     this
+    # 
+    # unset : (key, opts) ->
+    #     
+    
+    
+    
+    
+    
+    ### Serialization
+    
+    serialize: (v) ->
+        # if v!?
+        #     v = ''
+        if _.isBoolean v
+            v =  Number v
+        else if _.isObject v
+            v = JSON.stringify v
+        String v
+    
+    /**
+     * Like `.toJSON()` in that it should return a plain object with no functions,
+     * but for the purpose of `.toKV()`, allowing you to customize the values
+     * included and keys used.
+     * @returns {Object}
+     */
+    toKVPairs: ->
+        kvo = _.collapseObject @toJSON()
+        for k, v in kvo
+            kvo[k] = @serialize v
+        kvo
+    
+    /**
+     * Serialize the model into a `www-form-encoded` string suitable for use as
+     * a query string or a POST body.
+     * @returns {String}
+     */
+    toKV: (item_delim='&', kv_delim='=') ->
+        _.toKV @toKVPairs(), item_delim, kv_delim
+    
+    /**
+     * @returns {String} URL identifying this model.
+     */
+    toURL: ->
+        "?#{@toKV ...}"
+    
+    toString: -> "#{@..name or @..displayName}(cid=#{@cid}, id=#{@id})"
+
+
+# Class Methods
+BaseModel import do
+    /**
+     * Factory method which constructs an instance of this model from a string of KV-pairs.
+     * This is a class method inherited by models which extend {BaseModel}.
+     * @static
+     * @param {String|Object} o Serialized KV-pairs (or a plain object).
+     * @returns {BaseModel} An instance of this model.
+     */
+    fromKV: (o, item_delim='&', kv_delim='=') ->
+        o   = _.fromKV o, item_delim, kv_delim if typeof o is 'string'
+        Cls = if typeof this is 'function' then this else this.constructor
+        new Cls _.uncollapseObject o
+
+# }}}
+
+
+/**
+ * @class Base collection, extending Backbone.Collection, used by scaffold and others.
+ * @extends Backbone.Collection
+ */
+BaseList = exports.BaseList = Backbone.Collection.extend mixinBase do # {{{
+    
+    
+    constructor : function BaseList
+        @__class__      = @constructor
+        @__superclass__ = @..__super__.constructor
+        @waitingOn      = 0
+        Backbone.Collection ...
+        @trigger 'create', this
+    
+    
+    ### Serialization
+    
+    toKVPairs: ->
+        _.collapseObject @toJSON()
+    
+    toKV: (item_delim='&', kv_delim='=') ->
+        _.toKV @toKVPairs(), item_delim, kv_delim
+    
+    toURL: (item_delim='&', kv_delim='=') ->
+        "?#{@toKV ...}"
+    
+    toString: -> "#{@..name or @..displayName}(length=#{@length})"
+# }}}
+
+

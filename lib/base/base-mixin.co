@@ -1,0 +1,82 @@
+Backbone = require 'backbone'
+
+{ _, op,
+} = require 'kraken/util'
+
+
+
+BaseBackboneMixin = exports.BaseBackboneMixin =
+    
+    initialize: ->
+        @__apply_bind__()
+    
+    
+    ### Auto-Bound methods
+    
+    /**
+     * A list of method-names to bind on `initialize`; set this on a subclass to override.
+     * @type Array<String>
+     */
+    __bind__ : []
+    
+    /**
+     * Applies the contents of `__bind__`.
+     */
+    __apply_bind__: ->
+        names = _ @pluckSuperAndSelf '__bind__' .chain().flatten().compact().unique().value()
+        _.bindAll this, ...names if names.length
+    
+    
+    
+    ### Synchronization
+    
+    /**
+     * Count of outstanding tasks.
+     * @type Number
+     */
+    waitingOn : 0
+    
+    
+    /**
+     * Increment the waiting task counter.
+     * @returns {this}
+     */
+    wait: ->
+        count = @waitingOn
+        @waitingOn += 1
+        # console.log "#this.wait! #count --> #{@waitingOn}"
+        # console.trace()
+        @trigger('start-waiting', this) if count is 0 and @waitingOn > 0
+        this
+    
+    /**
+     * Decrement the waiting task counter.
+     * @returns {this}
+     */
+    unwait: ->
+        count = @waitingOn
+        @waitingOn -= 1
+        # console.warn "#this.unwait! #{@waitingOn} < 0" if @waitingOn < 0
+        # console.log "#this.unwait! #count --> #{@waitingOn}"
+        # console.trace()
+        @trigger('stop-waiting', this) if @waitingOn is 0 and count > 0
+        this
+    
+    /**
+     * @param {Function} fn Function to wrap.
+     * @returns {Function} A function wrapping the passed function with a call
+     *  to `unwait()`, then delegating with current context and arguments.
+     */
+    unwaitAnd: (fn) ->
+        self = this
+        ->
+            # console.log "#self.unwaitAnd( function #{fn.name or fn.displayName}() )"
+            # console.trace()
+            self.unwait(); fn ...
+    
+    
+
+mixinBase = exports.mixinBase = (body) ->
+    _.clone(BaseBackboneMixin) import body
+
+

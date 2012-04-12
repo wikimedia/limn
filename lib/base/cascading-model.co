@@ -1,0 +1,50 @@
+{ _, op,
+} = require 'kraken/util'
+{ BaseModel, BaseList,
+} = require 'kraken/base/base-model'
+
+Cascade = require 'kraken/util/cascade'
+
+
+
+/**
+ * @class A model that implements cascading lookups for its attributes.
+ */
+CascadingModel = exports.CascadingModel = BaseModel.extend do # {{{
+    /**
+     * The lookup cascade.
+     * @type Cascade
+     */
+    cascade : null
+    
+    
+    constructor: function CascadingModel (attributes={}, opts)
+        @cascade = new Cascade attributes
+        BaseModel.call this, attributes, opts
+    
+    initialize: ->
+        BaseModel::initialize ...
+    
+    get: (key) ->
+        @cascade.get key
+    
+    toJSON: (opts={}) ->
+        opts = {-collapseCascade, ...opts}
+        if opts.collapseCascade
+            @cascade.toJSON()
+        else
+            BaseModel::toJSON()
+    
+
+
+# Proxy Cascade methods
+<[
+    addLookup removeLookup popLookup shiftLookup unshiftLookup
+    isOwnProperty isOwnValue isInheritedValue isModifiedValue
+]>.forEach (methodname) ->
+    CascadingModel::[methodname] = -> @cascade[methodname].apply @cascade, arguments
+
+# }}}
+
+
+

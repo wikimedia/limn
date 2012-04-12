@@ -241,7 +241,7 @@ Graph = exports.Graph = BaseModel.extend do # {{{
      * @returns {Boolean}
      */
     isChangedOption: (k) ->
-        @optionCascade.isChangedValue k
+        @optionCascade.isModifiedValue k
         and not @isDefaultOption k
     
     
