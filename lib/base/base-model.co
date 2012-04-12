@@ -70,12 +70,16 @@ BaseModel = exports.BaseModel = Backbone.Model.extend mixinBase do # {{{
      * Like `.toJSON()` in that it should return a plain object with no functions,
      * but for the purpose of `.toKV()`, allowing you to customize the values
      * included and keys used.
+     * 
+     * @param {Object} [opts={}] Options:
+     * @param {Boolean} [opts.keepFunctions=false] If false, functions will be omitted from the result.
      * @returns {Object}
      */
-    toKVPairs: ->
+    toKVPairs: (opts={}) ->
+        opts = {-keepFunctions, ...opts}
         kvo = _.collapseObject @toJSON()
         for k, v in kvo
-            kvo[k] = @serialize v
+            kvo[k] = @serialize v if opts.keepFunctions or typeof v is not 'function'
         kvo
     
     /**
@@ -92,7 +96,8 @@ BaseModel = exports.BaseModel = Backbone.Model.extend mixinBase do # {{{
     toURL: ->
         "?#{@toKV ...}"
     
-    toString: -> "#{@..name or @..displayName}(cid=#{@cid}, id=#{@id})"
+    toString: ->
+        "#{@getClassName()}(cid=#{@cid}, id=#{@id})"
 
 
 # Class Methods
@@ -138,7 +143,11 @@ BaseList = exports.BaseList = Backbone.Collection.extend mixinBase do # {{{
     toURL: (item_delim='&', kv_delim='=') ->
         "?#{@toKV ...}"
     
-    toString: -> "#{@..name or @..displayName}(length=#{@length})"
+    toString: ->
+        modelIds = @models
+            .map -> "\"#{it.id ? it.cid}\""
+            .join ', '
+        "#{@getClassName()}[#{@length}](#modelIds)"
 # }}}
 
 

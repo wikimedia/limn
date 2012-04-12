@@ -137,7 +137,8 @@ BaseView = exports.BaseView = Backbone.View.extend mixinBase do # {{{
     #     @$el.appendTo parent if parent?.length
     #     this
     
-    toString : -> "#{@..name or @..displayName}(model=#{@model})"
+    toString : ->
+        "#{@getClassName()}(model=#{@model})"
 
 
 # Proxy model methods
