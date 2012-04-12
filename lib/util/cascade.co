@@ -188,8 +188,25 @@ class Cascade
         for o of arguments then @set o
         this
     
+    /**
+     * Recursively collapses the Cascade to a plain object by recursively merging the
+     * lookups (in reverse order) into the data.
+     * @returns {Object}
+     */
+    collapse: ->
+        _.merge {}, ...@_lookups.slice().reverse()
+    
+    /**
+     * Returns a plain object for JSON serialization via {@link Cascade#collapse()}.
+     * The name of this method is a bit confusing, as it doesn't actually return a 
+     * JSON string -- but I'm afraid that it's the way that the JavaScript API for 
+     * `JSON.stringify()` works.
+     * 
+     * @see https://developer.mozilla.org/en/JSON#toJSON()_method
+     * @return {Object} Plain object for JSON serialization.
+     */
     toJSON: ->
-        _.extend {}, ...@_lookups.slice().reverse()
+        @collapse()
     
     # XXX: should unique? but then won't map 1:1 to @values()...
     keys: ->
@@ -228,8 +245,8 @@ class Cascade
 
 
 ALIASES =
-    toJSON : 'toObject'
-    each   : 'forEach'
+    collapse : 'toObject'
+    each     : 'forEach'
 
 for src, dest in ALIASES
     Cascade::[dest] = Cascade::[src]
