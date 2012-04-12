@@ -10,9 +10,15 @@ section.graph.graph-display(id=graph_id)
         .graph-legend
     
     .graph-details-row.row-fluid
-        .graph-desc
+        .graph-desc.span6
             != jade.filters.markdown(desc)
         
-        //- 
-            .graph-notes.span6
+        .span8
+            .graph-permalink 
+                a(href='#{model.toLink()}') Permalink: 
+                input.span6(value='#{model.toPermalink()}')
+
+            //- 
+            .graph-notes
                 != jade.filters.markdown(notes)
+

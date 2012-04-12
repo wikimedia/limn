@@ -1,7 +1,9 @@
 _ = require 'underscore'
 
-OBJ_PROTO = Object.prototype
-getProto = Object.getPrototypeOf
+getProto    = Object.getPrototypeOf
+OBJ_PROTO   = Object.prototype
+hasOwn      = OBJ_PROTO.hasOwnProperty
+objToString = OBJ_PROTO.toString
 
 
 /**
@@ -28,11 +30,28 @@ MISSING = {}
  */
 _obj = do
     
+    # isPlainObject : (o) ->
+    #     !!( o and _.isObject(o) and OBJ_PROTO is getProto(o) )
+    
     /**
      * @returns {Boolean} Whether value is a plain object or not.
      */
-    isPlainObject : (o) ->
-        !! o and _.isObject(o) and OBJ_PROTO is getProto(o)
+    isPlainObject: (obj) ->
+        # Must be an Object.
+        # Because of IE, we also have to check the presence of the constructor property.
+        # Make sure that DOM nodes and window objects don't pass through, as well.
+        if not obj or objToString.call(obj) !== "[object Object]" or obj.nodeType or obj.setInterval
+            return false
+        
+        # Not own constructor property must be Object
+        return false if obj.constructor
+            and not hasOwn.call(obj, "constructor")
+            and not hasOwn.call(obj.constructor.prototype, "isPrototypeOf")
+        
+        # Own properties are enumerated firstly, so to speed up,
+        # if last one is own, then all properties are own.
+        for key in obj then ;
+        return key is void or hasOwn.call obj, key
     
     
     /**
@@ -185,6 +204,49 @@ _obj = do
         return unless meta
         _.unset meta.obj, meta.key, opts
         meta.val
+    
+    
+    /**
+     * Recursively merges together any number of donor objects into the target object.
+     * Modified from `jQuery.extend()`.
+     * 
+     * @param {Object} target Target object of the merge.
+     * @param {Object} ...donors Donor objects.
+     * @returns {Object} 
+     */
+    merge: (target={}, ...donors) ->
+        # Handle case when target is a string or something (possible in deep copy)
+        target = {} unless typeof target is "object" or _.isFunction(target)
+        
+        for donor of donors
+            # Only deal with non-null/undefined values
+            continue unless donor?
+            
+            # Extend the base object
+            for key, value in donor
+                srcVal = target[key]
+                
+                # Prevent never-ending loop
+                continue if target is value
+                
+                # Recurse if we're merging plain objects or arrays
+                if value and (_.isPlainObject(value) or (valueIsArray = _.isArray(value)))
+                    if valueIsArray
+                        valueIsArray = false
+                        clone = srcVal and if _.isArray(srcVal) then srcVal else []
+                    else
+                        clone = srcVal and if _.isPlainObject(srcVal) then srcVal else {}
+                    
+                    # Never move original objects, clone them
+                    target[key] = _.deepcopy(clone, value)
+                    
+                # Don't bring in undefined values
+                else if value is not void
+                    target[key] = value
+        
+        # Return the modified object
+        target
+    
     
 
 

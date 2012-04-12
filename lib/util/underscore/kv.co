@@ -32,7 +32,7 @@ _kv = do
             {}
     
     /**
-     * Copies and flattens any sub-objects into namespaced keys on the parent object, such 
+     * Copies and flattens a tree of sub-objects into namespaced keys on the parent object, such 
      * that `{ "foo":{ "bar":1 } }` becomes `{ "foo.bar":1 }`.
      */
     collapseObject: (obj, parent={}, prefix='') ->
