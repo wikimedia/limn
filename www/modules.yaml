@@ -37,6 +37,7 @@ dev:
         - jade.runtime.min
         - moment.mod.min
         - dygraph
+        - d3
 
 -   suffix: .mod.js
     paths:

@@ -1,0 +1,10 @@
+extends layout
+
+block title
+    title Geolocation
+
+append styles
+    mixin css('geo-display.css')
+
+block main-scripts
+    script(src="/js/kraken/main-geo.js?"+version)

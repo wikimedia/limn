@@ -190,6 +190,9 @@ app.get '/datasources/all', (req, res, next) ->
 app.get '/', (req, res) ->
     res.render 'dashboard'
 
+app.get '/geo', (req, res) ->
+    res.render 'geo'
+
 app.get '/:type/:action/?', (req, res, next) ->
     {type, action} = req.params
     if exists "#WWW/#type/#action.jade"
