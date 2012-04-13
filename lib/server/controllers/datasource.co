@@ -33,24 +33,30 @@ class DataSourceController extends Controller
      * Auto-load :id for related requests.
      */
     autoload: (id, cb) ->
-        file = @toFile id
-        parser = JSON.parse
+        files   = findit.sync @dataDir
+        pattern = new RegExp "#id\.(json|ya?ml)$", "i"
+        file    = _.find files, -> pattern.test it
         
-        yamlFile = file.replace /\.json$/i, '.yaml'
-        if exists yamlFile 
-            file = yamlFile
+        unless file
+            console.error "Unable to find DataSource for '#id'!"
+            return cb new Error "Unable to find DataSource for '#id'!"
+        
+        if _.endsWith file, "#id.json"
+            parser = JSON.parse
+        if _.endsWith file, "#id.yaml"
             parser = yaml.load
         
         err, data <- fs.readFile file, 'utf8'
         if 'ENOENT' is err?.code
-            return cb null, {}
+            console.error "Unable to find DataSource for '#id'!"
+            return cb new Error "Unable to find DataSource for '#id'!"
         if err
-            console.error "DataSourceController.autoload(#id, #{typeof cb}) -->\nerr"
+            console.error "DataSourceController.autoload(#id, #{typeof cb}) -->\n", err
             return cb err
         try
             cb null, parser data
         catch err
-            console.error "DataSourceController.autoload(#id, #{typeof cb}) -->\nerr"
+            console.error "DataSourceController.autoload(#id, #{typeof cb}) -->\n", err
             cb err
     
     /**
