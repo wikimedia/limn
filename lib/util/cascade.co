@@ -2,22 +2,44 @@ _ = require 'kraken/util/underscore'
 
 hasOwn = ({}).hasOwnProperty
 
-# Sentinel for missing values.
+/**
+ * Sentinel for missing values.
+ */
 MISSING = void
+
+/**
+ * Tombstone for deleted, non-passthrough keys.
+ */
+TOMBSTONE = {}
 
 
 /**
  * @class A mapping of key-value pairs supporting lookup fallback across multiple objects.
  */
 class Cascade
+    /**
+     * Default tombstone for deleted, non-passthrough keys.
+     * @type TOMBSTONE
+     * @readonly
+     */
+    @TOMBSTONE = TOMBSTONE
+    
     
     /**
-     * Map holding the object's KV-pairs. It is also the first element of the
+     * Map holding the object's KV-pairs; always the second element of the
      * cascade lookup.
      * @type Object
      * @private
      */
     _data : null
+    
+    /**
+     * Map of tombstones, marking intentionally unset keys in the object's
+     * KV-pairs; always the first element of the cascade lookup.
+     * @type Object<String, TOMBSTONE>
+     * @private
+     */
+    _tombstones : null
     
     /**
      * List of objects for lookups.
@@ -31,16 +53,20 @@ class Cascade
     /**
      * @constructor
      */
-    (data={}, lookups=[]) ->
-        @_data    = data
-        @_lookups = [@_data].concat lookups
+    (data={}, lookups=[], tombstones={}) ->
+        @_data       = data
+        @_tombstones = tombstones
+        @_lookups    = [@_data].concat lookups
     
     
     /**
      * @returns {Cascade} A copy of the data and lookup chain.
      */
     clone: ->
-        new Cascade {} import @_data, @_lookups.slice()
+        new Cascade do
+            {} import @_data
+            @_lookups.slice()
+            {} import @_tombstones
     
     
     
@@ -52,6 +78,12 @@ class Cascade
     setData: (data) ->
         @_data = @_lookups[0] = data
         this
+    
+    /**
+     * @returns {Array<Object>} The array of lookup dictionaries.
+     */
+    getLookups: ->
+        @_lookups
     
     /**
      * Adds a new lookup dictionary to the chain.
@@ -173,11 +205,31 @@ class Cascade
     
     
     /**
-     * Delete the given key from this object's concrete data. If missing,
-     * does not cascade.
+     * Delete the given key from this object's data dictionary and set a tombstone
+     * which ensures that future lookups do not cascade and thus see the key as
+     * `undefined`.
+     * 
+     * If the key is missing from the data dictionary the delete does not cascade,
+     * but the tombstone is still set.
+     * 
+     * @param {String} key Key to unset.
      * @returns {undefined|*} If found, returns the old value, and otherwise `undefined`.
      */
     unset: (key) ->
+        old = _.unsetNested @_data, key
+        _.setNested @_tombstones, key, TOMBSTONE, {+ensure}
+        old
+    
+    
+    /**
+     * Unsets the key in the data dictionary, but ensures future lookups also
+     * see the key as `undefined`, as opposed.
+     * 
+     * @param {String} key Key to unset.
+     * @returns {this} 
+     */
+    inherit: (key) ->
+        _.unsetNested @_tombstones, key
         _.unsetNested @_data, key
     
     

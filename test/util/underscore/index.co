@@ -1,0 +1,2 @@
+_object = require './underscore-object-test'
+exports import _object

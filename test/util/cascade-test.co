@@ -3,9 +3,13 @@ assert  = require 'assert'
 _       = require 'kraken/util/underscore'
 Cascade = require 'kraken/util/cascade'
 
+assertArraysEqual = (actual, expected, name) ->
+    assert.deepEqual actual, expected
+    assert.ok _.isArray(actual), "_.isArray #name = #actual"
+    assert.equal actual?.length, expected.length, "#name.length"
 
-assertEqual = (got, expected, msg) ->
-    assert.equal got, expected, "#msg:\t Expected: #expected;\tGot: #got"
+assertEqual = (actual, expected, msg) ->
+    assert.equal actual, expected, "#msg:\t Expected: #expected;\tGot: #actual"
 
 exports.basicCascade = ->
     a = { a:1 }
