@@ -2,33 +2,37 @@ _ = require 'underscore'
 
 getProto    = Object.getPrototypeOf
 OBJ_PROTO   = Object.prototype
-hasOwn      = OBJ_PROTO.hasOwnProperty
-objToString = OBJ_PROTO.toString
-
+{
+    hasOwnProperty : hasOwn
+    toString       : objToString
+} = {}
 
 /**
  * Default options for delegate-accessor functions.
  */
-DEFAULT_DELEGATE_OPTIONS =
+DEFAULT_DELEGATE_OPTIONS = exports.DEFAULT_DELEGATE_OPTIONS =
     getter  : 'get'
     setter  : 'set'
     deleter : 'unset'
 
 /**
- * Default options for nested-accessor functions.
+ * Tombstone for deleted, non-passthrough keys.
  */
-DEFAULT_NESTED_OPTIONS = {-ensure} import DEFAULT_DELEGATE_OPTIONS
+TOMBSTONE = exports.TOMBSTONE = {}
 
 /**
- * Sentinel for missing values.
+ * Default options for nested-accessor functions.
  */
-MISSING = {}
+DEFAULT_NESTED_OPTIONS = exports.DEFAULT_NESTED_OPTIONS =
+    {-ensure, tombstone:TOMBSTONE} import DEFAULT_DELEGATE_OPTIONS
+
 
 
 /**
  * @namespace Functions for working with objects and object graphs.
  */
 _obj = do
+    
     
     # isPlainObject : (o) ->
     #     !!( o and _.isObject(o) and OBJ_PROTO is getProto(o) )
@@ -96,7 +100,7 @@ _obj = do
     
     set: (obj, key, value, opts) ->
         return unless obj?
-        if _.isObject(key) and key?
+        if key? and _.isObject(key)
             [values, opts] = [key, value]
         else
             values = { "#key": value }
@@ -138,6 +142,8 @@ _obj = do
      * @param {String} [opts.getter="get"] Name of the sub-object getter method use if it exists.
      * @param {String} [opts.setter="set"] Name of the sub-object setter method use if it exists.
      * @param {String} [opts.deleter="unset"] Name of the sub-object deleter method use if it exists.
+     * @param {Object} [opts.tombstone=TOMBSTONE] Sentinel value to be interpreted as no-passthrough,
+     *  forcing the lookup to fail and return `undefined`.
      * @returns {undefined|Object} If found, the object is of the form 
      *  `{ key: Qualified key name, obj: Parent object of key, val: Value at obj[key], opts: Options }`. 
      *  Otherwise `undefined`.
@@ -169,7 +175,7 @@ _obj = do
      * @returns {null|Object} If found, returns the value, and otherwise `default`.
      */
     getNested : (obj, chain, def, opts) ->
-        {opts} = meta = _.getNestedMeta obj, chain, opts
+        meta = _.getNestedMeta obj, chain, opts
         return def if meta?.val is void
         meta.val
     
@@ -183,10 +189,10 @@ _obj = do
      * @returns {undefined|Any} If found, returns the old value, and otherwise `undefined`.
      */
     setNested : (obj, chain, value, opts) ->
-        {opts} = meta = _.getNestedMeta obj, chain, opts
-        return unless meta
-        _.set meta.obj, meta.key, value, opts
-        meta.val
+        return unless meta = _.getNestedMeta obj, chain, opts
+        {obj, key, val, opts} = meta
+        _.set obj, key, value, opts
+        val
     
     /**
      * Searches a heirarchical object for a potentially-nested key and removes it.
@@ -200,10 +206,10 @@ _obj = do
      * @returns {undefined|Any} The old value if found; otherwise `undefined`.
      */
     unsetNested : (obj, chain, opts) ->
-        {opts} = meta = _.getNestedMeta obj, chain, opts
-        return unless meta
-        _.unset meta.obj, meta.key, opts
-        meta.val
+        return unless meta = _.getNestedMeta obj, chain, opts
+        {obj, key, val, opts} = meta
+        _.unset obj, key, opts
+        val
     
     
     /**
@@ -216,33 +222,33 @@ _obj = do
      */
     merge: (target={}, ...donors) ->
         # Handle case when target is a string or something (possible in deep copy)
-        target = {} unless typeof target is "object" or _.isFunction(target)
+        unless typeof target is "object" or _.isFunction(target)
+            target = if _.isArray donors[0] then [] else {}
         
         for donor of donors
             # Only deal with non-null/undefined values
             continue unless donor?
             
             # Extend the base object
-            for key, value in donor
-                srcVal = target[key]
+            _.each donor, (value, key) ->
+                current = target[key]
                 
                 # Prevent never-ending loop
-                continue if target is value
+                return if target is value
                 
                 # Recurse if we're merging plain objects or arrays
                 if value and (_.isPlainObject(value) or (valueIsArray = _.isArray(value)))
                     if valueIsArray
-                        valueIsArray = false
-                        clone = srcVal and if _.isArray(srcVal) then srcVal else []
+                        current = [] unless _.isArray current
                     else
-                        clone = srcVal and if _.isPlainObject(srcVal) then srcVal else {}
+                        current = {} unless current and typeof current is 'object'
                     
                     # Never move original objects, clone them
-                    target[key] = _.deepcopy(clone, value)
+                    _.set target, key, _.merge(current, value)
                     
                 # Don't bring in undefined values
                 else if value is not void
-                    target[key] = value
+                    _.set target, key, value
         
         # Return the modified object
         target

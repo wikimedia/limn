@@ -25,15 +25,22 @@ CascadingModel = exports.CascadingModel = BaseModel.extend do # {{{
     initialize: ->
         BaseModel::initialize ...
     
+    
+    /**
+     * Recursively look up a (potenitally nested) attribute in the lookup chain.
+     * @param {String} key Attribute key (potenitally nested using dot-delimited subkeys).
+     * @returns {*}
+     */
     get: (key) ->
         @cascade.get key
+    
     
     toJSON: (opts={}) ->
         opts = {-collapseCascade, ...opts}
         if opts.collapseCascade
-            @cascade.toJSON()
+            @cascade.collapse()
         else
-            BaseModel::toJSON()
+            BaseModel::toJSON ...
     
 
 
