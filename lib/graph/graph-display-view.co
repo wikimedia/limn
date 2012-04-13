@@ -185,7 +185,7 @@ GraphDisplayView = exports.GraphDisplayView = BaseView.extend do # {{{
     
     update: ->
         locals = @toTemplateLocals()
-        @$el.find '.graph-name' .text(locals.name or '')
+        @$el.find '.graph-name a' .text(locals.name or '')
         @$el.find '.graph-desc' .html jade.filters.markdown locals.desc or ''
         this
     
