@@ -64,9 +64,9 @@ class Controller extends Resource
         if typeof actions.autoload is 'function'
             actions.load = actions.autoload
         
-        super (name or @name), actions, @app
         (@app.resources or= {})[@name] = this
         @applyControllerMapping()
+        super (name or @name), actions, @app
     
     
     /**
