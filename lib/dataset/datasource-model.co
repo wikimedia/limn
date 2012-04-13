@@ -55,11 +55,38 @@ DataSourceList = exports.DataSourceList = BaseList.extend do # {{{
     urlRoot  : '/datasources'
     model    : DataSource
     
-    constructor: function DataSourceList
-        BaseList ...
-    
-    initialize : ->
-        BaseList::initialize ...
+    constructor: function DataSourceList then BaseList ...
+    initialize : -> BaseList::initialize ...
     
     
 # }}}
+
+
+/* * * *  DataSource Cache  * * * */
+
+DataSource import do
+    CACHE : new DataSourceList
+    
+    register: (model) ->
+        # console.log "#{@CACHE}.register(#{model.id or model.get('id')})", model
+        if @CACHE.contains model
+            @CACHE.remove model, {+silent}
+        @CACHE.add model
+        model
+    
+    get: (id) ->
+        @CACHE.get id
+    
+    lookup: (id, cb) ->
+        # console.log "#{@CACHE}.lookup(#id, #{typeof cb})"
+        if @CACHE.get id
+            cb null, that
+        else
+            Cls = this
+            @register new Cls {id}
+                .on 'ready', -> cb null, it
+    
+
+_.bindAll DataSource, 'register', 'get', 'lookup'
+
+

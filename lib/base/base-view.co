@@ -70,6 +70,9 @@ BaseView = exports.BaseView = Backbone.View.extend mixinBase do # {{{
     hasSubview: (view) ->
         _.any @subviews, ([v]) -> v is view
     
+    invokeSubviews: ->
+        _ _.pluck(@subviews, 0) .invoke ...arguments
+    
     attachSubviews: ->
         for [view, selector] of @subviews
             return unless view
@@ -80,6 +83,11 @@ BaseView = exports.BaseView = Backbone.View.extend mixinBase do # {{{
             else
                 @$el.append el
             view.delegateEvents()
+        this
+    
+    removeAllSubviews: ->
+        @invokeSubviews 'remove'
+        _.pluck @subviews, 0 .forEach @removeSubview, this
         this
     
     

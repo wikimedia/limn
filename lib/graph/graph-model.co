@@ -91,8 +91,8 @@ Graph = exports.Graph = BaseModel.extend do # {{{
         @chartType = ChartType.lookup @get('chartType')
         
         # Insert submodels in place of JSON
-        # @get('dataset')
-        @set 'data', new DataSet(@get('data')), {+silent}
+        # data = @get('data') or @get('dataset')
+        @set 'data', @dataset = new DataSet(@get('data')), {+silent}
         
         @trigger 'init', this
         @load() if opts.autoload
@@ -115,6 +115,7 @@ Graph = exports.Graph = BaseModel.extend do # {{{
                             next.ok()
                         success : @unwaitAnd (model, res) ~>
                             # console.log "#{this}.fetch() --> success!", res
+                            @dataset.set @get('data')
                             next.ok res
             .seq_ (next) ~>
                 next.ok @get('parents')
@@ -268,6 +269,7 @@ Graph = exports.Graph = BaseModel.extend do # {{{
         kvo = @toJSON opts
         kvo.parents = JSON.stringify kvo.parents
         delete kvo.slug unless opts.keepSlug
+        delete kvo.data
         
         # console.group 'toKVPairs'
         # console.log '[IN]', JSON.stringify kvo
@@ -323,10 +325,8 @@ GraphList = exports.GraphList = BaseList.extend do # {{{
 
 /* * * *  Visualization Cache for parent-lookup  * * * {{{ */
 
-GRAPH_CACHE = exports.GRAPH_CACHE = new GraphList
-
 Graph import do
-    CACHE : GRAPH_CACHE
+    CACHE : new GraphList
     
     register: (model) ->
         # console.log "#{@CACHE}.register(#{model.id or model.get('id')})", model

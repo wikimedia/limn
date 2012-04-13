@@ -68,4 +68,6 @@ MetricList = exports.MetricList = BaseList.extend do # {{{
     model    : Metric
     
     constructor: function MetricList then BaseList ...
+    initialize: -> BaseList::initialize ...
+    
 # }}}

@@ -29,7 +29,8 @@ GraphEditView = exports.GraphEditView = BaseView.extend do # {{{
     __bind__  : <[
         render renderAll stopAndRender stopAndRenderAll resizeViewport wait unwait checkWaiting
         numberFormatter numberFormatterHTML
-        onReady onSync onModelChange onScaffoldChange onFirstClickRenderOptionsTab
+        onReady onSync onModelChange onScaffoldChange 
+        onFirstClickRenderOptionsTab onFirstClickRenderDataTab
     ]>
     __debounce__: <[ render renderAll ]>
     tagName   : 'section'
@@ -103,6 +104,8 @@ GraphEditView = exports.GraphEditView = BaseView.extend do # {{{
         
         @scaffold.on 'change', @onScaffoldChange
         @chartOptions @model.getOptions(), {+silent}
+        
+        @$el.on 'click', '.graph-data-tab', @onFirstClickRenderDataTab
         
         # Rerender the options boxes once the tab is visible
         # Can't use @events because we need to bind before registering
@@ -464,6 +467,12 @@ GraphEditView = exports.GraphEditView = BaseView.extend do # {{{
     onFirstClickRenderOptionsTab: ->
         @$el.off 'click', '.graph-options-tab', @onFirstClickRenderOptionsTab
         @scaffold.render()
+    
+    onFirstClickRenderDataTab: ->
+        # @$el.off 'click', '.graph-data-tab', @onFirstClickRenderDataTab
+        _.delay do
+            ~> @data.onMetricsChanged()
+            100
     
     onKeypress: (evt) ->
         $(evt.target).submit() if evt.keyCode is 13

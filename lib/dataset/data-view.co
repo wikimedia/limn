@@ -31,6 +31,22 @@ DataView = exports.DataView = BaseView.extend do # {{{
         @on 'ready', @onReady, this
         @load()
     
+    onReady: ->
+        dataset = @model
+        @metric_edit_view = @addSubview new MetricEditView  {@graph_id, dataset, @datasources}
+        @metric_edit_view
+            .on 'update',           @onUpdateMetric,      this
+        
+        @dataset_view = @addSubview new DataSetView {@model, @graph_id, dataset, @datasources}
+        @dataset_view
+            .on 'add-metric',       @onMetricsChanged,  this
+            .on 'remove-metric',    @onMetricsChanged,  this
+            .on 'edit-metric',      @editMetric,        this
+        
+        @attachSubviews()
+        this
+    
+    
     
     load: ->
         @wait()
@@ -63,22 +79,6 @@ DataView = exports.DataView = BaseView.extend do # {{{
         ds
     
     
-    onReady: ->
-        dataset = @model
-        @metric_edit_view = @addSubview new MetricEditView  {@graph_id, dataset, @datasources}
-        @metric_edit_view
-            .on 'update',           @onUpdateMetric,      this
-        
-        @dataset_view = @addSubview new DataSetView {@model, @graph_id, dataset, @datasources}
-        @dataset_view
-            .on 'add-metric',       @onMetricsChanged,  this
-            .on 'remove-metric',    @onMetricsChanged,  this
-            .on 'edit-metric',      @editMetric,        this
-        
-        @attachSubviews()
-        this
-    
-    
     toTemplateLocals: ->
         attrs = _.clone @model.attributes
         { $, _, op, @model, view:this, @graph_id, @datasources, } import attrs
@@ -97,9 +97,11 @@ DataView = exports.DataView = BaseView.extend do # {{{
     
     editMetric: (metric) ->
         @metric_edit_view.editMetric metric
+        @onMetricsChanged()
     
     onMetricsChanged: ->
-        @$el.css 'min-height', @dataset_view.$el.height()
+        # console.log 'onMetricsChanged!'
+        @$el.css 'min-height', Math.max @dataset_view.$el.height(), @metric_edit_view.$el.height()
     
     onUpdateMetric: ->
         @renderSubviews()

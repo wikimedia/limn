@@ -144,10 +144,13 @@ BaseList = exports.BaseList = Backbone.Collection.extend mixinBase do # {{{
         "?#{@toKV ...}"
     
     toString: ->
-        modelIds = @models
-            .map -> "\"#{it.id ? it.cid}\""
-            .join ', '
-        "#{@getClassName()}[#{@length}](#modelIds)"
+        "#{@getClassName()}[#{@length}]"
+    
+    # toString: ->
+    #     modelIds = @models
+    #         .map -> "\"#{it.id ? it.cid}\""
+    #         .join ', '
+    #     "#{@getClassName()}[#{@length}](#modelIds)"
 # }}}
 
 
