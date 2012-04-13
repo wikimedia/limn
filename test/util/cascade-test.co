@@ -71,6 +71,7 @@ exports.nestedKeys = ->
     b =
         lol: 'clowns'
         hat: fez:true
+        rat: drat:2, spat:2
         baz: feh:2
         bats: 13
     
@@ -89,9 +90,28 @@ exports.nestedKeys = ->
     assertEqual o.hat?.fez,         'red',      "After nested set  o.hat?.fez"
     assertEqual b.hat?.fez,         true,       "After nested set  b.hat?.fez"
     
+    c.inherit 'hat.fez'
+    assertEqual c.get('hat.fez'),   true,       "After inherit  c.get('hat.fez')"
+    assertEqual o.hat?.fez,         void,       "After inherit  o.hat?.fez"
+    
     c.unset 'hat.fez'
-    assertEqual c.get('hat.fez'),   true,       "After unset  c.get('hat.fez')"
+    assertEqual c.get('hat.fez'),   void,       "After unset  c.get('hat.fez')"
     assertEqual o.hat?.fez,         void,       "After unset  o.hat?.fez"
+    assertEqual c.hasTombstone('hat.fez'), true, "After unset  c.hasTombstone('hat.fez')"
+    assertEqual b.hat?.fez,         true,       "After unset  b.hat?.fez"
+    
+    c.set 'rat.drat', 1
+    assertEqual c.get('rat.drat'),  1,          "Shadow nested  c.get('rat.drat')"
+    assertEqual c.get('rat.spat'),  2,          "Cascade nested  c.get('rat.spat')"
+    c.inherit 'rat'
+    assertEqual c.get('rat.drat'),  2,          "After inherit  c.get('rat.drat')"
+    assertEqual c.get('rat.spat'),  2,          "After inherit  c.get('rat.spat')"
+    c.unset 'rat'
+    assertEqual c.get('rat.drat'),  void,       "After unset  c.get('rat.drat')"
+    assertEqual c.get('rat.spat'),  void,       "After unset  c.get('rat.spat')"
+    assertEqual c.hasTombstone('rat.drat'), true, "After unset  c.hasTombstone('rat.drat')"
+    assertEqual c.hasTombstone('rat.spat'), true, "After unset  c.hasTombstone('rat.spat')"
+    assertEqual c.hasTombstone('rat'),      true, "After unset  c.hasTombstone('rat')"
 
 
 
