@@ -13,7 +13,7 @@ Seq = require 'seq'
  * @class
  */
 DataView = exports.DataView = BaseView.extend do # {{{
-    __bind__       : <[ onReady ]>
+    __bind__       : <[ ]>
     tagName        : 'section'
     className      : 'data-ui'
     template       : require 'kraken/template/data'
@@ -28,46 +28,48 @@ DataView = exports.DataView = BaseView.extend do # {{{
     initialize: ->
         @graph_id = @options.graph_id
         BaseView::initialize ...
-        @on 'ready', @onReady
+        @on 'ready', @onReady, this
         @load()
     
     
     load: ->
+        @wait()
         $.getJSON '/datasources/all', (@datasources) ~>
-            @canonicalizeDataSources @datasources
+            _.each @datasources, @canonicalizeDataSource, this
             @ready = true
+            @unwait()
             @render()
             @trigger 'ready', this
     
     /**
      * Transform the `columns` field to ensure an Array of {label, type} objects.
      */
-    canonicalizeDataSources: (datasources) ->
-        _.each datasources, (ds) ->
-            ds.shortName    or= ds.name
-            ds.title        or= ds.name
-            ds.subtitle     or= ''
-            
-            cols = ds.columns
-            if _.isArray cols
-                ds.metrics = _.map cols, (col, idx) ->
-                    if _.isArray col
-                        [label, type] = col
-                        {idx, label, type or 'int'}
-                    else
-                        col
-            else
-                ds.metrics = _.map cols.labels, (label, idx) ->
-                    {idx, label, type:cols.types[idx] or 'int'}
-        datasources
+    canonicalizeDataSource: (ds) ->
+        ds.shortName    or= ds.name
+        ds.title        or= ds.name
+        ds.subtitle     or= ''
+        
+        cols = ds.columns
+        if _.isArray cols
+            ds.metrics = _.map cols, (col, idx) ->
+                if _.isArray col
+                    [label, type] = col
+                    {idx, label, type or 'int'}
+                else
+                    col
+        else
+            ds.metrics = _.map cols.labels, (label, idx) ->
+                {idx, label, type:cols.types[idx] or 'int'}
+        ds
     
     
     onReady: ->
-        @metric_edit_view = @addSubview new MetricEditView  {@graph_id, dataset:@model, @datasources}
+        dataset = @model
+        @metric_edit_view = @addSubview new MetricEditView  {@graph_id, dataset, @datasources}
         @metric_edit_view
             .on 'update',           @onUpdateMetric,      this
         
-        @dataset_view = @addSubview new DataSetView {@model, @graph_id, @dataset, @datasources}
+        @dataset_view = @addSubview new DataSetView {@model, @graph_id, dataset, @datasources}
         @dataset_view
             .on 'add-metric',       @onMetricsChanged,  this
             .on 'remove-metric',    @onMetricsChanged,  this

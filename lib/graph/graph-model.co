@@ -91,7 +91,8 @@ Graph = exports.Graph = BaseModel.extend do # {{{
         @chartType = ChartType.lookup @get('chartType')
         
         # Insert submodels in place of JSON
-        @set 'data', new DataSet(@get('data') or @get('dataset')), {+silent}
+        # @get('dataset')
+        @set 'data', new DataSet(@get('data')), {+silent}
         
         @trigger 'init', this
         @load() if opts.autoload
@@ -204,9 +205,17 @@ Graph = exports.Graph = BaseModel.extend do # {{{
             @trigger "change:options", this, @get('options'), 'options', opts
         this
     
+    inheritOption: (key, opts={}) ->
+        old = @getOption(key)
+        @optionCascade.inherit(key)
+        unless @getOption(key) is old or opts.silent
+            @trigger "change:options.#key", this, void, key, opts
+            @trigger "change:options", this, @get('options'), 'options', opts
+        this
+    
     getOptions: (opts={}) ->
         opts = {+keepDefaults, +keepUnchanged} import opts
-        options = @optionCascade.toObject()
+        options = @optionCascade.collapse()
         for k, v in options
             delete options[k] if v is void or
                 (not opts.keepDefaults  and @isDefaultOption k) or
