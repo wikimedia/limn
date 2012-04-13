@@ -470,9 +470,7 @@ GraphEditView = exports.GraphEditView = BaseView.extend do # {{{
     
     onFirstClickRenderDataTab: ->
         # @$el.off 'click', '.graph-data-tab', @onFirstClickRenderDataTab
-        _.delay do
-            ~> @data.onMetricsChanged()
-            100
+        _.defer ~> @data.onMetricsChanged()
     
     onKeypress: (evt) ->
         $(evt.target).submit() if evt.keyCode is 13

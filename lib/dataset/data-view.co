@@ -100,8 +100,13 @@ DataView = exports.DataView = BaseView.extend do # {{{
         @onMetricsChanged()
     
     onMetricsChanged: ->
-        # console.log 'onMetricsChanged!'
-        @$el.css 'min-height', Math.max @dataset_view.$el.height(), @metric_edit_view.$el.height()
+        oldMinHeight = parseInt @$el.css 'min-height'
+        newMinHeight = Math.max do
+            oldMinHeight
+            @dataset_view.$el.height()
+            @metric_edit_view.$el.height()
+        # console.log 'onMetricsChanged!', oldMinHeight, '-->', newMinHeight
+        @$el.css 'min-height', newMinHeight
     
     onUpdateMetric: ->
         @renderSubviews()

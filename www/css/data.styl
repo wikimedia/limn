@@ -6,8 +6,11 @@
 
 section.graph section.data-ui
     height 100%
-    min-height 300px
+    min-height 500px
     clearfix()
+    
+    // transition-duration 0.5s
+    // transition-property min-height
     
     h4
         display none
@@ -20,7 +23,7 @@ section.graph section.data-ui
         absolute 0 0
         width 40%
         height 100%
-        min-height 300px
+        min-height 500px
         border-right 1px solid #ccc
         
         .inner
@@ -183,12 +186,15 @@ section.graph section.data-ui
                 height 100%
                 display table-cell
                 float none
-                width 200px
+                // width 200px
+                // min-width 200px
+                li a
+                    min-width 150px
             
             .datasource-sources-details
                 display table-cell
                 padding 1em
-                width auto
+                // width auto
             
             
         
