@@ -258,7 +258,7 @@ class Cascade
         
         # Set and ensure the creation of missing intermediate objects.
         for key, val in values
-            _.unsetNested @_tombstones, key
+            _.unsetNested @_tombstones, key, {+ensure}
             _.setNested @_data, key, val, {+ensure}
         
         this
@@ -290,7 +290,7 @@ class Cascade
      * @returns {this} 
      */
     inherit: (key) ->
-        _.unsetNested @_tombstones, key
+        _.unsetNested @_tombstones, key, {+ensure}
         _.unsetNested @_data, key
     
     
