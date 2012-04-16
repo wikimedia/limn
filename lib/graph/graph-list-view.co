@@ -11,20 +11,26 @@ DEBOUNCE_RENDER = 100ms
 /**
  * @class View for a showing a list of all saved graphs
  */
-GraphIndexView = exports.GraphIndexView = BaseView.extend do # {{{
+GraphListView = exports.GraphListView = BaseView.extend do # {{{
     __bind__  : <[
         render
     ]>
     __debounce__: <[ render ]>
     
     tagName   : 'section'
-    className : 'graph-index-view'
-    template  : require 'kraken/template/graph-index'
+    className : 'graph-list-view'
+    template  : require 'kraken/template/graph-list'
     
     data  : {}
     ready : false
-
-    initialize : (o={}) ->
-        @model = new GraphList (o['graph_list_data'])
+    
+    initialize : ->
+        @model = @collection or= new GraphList
         BaseView::initialize ...
         console.log "#this.initialize!"
+    
+    toTemplateLocals: ->
+        locals = BaseView::toTemplateLocals ...
+        locals.collection = @collection
+        locals
+    
