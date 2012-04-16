@@ -78,6 +78,7 @@ dev:
                 - graph-display.jade
                 - graph-edit.jade
                 - dashboard.jade
+                - graph-list.jade
             - chart:
                 - chart-type
                 - dygraphs
@@ -99,6 +100,7 @@ dev:
                 - graph-model
                 - graph-display-view
                 - graph-edit-view
+                - graph-list-view
                 - index
             - dashboard:
                 - dashboard-model

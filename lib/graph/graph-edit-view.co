@@ -34,7 +34,7 @@ GraphEditView = exports.GraphEditView = BaseView.extend do # {{{
     ]>
     __debounce__: <[ render renderAll ]>
     tagName   : 'section'
-    className : 'graph graph-edit'
+    className : 'graph-edit graph'
     template  : require 'kraken/template/graph-edit'
     
     events:
@@ -42,12 +42,12 @@ GraphEditView = exports.GraphEditView = BaseView.extend do # {{{
         'click    .load-button'                    : 'load'
         'click    .save-button'                    : 'save'
         'click    .done-button'                    : 'done'
-        'keypress form.details input[type="text"]' : 'onKeypress'
-        'keypress form.options .value'             : 'onKeypress'
-        'submit   form.details'                    : 'onDetailsSubmit'
-        'change   select'                          : 'onDetailsSubmit'
-        'submit   form.options'                    : 'onOptionsSubmit'
-        'change   input[type="checkbox"]'          : 'onOptionsSubmit'
+        'keypress .graph-details input[type="text"]'     : 'onKeypress'
+        'submit   .graph-details'                        : 'onDetailsSubmit'
+        'change   :not(.chart-options) select'           : 'onDetailsSubmit'
+        'keypress .chart-options .value'                 : 'onKeypress'
+        'submit   .chart-options'                        : 'onOptionsSubmit'
+        'change   .chart-options input[type="checkbox"]' : 'onOptionsSubmit'
     
     
     /**
@@ -218,7 +218,7 @@ GraphEditView = exports.GraphEditView = BaseView.extend do # {{{
     
     # Repopulate UI from Model
     renderDetails: ->
-        form = @$el.find 'form.details'
+        form = @$el.find 'form.graph-details'
         for k, v in @model.attributes
             continue if k is 'options'
             txt = @model.serialize v
@@ -478,7 +478,7 @@ GraphEditView = exports.GraphEditView = BaseView.extend do # {{{
     onDetailsSubmit: ->
         console.log "#this.onDetailsSubmit!"
         data = _.synthesize do
-            @$el.find('form.details').serializeArray()
+            @$el.find('form.graph-details').serializeArray()
             -> [it.name, it.value]
         @model.set data
         false

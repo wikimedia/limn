@@ -32,14 +32,15 @@ GraphDisplayView = exports.GraphDisplayView = BaseView.extend do # {{{
     className : 'graph graph-display'
     template  : require 'kraken/template/graph-display'
     
-    # events:
-    #     'click    .redraw-button'                  : 'stopAndRender'
-    #     'click    .load-button'                    : 'load'
-    
+    events:
+        # Select the whole permalink URI text when it receives focus.
+        'focus      .graph-permalink input'             : 'onPermalinkFocus'     
+        #     'click    .redraw-button'                  : 'stopAndRender'
+        #     'click    .load-button'                    : 'load'
+
     data  : {}
     ready : false
-    
-    
+
     constructor: function GraphDisplayView
         BaseView ...
     
@@ -184,7 +185,7 @@ GraphDisplayView = exports.GraphDisplayView = BaseView.extend do # {{{
     
     update: ->
         locals = @toTemplateLocals()
-        @$el.find '.graph-name' .text(locals.name or '')
+        @$el.find '.graph-name a' .text(locals.name or '')
         @$el.find '.graph-desc' .html jade.filters.markdown locals.desc or ''
         this
     
@@ -258,7 +259,16 @@ GraphDisplayView = exports.GraphDisplayView = BaseView.extend do # {{{
         # console.log "Graph.changed( options ) ->\n\tchanges: #{JSON.stringify changes}\n\toptions: #{JSON.stringify options}" #"\n\t^opts: #{JSON.stringify _.intersection _.keys(changes), _.keys(options)}"
         @chart?.updateOptions file:that if changes?.dataset
     
-    
+    /**
+     * Selects the graph permalink input field.
+     */
+    onPermalinkFocus: (evt) ->
+        # defer to allow the select() to be the
+        # last action that happens.  If we don't
+        # defer, the focusing click will 
+        # unselect the text.
+        _.defer( ~> @$el.find '.graph-permalink input' .select() )
+
     # Needed because (sigh) _.debounce returns undefined
     stopAndRender: ->
         @render ...

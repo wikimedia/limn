@@ -1,8 +1,8 @@
 - var graph_id = view.id || model.id || model.cid
-section.graph.graph-edit(id=graph_id)
+section.graph-edit.graph(id=graph_id)
     
     //- Graph Name field is not part of the form due to the layout.
-    .graph-name-row.row-fluid.control-group
+    .graph-name-row.graph-details.row-fluid.control-group
         //- label.name.control-label(for="#{id}_name"): h3 Graph Name
         input.span6.graph-name(type='text', id="#{graph_id}_name", name="name", placeholder='Graph Name', value=name)
     
