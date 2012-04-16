@@ -13,8 +13,8 @@ DEBOUNCE_RENDER = exports.DEBOUNCE_RENDER = 100ms
 ChartOptionView = exports.ChartOptionView = FieldView.extend do # {{{
     # __bind__  : <[ onClick ]>
     ctorName  : 'ChartOptionView'
-    tagName   : 'div'
-    className : 'field option'
+    tagName   : 'section'
+    className : 'chart-option field'
     template  : require 'kraken/template/chart-option'
     
     isCollapsed : true
@@ -59,7 +59,7 @@ ChartOptionView = exports.ChartOptionView = FieldView.extend do # {{{
 ChartOptionScaffold = exports.ChartOptionScaffold = Scaffold.extend do # {{{
     ctorName       : 'ChartOptionScaffold'
     tagName        : 'form'
-    className      : 'options scaffold'
+    className      : 'chart-options scaffold'
     template       : require 'kraken/template/chart-scaffold'
     collectionType : ChartOptionList
     subviewType    : ChartOptionView
@@ -83,10 +83,10 @@ ChartOptionScaffold = exports.ChartOptionScaffold = Scaffold.extend do # {{{
         container = if @fields then @$el.find @fields else @$el
         container
             .addClass 'isotope'
-            .find '.field.option' .addClass 'isotope-item'
+            .find '.chart-option.field' .addClass 'isotope-item'
         container.isotope do
             # itemPositionDataEnabled : true
-            itemSelector    : '.field.option'
+            itemSelector    : '.chart-option.field'
             layoutMode      : 'masonry'
             masonry         : columnWidth : 10
             getSortData :

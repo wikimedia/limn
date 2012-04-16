@@ -1,6 +1,6 @@
 include browser-helpers
 - var graph_id = view.id
-section.graph.graph-display(id=view.id)
+section.graph-display.graph(id=view.id)
     
     .graph-name-row.page-header.row-fluid
         h2.graph-name 
@@ -17,8 +17,7 @@ section.graph.graph-display(id=view.id)
         .span8
             .graph-permalink 
                 input.span6(value="#{model.toPermalink()}", readonly="readonly")
-
-            //- 
+            
             .graph-notes
                 != jade.filters.markdown(notes)
-
+            
