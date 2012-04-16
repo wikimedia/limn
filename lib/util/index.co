@@ -12,7 +12,8 @@ op        = require 'kraken/util/op'
 backbone  = require 'kraken/util/backbone'
 parser    = require 'kraken/util/parser'
 Cascade   = require 'kraken/util/cascade'
-exports import { root, _, op, backbone, parser, Cascade, }
+CSVData   = require 'kraken/util/csv'
+exports import { root, _, op, backbone, parser, Cascade, CSVData, }
 
 # HashSet   = require 'kraken/util/hashset'
 # BitString = require 'kraken/util/bitstring'
