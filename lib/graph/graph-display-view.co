@@ -34,13 +34,14 @@ GraphDisplayView = exports.GraphDisplayView = BaseView.extend do # {{{
     
     events:
         # Select the whole permalink URI text when it receives focus.
-        'focus      .graph-permalink input'             : 'onPermalinkFocus'     
+        'focus      .graph-permalink input'             : 'onPermalinkFocus'
         #     'click    .redraw-button'                  : 'stopAndRender'
         #     'click    .load-button'                    : 'load'
-
+    
     data  : {}
     ready : false
-
+    
+    
     constructor: function GraphDisplayView
         BaseView ...
     

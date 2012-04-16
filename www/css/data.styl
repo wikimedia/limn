@@ -189,15 +189,20 @@ section.graph section.data-ui
                 li a
                     min-width 150px
             
-            .well
-                padding 0.75em
-            
-            .datasource-sources-details
+            .datasource-sources-info
                 display table-cell
                 padding 1em
+                
+                .well
+                    padding 0.75em
+                
                 .source-id, .source-format, .source-charttype,
-                thead, .source-metric-idx, .source-metric-type
+                thead, .source-metric-idx
                     display none
+                
+                .datasource-source-details
+                    font-size 12px
+                
                 .source-name
                     font-size 15px
                     margin-bottom 0.75em
@@ -205,11 +210,13 @@ section.graph section.data-ui
                     display block
                     width 95%
                     font-family menlo, monospace
+                    font-size 11px
                 .datasource-source-time
                     margin 0.5em
                     & > *
                         display inline-block
                         margin-right 1em
+                
                 .datasource-source-metric
                     &, &:hover
                         cursor pointer
@@ -218,6 +225,8 @@ section.graph section.data-ui
                         background-color #d9edf7
                         border 1px solid #3a87ad
                         border-width 1px 0
+                    .source-metric-type
+                        font-family menlo, monospace
                 
             
             

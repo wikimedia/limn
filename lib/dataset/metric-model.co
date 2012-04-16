@@ -2,9 +2,7 @@
 } = require 'kraken/util'
 { BaseModel, BaseList,
 } = require 'kraken/base'
-{ DataSource, DataSourceList,
-} = require 'kraken/dataset/datasource-model'
-
+DataSource = DataSourceList = null
 
 /**
  * @class
@@ -97,3 +95,9 @@ MetricList = exports.MetricList = BaseList.extend do # {{{
         metric.get('index') ? Infinity
     
 # }}}
+
+### FIXME: LOLHACKS ###
+setTimeout do
+    -> { DataSource, DataSourceList, } := require 'kraken/dataset/datasource-model'
+    10
+

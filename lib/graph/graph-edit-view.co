@@ -43,10 +43,10 @@ GraphEditView = exports.GraphEditView = BaseView.extend do # {{{
         'click    .save-button'                    : 'save'
         'click    .done-button'                    : 'done'
         'keypress .graph-details input[type="text"]'     : 'onKeypress'
-        'submit   .graph-details'                        : 'onDetailsSubmit'
+        'submit   form.graph-details'                    : 'onDetailsSubmit'
         'change   :not(.chart-options) select'           : 'onDetailsSubmit'
         'keypress .chart-options .value'                 : 'onKeypress'
-        'submit   .chart-options'                        : 'onOptionsSubmit'
+        'submit   form.chart-options'                    : 'onOptionsSubmit'
         'change   .chart-options input[type="checkbox"]' : 'onOptionsSubmit'
     
     

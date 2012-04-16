@@ -1,7 +1,9 @@
-{ _, op,
+{ _, op, CSVData,
 } = require 'kraken/util'
 { BaseModel, BaseList, BaseView,
 } = require 'kraken/base'
+{ Metric, MetricList,
+} = require 'kraken/dataset/metric-model'
 
 
 /**
@@ -17,20 +19,6 @@ DataSource = exports.DataSource = BaseModel.extend do # {{{
      * @type Array
      */
     data : null
-    
-    
-    
-    
-    
-    constructor: function DataSource
-        BaseModel ...
-    
-    initialize: ->
-        @attributes = @canonicalize @attributes
-        BaseModel::initialize ...
-        @constructor.register this
-        @on 'load-success', @onLoadSuccess, this
-    
     
     defaults: ->
         id            : ''
@@ -57,6 +45,22 @@ DataSource = exports.DataSource = BaseModel.extend do # {{{
     
     url: ->
         "/datasources/#{@id}.json"
+    
+    
+    
+    
+    
+    constructor: function DataSource
+        BaseModel ...
+    
+    initialize: ->
+        @attributes = @canonicalize @attributes
+        BaseModel::initialize ...
+        @constructor.register this
+        @metrics = new MetricList @attributes.metrics
+        @on 'change:metrics', @onMetricChange, this
+        @on 'load-success', @onLoadSuccess, this
+    
     
     canonicalize: (ds) ->
         ds.shortName    or= ds.name
@@ -90,16 +94,6 @@ DataSource = exports.DataSource = BaseModel.extend do # {{{
             @trigger 'load-error', this, 'Unknown Data Format!'
         this
     
-    onLoadSuccess: ->
-        return if @ready
-        @ready = true
-        @trigger 'ready', this
-    
-    onLoadError: (jqXHR, txtStatus, err) ->
-        @_loadError = true
-        console.error "#this Error loading data! -- #msg: #{err or ''}"
-    
-    
     loadJSON: (url) ->
         $.ajax do
             url      : url
@@ -114,14 +108,25 @@ DataSource = exports.DataSource = BaseModel.extend do # {{{
         $.ajax do
             url      : url
             dataType : 'text'
-            success : (@data) ->
+            success : (data) ->
+                @data = new CSVData data
                 @trigger 'load-success', this
             error : (jqXHR, txtStatus, err) ->
                 @trigger 'load-error', this, txtStatus, err
         this
     
-    parseCSV: (data) ->
-        ...
+    onLoadSuccess: ->
+        return if @ready
+        @ready = true
+        @trigger 'ready', this
+    
+    onLoadError: (jqXHR, txtStatus, err) ->
+        @_errorLoading = true
+        console.error "#this Error loading data! -- #msg: #{err or ''}"
+    
+    
+    getData: ->
+        @data.toJSON?() or @data
     
     
     getColumnName: (idx) ->
@@ -130,6 +135,9 @@ DataSource = exports.DataSource = BaseModel.extend do # {{{
     getColumnIndex: (name) ->
         return that.idx if _.find @get('metrics'), -> it.label is name
         -1
+    
+    onMetricChange: ->
+        @metrics.reset @get 'metrics'
     
     
 # }}}

@@ -186,6 +186,10 @@ class CSVData
         @data = _.merge [], @origData
         @rebuildColumns()
     
+    
+    toJSON: ->
+        _.merge [], @data
+    
 
 module.exports = CSVData
 
