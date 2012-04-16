@@ -1,0 +1,30 @@
+{ _, op,
+} = require 'kraken/util'
+{ BaseView,
+} = require 'kraken/base'
+{ Graph, GraphList
+} = require 'kraken/graph/graph-model'
+
+root = do -> this
+DEBOUNCE_RENDER = 100ms
+
+/**
+ * @class View for a showing a list of all saved graphs
+ */
+GraphIndexView = exports.GraphIndexView = BaseView.extend do # {{{
+    __bind__  : <[
+        render
+    ]>
+    __debounce__: <[ render ]>
+    
+    tagName   : 'section'
+    className : 'graph-index-view'
+    template  : require 'kraken/template/graph-index'
+    
+    data  : {}
+    ready : false
+
+    initialize : (o={}) ->
+        @model = new GraphList (o['graph_list_data'])
+        BaseView::initialize ...
+        console.log "#this.initialize!"

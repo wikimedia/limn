@@ -1,0 +1,28 @@
+{ _, op,
+} = require 'kraken/util'
+{ BaseView, BaseModel, BaseList,
+} = require 'kraken/base'
+{ Graph, GraphList, GraphIndexView
+} = require 'kraken/graph'
+
+root = this
+
+# instantiates a new GraphIndexView with the
+# passed in JSON graph_list_data, and then
+# appends the rendered view to the DOM.
+main = (graph_list_data) ->
+    view = new GraphIndexView { 'graph_list_data': graph_list_data }
+    $ '#content .inner' .append view.el
+
+# URL to query for saved graph JSON data.
+graph_list_url = 'http://localhost:8081/graphslist'
+
+jQuery.ajax do
+    url : 'http://localhost:8081/graphslist'
+    dataType : 'json'
+    success : (res) ->
+        console.log("got %o", res)
+        # result will be the returned JSON
+        # data of all of the saved graphs
+        jQuery main res
+    error : (err) -> console.error err

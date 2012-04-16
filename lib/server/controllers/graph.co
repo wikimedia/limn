@@ -61,7 +61,7 @@ class GraphController extends Controller
     
     # GET /graphs
     index: (req, res) ->
-        res.render 'dashboard'
+        res.render 'graph/index'
     
     # GET /graphs/:graph
     show: (req, res) ->
