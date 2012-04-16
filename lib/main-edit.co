@@ -11,6 +11,8 @@ Backbone = require 'backbone'
   ChartOption, ChartOptionList, TagSet,
   ChartOptionView, ChartOptionScaffold,
 } = require 'kraken/chart'
+{ DataSource, DataSourceList,
+} = require 'kraken/dataset'
 { Graph, GraphList, GraphEditView,
 } = require 'kraken/graph'
 
@@ -60,14 +62,12 @@ main = ->
     $ '#content .inner' .append view.el
 
 
-
 # Load data files
 Seq([   <[ CHART_OPTIONS_SPEC /schema/dygraph.json ]>
 ])
 .parEach_ (next, [key, url]) ->
     jQuery.ajax do
         url : url,
-        dataType : 'json'
         success : (res) ->
             root[key] = res
             next.ok()

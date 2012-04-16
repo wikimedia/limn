@@ -31,12 +31,21 @@ DataSourceUIView = exports.DataSourceUIView = BaseView.extend do # {{{
     
     toTemplateLocals: ->
         locals = @model.toJSON()
-        locals import {
-            @graph_id, @dataset, @datasources,
-            source_summary   : '<Select Source>'
-            metric_summary   : '<Select Metric>'
-            timespan_summary : '<Select Timespan>'
-        }
+        locals import {@graph_id, @dataset, @datasources}
+        
+        ds = @model.source
+        hasSource = @model.get('source_id')? and ds
+        locals.source_summary   = unless hasSource then '<Select Source>' else ds.get 'shortName'
+        
+        hasMetric = hasSource and @model.get('source_col')?
+        locals.metric_summary   = unless hasMetric then '<Select Metric>' else @model.getSourceColumnName()
+        
+        dsts = ds?.get('timespan') or {}
+        ts = locals.timespan = _.defaults _.clone(@model.get('timespan')), dsts
+        hasTimespan = hasMetric and ts.start and ts.end and ts.step
+        locals.timespan_summary = unless hasTimespan then '<Select Timespan>' else "#{ts.start} &mdash; #{ts.end}"
+        
+        locals
     
     onHeaderClick: ->
         @$el.toggleClass 'in'

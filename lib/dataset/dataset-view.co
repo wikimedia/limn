@@ -28,9 +28,10 @@ DataSetView = exports.DataSetView = BaseView.extend do # {{{
         BaseView::initialize ...
         @views_by_cid = {}
         @addAllMetrics()
-        @model.metrics.on 'add',    @addMetric,         this
-        @model.metrics.on 'remove', @removeMetric,      this
-        @model.metrics.on 'reset',  @addAllMetrics,     this
+        @model.metrics
+            .on 'add',    @addMetric,         this
+            .on 'remove', @removeMetric,      this
+            .on 'reset',  @addAllMetrics,     this
     
     
     newMetric: ->

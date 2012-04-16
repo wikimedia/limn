@@ -186,15 +186,39 @@ section.graph section.data-ui
                 height 100%
                 display table-cell
                 float none
-                // width 200px
-                // min-width 200px
                 li a
                     min-width 150px
+            
+            .well
+                padding 0.75em
             
             .datasource-sources-details
                 display table-cell
                 padding 1em
-                // width auto
+                .source-id, .source-format, .source-charttype,
+                thead, .source-metric-idx, .source-metric-type
+                    display none
+                .source-name
+                    font-size 15px
+                    margin-bottom 0.75em
+                .source-url
+                    display block
+                    width 95%
+                    font-family menlo, monospace
+                .datasource-source-time
+                    margin 0.5em
+                    & > *
+                        display inline-block
+                        margin-right 1em
+                .datasource-source-metric
+                    &, &:hover
+                        cursor pointer
+                    &.active td
+                        color #3a87ad
+                        background-color #d9edf7
+                        border 1px solid #3a87ad
+                        border-width 1px 0
+                
             
             
         

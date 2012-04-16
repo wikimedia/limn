@@ -8,14 +8,28 @@
  * @class
  */
 DataSource = exports.DataSource = BaseModel.extend do # {{{
+    __bind__ : <[ onLoadSuccess onLoadError ]>
     urlRoot  : '/datasources'
+    ready    : false
+    
+    /**
+     * Parsed data for this datasource.
+     * @type Array
+     */
+    data : null
+    
+    
+    
     
     
     constructor: function DataSource
         BaseModel ...
     
     initialize: ->
+        @attributes = @canonicalize @attributes
         BaseModel::initialize ...
+        @constructor.register this
+        @on 'load-success', @onLoadSuccess, this
     
     
     defaults: ->
@@ -32,7 +46,7 @@ DataSource = exports.DataSource = BaseModel.extend do # {{{
         
         timespan : 
             start     : null
-            stop      : null
+            end       : null
             step      : '1mo'
         
         columns       : []
@@ -44,8 +58,81 @@ DataSource = exports.DataSource = BaseModel.extend do # {{{
     url: ->
         "/datasources/#{@id}.json"
     
+    canonicalize: (ds) ->
+        ds.shortName    or= ds.name
+        ds.title        or= ds.name
+        ds.subtitle     or= ''
+        
+        cols = ds.columns
+        if _.isArray cols
+            ds.metrics = _.map cols, (col, idx) ->
+                if _.isArray col
+                    [label, type] = col
+                    {idx, label, type or 'int'}
+                else
+                    col.type or= 'int'
+                    col
+        else
+            ds.metrics = _.map cols.labels, (label, idx) ->
+                {idx, label, type:cols.types[idx] or 'int'}
+        ds
+    
+    load: ->
+        @trigger 'load', this
+        url = @get 'url'
+        switch @get 'format'
+        case 'json'
+            @loadJSON url
+        case 'csv'
+            @loadCSV url
+        default
+            console.error "#this.load() Unknown Data Format!"
+            @trigger 'load-error', this, 'Unknown Data Format!'
+        this
+    
+    onLoadSuccess: ->
+        return if @ready
+        @ready = true
+        @trigger 'ready', this
+    
+    onLoadError: (jqXHR, txtStatus, err) ->
+        @_loadError = true
+        console.error "#this Error loading data! -- #msg: #{err or ''}"
+    
+    
+    loadJSON: (url) ->
+        $.ajax do
+            url      : url
+            dataType : 'json'
+            success : (@data) ->
+                @trigger 'load-success', this
+            error : (jqXHR, txtStatus, err) ->
+                @trigger 'load-error', this, txtStatus, err
+        this
+    
+    loadCSV: (url) ->
+        $.ajax do
+            url      : url
+            dataType : 'text'
+            success : (@data) ->
+                @trigger 'load-success', this
+            error : (jqXHR, txtStatus, err) ->
+                @trigger 'load-error', this, txtStatus, err
+        this
+    
+    parseCSV: (data) ->
+        ...
+    
+    
+    getColumnName: (idx) ->
+        @get('metrics')?[idx]?.label
+    
+    getColumnIndex: (name) ->
+        return that.idx if _.find @get('metrics'), -> it.label is name
+        -1
+    
+    
 # }}}
-
 
 
 /**
@@ -57,15 +144,16 @@ DataSourceList = exports.DataSourceList = BaseList.extend do # {{{
     
     constructor: function DataSourceList then BaseList ...
     initialize : -> BaseList::initialize ...
-    
-    
 # }}}
+
+
 
 
 /* * * *  DataSource Cache  * * * */
 
 DataSource import do
     CACHE : new DataSourceList
+    ready : false
     
     register: (model) ->
         # console.log "#{@CACHE}.register(#{model.id or model.get('id')})", model
@@ -77,16 +165,30 @@ DataSource import do
     get: (id) ->
         @CACHE.get id
     
-    lookup: (id, cb) ->
+    lookup: (id, cb, cxt=this) ->
         # console.log "#{@CACHE}.lookup(#id, #{typeof cb})"
+        unless @ready
+            @on 'cache-ready', ~>
+                @off 'cache-ready', arguments.callee
+                @lookup id, cb, cxt
+            return
+        
         if @CACHE.get id
-            cb null, that
+            cb.call cxt, null, that
         else
             Cls = this
             @register new Cls {id}
-                .on 'ready', -> cb null, it
+                .on 'ready', -> cb.call cxt, null, it
     
 
 _.bindAll DataSource, 'register', 'get', 'lookup'
+
+
+# Fetch all DataSources
+$.getJSON '/datasources/all', (data) ->
+    DataSource.CACHE.reset _.map data, -> it
+    DataSource.ready = true
+    DataSource.trigger 'cache-ready', DataSource
+
 
 

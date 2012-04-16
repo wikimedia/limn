@@ -18,7 +18,8 @@ DataView = exports.DataView = BaseView.extend do # {{{
     className      : 'data-ui'
     template       : require 'kraken/template/data'
     
-    datasources : {}
+    data        : {}
+    datasources : null
     
     
     
@@ -28,6 +29,7 @@ DataView = exports.DataView = BaseView.extend do # {{{
     initialize: ->
         @graph_id = @options.graph_id
         BaseView::initialize ...
+        @datasources = @model.sources
         @on 'ready', @onReady, this
         @load()
     
@@ -50,8 +52,9 @@ DataView = exports.DataView = BaseView.extend do # {{{
     
     load: ->
         @wait()
-        $.getJSON '/datasources/all', (@datasources) ~>
-            _.each @datasources, @canonicalizeDataSource, this
+        $.getJSON '/datasources/all', (@data) ~>
+            _.each @data, @canonicalizeDataSource, this
+            @model.sources.reset _.map @data, -> it
             @ready = true
             @unwait()
             @render()
@@ -81,7 +84,7 @@ DataView = exports.DataView = BaseView.extend do # {{{
     
     toTemplateLocals: ->
         attrs = _.clone @model.attributes
-        { $, _, op, @model, view:this, @graph_id, @datasources, } import attrs
+        { $, _, op, @model, view:this, @graph_id, @datasources } import attrs
     
     # attachSubviews: ->
     #     @$el.empty()

@@ -15,16 +15,32 @@ BaseView = exports.BaseView = Backbone.View.extend mixinBase do # {{{
     tagName : 'section'
     
     /**
+     * The identifier for this view class.
+     * By default, the class name is converted to underscore-case, and a
+     * trailing '_view' suffix is dropped.
+     * Example: "CamelCaseView" becomes "camel_case"
+     * @type String
+     */
+    __view_type_id__: null
+    
+    /**
      * Array of [view, selector]-pairs.
      * @type Array<[BaseView, String]>
      */
     subviews : []
+    
+    /**
+     * Whether this view has been added to the DOM.
+     * @type Boolean
+     */
+    _parented: false
     
     
     
     constructor : function BaseView
         @__class__      = @constructor
         @__superclass__ = @..__super__.constructor
+        @__view_type_id__ or= _.str.underscored @getClassName() .replace /_view$/, ''
         @waitingOn      = 0
         @subviews       = []
         Backbone.View ...
@@ -90,6 +106,10 @@ BaseView = exports.BaseView = Backbone.View.extend mixinBase do # {{{
         _.pluck @subviews, 0 .forEach @removeSubview, this
         this
     
+    bubbleEvent: (evt) ->
+        @invokeSubviews 'trigger', ...arguments
+        this
+    
     
     ### Rendering Chain
     
@@ -123,14 +143,32 @@ BaseView = exports.BaseView = Backbone.View.extend mixinBase do # {{{
         this
     
     
+    attach: (el) ->
+        @$el.appendTo el
+        # only trigger the event the first time
+        return this if @_parented
+        @_parented = true
+        _.delay do
+            ~> # have to let DOM settle to ensure elements can be found
+                @delegateEvents()
+                @trigger 'parent', this
+            50
+        this
+    
+    remove : ->
+        @undelegateEvents()
+        @$el.remove()
+        return this unless @_parented
+        @_parented = false
+        @trigger 'unparent', this
+        this
     
     
     ### UI Utilities
     
-    hide   : -> @$el.hide();      this
-    show   : -> @$el.show();      this
-    remove : -> @$el.remove();    this
-    clear  : -> @model.destroy(); @remove()
+    hide   : -> @$el.hide();      @trigger('hide', this);       this
+    show   : -> @$el.show();      @trigger('show', this);       this
+    clear  : -> @model.destroy(); @trigger('clear', this);      @remove()
     
     
     # remove : ->

@@ -2,6 +2,8 @@
 } = require 'kraken/util'
 { BaseModel, BaseList,
 } = require 'kraken/base'
+{ DataSource, DataSourceList,
+} = require 'kraken/dataset/datasource-model'
 
 
 /**
@@ -16,25 +18,16 @@ Metric = exports.Metric = BaseModel.extend do # {{{
      */
     source : null
     
-    
-    constructor: function Metric
-        BaseModel ...
-    
-    initialize : ->
-        BaseModel::initialize ...
-    
-    
     defaults : ->
         index           : 0
         label           : 'New Metric'
         type            : 'int'
-        timespan        : { start:null, stop:null, step:null }
+        timespan        : { start:null, end:null, step:null }
         disabled        : false
         
         # DataSource
-        source_id       : null
-        source_col_idx  : -1
-        source_col_name : ''
+        source_id  : null
+        source_col : -1
         
         # Chart Options
         color           : null
@@ -42,8 +35,37 @@ Metric = exports.Metric = BaseModel.extend do # {{{
         format_value    : null
         format_axis     : null
         
-        scale           : 1.0
         transforms      : []
+        scale           : 1.0
+    
+    
+    
+    constructor: function Metric
+        BaseModel ...
+    
+    initialize : ->
+        BaseModel::initialize ...
+        @on 'change:source_id', @onUpdateSource, this
+        @onUpdateSource()
+    
+    
+    onUpdateSource: ->
+        if source_id = @get 'source_id'
+            @wait()
+            DataSource.lookup source_id, @onSourceReady, this
+        this
+    
+    onSourceReady: (err, source) ->
+        console.log "#this.onSourceReady", arguments
+        @unwait()
+        if err
+            console.error "#this Error loading DataSource! #err"
+        else
+            @source = source
+            unless @ready
+                @ready = true
+                @trigger 'ready', this
+        this
     
     
     /**
@@ -52,10 +74,11 @@ Metric = exports.Metric = BaseModel.extend do # {{{
      */
     isOk: ->
         (label = @get('label')) and label is not 'New Metric'
-        and @get('source_id')   and @get('source_col_idx') >= 0
+        and @get('source_id')   and @get('source_col') >= 0
         and _.every @get('timespan'), op.ok
     
-    
+    getSourceColumnName: ->
+        @source?.getColumnName @get 'source_col'
     
 # }}}
 
@@ -69,5 +92,8 @@ MetricList = exports.MetricList = BaseList.extend do # {{{
     
     constructor: function MetricList then BaseList ...
     initialize: -> BaseList::initialize ...
+    
+    comparator: (metric) ->
+        metric.get('index') ? Infinity
     
 # }}}

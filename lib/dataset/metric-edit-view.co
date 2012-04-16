@@ -36,7 +36,7 @@ MetricEditView = exports.MetricEditView = BaseView.extend do # {{{
     
     toTemplateLocals: ->
         locals = BaseView::toTemplateLocals ...
-        locals import { @graph_id, @dataset, @datasources, }
+        locals import { @graph_id, @dataset, @datasources }
     
     build: ->
         BaseView::build ...
@@ -46,7 +46,7 @@ MetricEditView = exports.MetricEditView = BaseView.extend do # {{{
     
     editMetric: (metric) ->
         console.log "#this.editMetric!", metric
-        @model = metric
+        @datasource_ui_view.model = @model = metric
         @render()
         @show()
         this
