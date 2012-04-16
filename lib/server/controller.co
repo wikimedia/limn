@@ -52,6 +52,7 @@ class Controller extends Resource
      * @constructor
      */
     (@app, name) ->
+        @routes or= {}
         
         # Bind all methods and make actions object
         actions = {}

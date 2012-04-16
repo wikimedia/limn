@@ -143,8 +143,7 @@ app.configure ->
 
 Controller   = require './controller'
 app.controller require './controllers/graph'
-ds = app.controller require './controllers/datasource'
-# ds.map 'get', 'all', ds.allData.bind(ds)
+app.controller require './controllers/datasource'
 
 YAML_EXT_PAT = /\.ya?ml$/i
 app.get '/datasources/all', (req, res, next) ->
