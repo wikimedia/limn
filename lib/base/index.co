@@ -1,5 +1,6 @@
 mixins    = require 'kraken/base/base-mixin'
 models    = require 'kraken/base/base-model'
 views     = require 'kraken/base/base-view'
+cache     = require 'kraken/base/model-cache'
 cascading = require 'kraken/base/cascading-model'
-exports import mixins import models import views import cascading
+exports import mixins import models import views import cache import cascading

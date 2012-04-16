@@ -1,0 +1,40 @@
+
+function ModelCache (ModelClass, ModelListClass)
+    ModelClass import do
+        CACHE : new ModelListClass
+        ready : false
+        
+        register: (model) ->
+            # console.log "ModelCache(#{@CACHE}).register(#{model.id or model.get('id')})", model
+            if @CACHE.contains model
+                @CACHE.remove model, {+silent}
+            @CACHE.add model
+            model
+        
+        get: (id) ->
+            @CACHE.get id
+        
+        lookup: (id, cb, cxt=this) ->
+            # console.log "ModelCache(#{@CACHE}).lookup(#id, #{typeof cb})"
+            unless @ready
+                @on 'cache-ready', ~>
+                    @off 'cache-ready', arguments.callee
+                    @lookup id, cb, cxt
+                return
+            
+            if @CACHE.get id
+                cb.call cxt, null, that
+            else
+                Cls = this
+                @register new Cls {id}
+                    .on 'ready', -> cb.call cxt, null, it
+            this
+    
+    # Bind the ModelCache methods to the class
+    for m of <[ register get lookup ]>
+        ModelClass[m] .= bind ModelClass
+    
+    ModelClass
+
+
+module.exports = exports = ModelCache
