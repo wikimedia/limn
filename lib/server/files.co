@@ -1,0 +1,53 @@
+/**
+ * @fileOverview Filesystem utilities.
+ */
+
+
+fs   = require 'fs'
+path = require 'path'
+
+_    = require 'underscore'
+Seq  = require 'seq'
+
+
+
+/**
+ * Asynchronously reads each filepath supplied, returning a map
+ * from filepath to contents.
+ * 
+ * @param {Array<String>} files List of paths to read.
+ * @param {Function} cb Callback taking `(error, data)` where `data` is a map
+ *  from filepath to contents. As always, `error` will be null on success.
+ * @returns {Seq} The Seq object representing the async operation chain. (You
+ *  can usually ignore this.)
+ */
+readFilesAsync = exports.readFilesAsync = (files, cb) ->
+    data = {}
+    Seq files
+        .parMap (f) ->
+            # console.log "fs.readFile '#CWD/data/#f'"
+            fs.readFile f, 'utf8', this
+        .parEach (text, i) ->
+            f = files[i]
+            data[f] = text
+            @ok()
+        .seq ->
+            # Success!
+            cb null, data
+        .catch (err) ->
+            console.error '[readFilesAsync] catch!'
+            console.error err
+            console.error that if err.stack
+            cb err
+
+
+
+
+# _     = require 'underscore'
+# files = require 'kraken/server/files'
+# files.readFilesAsync <[ package.co package.json deploy.sh ]>, (err, data) ->
+#     if err
+#         console.error err
+#     else
+#         console.log _.map data, (txt, f) -> "#f: #{txt.length}"
+
