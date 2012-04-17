@@ -1,18 +1,23 @@
 include browser-helpers
 - var graph_id = view.id
-section.graph.graph-display(id=view.id)
+section.graph-display.graph(id=view.id)
     
     .graph-name-row.page-header.row-fluid
-        h2.graph-name #{name}
+        h2.graph-name 
+            a(id="graph-title", href="#{model.toLink()}") #{name}
     
     .graph-viewport-row.row-fluid
         .viewport
         .graph-legend
     
     .graph-details-row.row-fluid
-        .graph-desc
+        .graph-desc.span6
             != jade.filters.markdown(desc)
         
-        //- 
-            .graph-notes.span6
+        .span8
+            .graph-permalink 
+                input.span6(value="#{model.toPermalink()}", readonly="readonly")
+            
+            .graph-notes
                 != jade.filters.markdown(notes)
+            

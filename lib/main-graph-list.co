@@ -1,0 +1,26 @@
+{ _, op,
+} = require 'kraken/util'
+{ BaseView, BaseModel, BaseList,
+} = require 'kraken/base'
+{ Graph, GraphList, GraphListView
+} = require 'kraken/graph'
+
+# instantiates a new GraphListView with the
+# passed in JSON graph_list_data, and then
+# appends the rendered view to the DOM.
+main = (graph_list_data) ->
+    graphs = new GraphList graph_list_data
+    view = new GraphListView { 'collection': graphs }
+    $ '#content .inner' .append view.el
+
+# URL to query for saved graph JSON data.
+graph_list_url = '/graphslist'
+
+jQuery.ajax do
+    url : graph_list_url
+    dataType : 'json'
+    success : (res) ->
+        # result will be the returned JSON
+        # data of all of the saved graphs
+        jQuery main.bind this, res
+    error : (err) -> console.error err

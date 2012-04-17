@@ -8,7 +8,7 @@ include browser-helpers
 - var tags_cls     = tags.map(_.domize('tag')).join(' ')
 
 
-.field.option(id=option_id, class="#{category_cls} #{tags_cls}")
+section.chart-option.field(id=option_id, class="#{category_cls} #{tags_cls}")
     a.close(title="Click to collapse") &times;
     
     h3.shortname(title="Click to collapse") #{name}
