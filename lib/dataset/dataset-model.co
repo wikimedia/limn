@@ -50,7 +50,7 @@ DataSet = exports.DataSet = BaseModel.extend do # {{{
         return this if @ready and not opts.force
         @wait()
         @trigger 'load', this
-        Seq @metrics.pluck 'source_id'
+        Seq _.unique @metrics.pluck 'source_id'
             .parMap_ (next, source_id) ->
                 DataSource.lookup source_id, next
             .seqEach_ (next, source) ~>

@@ -9,6 +9,7 @@ DataSource = DataSourceList = null
  */
 Metric = exports.Metric = BaseModel.extend do # {{{
     urlRoot  : '/metrics'
+    ready : false
     
     /**
      * Data source of the Metric.
@@ -43,13 +44,15 @@ Metric = exports.Metric = BaseModel.extend do # {{{
     
     initialize : ->
         BaseModel::initialize ...
-        @on 'change:source_id', @onUpdateSource, this
-        @onUpdateSource()
+        @on 'change:source_id',  @lookupSource,         this
+        @on 'change:source_col', @onUpdateSourceCol,    this
+        @lookupSource()
     
     
-    onUpdateSource: ->
+    lookupSource: ->
         if source_id = @get 'source_id'
             @wait()
+            @updateId()
             DataSource.lookup source_id, @onSourceReady, this
         this
     
@@ -60,9 +63,20 @@ Metric = exports.Metric = BaseModel.extend do # {{{
             console.error "#this Error loading DataSource! #err"
         else
             @source = source
+            @updateId()
             unless @ready
                 @ready = true
                 @trigger 'ready', this
+        this
+    
+    
+    onUpdateSourceCol: ->
+        @updateId()
+        this
+    
+    updateId: ->
+        if (source_id = @get('source_id')) and (source_col = @get('source_col'))
+            @id = "#source_id[#source_col]"
         this
     
     

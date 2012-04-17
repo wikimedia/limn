@@ -59,7 +59,7 @@ DataSource = exports.DataSource = BaseModel.extend do # {{{
         @constructor.register this
         @metrics = new MetricList @attributes.metrics
         @on 'change:metrics', @onMetricChange, this
-        @on 'load-success', @onLoadSuccess, this
+        @load()
     
     
     canonicalize: (ds) ->
@@ -91,31 +91,28 @@ DataSource = exports.DataSource = BaseModel.extend do # {{{
             @loadCSV url
         default
             console.error "#this.load() Unknown Data Format!"
-            @trigger 'load-error', this, 'Unknown Data Format!'
+            @onLoadError null, 'Unknown Data Format!', new Error 'Unknown Data Format!'
         this
     
     loadJSON: (url) ->
         $.ajax do
             url      : url
             dataType : 'json'
-            success : (@data) ->
-                @trigger 'load-success', this
-            error : (jqXHR, txtStatus, err) ->
-                @trigger 'load-error', this, txtStatus, err
+            success  : @onLoadSuccess
+            error    : @onLoadError
         this
     
     loadCSV: (url) ->
         $.ajax do
             url      : url
             dataType : 'text'
-            success : (data) ->
-                @data = new CSVData data
-                @trigger 'load-success', this
-            error : (jqXHR, txtStatus, err) ->
-                @trigger 'load-error', this, txtStatus, err
+            success  : (data) ~> @onLoadSuccess new CSVData data
+            error    : @onLoadError
         this
     
-    onLoadSuccess: ->
+    onLoadSuccess: (@data) ->
+        console.log "#this.onLoadSuccess #{@data}"
+        @trigger 'load-success', this
         return if @ready
         @ready = true
         @trigger 'ready', this
@@ -123,6 +120,7 @@ DataSource = exports.DataSource = BaseModel.extend do # {{{
     onLoadError: (jqXHR, txtStatus, err) ->
         @_errorLoading = true
         console.error "#this Error loading data! -- #msg: #{err or ''}"
+        @trigger 'load-error', this, txtStatus, err
     
     
     getData: ->
