@@ -149,7 +149,7 @@ app.controller require './controllers/datasource'
 YAML_EXT_PAT = /\.ya?ml$/i
 app.get '/datasources/all', (req, res, next) ->
     data = {}
-    Seq
+    Seq()
         .seq glob, 'data/datasources/**/*.@(yaml|json)', {+nocase, +nosort}, Seq
         .seq (paths) -> readFilesAsync paths, this
         .seq (txts) -> @ok _.items txts
