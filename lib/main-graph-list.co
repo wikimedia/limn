@@ -10,11 +10,11 @@
 # appends the rendered view to the DOM.
 main = (graph_list_data) ->
     graphs = new GraphList graph_list_data
-    view = new GraphListView { 'collection': graphs }
+    view   = new GraphListView { 'collection': graphs }
     $ '#content .inner' .append view.el
 
 # URL to query for saved graph JSON data.
-graph_list_url = '/graphslist'
+graph_list_url = '/graphs.json'
 
 jQuery.ajax do
     url : graph_list_url
