@@ -2,14 +2,11 @@
 
 fs     = require 'fs'
 path   = require 'path'
-findit = require 'findit'
+glob   = require 'glob'
 {existsSync:exists} = path
 {exec, spawn} = require 'child_process'
 {mkdirp, mkdirpAsync} = require './mkdirp'
 
-_        = require 'underscore'
-_.str    = require 'underscore.string'
-_.mixin _.str.exports()
 
 Seq      = require 'seq'
 yaml     = require 'js-yaml'
@@ -18,7 +15,9 @@ express  = require 'express'
 Resource = require 'express-resource'
 compiler = require 'connect-compiler-extras'
 
+_        = require '../util/underscore'
 op       = require '../util/op'
+files    = require './files'
 
 
 
@@ -148,21 +147,12 @@ app.controller require './controllers/datasource'
 YAML_EXT_PAT = /\.ya?ml$/i
 app.get '/datasources/all', (req, res, next) ->
     data = {}
-    files = []
-    Seq(findit.sync 'data/datasources')
-        # .seq fs.readdir, 'data/datasources', Seq
-        # .flatten()
-        .filter -> /\.(json|ya?ml)$/.test it
-        .seq ->
-            files := @stack.slice()
-            # console.log 'files:', files
-            @ok files
-        .flatten()
-        .parMap (f) ->
-            # console.log "fs.readFile '#CWD/data/#f'"
-            fs.readFile f, 'utf8', this
-        .parMap (text, i) ->
-            f = files[i]
+    Seq
+        .seq glob, 'data/datasources/**/*.@(yaml|json)', {+nocase, +nosort}, Seq
+        .seq (paths) -> files.readFilesAsync paths, this
+        .seq (txts) -> @ok _.items txts
+        .flatten false
+        .parMap ([f, text]) ->
             # console.log "parsing file[#i]: '#f' -> text[#{text.length}]..."
             k = f.replace YAML_EXT_PAT, '.json'
             v = data[k] = {}
@@ -184,6 +174,7 @@ app.get '/datasources/all', (req, res, next) ->
             console.error err
             console.error that if err.stack
             res.send { error:String(err), partial_data:data }
+
 
 
 # temporarily hardcoded until funciton to get JSON out of 
