@@ -11,7 +11,10 @@ html
             block styles
                 //- mixin css('reset.min.css')
                 mixin css('/vendor/bootstrap/css/bootstrap.css')
+                mixin css('/vendor/bootstrap/css/bootstrap.css', media='print')
                 mixin css('layout.css')
+                mixin css('layout.css', media='print')
+                
             
             link(type="image/ico", rel="icon", href="/favicon.ico")
             link(type="image/x-icon", rel="shortcut icon", href="/favicon.ico")
