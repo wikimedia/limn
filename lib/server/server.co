@@ -183,15 +183,10 @@ app.get '/datasources/all', (req, res, next) ->
 # can be used to instantiate a GraphList of Graph Models.
 app.get '/graphslist' (req, res) ->
     Seq()
-        # find list of data/graph/*.json files
-        .seq            -> @ok glob.sync "#DATA/graphs/*.json"
-        # read them each in 
-        .seq (paths)    -> readFilesAsync paths, this
-        # parse each file into a JSON object and send it as the response
-        .seq (data)     -> 
-            graphs = ( for f, txt in data then JSON.parse txt )
-            res.send graphs
-            
+        # find list of data/graph/*.json files, send back the objects
+        .seq            -> readJSONFilesAsync "#DATA/graphs/*.json", this
+        # remove filepath info
+        .seq   (graphs) -> res.send _.values graphs
 
 app.get '/', (req, res) ->
     res.render 'dashboard'
