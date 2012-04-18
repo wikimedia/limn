@@ -6,6 +6,8 @@ glob   = require 'glob'
 {existsSync:exists} = path
 {exec, spawn} = require 'child_process'
 {mkdirp, mkdirpAsync} = require './mkdirp'
+{ readFilesAsync, readJSONFilesAsync,
+} = require './files'
 
 
 Seq      = require 'seq'
@@ -149,7 +151,7 @@ app.get '/datasources/all', (req, res, next) ->
     data = {}
     Seq
         .seq glob, 'data/datasources/**/*.@(yaml|json)', {+nocase, +nosort}, Seq
-        .seq (paths) -> files.readFilesAsync paths, this
+        .seq (paths) -> readFilesAsync paths, this
         .seq (txts) -> @ok _.items txts
         .flatten false
         .parMap ([f, text]) ->
@@ -175,18 +177,21 @@ app.get '/datasources/all', (req, res, next) ->
             console.error that if err.stack
             res.send { error:String(err), partial_data:data }
 
-
-
-# temporarily hardcoded until funciton to get JSON out of 
-# files in a directory is finished.  Also need to fix
-# controller method action mapping.
+# FIXME:  Make /graphs.json do this instead of graphslist.
+#      :  Can I use Seq .par to read in data and also parse the JSON?
+# Sends a JSON list of saved graphs.  These
+# can be used to instantiate a GraphList of Graph Models.
 app.get '/graphslist' (req, res) ->
-    data = [
-        {"options":{"animatedZooms":true,"avoidMinZero":false,"axis":null,"axisLabelColor":"#666666","axisLabelFontSize":11,"axisLabelFormatter":null,"axisLabelWidth":50,"axisLineColor":'#AAAAAA',"axisLineWidth":0.3,"axisTickSize":3,"colorSaturation":1,"colorValue":0.5,"colors":['#FF0097','#EF8158','#83BB32','#182B53','#4596FF','#553DC9','#AD3238','#00FFBC','#F1D950'],"connectSeparatedPoints":false,"customBars":false,"dateWindow":null,"delimiter":",","digitsAfterDecimal":2,"displayAnnotations":false,"drawPoints":true,"drawXAxis":true,"drawXGrid":true,"drawYAxis":true,"drawYGrid":true,"errorBars":false,"file":null,"fillAlpha":0.15,"fillGraph":false,"fractions":false,"gridLineColor":'#D8D8D8',"gridLineWidth":0.3,"hideOverlayOnMouseOut":false,"highlightCircleSize":4,"includeZero":false,"interactionModel":null,"isZoomedIgnoreProgrammaticZoom":false,"labels":null,"labelsDiv":null,"labelsDivStyles":null,"labelsDivWidth":250,"labelsKMB":true,"labelsKMG2":false,"labelsSeparateLines":true,"labelsShowZeroValues":true,"legend":"always","logscale":true,"maxNumberWidth":30,"panEdgeFraction":null,"pixelsPerLabel":null,"pixelsPerXLabel":null,"pixelsPerYLabel":null,"pointSize":1,"rangeSelectorHeight":40,"rangeSelectorPlotFillColor":'#A7B1C4',"rangeSelectorPlotStrokeColor":"#808FAB","rightGap":20,"rollPeriod":1,"showLabelsOnHighlight":true,"showRangeSelector":false,"showRoller":false,"sigFigs":null,"sigma":2,"stackedGraph":false,"stepPlot":false,"strokePattern":null,"strokeWidth":2,"ticker":null,"title":null,"titleHeight":18,"valueFormatter":null,"valueRange":null,"visibility":null,"wilsonInterval":true,"xAxisHeight":null,"xAxisLabelFormatter":null,"xAxisLabelWidth":55,"xLabelHeight":18,"xValueFormatter":null,"xValueParser":null,"xlabel":null,"y2label":null,"yAxisLabelFormatter":null,"yAxisLabelWidth":50,"yLabelWidth":18,"yValueFormatter":null,"ylabel":"Number of Editors"},"slug":"active_editors","name":"Active Wikimedia Editors for All Wikimedia Projects (5+ edits per month)","desc":"","dataset":"/data/datasources/rc/rc_active_editors_count.csv","width":"auto","height":320,"chartType":"dygraphs","parents":["root"],"id":"active_editors"},
-        {"options":{"animatedZooms":true,"avoidMinZero":false,"axis":null,"axisLabelColor":"#666666","axisLabelFontSize":11,"axisLabelFormatter":null,"axisLabelWidth":50,"axisLineColor":'#AAAAAA',"axisLineWidth":0.3,"axisTickSize":3,"colorSaturation":1,"colorValue":0.5,"colors":['#FF0097','#EF8158','#83BB32','#182B53','#4596FF','#553DC9','#AD3238','#00FFBC','#F1D950'],"connectSeparatedPoints":false,"customBars":false,"dateWindow":null,"delimiter":",","digitsAfterDecimal":2,"displayAnnotations":false,"drawPoints":true,"drawXAxis":true,"drawXGrid":true,"drawYAxis":true,"drawYGrid":true,"errorBars":false,"file":null,"fillAlpha":0.15,"fillGraph":false,"fractions":false,"gridLineColor":'#D8D8D8',"gridLineWidth":0.3,"hideOverlayOnMouseOut":false,"highlightCircleSize":4,"includeZero":false,"interactionModel":null,"isZoomedIgnoreProgrammaticZoom":false,"labels":null,"labelsDiv":null,"labelsDivStyles":null,"labelsDivWidth":250,"labelsKMB":true,"labelsKMG2":false,"labelsSeparateLines":true,"labelsShowZeroValues":true,"legend":"always","logscale":true,"maxNumberWidth":30,"panEdgeFraction":null,"pixelsPerLabel":null,"pixelsPerXLabel":null,"pixelsPerYLabel":null,"pointSize":1,"rangeSelectorHeight":40,"rangeSelectorPlotFillColor":'#A7B1C4',"rangeSelectorPlotStrokeColor":"#808FAB","rightGap":20,"rollPeriod":1,"showLabelsOnHighlight":true,"showRangeSelector":false,"showRoller":false,"sigFigs":null,"sigma":2,"stackedGraph":false,"stepPlot":false,"strokePattern":null,"strokeWidth":2,"ticker":null,"title":null,"titleHeight":18,"valueFormatter":null,"valueRange":null,"visibility":null,"wilsonInterval":true,"xAxisHeight":null,"xAxisLabelFormatter":null,"xAxisLabelWidth":55,"xLabelHeight":18,"xValueFormatter":null,"xValueParser":null,"xlabel":null,"y2label":null,"yAxisLabelFormatter":null,"yAxisLabelWidth":50,"yLabelWidth":18,"yValueFormatter":null,"ylabel":"Number of visitors"},"slug":"unique_visitors","name":"Unique Visitors per Region (comScore)","desc":"","dataset":"/data/datasources/rc/rc_comscore_region_uv.csv","width":"auto","height":320,"chartType":"dygraphs","parents":["root"],"id":"unique_visitors"},
-        {"options":{"animatedZooms":true,"avoidMinZero":false,"axis":null,"axisLabelColor":"#666666","axisLabelFontSize":11,"axisLabelFormatter":null,"axisLabelWidth":50,"axisLineColor":'#AAAAAA',"axisLineWidth":0.3,"axisTickSize":3,"colorSaturation":1,"colorValue":0.5,"colors":['#FF0097','#EF8158','#83BB32','#182B53','#4596FF','#553DC9','#AD3238','#00FFBC','#F1D950'],"connectSeparatedPoints":false,"customBars":false,"dateWindow":null,"delimiter":",","digitsAfterDecimal":2,"displayAnnotations":false,"drawPoints":true,"drawXAxis":true,"drawXGrid":true,"drawYAxis":true,"drawYGrid":true,"errorBars":false,"file":null,"fillAlpha":0.15,"fillGraph":false,"fractions":false,"gridLineColor":'#D8D8D8',"gridLineWidth":0.3,"hideOverlayOnMouseOut":false,"highlightCircleSize":4,"includeZero":false,"interactionModel":null,"isZoomedIgnoreProgrammaticZoom":false,"labels":null,"labelsDiv":null,"labelsDivStyles":null,"labelsDivWidth":250,"labelsKMB":true,"labelsKMG2":false,"labelsSeparateLines":true,"labelsShowZeroValues":true,"legend":"always","logscale":true,"maxNumberWidth":30,"panEdgeFraction":null,"pixelsPerLabel":null,"pixelsPerXLabel":null,"pixelsPerYLabel":null,"pointSize":1,"rangeSelectorHeight":40,"rangeSelectorPlotFillColor":'#A7B1C4',"rangeSelectorPlotStrokeColor":"#808FAB","rightGap":20,"rollPeriod":1,"showLabelsOnHighlight":true,"showRangeSelector":false,"showRoller":false,"sigFigs":null,"sigma":2,"stackedGraph":false,"stepPlot":false,"strokePattern":null,"strokeWidth":2,"ticker":null,"title":null,"titleHeight":18,"valueFormatter":null,"valueRange":null,"visibility":null,"wilsonInterval":true,"xAxisHeight":null,"xAxisLabelFormatter":null,"xAxisLabelWidth":55,"xLabelHeight":18,"xValueFormatter":null,"xValueParser":null,"xlabel":null,"y2label":null,"yAxisLabelFormatter":null,"yAxisLabelWidth":50,"yLabelWidth":18,"yValueFormatter":null,"ylabel":"Number of Articles"},"slug":"articles","name":"Wikipedia Articles","desc":"","dataset":"/data/datasources/rc/rc_article_count.csv","width":"auto","height":320,"chartType":"dygraphs","parents":["root"],"id":"articles"},
-    ]
-    res.send data
+    Seq()
+        # find list of data/graph/*.json files
+        .seq            -> @ok glob.sync "#DATA/graphs/*.json"
+        # read them each in 
+        .seq (paths)    -> readFilesAsync paths, this
+        # parse each file into a JSON object and send it as the response
+        .seq (data)     -> 
+            graphs = ( for f, txt in data then JSON.parse txt )
+            res.send graphs
+            
 
 app.get '/', (req, res) ->
     res.render 'dashboard'
