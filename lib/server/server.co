@@ -6,7 +6,7 @@ glob   = require 'glob'
 {existsSync:exists} = path
 {exec, spawn} = require 'child_process'
 {mkdirp, mkdirpAsync} = require './mkdirp'
-{ readFilesAsync, readJSONFilesAsync,
+{ readFilesAsync,
 } = require './files'
 
 
@@ -177,17 +177,6 @@ app.get '/datasources/all', (req, res, next) ->
             console.error that if err.stack
             res.send { error:String(err), partial_data:data }
 
-# FIXME:  Make /graphs.json do this instead of graphslist.
-#      :  Can I use Seq .par to read in data and also parse the JSON?
-# Sends a JSON list of saved graphs.  These
-# can be used to instantiate a GraphList of Graph Models.
-app.get '/graphslist' (req, res) ->
-    Seq()
-        # find list of data/graph/*.json files, send back the objects
-        .seq            -> readJSONFilesAsync "#DATA/graphs/*.json", this
-        # remove filepath info
-        .seq   (graphs) -> res.send _.values graphs
-
 app.get '/', (req, res) ->
     res.render 'dashboard'
 
@@ -215,7 +204,6 @@ app.all '/webhook/post-update', (req, res) ->
             res.send "$ #cmd\n\n#stdout\n\n#stderr\n\nERROR! #err", 503
         else
             res.send "$ #cmd\n\n#stdout\n\n#stderr", 200
-
 
 # }}}
 
