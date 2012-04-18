@@ -1,0 +1,128 @@
+_  = require 'kraken/util/underscore'
+op = require 'kraken/util/op'
+
+
+
+/**
+ * @class Represents a collection of data columns aligned along a common timeline.
+ */
+class TimeSeriesData
+    DEFAULT_OPTIONS : {}
+    
+    options         : {}
+    labels          : []
+    types           : []
+    
+    untransformedRows        : null # row-oriented (untransformed)
+    rows            : null # row-oriented
+    columns         : null # column-oriented (includes date column)
+    dateColumn      : null # only date column
+    dataColumns     : null # column-oriented (excludes date column)
+    
+    
+    /**
+     * @constructor
+     */
+    (data, opts) ->
+        unless typeof data is 'string' or _.isArray data
+            [opts, data] = [data, null]
+        @options = _.clone(@DEFAULT_OPTIONS) import (opts or {})
+        
+        @transforms = []
+        @labels  = @options.labels or []
+        @types   = @options.types  or []
+        
+        @parse that if data or @options.data
+        @rebuildDerived()
+    
+    
+    
+    /* * * *  Parsing  * * * */
+    
+    /**
+     * Stub. Subclass and override to perform preprocessing of the data.
+     */
+    parse : (rawData) ->
+        this
+    
+    /**
+     * Rebuilds the row-oriented data matrix from the columns.
+     */
+    rebuildData: ->
+        @rows = _.zip ...@columns
+        @rebuildDerived()
+    
+    /**
+     * Rebuilds the column-oriented data matrix from the columns.
+     */
+    rebuildColumns: ->
+        @columns = _.zip ...@rows
+        @rebuildDerived()
+    
+    rebuildDerived: ->
+        while @transforms.length < @columns.length
+            @transforms.push []
+        @dateColumn  = @columns[0]
+        @dataColumns = @columns.slice(1)
+        this
+    
+    
+    
+    /* * * *  Data Transformation  * * * */
+    
+    applyTransforms: ->
+        for fns, idx of @transforms
+            for fn of fns
+                @columns[idx] .= map fn, ctx
+        @rebuildData()
+    
+    clearTransforms: ->
+        @transforms = []
+        @rows = _.merge [], @untransformedRows
+        @rebuildColumns()
+    
+    /**
+     * Map a function across the specified columns, one-by-one (in column-major 
+     * order), replacing the data with the mapped result.
+     * 
+     * @param {Number|Array} indices List one or more column indices to map. Negative
+     *  numbers are offset from the end of the columns list.
+     * @param {Function} fn Mapping function of the form:
+     *  `(single_value, row_idx, column) -> new_value`
+     * @param {Object} [ctx=this] Execution context.
+     * @returns {this} 
+     */
+    addTransform: (indices, fn, ctx=this) ->
+        num_cols = @columns.length
+        if typeof idx is 'function'
+            [ctx, fn, indices] = [fn, indices, null]
+        unless indices?
+            indices = _.range num_cols
+        unless _.isArray indices
+            indices = [indices]
+        for idx of indices
+            idx %= num_cols
+            idx += num_cols if idx < 0
+            @transforms[idx].push fn
+        @applyTransforms()
+    
+    addDataTransform: (fn, ctx=this) ->
+        @addTransform _.range(1, @columns.length), fn, ctx
+    
+    
+    
+    /* * * *  Misc  * * * */
+    
+    toJSON: ->
+        _.merge [], @rows
+    
+    toString: ->
+        labels = @labels
+            .map -> "'#it'"
+            .join ', '
+        "#{@..name or @..displayName}(#labels)"
+    
+
+
+module.exports = exports = TimeSeriesData
+
