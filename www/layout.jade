@@ -30,6 +30,9 @@ html
             
             footer
                 block footer
+                //- FIXME: put link to /graphs only if dev env, for now.
+                if NODE_ENV == 'dev'
+                    a(href='/graphs') Browse Saved Graphs
             
             .scripts
                 block scripts
