@@ -123,7 +123,7 @@ DataSource = exports.DataSource = BaseModel.extend do # {{{
         @trigger 'load-error', this, txtStatus, err
     
     
-    getDates: ->
+    getDateColumn: ->
         @data.dateColumn
     
     getData: ->

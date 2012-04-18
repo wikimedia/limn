@@ -63,31 +63,54 @@ DataSet = exports.DataSet = BaseModel.extend do # {{{
         this
     
     
-    # TODO: toJSON() must ensure columns in MetricList are ordered by index
-    #   ...in theory, MetricList.comparator now does this
+    /* * * *  TimeSeriesData interface  * * * {{{ */
     
-    getDates: ->
-        dates = @metrics.invoke 'getDates'
+    /**
+     * @returns {Array<Array>} The reified dataset, materialized to a list of rows including timestamps.
+     */
+    getData: ->
+        _.zip ...@getColumns()
+    
+    /**
+     * @returns {Array<Array>} List of all columns (including date column).
+     */
+    getColumns: ->
+        [ @getDateColumn() ].concat @getDataColumns()
+    
+    /**
+     * @returns {Array<Date>} The date column.
+     */
+    getDateColumn: ->
+        dates = @metrics.invoke 'getDateColumn'
         maxLen = _.max _.pluck dates, 'length'
         _.find dates, -> it.length is maxLen
     
     /**
-     * @returns {Array} The reified dataset, materialized to an array of data-series arrays.
+     * @returns {Array<Array>} List of all columns except the date column.
      */
-    getData: ->
-        _.zip ...[ @getDates() ].concat @metrics.invoke 'getData'
+    getDataColumns: ->
+        @metrics.invoke 'getData'
     
+    /**
+     * @returns {Array<String>} List of column labels.
+     */
     getLabels: ->
         ['Date'].concat @metrics.pluck 'label'
+    
+    # }}}
+    
     
     newMetric: ->
         index = @metrics.length
         @metrics.add m = new Metric { index, color:ColorBrewer.Spectral[11][index] }
         m
     
-    
     onMetricChange: ->
         @metrics.reset @get 'metrics'
+    
+    # TODO: toJSON() must ensure columns in MetricList are ordered by index
+    #   ...in theory, MetricList.comparator now does this
+    
     
 # }}}
 

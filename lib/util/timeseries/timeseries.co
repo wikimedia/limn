@@ -36,17 +36,52 @@ class TimeSeriesData
         @rebuildDerived()
     
     
+    /* * * *  TimeSeriesData interface  * * * */
+    
+    
+    /**
+     * @returns {Array<Array>} List of rows, each of which includes all columns.
+     */
+    getData: ->
+        @data
+    
+    /**
+     * @returns {Array<Array>} List of all columns (including date column).
+     */
+    getColumns: ->
+        @columns
+    
+    /**
+     * @returns {Array<Date>} The date column.
+     */
+    getDateColumn: ->
+        @dateColumn
+    
+    /**
+     * @returns {Array<Array>} List of all columns except the date column.
+     */
+    getDataColumns: ->
+        @dataColumns
+    
+    /**
+     * @returns {Array<String>} List of column labels.
+     */
+    getLabels: ->
+        @labels
+    
     
     /* * * *  Parsing  * * * */
     
     /**
-     * Stub. Subclass and override to perform preprocessing of the data.
+     * Subclass and override to perform preprocessing of the data.
+     * @private
      */
     parse : (rawData) ->
         this
     
     /**
      * Rebuilds the row-oriented data matrix from the columns.
+     * @private
      */
     rebuildData: ->
         @rows = _.zip ...@columns
@@ -54,11 +89,15 @@ class TimeSeriesData
     
     /**
      * Rebuilds the column-oriented data matrix from the columns.
+     * @private
      */
     rebuildColumns: ->
         @columns = _.zip ...@rows
         @rebuildDerived()
     
+    /**
+     * @private
+     */
     rebuildDerived: ->
         while @transforms.length < @columns.length
             @transforms.push []
@@ -70,27 +109,39 @@ class TimeSeriesData
     
     /* * * *  Data Transformation  * * * */
     
+    /**
+     * Applies the stack of transforms to the data.
+     * 
+     * TODO: Apply transforms in @getData()?
+     * @private
+     * @returns {this}
+     */
     applyTransforms: ->
         for fns, idx of @transforms
             for fn of fns
                 @columns[idx] .= map fn, ctx
         @rebuildData()
     
+    /**
+     * Clears all transforms and restores the original data.
+     * @returns {this}
+     */
     clearTransforms: ->
         @transforms = []
         @rows = _.merge [], @untransformedRows
         @rebuildColumns()
     
     /**
-     * Map a function across the specified columns, one-by-one (in column-major 
-     * order), replacing the data with the mapped result.
+     * Add a data transform to the specified columns. The function is
+     * applied one-by-one (in column-major order), replacing the data
+     * with the mapped result.
      * 
      * @param {Number|Array} indices List one or more column indices to map. Negative
      *  numbers are offset from the end of the columns list.
      * @param {Function} fn Mapping function of the form:
      *  `(single_value, row_idx, column) -> new_value`
-     * @param {Object} [ctx=this] Execution context.
-     * @returns {this} 
+     * @param {Object} [ctx=this] Execution context for the function.
+     * @returns {this}
      */
     addTransform: (indices, fn, ctx=this) ->
         num_cols = @columns.length
@@ -106,6 +157,16 @@ class TimeSeriesData
             @transforms[idx].push fn
         @applyTransforms()
     
+    /**
+     * Add a data transform to all columns except the date column. The function
+     * is applied one-by-one (in column-major order), replacing the data
+     * with the mapped result.
+     * 
+     * @param {Function} fn Mapping function of the form:
+     *  `(single_value, row_idx, column) -> new_value`
+     * @param {Object} [ctx=this] Execution context for the function.
+     * @returns {this}
+     */
     addDataTransform: (fn, ctx=this) ->
         @addTransform _.range(1, @columns.length), fn, ctx
     
@@ -113,8 +174,11 @@ class TimeSeriesData
     
     /* * * *  Misc  * * * */
     
+    /**
+     * @returns {Array<Array>} Deep copy of the data rows (including all columns).
+     */
     toJSON: ->
-        _.merge [], @rows
+        _.merge [], @getData()
     
     toString: ->
         labels = @labels
