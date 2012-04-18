@@ -58,20 +58,27 @@ DataSet = exports.DataSet = BaseModel.extend do # {{{
                 next.ok source
             .seq ~>
                 @ready = true
-                @trigger 'ready', this
                 @unwait() # terminates the `load` wait
+                @trigger 'ready', this
         this
     
     
     # TODO: toJSON() must ensure columns in MetricList are ordered by index
     #   ...in theory, MetricList.comparator now does this
     
+    getDates: ->
+        dates = @metrics.invoke 'getDates'
+        maxLen = _.max _.pluck dates, 'length'
+        _.find dates, -> it.length is maxLen
     
     /**
      * @returns {Array} The reified dataset, materialized to an array of data-series arrays.
      */
     getData: ->
-        '/data/datasources/rc/rc_comscore_region_uv.csv'
+        _.zip ...[ @getDates() ].concat @metrics.invoke 'getData'
+    
+    getLabels: ->
+        ['Date'].concat @metrics.pluck 'label'
     
     newMetric: ->
         index = @metrics.length

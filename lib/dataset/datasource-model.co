@@ -123,9 +123,14 @@ DataSource = exports.DataSource = BaseModel.extend do # {{{
         @trigger 'load-error', this, txtStatus, err
     
     
+    getDates: ->
+        @data.dateColumn
+    
     getData: ->
         @data.toJSON?() or @data
     
+    getColumn: (idx) ->
+        @data.columns[idx]
     
     getColumnName: (idx) ->
         @get('metrics')?[idx]?.label

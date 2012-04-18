@@ -237,13 +237,16 @@ GraphEditView = exports.GraphEditView = BaseView.extend do # {{{
     
     # Redraw chart inside viewport.
     renderChart: ->
-        data = @model.get 'dataset'
-        data = data.getData() if typeof data is not 'string'
+        # data = @model.get 'dataset'
+        # data = data.getData() if typeof data is not 'string'
+        dataset = @model.dataset
+        data = dataset.getData()
         size = @resizeViewport()
         
         # XXX: use @model.changedAttributes() to calculate what to update
         options = @chartOptions() #import size
         options import do
+            labels             : dataset.getLabels()
             labelsDiv          : @$el.find '.graph-label' .0
             valueFormatter     : @numberFormatterHTML
             axes:
