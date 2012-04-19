@@ -60,7 +60,7 @@ app.start = ->
     app
 
 app.configure ->
-    mime.define 'text/plain' : <[ jade co styl stylus ]>
+    mime.define 'text/plain' : <[ jade co styl stylus yaml md ]>
     
     # Set up 
     app.set 'views', WWW
