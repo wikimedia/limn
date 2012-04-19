@@ -42,6 +42,16 @@ class Controller extends Resource
      *    for this sub-route.
      *  - Object: Hash of HTTP-method (get, put, post, del, or all) to the name
      *    of a method on this Controller.
+     * 
+     * Example:
+     *      { '/foo' => 'foo',
+     *        '/bar' => {'get' => 'get_bar', 'del' => 'delete_bar' },
+     *      }
+     *      If this mapping is in a controller with name 'nonya', then
+     *          GET     '/nonya/foo' -> NonyaController.foo(),
+     *          GET     '/nonya/bar' -> NonyaController.get_bar()
+     *          DELETE  '/nonya/bar' -> NonyaController.delete_bar()
+     * 
      * @type Object
      */
     mapping : null
