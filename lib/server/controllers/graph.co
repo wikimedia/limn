@@ -37,6 +37,7 @@ class GraphController extends Controller
     -> super ...
     
     
+    
     toFile: (id) -> "#{@dataDir}/#id.json"
     
     /**
@@ -62,20 +63,21 @@ class GraphController extends Controller
         catch err
             console.error "GraphController.autoload(#id, #{typeof cb}) -->\nerr"
             cb err
-    
+
     # GET /graphs.:format?
     index: (req, res) ->
         # if format is json, then return the graph JSON
-        if (req.params.format == 'json')
-            pattern = @dataDir + "/*.json"
-            Seq()
-                # find list of data/graph/*.json files, send back the objects
-                .seq            -> readJSONFilesAsync pattern, this
-                # remove filepath info
-                .seq   (graphs) -> res.send _.values graphs
-        else
-            res.render 'graph/index'
-    
+        switch req.format
+            case 'json' 
+                pattern = @dataDir + "/*.json"
+                Seq()
+                    # find list of data/graph/*.json files, send back the objects
+                    .seq            -> readJSONFilesAsync pattern, this
+                    # remove filepath info
+                    .seq   (graphs) -> res.send _.values graphs
+            default 
+                res.render 'graph/index'
+
     # GET /graphs/:graph
     show: (req, res) ->
         if req.format is 'json'
