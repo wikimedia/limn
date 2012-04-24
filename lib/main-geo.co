@@ -3,7 +3,7 @@ ColorBrewer = require 'colorbrewer'
 
 root = this
 
-root.data = null
+# root.data = null
 
 width = 960
 height = 500
@@ -18,9 +18,8 @@ quantize = (d) ->
     if root.data[d.properties.name]?    
         return fill root.data[d.properties.name]['editors']
     else 
-        console.log 'Country '+d.properties.name+' not in data'
+        # console.log 'Country '+d.properties.name+' not in data'
         return fill "rgb(0,0,0)"
-
 
 move = -> 
     # console.log d3.event
@@ -29,7 +28,7 @@ move = ->
         .scale d3.event.scale              
     feature.attr "d", path
 
-
+## zooming/panning 
 
 projection = d3.geo.mercator()
     .scale width
@@ -44,6 +43,9 @@ zoom = d3.behavior.zoom()
     .scaleExtent [height,height*8]
     .on "zoom", move
 
+
+# main svg object
+
 svg = d3.select ".inner"
     .append "svg"
         .attr "width", width
@@ -52,50 +54,71 @@ svg = d3.select ".inner"
         .attr "transform", "translate(0,0)"
         .call zoom
 
-g = svg.append "g"
-
-feature = g.selectAll ".feature"
-
+# rectangle
 svg.append "rect"
     .attr "class", "frame"
     .attr "width", width
     .attr "height", height
 
+# infobox
+infobox = d3.select ".inner"
+    .append "div"
+        .attr "id","infobox"
+        .style "display","none"    
+p = infobox.append "p"
+    .text "FABZ"
+
+# path objects
+feature = svg.selectAll ".feature"
+
+worldmap = -> 
+    d3.json do
+        "/data/geo/maps/world-countries.json"
+        (json) -> 
+            root.feature = feature
+                .data json.features
+                .enter().append "path"
+                    .attr "class", "feature"
+                    .attr "d", path    
+                    .attr "fill", quantize           
+                    # .attr do
+                    #     "fill" 
+                    #     (d) ->                         
+                    #         fill "rgb(0,0,0)"
+                    .on do 
+                        "mouseover" 
+                        (d) ->                             
+                            if root.data[d.properties.name]?
+                                p.text d.properties.name+" - All:"+root.data[d.properties.name]['editors']+' 5+:'+root.data[d.properties.name]['editors5']+' 100+:'+root.data[d.properties.name]['editors100']                         
+                                # console.log root.data[d.properties.name]['editors']
+                            else 
+                                p.text d.properties.name+": No edits" 
+                                # console.log 'Country '+d.properties.name+' not in data'
+                            # xy = path.centroid d
+                            xy = d3.svg.mouse this
+                            infobox.style "left", xy[0]+'px'
+                            infobox.style "top", xy[1]+'px'
+                            infobox.style "display", "block"
+                    .on do
+                        "mouseout" 
+                        (d) ->
+                            infobox.style "display", "none"
 
 
-d3.json do
-    "/data/geo/maps/world-countries.json"
-    (json) -> 
-        root.feature = feature
-            .data json.features
-            .enter().append "path"
-                .attr "class", "feature"
-                .attr "d", path                
-                .attr do
-                    "fill" 
-                    (d) -> 
-                        # console.log path.area d
-                        fill "rgb(0,0,0)"
-                .on do 
-                    "mouseover" 
-                    (d) -> 
-                        console.log 'mouseover!'
-                        if root.data[d.properties.name]?    
-                            console.log root.data[d.properties.name]['editors']
-                        else 
-                            console.log 'Country '+d.properties.name+' not in data'
-                            
 
-
-
-d3.json do
-    "/data/geo/data/en_geo_editors.json"
-    (json) ->
-        root.data = json
-        console.log root.data   
-        console.log root.feature
-        root.feature.attr "fill", quantize
+jQuery.ajax do
+    url : "/data/geo/data/en_geo_editors.json"
+    dataType : 'json'
+    success : (res) ->
+        # result will be the returned JSON
         
+        root.data = res
+
+        # load the world map
+        worldmap()
+
+        console.log 'Loaded geo coding map!'
+
+    error : (err) -> console.error err
 
         
-console.log 'Loaded geo coding map!'
