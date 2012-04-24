@@ -1,52 +1,101 @@
-Seq      = require 'seq'
-Backbone = require 'backbone'
-
-{ _, op,
-} = require 'kraken/util'
-{ BaseView, BaseModel, BaseList,
-} = require 'kraken/base'
-{ ChartType, DygraphsChartType,
-} = require 'kraken/chart'
-{ Graph, GraphList, GraphDisplayView,
-} = require 'kraken/graph'
-{ DashboardView,
-} = require 'kraken/dashboard'
-
-
+# Seq      = require 'seq'
+ColorBrewer = require 'colorbrewer'
 
 root = this
-CHART_OPTIONS_SPEC    = []
-CHART_DEFAULT_OPTIONS = {}
+
+root.data = null
+
+width = 960
+height = 500
 
 
-# Create the Graph Scaffold
-main = ->
-    # Set up Dygraph chart type spec
-    # TODO: load this on-demand
-    dyglib = new DygraphsChartType CHART_OPTIONS_SPEC
-    
-    # _.dump _.clone(data.options), 'data.options'
-    
-    # Instantiate model & view
-    dashboard = root.dashboard = new DashboardView do
-        graph_spec : root.CHART_OPTIONS_SPEC # FIXME: necessary?
-    
-    $ '#content .inner' .append dashboard.el
+fill = d3.scale.log()
+    .domain [1, 10000]
+    .range ["black", "red"]
+
+quantize = (d) -> 
+    # console.log d.properties.name
+    if root.data[d.properties.name]?    
+        return fill root.data[d.properties.name]['editors']
+    else 
+        console.log 'Country '+d.properties.name+' not in data'
+        return fill "rgb(0,0,0)"
+
+
+move = -> 
+    # console.log d3.event
+    projection
+        .translate d3.event.translate 
+        .scale d3.event.scale              
+    feature.attr "d" path
 
 
 
-# Load data files
-Seq([   <[ CHART_OPTIONS_SPEC /schema/dygraph.json ]>
-])
-.parEach_ (next, [key, url]) ->
-    jQuery.ajax do
-        url : url,
-        dataType : 'json'
-        success : (res) ->
-            root[key] = res
-            next.ok()
-        error : (err) -> console.error err
-.seq ->
-    console.log 'All data loaded!'
-    jQuery main
+projection = d3.geo.mercator()
+    .scale width
+    .translate [width/2,height/2]
 
+path = d3.geo.path()
+    .projection projection
+
+zoom = d3.behavior.zoom()
+    .translate projection.translate()
+    .scale projection.scale()
+    .scaleExtent [height,height*8]
+    .on "zoom" move
+
+svg = d3.select ".inner"
+    .append "svg"
+        .attr "width" width
+        .attr "height" height
+    .append "g"
+        .attr "transform" "translate(0,0)"
+        .call zoom
+
+g = svg.append "g"
+
+feature = g.selectAll ".feature"
+
+svg.append "rect"
+    .attr "class" "frame"
+    .attr "width" width
+    .attr "height" height
+
+
+
+d3.json do
+    "/data/geo/maps/world-countries.json"
+    (json) -> 
+        root.feature = feature
+            .data json.features
+            .enter().append "path"
+                .attr "class" "feature"
+                .attr "d" path                
+                .attr do
+                    "fill" 
+                    (d) -> 
+                        # console.log path.area d
+                        fill "rgb(0,0,0)"
+                .on do 
+                    "mouseover" 
+                    (d) -> 
+                        console.log 'mouseover!'
+                        if root.data[d.properties.name]?    
+                            console.log root.data[d.properties.name]['editors']
+                        else 
+                            console.log 'Country '+d.properties.name+' not in data'
+                            
+
+
+
+d3.json do
+    "/data/geo/data/en_geo_editors.json"
+    (json) ->
+        root.data = json
+        console.log root.data   
+        console.log root.feature
+        root.feature.attr "fill" quantize
+        
+
+        
+console.log 'Loaded geo coding map!'

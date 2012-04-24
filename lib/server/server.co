@@ -15,7 +15,7 @@ Seq      = require 'seq'
 yaml     = require 'js-yaml'
 mime     = require 'mime'
 express  = require 'express'
-Resource = require 'express-resource'
+# Resource = require 'express-resource'
 compiler = require 'connect-compiler-extras'
 
 op       = require '../util/op'
