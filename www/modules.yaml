@@ -52,11 +52,15 @@ dev:
                 - backbone
                 - parser
                 - cascade
+                - index
+            - timeseries:
+                - timeseries
                 - csv
                 - index
             - base:
                 - base-mixin
                 - base-model
+                - data-binding
                 - base-view
                 - model-cache
                 - cascading-model
