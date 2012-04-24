@@ -27,7 +27,7 @@ move = ->
     projection
         .translate d3.event.translate 
         .scale d3.event.scale              
-    feature.attr "d" path
+    feature.attr "d", path
 
 
 
@@ -42,14 +42,14 @@ zoom = d3.behavior.zoom()
     .translate projection.translate()
     .scale projection.scale()
     .scaleExtent [height,height*8]
-    .on "zoom" move
+    .on "zoom", move
 
 svg = d3.select ".inner"
     .append "svg"
-        .attr "width" width
-        .attr "height" height
+        .attr "width", width
+        .attr "height", height
     .append "g"
-        .attr "transform" "translate(0,0)"
+        .attr "transform", "translate(0,0)"
         .call zoom
 
 g = svg.append "g"
@@ -57,9 +57,9 @@ g = svg.append "g"
 feature = g.selectAll ".feature"
 
 svg.append "rect"
-    .attr "class" "frame"
-    .attr "width" width
-    .attr "height" height
+    .attr "class", "frame"
+    .attr "width", width
+    .attr "height", height
 
 
 
@@ -69,8 +69,8 @@ d3.json do
         root.feature = feature
             .data json.features
             .enter().append "path"
-                .attr "class" "feature"
-                .attr "d" path                
+                .attr "class", "feature"
+                .attr "d", path                
                 .attr do
                     "fill" 
                     (d) -> 
@@ -94,7 +94,7 @@ d3.json do
         root.data = json
         console.log root.data   
         console.log root.feature
-        root.feature.attr "fill" quantize
+        root.feature.attr "fill", quantize
         
 
         
