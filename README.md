@@ -15,6 +15,26 @@ Finally, start the `server` task using Coke (it's like Rake for Coco) with `coke
 
 You should now have a server running on 8081.
 
+### Project Layout
+- assets/                 - static images
+- data/                   - json, yaml, csv, etc. files that contain graph configuration and graph content data
+- data/datasources/       - graph content data
+- data/graphs/            - saved graph configurations.
+- lib/                    - [Coco][coco] files.  Application logic lives here.
+- lib/{chart,dashboard,dataset,graph}/ - Models and View Classes
+- lib/main-*.co           - These files get included from the main [Jade][jade] views in www/.  They act like client side controllers.  They are responsible for setting up data and rendering views.
+- lib/template/           - client side [Jade][jade] views.  These are included and rendered by View classes.
+- lib/server/             - Server side [Coco][coco] files.  
+- lib/server/server.co    - [Express][expressjs] server setup.   Routing is done here.
+- lib/server/controllers/ - Server side controllers.  Routed to by [express-resource][].
+- www/                    - (Mostly) static [Jade][jade] HTML templates and [Stylus][stylus] CSS templates.  The [Jade][jade] templates are rendered by the server side controllers in lib/server/controllers/.
+- var/                    - Compiled JavaScript and CSS files.
+
+### Deployment
+Coco needs to be compiled down to JavaScript in order for it to be executed.  In development environments, this is done on the fly.  In production environments, all Coco is compiled down into JavaScript files and placed in a dist/ directory.  These JavaScript (and compiled Stylus CSS files) are served up directly to the browser upon request, rather than having to be compiled first.
+
+deploy.sh currently builds a distribution tmp/dist, and then rsyncs this over to reportcard.wmflabs.org.  You will need an account with sudo permissions on reportcard2.pmtpa.wmflabs in order to deploy.
+
 
 ### Notes
 
@@ -37,3 +57,7 @@ You should now have a server running on 8081.
 [coffee]: http://coffeescript.org/
 [coffee-docs]: http://coffeescript.org/#language
 [connect-compiler]: https://github.com/dsc/connect-compiler
+[jade]: https://github.com/visionmedia/jade
+[expressjs]: http://expressjs.com/guide.html
+[express-resource]: https://github.com/visionmedia/express-resource
+[stylus]: http://learnboost.github.com/stylus/

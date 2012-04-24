@@ -1,0 +1,96 @@
+/**
+ * @fileOverview Filesystem utilities.
+ */
+
+
+fs   = require 'fs'
+path = require 'path'
+
+_    = require 'underscore'
+Seq  = require 'seq'
+glob = require 'glob'
+
+
+/**
+ * Asynchronously reads the text for each filepath produced by the
+ * globs supplied, returning a map from filepath to contents.
+ * 
+ * @param {String|Array<String>} patterns List of file-paths and/or glob-patterns to read.
+ * @param {Function} cb Callback taking `(error, data)` where `data` is a map
+ *  from filepath to contents. As always, `error` will be null on success.
+ * @returns {Seq} The Seq object representing the async operation chain. (You
+ *  can usually ignore this.)
+ */
+readFilesAsync = exports.readFilesAsync = (patterns, cb) ->
+    patterns = [patterns] if typeof patterns is 'string'
+    files = []
+    data = {}
+    Seq patterns
+        .parMap (pat) -> glob pat, {+nocase, +nosort}, this
+        .flatten()
+        .parMap (f) ->
+            files.push f
+            fs.readFile f, 'utf8', this
+        .parEach (text, i) ->
+            f = files[i]
+            data[f] = text
+            @ok()
+        .seq -> cb null, data
+        .catch (err) ->
+            console.error err.file, err
+            cb err
+
+/**
+ * Asynchronously reads text and parses JSON for each filepath produced by the
+ * globs supplied, returning a map from filepath to contents.
+ * 
+ * @param {String|Array<String>} patterns List of filepaths and/or glob-patterns to read.
+ * @param {Function} cb Callback taking `(error, data)` where `data` is a map
+ *  from filepath to contents. As always, `error` will be null on success.
+ * @returns {Seq} The Seq object representing the async operation chain. (You
+ *  can usually ignore this.)
+ */
+readJSONFilesAsync = exports.readJSONFilesAsync = (patterns, cb) ->
+    data = {}
+    Seq()
+        .seq -> readFilesAsync patterns, this
+        .seq (data) ->
+            @ok _.map data, (text, f) -> [f, text]
+        .flatten false # flatten one level
+        .parMap ([f, text]) ->
+            try
+                data[f] = JSON.parse text
+                @ok()
+            catch err
+                err.file = f
+                console.error f, err
+                cb err
+        .seq -> cb null, data
+        .catch (err) ->
+            console.error err.file, err
+            cb err
+
+logErrorsAnd = exports.logErrorsAnd = (cb) ->
+    (err, ...args) ->
+        global.args = arguments
+        if err
+            console.error err
+        else
+            cb ...args if cb
+
+## Test Code
+if require.main is module
+    files = exports
+    u = require 'kraken/util/underscore'
+    
+    paths = <[ package.* deploy.sh ]>
+    files.readFilesAsync paths, (err, data) ->
+        if err then console.error err
+        else console.log '\n\n', global.data = u.map data, (txt, f) -> "#f: #{txt.length}"
+    
+    # u = require 'kraken/util/underscore'; files = require 'kraken/server/files'
+    # files.readJSONFilesAsync 'data/**/*.json', files.logErrorsAnd()
+
+
+
+
