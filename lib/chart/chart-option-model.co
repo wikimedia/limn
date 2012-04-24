@@ -59,8 +59,8 @@ ChartOption = exports.ChartOption = Field.extend do # {{{
         KNOWN_TAGS.update @getCategory()
         
         # Ignore functions/callbacks and, ahem, hidden tags.
-        type = @get 'type', '' .toLowerCase()
-        tags = @get 'tags', []
+        type = @get 'type' .toLowerCase() or ''
+        tags = @get('tags') or []
         if _.str.include(type, 'function') or _.intersection(tags, @IGNORED_TAGS).length
             @set 'ignore', true
     
@@ -69,7 +69,7 @@ ChartOption = exports.ChartOption = Field.extend do # {{{
     # will not trigger the 'changed:tags' event.
     addTag: (tag) ->
         return this unless tag
-        tags = @get('tags', [])
+        tags = @get('tags') or []
         tags.push tag
         @set 'tags', tags
         this
@@ -78,7 +78,7 @@ ChartOption = exports.ChartOption = Field.extend do # {{{
     # will not trigger the 'changed:tags' event.
     removeTag: (tag) ->
         return this unless tag
-        tags = @get('tags', [])
+        tags = @get('tags') or []
         _.remove tags, tag
         @set 'tags', tags
         this
@@ -93,7 +93,7 @@ ChartOption = exports.ChartOption = Field.extend do # {{{
     
     # A field's category is its first tag.
     getCategory: ->
-        @get('tags', [])[0]
+        tags = (@get('tags') or [])[0]
     
     getCategoryIndex: ->
         @getTagIndex @getCategory()
@@ -112,7 +112,7 @@ ChartOption = exports.ChartOption = Field.extend do # {{{
  * @class List of ChartOption fields.
  */
 ChartOptionList = exports.ChartOptionList = FieldList.extend do # {{{
-    model      : ChartOption
+    model : ChartOption
     
     
     constructor: function ChartOptionList

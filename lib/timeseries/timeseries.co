@@ -1,5 +1,4 @@
 _  = require 'kraken/util/underscore'
-op = require 'kraken/util/op'
 
 
 

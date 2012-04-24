@@ -1,7 +1,5 @@
 _  = require 'kraken/util/underscore'
-op = require 'kraken/util/op'
-
-TimeSeriesData = require 'kraken/util/timeseries/timeseries'
+TimeSeriesData = require 'kraken/timeseries/timeseries'
 
 
 DASH_PATTERN       = /-/g
@@ -56,8 +54,7 @@ class CSVData extends TimeSeriesData
      * @returns {this}
      */
     parse: (@rawData) ->
-        if typeof rawData is not 'string'
-            
+        return this if typeof rawData is not 'string'
         o = @options
         
         lines = rawData.split o.rowSep

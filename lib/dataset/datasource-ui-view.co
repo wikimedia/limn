@@ -14,7 +14,8 @@ DataSourceUIView = exports.DataSourceUIView = BaseView.extend do # {{{
     template       : require 'kraken/template/datasource-ui'
     
     events :
-        'click .datasource-summary': 'onHeaderClick'
+        'click .datasource-summary'       : 'onHeaderClick'
+        'click .datasource-source-metric' : 'onSelectMetric'
     
     graph_id           : null
     dataset            : null
@@ -49,5 +50,11 @@ DataSourceUIView = exports.DataSourceUIView = BaseView.extend do # {{{
     
     onHeaderClick: ->
         @$el.toggleClass 'in'
+    
+    onSelectMetric: (evt) ->
+        tr = evt.currentTarget
+        idx = @$ '.source-metrics .datasource-source-metric' .toArray().indexOf tr
+        return unless idx is not -1
+        
     
 # }}}

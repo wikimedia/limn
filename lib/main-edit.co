@@ -3,6 +3,8 @@ Backbone = require 'backbone'
 
 { _, op,
 } = require 'kraken/util'
+{ TimeSeriesData, CSVData,
+} = require 'kraken/timeseries'
 { BaseView, BaseModel, BaseList,
 } = require 'kraken/base'
 { Field, FieldList, FieldView, Scaffold,

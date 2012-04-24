@@ -68,7 +68,7 @@ DashboardView = exports.DashboardView = BaseView.extend do # {{{
                 @trigger 'ready', this
     
     attachGraphs: ->
-        graphs_el = @$el.find '#graphs'
+        graphs_el = @$ '#graphs'
         for id of @graph_ids
             break unless graph = @graphs.get id
             continue if graph.view.isAttached

@@ -1,5 +1,7 @@
-{ _, op, CSVData,
+{ _, op,
 } = require 'kraken/util'
+{ TimeSeriesData, CSVData,
+} = require 'kraken/timeseries'
 { BaseModel, BaseList, BaseView,
 } = require 'kraken/base'
 { Metric, MetricList,
@@ -59,7 +61,7 @@ DataSource = exports.DataSource = BaseModel.extend do # {{{
         @constructor.register this
         @metrics = new MetricList @attributes.metrics
         @on 'change:metrics', @onMetricChange, this
-        @load()
+        # @load()
     
     
     canonicalize: (ds) ->
@@ -98,7 +100,7 @@ DataSource = exports.DataSource = BaseModel.extend do # {{{
         $.ajax do
             url      : url
             dataType : 'json'
-            success  : @onLoadSuccess
+            success  : (data) ~> @onLoadSuccess new TimeSeriesData data
             error    : @onLoadError
         this
     
@@ -190,6 +192,7 @@ DataSource import do
             Cls = this
             @register new Cls {id}
                 .on 'ready', -> cb.call cxt, null, it
+                .load()
     
 
 _.bindAll DataSource, 'register', 'get', 'lookup'

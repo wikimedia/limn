@@ -23,6 +23,7 @@ section.datasource-ui
                         li(class=activeClass): a(href="#datasource-selector_datasource-source-#{ds.id}", data-toggle="tab", data-target=ds_target) #{ds.shortName}
                 
                 .datasource-sources-info.tab-content
+                    //- DataSourceViews attach here
                     for source, k in datasources.models
                         - var ds = source.attributes
                         - var activeClass = (source_id === ds.id ? 'active' : '')

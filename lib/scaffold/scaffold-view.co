@@ -13,8 +13,8 @@ FieldView = exports.FieldView = BaseView.extend do # {{{
     type : 'string'
     
     events :
-        'blur .value'   : 'update'
-        'submit .value' : 'update'
+        'blur .value'   : 'change'
+        'submit .value' : 'change'
     
     
     constructor: function FieldView
@@ -23,19 +23,25 @@ FieldView = exports.FieldView = BaseView.extend do # {{{
     initialize: ->
         # console.log "#this.initialize!"
         BaseView::initialize ...
-        @type = @model.get('type', 'string').toLowerCase()
+        @type = @model.get('type').toLowerCase() or 'string'
     
-    update: ->
+    toTemplateLocals: ->
+        json = {value:v} = @model.toJSON()
+        if _.isArray(v) or _.isPlainObject(v)
+            json.value = JSON.stringify v
+        json
+    
+    change: ->
         if @type is 'boolean'
-            val = !! @$el.find('.value').attr('checked')
+            val = !! @$('.value').attr('checked')
         else
-            val = @model.getParser() @$el.find('.value').val()
+            val = @model.getParser() @$('.value').val()
         
         current = @model.getValue()
         return if _.isEqual val, current
-        console.log "#this.update( #current -> #val )"
+        console.log "#this.change( #current -> #val )"
         @model.setValue val, {+silent}
-        @trigger 'update', this
+        @trigger 'change', this
     
     render: ->
         return @remove() if @model.get 'ignore', false
@@ -61,7 +67,7 @@ FieldView = exports.FieldView = BaseView.extend do # {{{
 #   model, collection, el, id, className, tagName, attributes
 
 Scaffold = exports.Scaffold = BaseView.extend do # {{{
-    __bind__       : <[ addOne addAll ]>
+    __bind__       : <[ addField resetFields ]>
     tagName        : 'form'
     className      : 'scaffold'
     
@@ -78,19 +84,14 @@ Scaffold = exports.Scaffold = BaseView.extend do # {{{
         @model = (@collection or= new CollectionType)
         BaseView::initialize ...
         
-        @collection.on 'add',   @addOne
-        @collection.on 'reset', @addAll
+        @collection.on 'add',   @addField, this
+        @collection.on 'reset', @resetFields, this
         
         @$el.data { model:@collection, view:this } .addClass @className
     
     
-    renderSubviews: ->
-        _.invoke @_subviews, 'render'
-        this
-    
-    addOne: (field) ->
-        # console.log "[S] #this.addOne!", @..__super__
-        _.remove @_subviews, field.view if field.view
+    addField: (field) ->
+        @removeSubview field.view if field.view
         
         # avoid duplicating event propagation
         field.off 'change:value', @change, this
@@ -99,19 +100,15 @@ Scaffold = exports.Scaffold = BaseView.extend do # {{{
         field.on 'change:value', @change, this
         
         SubviewType = @subviewType
-        view = new SubviewType model:field
-        @_subviews.push view
-        container = if @fields then @$el.find @fields else @$el
-        container.append view.render().el unless field.get 'ignore'
-        view.on 'update', @change.bind(this, field)
+        view = @addSubview new SubviewType model:field
+        view.on 'change', @change.bind(this, field)
         
         @render()
         view
     
-    addAll: ->
-        _.invoke @_subviews, 'remove'
-        @_subviews = []
-        @collection.each @addOne
+    resetFields: ->
+        @removeAllSubviews()
+        @collection.each @addField
         this
     
     change: (field) ->

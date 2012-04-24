@@ -19,9 +19,9 @@ ChartOptionView = exports.ChartOptionView = FieldView.extend do # {{{
     isCollapsed : true
     
     events :
-        'blur .value'                        : 'update'
-        'click input[type="checkbox"].value' : 'update'
-        'submit .value'                      : 'update'
+        'blur .value'                        : 'change'
+        'click input[type="checkbox"].value' : 'change'
+        'submit .value'                      : 'change'
         'click .close'                       : 'toggleCollapsed'
         'click h3'                           : 'toggleCollapsed'
         'click .collapsed'                   : 'onClick'
@@ -32,6 +32,7 @@ ChartOptionView = exports.ChartOptionView = FieldView.extend do # {{{
     
     render: ->
         FieldView::render ...
+        @$el.addClass 'ignore'    if @get 'ignore'
         @$el.addClass 'collapsed' if @isCollapsed
         this
     
@@ -106,9 +107,10 @@ ChartOptionScaffold = exports.ChartOptionScaffold = Scaffold.extend do # {{{
     
     render: ->
         console.log "#this.render(ready=#{@ready}) -> .isotope()"
-        # Scaffold::render ...
+        Scaffold::render ...
         return this unless @ready
-        container = if @fields then @$el.find @fields else @$el
+        
+        container = if @fields then @$ @fields else @$el
         container
             .addClass 'isotope'
             .find '.chart-option.field' .addClass 'isotope-item'
@@ -125,21 +127,21 @@ ChartOptionScaffold = exports.ChartOptionScaffold = Scaffold.extend do # {{{
         this
     
     getOptionsFilter: ->
-        data = @$el.find '.options-filter-button.active' .toArray().map -> $ it .data()
+        data = @$ '.options-filter-button.active' .toArray().map -> $ it .data()
         sel = data.reduce do
             (sel, d) ->
                 sel += that if d.filter
                 sel
-            ''
+            ':not(.ignore)'
         sel
     
     collapseAll: ->
-        _.invoke @_subviews, 'collapse', true
+        _.invoke @subviews, 'collapse', true
         # @renderSubviews()
         false
     
     expandAll: ->
-        _.invoke @_subviews, 'collapse', false
+        _.invoke @subviews, 'collapse', false
         # @renderSubviews()
         false
     
@@ -148,9 +150,10 @@ ChartOptionScaffold = exports.ChartOptionScaffold = Scaffold.extend do # {{{
      * Add a ChartOption to this scaffold, rerendering the isotope
      * layout after collapse events.
      */
-    addOne: (field) ->
-        view = Scaffold::addOne ...
-        view.on 'change:collapse render', @render, this
+    addField: (field) ->
+        view = Scaffold::addField ...
+        # view.on 'change:collapse render', @render, this
+        view.on 'change:collapse', @render, this
         view
     
     toKV: ->

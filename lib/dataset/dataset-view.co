@@ -48,7 +48,7 @@ DataSetView = exports.DataSetView = BaseView.extend do # {{{
         
         view = @addSubview new DataSetMetricView {model:metric, @graph_id}
         @views_by_cid[metric.cid] = view
-        @$el.find '.metrics' .append view.render().el
+        @$ '.metrics' .append view.render().el
         
         # @render()
         @trigger 'add-metric', metric, view, this
@@ -68,13 +68,13 @@ DataSetView = exports.DataSetView = BaseView.extend do # {{{
         this
     
     editMetric: (metric) ->
-        console.log "#this.editMetric!", metric
+        # console.log "#this.editMetric!", metric
         if metric instanceof [jQuery.Event, Event]
             metric = $ metric.currentTarget .data 'model'
         view = @active_view = @views_by_cid[metric.cid]
-        console.log '  --> metric:', metric, 'view:', view
+        console.log "#this.editMetric!", metric
         
-        @$el.find '.metrics .dataset-metric' .removeClass 'metric-active'
+        @$ '.metrics .dataset-metric' .removeClass 'metric-active'
         view.$el.addClass 'metric-active'
         view.$el.find '.activity-arrow' .css 'font-size', 2+view.$el.height()
         

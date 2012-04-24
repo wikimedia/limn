@@ -1,9 +1,7 @@
 - var graph_id = view.id || model.id || model.cid
 section.graph-edit.graph(id=graph_id)
     
-    //- Graph Name field is not part of the form due to the layout.
     .graph-name-row.graph-details.row-fluid.control-group
-        //- label.name.control-label(for="#{id}_name"): h3 Graph Name
         input.span6.graph-name(type='text', id="#{graph_id}_name", name="name", placeholder='Graph Name', value=name)
     
     .graph-viewport-row.row-fluid
@@ -66,12 +64,12 @@ section.graph-edit.graph(id=graph_id)
                                     <textarea class="span3 desc" id="#{graph_id}_desc" name="desc" placeholder="Graph description.">#{desc}</textarea>
                                     p.help-block A description of the graph.
                 
-                .graph-data-pane.tab-pane(id="#{graph_id}-tab-data")
+                .graph-data-pane.tab-pane(id="#{graph_id}-tab-data", data-subview="DataView")
                     //- 
                         .row-fluid
                             label.dataset.control-label(for="#{graph_id}_dataset") Data Set
                             input.span3.dataset(type='text', id="#{graph_id}_dataset", name='dataset', placeholder='URL to dataset file', value=dataset)
                             p.help-block This dataset filename will soon be replaced by a friendly UI.
                 
-                .graph-options-pane.tab-pane(id="#{graph_id}-tab-options")
+                .graph-options-pane.tab-pane(id="#{graph_id}-tab-options", data-subview="ChartOptionScaffold")
 

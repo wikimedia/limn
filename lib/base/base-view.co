@@ -4,6 +4,8 @@ Backbone = require 'backbone'
 } = require 'kraken/util'
 { BaseBackboneMixin, mixinBase,
 } = require 'kraken/base/base-mixin'
+{ DataBinding,
+} = require 'kraken/base/data-binding'
 
 
 
@@ -13,15 +15,20 @@ Backbone = require 'backbone'
  */
 BaseView = exports.BaseView = Backbone.View.extend mixinBase do # {{{
     tagName : 'section'
+    model : BaseModel
     
     /**
-     * The identifier for this view class.
-     * By default, the class name is converted to underscore-case, and a
-     * trailing '_view' suffix is dropped.
-     * Example: "CamelCaseView" becomes "camel_case"
+     * Method-name called by `onReturnKeypress` when used as an event-handler.
      * @type String
      */
-    __view_type_id__: null
+    callOnReturnKeypress: null
+    
+    
+    /**
+     * Parent view of this view.
+     * @type BaseView
+     */
+    parent : null
     
     /**
      * Array of [view, selector]-pairs.
@@ -33,7 +40,7 @@ BaseView = exports.BaseView = Backbone.View.extend mixinBase do # {{{
      * Whether this view has been added to the DOM.
      * @type Boolean
      */
-    _parented: false
+    isAttached: false
     
     
     
@@ -42,7 +49,8 @@ BaseView = exports.BaseView = Backbone.View.extend mixinBase do # {{{
         @__superclass__ = @..__super__.constructor
         @__view_type_id__ or= _.str.underscored @getClassName() .replace /_view$/, ''
         @waitingOn      = 0
-        @subviews       = []
+        @subviews       = new ViewList
+        @onReturnKeypress = _.debounce @onReturnKeypress.bind(this), 50
         Backbone.View ...
         @trigger 'create', this
     
@@ -65,63 +73,130 @@ BaseView = exports.BaseView = Backbone.View.extend mixinBase do # {{{
             @$el.data { @model, view:this }
             @model.on 'change',  @render, this
             @model.on 'destroy', @remove, this
-        @model
+            @trigger 'change:model', this, model
+        model
     
     
     
     ### Subviews
     
-    addSubview: (selector, view) ->
-        [view, selector] = [selector, null] unless view
-        @subviews.push [view, selector]
+    setParent: (parent) ->
+        [old_parent, @parent] = [@parent, parent]
+        @trigger 'parent', this, parent, old_parent
+        this
+    
+    unsetParent: ->
+        [old_parent, @parent] = [@parent, null]
+        @trigger 'unparent', this, old_parent
+        this
+    
+    
+    addSubview: (view) ->
+        @removeSubview view
+        @subviews.push view
+        view.setParent this
         view
     
     removeSubview: (view) ->
-        for [v, sel], idx of @subviews
-            if v is view
-                @subviews.splice(idx, 1)
-                return [v, sel]
-        null
+        if @hasSubview view
+            view.remove()
+            @subviews.remove view
+            view.unsetParent()
+        view
     
     hasSubview: (view) ->
-        _.any @subviews, ([v]) -> v is view
+        @subviews.contains view
     
     invokeSubviews: ->
-        _ _.pluck(@subviews, 0) .invoke ...arguments
-    
-    attachSubviews: ->
-        for [view, selector] of @subviews
-            return unless view
-            view.undelegateEvents()
-            return unless el = view.render()?.el
-            if selector
-                @$el.find selector .append el
-            else
-                @$el.append el
-            view.delegateEvents()
-        this
+        @subviews.invoke ...arguments
     
     removeAllSubviews: ->
-        @invokeSubviews 'remove'
-        _.pluck @subviews, 0 .forEach @removeSubview, this
+        @subviews.forEach @removeSubview, this
+        @subviews = new ViewList
         this
     
-    bubbleEvent: (evt) ->
-        @invokeSubviews 'trigger', ...arguments
+    
+    
+    ### UI Utilities
+    
+    attach: (el) ->
+        # @undelegateEvents()
+        @$el.appendTo el
+        # only trigger the event the first time
+        return this if @isAttached
+        @isAttached = true
+        _.delay do
+            ~> # have to let DOM settle to ensure elements can be found
+                @delegateEvents()
+                @trigger 'attach', this
+            50
         this
+    
+    remove : ->
+        # @undelegateEvents()
+        @$el.remove()
+        return this unless @isAttached
+        @isAttached = false
+        @trigger 'unattach', this
+        this
+    
+    clear  : ->
+        @remove()
+        @model.destroy()
+        @trigger 'clear', this
+        this
+    
+    hide : -> @$el.hide(); @trigger('hide', this); this
+    show : -> @$el.show(); @trigger('show', this); this
+    
+    /**
+     * Attach each subview to its bind-point.
+     * @returns {this}
+     */
+    attachSubviews: ->
+        bps = @getOwnSubviewBindPoints()
+        if @subviews.length and not bps.length
+            console.warn "#this.attachSubviews(): no subview bind-points found!"
+            return this
+        for view of @subviews
+            if bp = @findSubviewBindPoint view, bps
+                view.attach bp
+            else
+                console.warn "#this.attachSubviews(): Unable to find bind-point for #view!"
+        this
+    
+    /**
+     * Finds all subview bind-points under this view's element, but not under
+     * the view element of any subview.
+     * @returns {jQuery|undefined}
+     */
+    getOwnSubviewBindPoints: ->
+        @$ '[data-subview]' .not @$ '[data-subview] [data-subview]'
+    
+    /**
+     * Find the matching subview bind-point for the given view.
+     */
+    findSubviewBindPoint: (view, bind_points) ->
+        bind_points or= @getOwnSubviewBindPoints()
+        
+        # check if any bindpoint specifies this subview by id
+        if view.id
+            bp = bind_points.filter "[data-subview$=':#{view.id}']"
+            return bp.eq 0 if bp.length
+        
+        # Find all elements that specify this type as the subview type
+        bp = bind_points.filter "[data-subview='#{view.getClassName()}']"
+        return bp.eq 0 if bp.length
+    
     
     
     ### Rendering Chain
     
     toTemplateLocals: ->
-        json = {value:v} = @model.toJSON()
-        if _.isArray(v) or _.isObject(v)
-            json.value = JSON.stringify v
-        json
+        @model.toJSON()
     
-    $template: (locals={}) ->
-        $ @template do
-            { $, _, op, @model, view:this } import @toTemplateLocals() import locals
+    $template: ->
+        $ @template { _, op, @model, view:this, ...@toTemplateLocals() }
     
     build: ->
         return this unless @template
@@ -129,59 +204,52 @@ BaseView = exports.BaseView = Backbone.View.extend mixinBase do # {{{
         @$el.html outer.html()
             .attr do
                 id    : outer.attr 'id'
-                class : outer.attr('class')
+                class : outer.attr 'class'
         @attachSubviews()
+        @isBuilt = true
         this
     
     render: ->
-        @build()
+        if @isBuilt
+            @update()
+        else
+            @build()
+        @renderSubviews()
         @trigger 'render', this
         this
     
     renderSubviews: ->
-        _.invoke _.pluck(@subviews, 0), 'render'
+        @attachSubviews()
+        @subviews.invoke 'render'
+        this
+    
+    update: ->
+        new DataBinding this .update @toTemplateLocals()
+        @trigger 'update', this
         this
     
     
-    attach: (el) ->
-        @$el.appendTo el
-        # only trigger the event the first time
-        return this if @_parented
-        @_parented = true
-        _.delay do
-            ~> # have to let DOM settle to ensure elements can be found
-                @delegateEvents()
-                @trigger 'parent', this
-            50
+    /* * * *  Events  * * * */
+    
+    bubbleEvent: (evt) ->
+        @invokeSubviews 'trigger', ...arguments
         this
     
-    remove : ->
-        @undelegateEvents()
-        @$el.remove()
-        return this unless @_parented
-        @_parented = false
-        @trigger 'unparent', this
+    redispatch: (evt) ->
+        @trigger ...arguments
         this
     
+    onlyOnReturn: (fn, ...args) ->
+        fn = _.debounce fn.bind(this), 50
+        (evt) ~> fn.apply this, args if evt.keyCode is 13
     
-    ### UI Utilities
-    
-    hide   : -> @$el.hide();      @trigger('hide', this);       this
-    show   : -> @$el.show();      @trigger('show', this);       this
-    clear  : -> @model.destroy(); @trigger('clear', this);      @remove()
-    
-    
-    # remove : ->
-    #     if (p = @$el.parent()).length
-    #         @$parent or= p
-    #         # @parent_index = p.children().indexOf @$el
-    #     @$el.remove()
-    #     this
-    # 
-    # reparent : (parent=@$parent) ->
-    #     parent = $ parent
-    #     @$el.appendTo parent if parent?.length
-    #     this
+    /**
+     * Call a delegate on keypress == the return key.
+     * @returns {Function} Keypress event handler.
+     */
+    onReturnKeypress: (evt) ->
+        fn = this[@callOnReturnKeypress] if @callOnReturnKeypress
+        fn.call this if fn and evt.keyCode is 13
     
     toString : ->
         "#{@getClassName()}(model=#{@model})"
@@ -193,4 +261,28 @@ BaseView = exports.BaseView = Backbone.View.extend mixinBase do # {{{
         BaseView::[methodname] = -> @model[methodname].apply @model, arguments
 
 # }}}
+
+
+
+class exports.ViewList extends Array
+    
+    (views=[]) ->
+        super ...
+    
+    extend: (views) ->
+        _.each views, ~> @push it
+        this
+    
+    findByModel: (model) ->
+        @find -> it.model is model
+    
+    toString: ->
+        contents = if @length then "\"#{@join '","'}\"" else ''
+        "ViewList[#{@length}](#contents)"
+
+
+<[ each contains invoke pluck find remove compact flatten without union intersection difference unique uniq ]>
+    .forEach (methodname) ->
+        ViewList::[methodname] = -> _[methodname].call _, this, ...arguments
+
 

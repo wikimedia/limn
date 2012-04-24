@@ -49,8 +49,8 @@ Metric = exports.Metric = BaseModel.extend do # {{{
         @lookupSource()
     
     
-    getDates: ->
-        @source.getDates()
+    getDateColumn: ->
+        @source.getDateColumn()
     
     getData: ->
         @source.getColumn @get 'source_col'
