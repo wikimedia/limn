@@ -21,8 +21,8 @@ dev:
         - jquery.spin.min
         - bootstrap.min
         
-        ### CommonJS Support Starts Here:
-        ### Browserify must come before any .mod files
+        ### CommonJS Support Starts Here
+        ### (this means Browserify must come before any .mod files)
         - browserify
         
         - underscore.mod
@@ -48,6 +48,10 @@ dev:
                     - kv
                     - string
                     - index
+                - event:
+                    - ready-emitter
+                    - waiting-emitter
+                    - index
                 - op
                 - backbone
                 - parser
@@ -60,8 +64,8 @@ dev:
             - base:
                 - base-mixin
                 - base-model
-                - data-binding
                 - base-view
+                - data-binding
                 - model-cache
                 - cascading-model
                 - index

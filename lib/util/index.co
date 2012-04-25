@@ -26,6 +26,8 @@ root.jQuery?.fn.invoke = (method, ...args) ->
         jQuery(el)[method] ...args
 
 
+exports import require 'kraken/util/event'
+
 backbone = exports.backbone = require 'kraken/util/backbone'
 parser   = exports.parser   = require 'kraken/util/parser'
 Cascade  = exports.Cascade  = require 'kraken/util/cascade'
