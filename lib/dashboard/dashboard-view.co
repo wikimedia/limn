@@ -63,9 +63,8 @@ DashboardView = exports.DashboardView = BaseView.extend do # {{{
                     .seq next_phase.ok
             .seq_ (next) ~>
                 console.log "#this.ready!"
-                @ready = true
                 @attachGraphs()
-                @trigger 'ready', this
+                @triggerReady()
     
     attachGraphs: ->
         graphs_el = @$ '#graphs'

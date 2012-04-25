@@ -47,7 +47,8 @@ DataSet = exports.DataSet = BaseModel.extend do # {{{
     
     
     load: (opts={}) ->
-        return this if @ready and not opts.force
+        @resetReady() if opts.force
+        return this if @ready
         @wait()
         @trigger 'load', this
         Seq _.unique @metrics.pluck 'source_id'
@@ -57,9 +58,8 @@ DataSet = exports.DataSet = BaseModel.extend do # {{{
                 @sources.add source
                 next.ok source
             .seq ~>
-                @ready = true
                 @unwait() # terminates the `load` wait
-                @trigger 'ready', this
+                @triggerReady()
         this
     
     

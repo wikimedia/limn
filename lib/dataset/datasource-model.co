@@ -115,9 +115,7 @@ DataSource = exports.DataSource = BaseModel.extend do # {{{
     onLoadSuccess: (@data) ->
         console.log "#this.onLoadSuccess #{@data}"
         @trigger 'load-success', this
-        return if @ready
-        @ready = true
-        @trigger 'ready', this
+        @triggerReady()
     
     onLoadError: (jqXHR, txtStatus, err) ->
         @_errorLoading = true
@@ -169,6 +167,7 @@ DataSource import do
     ready : false
     
     register: (model) ->
+        return model unless model
         # console.log "#{@CACHE}.register(#{model.id or model.get('id')})", model
         if @CACHE.contains model
             @CACHE.remove model, {+silent}

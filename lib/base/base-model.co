@@ -131,6 +131,9 @@ BaseList = exports.BaseList = Backbone.Collection.extend mixinBase do # {{{
         Backbone.Collection ...
         @trigger 'create', this
     
+    getIds: ->
+        @models.map -> it.id or it.get('id') or it.cid
+    
     
     ### Serialization
     

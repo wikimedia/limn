@@ -59,10 +59,9 @@ DataView = exports.DataView = BaseView.extend do # {{{
         # $.getJSON '/datasources/all', (@data) ~>
         #     _.each @data, @canonicalizeDataSource, this
         #     @model.sources.reset _.map @data, -> it
-        @ready = true
         @unwait()
         # @render()
-        @trigger 'ready', this
+        @triggerReady()
     
     /**
      * Transform the `columns` field to ensure an Array of {label, type} objects.

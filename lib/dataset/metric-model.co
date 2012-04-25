@@ -63,16 +63,14 @@ Metric = exports.Metric = BaseModel.extend do # {{{
         this
     
     onSourceReady: (err, source) ->
-        console.log "#this.onSourceReady", arguments
+        # console.log "#this.onSourceReady", arguments
         @unwait()
         if err
             console.error "#this Error loading DataSource! #err"
         else
             @source = source
             @updateId()
-            unless @ready
-                @ready = true
-                @trigger 'ready', this
+            @triggerReady()
         this
     
     

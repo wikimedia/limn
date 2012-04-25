@@ -1,11 +1,11 @@
-Seq = require "seq"
+Seq = require 'seq'
 
-_ = require 'kraken/util/underscore'
-Cascade = require 'kraken/util/cascade'
+{ _, Cascade,
+} = require 'kraken/util'
+{ BaseModel, BaseList, ModelCache,
+} = require 'kraken/base'
 { ChartType,
 } = require 'kraken/chart'
-{ BaseModel, BaseList,
-} = require 'kraken/base'
 { DataSet
 } = require 'kraken/dataset'
 
@@ -76,6 +76,7 @@ Graph = exports.Graph = BaseModel.extend do # {{{
     constructor: function Graph (attributes={}, opts)
         # @on 'ready', ~> console.log "(#this via Graph).ready!"
         attributes.options or= {}
+        attributes.slug    or= attributes.id if attributes.id?
         @optionCascade = new Cascade attributes.options
         BaseModel.call this, attributes, opts
     
@@ -99,7 +100,8 @@ Graph = exports.Graph = BaseModel.extend do # {{{
     
     
     load: (opts={}) ->
-        return this if @ready and not opts.force
+        return this if (@loading or @ready) and not opts.force
+        @loading = true
         @wait()
         @trigger 'load', this
         Seq()
@@ -116,6 +118,8 @@ Graph = exports.Graph = BaseModel.extend do # {{{
                         success : @unwaitAnd (model, res) ~>
                             # console.log "#{this}.fetch() --> success!", res
                             @dataset.set @get('data')
+                            @trigger 'change:data', this, @dataset, 'data'
+                            @trigger 'change',      this, @dataset, 'data'
                             next.ok res
             .seq_ (next) ~>
                 next.ok @get('parents')
@@ -129,9 +133,9 @@ Graph = exports.Graph = BaseModel.extend do # {{{
                 @unwait()
                 next.ok()
             .seq ~>
-                @ready = true
-                @trigger 'ready', this
+                @loading = false
                 @unwait() # terminates the `load` wait
+                @triggerReady()
         this
     
     
@@ -323,32 +327,6 @@ GraphList = exports.GraphList = BaseList.extend do # {{{
 # }}}
 
 
-/* * * *  Visualization Cache for parent-lookup  * * * {{{ */
+### Graph Cache for parent-lookup
+new ModelCache Graph
 
-Graph import do
-    CACHE : new GraphList
-    
-    register: (model) ->
-        # console.log "#{@CACHE}.register(#{model.id or model.get('id')})", model
-        if @CACHE.contains model
-            @CACHE.remove model, {+silent}
-        @CACHE.add model
-        model
-    
-    get: (id) ->
-        @CACHE.get id
-    
-    lookup: (id, cb) ->
-        # console.log "#{@CACHE}.lookup(#id, #{typeof cb})"
-        if @CACHE.get id
-            cb null, that
-        else
-            Cls = this
-            @register new Cls { id, slug:id }
-                .on 'ready', -> cb null, it
-    
-
-
-_.bindAll Graph, 'register', 'get', 'lookup'
-
-/* }}} */
