@@ -10,11 +10,15 @@ section.graph-display.graph(id=view.id)
         .viewport
         .graph-legend
     
-    .graph-details-row.row-fluid
+    .graph-details-row.row-fluid        
+        .span1
         .graph-desc.span6
-            != jade.filters.markdown(desc)
-        
-        .span8
+            small
+                != jade.filters.markdown(desc)
+
+    .graph-details-row.row-fluid
+        .span1 
+        .span6
             .graph-permalink 
                 input.span6(value="#{model.toPermalink()}", readonly="readonly")
             
