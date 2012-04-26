@@ -3,10 +3,26 @@ extends layout
 block content 
     .page-header
         h1 Wikimedia Geolocation Map 
-            small February 2012
+            small English Wikipedia - February 2012
     
-    
+    svg#worldmap        
 
+    .well#infobox
+        .row
+            .span4
+                h3#country
+        .row 
+            .span2 All editors                    
+            .span2#ae
+        .row 
+            .span2 5+ editors
+            .span2#e5
+        .row 
+            .span2 100+ editors
+            .span2#e100
+
+    .page-footer.pull-right
+        h6 Zoom/Pan using mouse.
 
 block title
     title Geolocation
