@@ -35,7 +35,7 @@ GraphDisplayView = exports.GraphDisplayView = BaseView.extend do # {{{
     events:
         # Select the whole permalink URI text when it receives focus.
         'focus      .graph-permalink input'             : 'onPermalinkFocus'     
-        #     'click    .redraw-button'                  : 'stopAndRender'
+        'click      .export-button'                     : 'exportChart'
         #     'click    .load-button'                    : 'load'
 
     data  : {}
@@ -162,7 +162,8 @@ GraphDisplayView = exports.GraphDisplayView = BaseView.extend do # {{{
                     valueFormatter     : @numberFormatterHTML
         
         # console.log "#this.render!", dataset
-        _.dump options, 'options'
+        # _.dump options, 'options'
+
         
         # Always rerender the chart to sidestep the case where we need to push defaults into
         # dygraphs to reset the current option state.
@@ -182,6 +183,24 @@ GraphDisplayView = exports.GraphDisplayView = BaseView.extend do # {{{
         #     @chart.resize size
         
         this
+
+    
+    /**
+     * Exports graph as png
+     */
+    exportChart: (evt) ->
+        # The following code is dygraph specific, thus should not 
+        # be implemented in this class. Rather in a dygraph charttype
+        # related class. The same is true for the 'renderChart' method above.
+
+        # The Dygraph.Export module is from http://cavorite.com/labs/js/dygraphs-export/
+        # Todo: We don't use the tile of the chart, which is thus missing from the png
+        console.log "#this.export!"
+        img = @$el.find '.export-image'
+        Dygraph.Export.asPNG(@chart, img);
+        window.open img.src, "toDataURL() image"
+
+    
     
     update: ->
         locals = @toTemplateLocals()
@@ -269,6 +288,8 @@ GraphDisplayView = exports.GraphDisplayView = BaseView.extend do # {{{
         # defer, the focusing click will 
         # unselect the text.
         _.defer( ~> @$el.find '.graph-permalink input' .select() )
+
+
 
     # Needed because (sigh) _.debounce returns undefined
     stopAndRender: ->
