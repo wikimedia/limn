@@ -27,7 +27,8 @@ DataSetView = exports.DataSetView = BaseView.extend do # {{{
         {@graph_id, @datasources, @dataset} = @options
         BaseView::initialize ...
         @views_by_cid = {}
-        @addAllMetrics()
+        @model
+            .on 'ready',  @addAllMetrics,     this
         @model.metrics
             .on 'add',    @addMetric,         this
             .on 'remove', @removeMetric,      this
@@ -63,6 +64,7 @@ DataSetView = exports.DataSetView = BaseView.extend do # {{{
         metric.view
     
     addAllMetrics: ->
+        console.log "#this.addAllMetrics! --> #{@model.metrics}"
         @removeAllSubviews()
         @model.metrics.each @addMetric, this
         this

@@ -6,6 +6,7 @@
 
 /**
  * @class
+ * Model is a Metric.
  */
 DataSourceUIView = exports.DataSourceUIView = BaseView.extend do # {{{
     __bind__       : <[  ]>
@@ -52,9 +53,17 @@ DataSourceUIView = exports.DataSourceUIView = BaseView.extend do # {{{
         @$el.toggleClass 'in'
     
     onSelectMetric: (evt) ->
-        tr = evt.currentTarget
-        idx = @$ '.source-metrics .datasource-source-metric' .toArray().indexOf tr
-        return unless idx is not -1
+        # tr = evt.currentTarget
+        # idx = @$ '.source-metrics .datasource-source-metric' .toArray().indexOf tr
+        # return unless idx is not -1
+        el = $ evt.currentTarget
+        {source_id, source_col} = el.data()
+        source_col = parseInt source_col
+        return if not source_id or isNaN source_col
         
+        @$ '.source-metrics .datasource-source-metric' .removeClass 'active'
+        el.addClass 'active'
+        @model.set {source_col, source_id}
+        # @trigger 'edit-metric', @model
     
 # }}}

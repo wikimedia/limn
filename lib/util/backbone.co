@@ -13,12 +13,26 @@ Backbone.setDomLibrary that if window? and (window.jQuery or window.Zepto or win
 
 
 _bb_events =
+    
+    /**
+     * Registers an event listener on the given event(s) to be fired only once.
+     * 
+     * @param {String} events Space delimited list of event names.
+     * @param {Function} callback Event listener function.
+     * @param {Object} [context=this] Object to be supplied as the context for the listener.
+     * @returns {this}
+     */
     once: (events, callback, context) ->
         fn = ~>
             @off events, arguments.callee, this
             callback.apply (context or this), arguments
         @on events, fn, this
-        fn
+        this
+    
+    /**
+     * Compatibility with Node's `EventEmitter`.
+     */
+    emit: Backbone.Events.trigger
 
 
 

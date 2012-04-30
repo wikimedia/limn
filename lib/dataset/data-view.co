@@ -7,13 +7,14 @@ Seq = require 'seq'
 } = require 'kraken/dataset/dataset-view'
 { MetricEditView,
 } = require 'kraken/dataset/metric-edit-view'
-
+{ DataSource, 
+} = require 'kraken/dataset/datasource-model'
 
 /**
- * @class
+ * @class DataSet selection and customization UI (root of the `data` tab).
  */
 DataView = exports.DataView = BaseView.extend do # {{{
-    __bind__       : <[ ]>
+    __bind__       : <[ onMetricsChanged ]>
     tagName        : 'section'
     className      : 'data-ui'
     template       : require 'kraken/template/data'
@@ -21,7 +22,9 @@ DataView = exports.DataView = BaseView.extend do # {{{
     datasources : null
     
     
-    
+    /**
+     * @constructor
+     */
     constructor: function DataView
         BaseView ...
     
@@ -29,20 +32,16 @@ DataView = exports.DataView = BaseView.extend do # {{{
         @graph_id = @options.graph_id
         BaseView::initialize ...
         @metric_views = new ViewList
-        @datasources = @model.sources
+        @datasources = DataSource.getAllSources()
         @model.metrics
-            .on 'add',      @addMetric,     this
-            .on 'remove',   @removeMetric,  this
-        @on 'ready', @onReady, this
-        @load()
+            .on 'add',          @addMetric,     this
+            .on 'remove',       @removeMetric,  this
+        @model.once 'ready',    @onReady,       this
     
     onReady: ->
+        console.log "#this.onReady! #{@model.metrics}"
         dataset = @model
         @model.metrics.each @addMetric, this
-        # @metric_edit_view = @addSubview new MetricEditView  {@graph_id, dataset, @datasources}
-        # @metric_edit_view
-        #     .on 'update',           @onUpdateMetric,    this
-        
         @dataset_view = new DataSetView {@model, @graph_id, dataset, @datasources}
         @addSubview @dataset_view
             .on 'add-metric',       @onMetricsChanged,  this
@@ -50,18 +49,9 @@ DataView = exports.DataView = BaseView.extend do # {{{
             .on 'edit-metric',      @editMetric,        this
         
         @render()
+        @triggerReady()
         this
     
-    
-    
-    load: ->
-        @wait()
-        # $.getJSON '/datasources/all', (@data) ~>
-        #     _.each @data, @canonicalizeDataSource, this
-        #     @model.sources.reset _.map @data, -> it
-        @unwait()
-        # @render()
-        @triggerReady()
     
     /**
      * Transform the `columns` field to ensure an Array of {label, type} objects.
@@ -89,16 +79,11 @@ DataView = exports.DataView = BaseView.extend do # {{{
         attrs = _.clone @model.attributes
         { @graph_id, @datasources } import attrs
     
-    # Don't rebuild HTML, simply notify subviews
-    # render: ->
-    #     @renderSubviews()
-    #     @trigger 'render', this
-    #     this
-    
     addMetric: (metric) ->
         console.log "#this.addMetric!", metric
         return metric if @metric_views.findByModel metric
-        view = new MetricEditView {model:metric, @graph_id, dataset, @datasources}
+        view = new MetricEditView {model:metric, @graph_id, dataset:@model, @datasources}
+        view.on 'update', @onUpdateMetric, this
         @metric_views.push @addSubview view
         metric
     
@@ -114,12 +99,11 @@ DataView = exports.DataView = BaseView.extend do # {{{
         @metric_views.invoke 'hide'
         @metric_edit_view = @metric_views.findByModel metric
         @metric_edit_view?.show()
-        @onMetricsChanged()
+        _.delay @onMetricsChanged, 10
     
     onMetricsChanged: ->
         oldMinHeight = parseInt @$el.css 'min-height'
         newMinHeight = Math.max do
-            oldMinHeight
             @dataset_view.$el.height()
             @metric_edit_view?.$el.height()
         # console.log 'onMetricsChanged!', oldMinHeight, '-->', newMinHeight

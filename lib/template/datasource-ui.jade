@@ -1,6 +1,6 @@
-section.datasource-ui
+section.datasource-ui(class="datasource-ui-#{source_id}")
     
-    section.datasource-summary(data-toggle="collapse", data-target="##{graph_id} .datasource-ui .datasource-selector")
+    section.datasource-summary(data-toggle="collapse", data-target="##{graph_id} .datasource-ui.datasource-ui-#{source_id} .datasource-selector")
         i.expand-datasource-ui-button.icon-chevron-down
         i.collapse-datasource-ui-button.icon-chevron-up
         
@@ -48,7 +48,7 @@ section.datasource-ui
                                     tbody.source-metrics
                                         for m, idx in ds.metrics.slice(1)
                                             - var activeColClass = (activeClass && source_col === m.idx) ? 'active' : ''
-                                            tr.datasource-source-metric(class=activeColClass)
+                                            tr.datasource-source-metric(class=activeColClass, data-source_id=ds.id, data-source_col=m.idx)
                                                 td.source-metric-idx #{m.idx}
                                                 td.source-metric-label #{m.label}
                                                 td.source-metric-type #{m.type}

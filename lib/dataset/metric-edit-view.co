@@ -11,13 +11,14 @@
 
 /**
  * @class
+ * Model is a Metric.
  */
 MetricEditView = exports.MetricEditView = BaseView.extend do # {{{
     tagName        : 'section'
     className      : 'metric-edit-ui'
     template       : require 'kraken/template/metric-edit'
     
-    callOnReturnKeypress : 'onChanged'
+    callOnReturnKeypress : 'onChange'
     events:
         'keydown .metric-label' : 'onReturnKeypress'
     
@@ -37,18 +38,18 @@ MetricEditView = exports.MetricEditView = BaseView.extend do # {{{
         @datasource_ui_view = new DataSourceUIView {@model, @graph_id, @dataset, @datasources}
         @addSubview @datasource_ui_view
             .on 'update', ~> @trigger 'update', this
-        @$ '.metric-datasource' .append @datasource_ui_view.render().el
+        # @$ '.metric-datasource' .append @datasource_ui_view.render().el
     
     
     toTemplateLocals: ->
         locals = BaseView::toTemplateLocals ...
         locals import { @graph_id, @dataset, @datasources }
     
-    build: ->
-        BaseView::build ...
-        if @datasource_ui_view
-            @$ '.metric-datasource' .append @datasource_ui_view.render().el
-        this
+    # build: ->
+    #     BaseView::build ...
+    #     if @datasource_ui_view
+    #         @$ '.metric-datasource' .append @datasource_ui_view.render().el
+    #     this
     
     update: ->
         color = @model.get 'color'
@@ -58,16 +59,13 @@ MetricEditView = exports.MetricEditView = BaseView.extend do # {{{
         
         this
     
-    onChanged: ->
+    onChange: ->
         attrs = @$ 'form.metric-edit-form' .formData()
         @model.set attrs, {+silent}
         @trigger 'update', this
     
-    editMetric: (metric) ->
-        console.log "#this.editMetric!", metric
-        @datasource_ui_view.setModel @setModel metric
-        @render()
-        @show()
+    onMetricChange: (metric) ->
+        console.log "#this.onMetricChange!", metric
         this
     
 # }}}

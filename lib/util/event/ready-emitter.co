@@ -1,4 +1,5 @@
 {EventEmitter} = require 'events'
+EventEmitter::trigger = EventEmitter::emit
 
 
 /**

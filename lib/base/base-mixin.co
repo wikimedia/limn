@@ -44,10 +44,10 @@ BaseBackboneMixin = exports.BaseBackboneMixin =
      * Subsequent listeners added on this event will be auto-triggered.
      * @returns {this}
      */
-    triggerReady: ->
-        return this if @ready
-        @ready = true
-        @trigger 'ready', this
+    triggerReady: (lock='ready', event='ready') ->
+        return this if @[lock]
+        @[lock] = true
+        @trigger event, this
         this
     
     /**
@@ -55,10 +55,10 @@ BaseBackboneMixin = exports.BaseBackboneMixin =
      * 'ready-reset' event.
      * @returns {this}
      */
-    resetReady: ->
-        return this unless @ready
-        @ready = false
-        @trigger 'ready-reset', this
+    resetReady: (lock='ready', event='ready') ->
+        return this unless @[lock]
+        @[lock] = false
+        @trigger "#event-reset", this
         this
     
     /**
@@ -71,12 +71,17 @@ BaseBackboneMixin = exports.BaseBackboneMixin =
      * @param {Object} [context]
      * @returns {this}
      */
-    on: (events, callback, context) ->
+    on: (events, callback, context=this) ->
         return this if not callback
         Backbone.Events.on ...
         if @ready and _.contains events.split(/\s+/), 'ready'
-            callback.call context or this, this
+            callback.call context, this
         this
+    
+    makeHandlersForCallback: (cb) ->
+        success : ~> cb.call this, [null].concat arguments
+        error   : ~> cb.call this, it
+    
     
     
     
@@ -126,6 +131,9 @@ BaseBackboneMixin = exports.BaseBackboneMixin =
             # console.trace()
             self.unwait(); fn ...
     
+    
+    
+    ###
     
     getClassName: ->
         "#{@..name or @..displayName}"

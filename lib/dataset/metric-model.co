@@ -9,7 +9,6 @@ DataSource = DataSourceList = null
  */
 Metric = exports.Metric = BaseModel.extend do # {{{
     urlRoot  : '/metrics'
-    ready : false
     
     /**
      * Data source of the Metric.
@@ -44,9 +43,9 @@ Metric = exports.Metric = BaseModel.extend do # {{{
     
     initialize : ->
         BaseModel::initialize ...
-        @on 'change:source_id',  @lookupSource,         this
-        @on 'change:source_col', @onUpdateSourceCol,    this
-        @lookupSource()
+        @on 'change:source_id',  @load,     this
+        @on 'change:source_col', @updateId, this
+        @load()
     
     
     getDateColumn: ->
@@ -55,28 +54,31 @@ Metric = exports.Metric = BaseModel.extend do # {{{
     getData: ->
         @source.getColumn @get 'source_col'
     
-    lookupSource: ->
-        if source_id = @get 'source_id'
-            @wait()
-            @updateId()
-            DataSource.lookup source_id, @onSourceReady, this
-        this
     
-    onSourceReady: (err, source) ->
-        # console.log "#this.onSourceReady", arguments
-        @unwait()
-        if err
-            console.error "#this Error loading DataSource! #err"
-        else
-            @source = source
-            @updateId()
-            @triggerReady()
-        this
-    
-    
-    onUpdateSourceCol: ->
+    load: (opts={}) ->
+        source_id = @get 'source_id'
+        @resetReady() if opts.force or @source?.id is not source_id
+        return this if not source_id or @loading or @ready
+        
+        console.log "#this.load()..."
         @updateId()
+        @loading = true
+        @wait()
+        @trigger 'load', this
+        
+        DataSource.lookup source_id, (err, source) ~>
+            # console.log "#this.onSourceReady", arguments
+            @loading = false
+            @unwait() # terminates the `load` wait
+            if err
+                console.error "#{this} Error loading DataSource! #err"
+            else
+                console.log "#{this}.load() complete!"
+                @source = source
+                @updateId()
+                @triggerReady()
         this
+    
     
     updateId: ->
         if (source_id = @get('source_id')) and (source_col = @get('source_col'))

@@ -18,7 +18,7 @@ BaseModel = exports.BaseModel = Backbone.Model.extend mixinBase do # {{{
         @__superclass__ = @..__super__.constructor
         @waitingOn      = 0
         Backbone.Model ...
-        @trigger 'create', this
+        # @..trigger 'create', this
     
     
     
@@ -52,7 +52,78 @@ BaseModel = exports.BaseModel = Backbone.Model.extend mixinBase do # {{{
     #     
     
     
+    ### Data & Model Loading
     
+    /**
+     * Override to customize what data or assets the model requires,
+     * and how they should be loaded.
+     * 
+     * By default, `load()` simply calls `loadModel()` via `loader()`.
+     * 
+     * @see BaseModel#loader
+     * @see BaseModel#loadModel
+     * @returns {this}
+     */
+    load: ->
+        console.log "#this.load()"
+        @loader do
+            start         : @loadModel
+            completeEvent : 'fetch-success'
+        this
+    
+    
+    /**
+     * Wraps the loading workflow boilerplate:
+     *  - Squelches multiple loads from running at once
+     *  - Squelches loads post-ready, unless forced
+     *  - Triggers a start event
+     *  - Triggers "ready" when complete
+     *  - Wraps workflow with wait/unwait
+     *  - Cleans up "loading" state
+     * 
+     * @protected
+     * @param {Object} [opts={}] Options:
+     * @param {Function} opts.start Function that starts the loading process. Always called with `this` as the context.
+     * @param {String} [opts.startEvent='load'] Event to trigger before beginning the load.
+     * @param {String} [opts.completeEvent='load-success'] Event which signals loading has completed.
+     * @param {Boolean} [opts.force=false] If true, move forward with the load even if we're ready.
+     * @returns {this} 
+     */
+    loader: (opts={}) ->
+        opts = { -force, startEvent:'load', completeEvent:'load-success', ...opts }
+        @resetReady() if opts.force
+        return this if not opts.start or @loading or @ready
+        
+        @wait()
+        @loading = true
+        @trigger opts.startEvent, this
+        
+        # Register a handler for the post-load event that will run only once
+        @once opts.completeEvent, ~>
+            console.log "#{this}.onLoadComplete()"
+            @loading = false
+            @unwait() # terminates the `load` wait
+            @trigger 'load-success', this unless opts.completeEvent is 'load-success'
+            @triggerReady()
+        
+        # Finally, start the loading process
+        opts.start.call this
+        this
+    
+    /**
+     * Runs `.fetch()`, triggering a `fetch` event at start, and
+     * `fetch-success` / `fetch-error` on completion.
+     * 
+     * @protected
+     * @returns {this}
+     */
+    loadModel: ->
+        @wait()
+        @trigger 'fetch', this
+        @fetch do
+            success : ~> @unwait(); @trigger 'fetch-success', this
+            error   : ~> @unwait(); @trigger 'fetch-error',   this, ...arguments
+        this
     
     
     ### Serialization
@@ -149,11 +220,11 @@ BaseList = exports.BaseList = Backbone.Collection.extend mixinBase do # {{{
     toString: ->
         "#{@getClassName()}[#{@length}]"
     
-    # toString: ->
-    #     modelIds = @models
-    #         .map -> "\"#{it.id ? it.cid}\""
-    #         .join ', '
-    #     "#{@getClassName()}[#{@length}](#modelIds)"
+    toStringWithIds: ->
+        modelIds = @models
+            .map -> "\"#{it.id ? it.cid}\""
+            .join ', '
+        "#{@getClassName()}[#{@length}](#modelIds)"
 # }}}
 
 

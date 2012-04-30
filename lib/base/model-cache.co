@@ -146,7 +146,7 @@ class exports.ModelCache extends ReadyEmitter
             .parMap_ (next, id) ~>
                 return next.ok(that) if @cache.get id
                 @register @createModel id
-                    .on 'ready', next
+                    .on 'ready', -> next.ok it
                     .load()
             .unflatten()
             .seq (models) ->

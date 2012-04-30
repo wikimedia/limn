@@ -29,6 +29,12 @@ Graph = exports.Graph = BaseModel.extend do # {{{
     ready : false
     
     /**
+     * Whether this Graph has loaded the actual data needed to draw the chart.
+     * @type Boolean
+     */
+    dataReady : false
+    
+    /**
      * The chart type backing this graph.
      * @type ChartType
      */
@@ -81,48 +87,48 @@ Graph = exports.Graph = BaseModel.extend do # {{{
         BaseModel.call this, attributes, opts
     
     
-    initialize: (attributes, opts) ->
+    initialize: (attributes) ->
         BaseModel::initialize ...
-        opts = {+autoload} import (opts or {})
         
         @constructor.register this
         @parents = new GraphList
         
         # TODO: Load on-demand
-        @chartType = ChartType.lookup @get('chartType')
+        @chartType = ChartType.lookup @get 'chartType'
         
         # Insert submodels in place of JSON
-        # data = @get('data') or @get('dataset')
-        @set 'data', @dataset = new DataSet(@get('data')), {+silent}
+        @dataset = new DataSet {id:@id, ...@get 'data'}
+        @set 'data', @dataset, {+silent}
         
         @trigger 'init', this
-        @load() if opts.autoload
     
     
     load: (opts={}) ->
         return this if (@loading or @ready) and not opts.force
+        console.log "#this.load()..."
         @loading = true
         @wait()
         @trigger 'load', this
         Seq()
+            # Fetch model if 
             .seq_ (next) ~>
-                if @isNew()
-                    next.ok()
-                else
-                    console.log "#{this}.fetch()..."
-                    @wait()
-                    @fetch do
-                        error : @unwaitAnd (err) ~>
-                            console.error "#{this}.fetch() --> error! #arguments"
-                            next.ok()
-                        success : @unwaitAnd (model, res) ~>
-                            # console.log "#{this}.fetch() --> success!", res
-                            @dataset.set @get('data')
-                            @trigger 'change:data', this, @dataset, 'data'
-                            @trigger 'change',      this, @dataset, 'data'
-                            next.ok res
+                return next.ok() if @isNew()
+                console.log "#{this}.fetch()..."
+                @wait()
+                @fetch do
+                    error : @unwaitAnd (err) ~>
+                        console.error "#{this}.fetch() --> error! #arguments"
+                        next.ok()
+                    success : @unwaitAnd (model, res) ~>
+                        # console.log "#{this}.fetch() --> success!", res
+                        @dataset.set @get 'data'
+                        @trigger 'change:data', this, @dataset, 'data'
+                        @trigger 'change',      this, @dataset, 'data'
+                        next.ok res
+            
+            # Load Parents...
             .seq_ (next) ~>
-                next.ok @get('parents')
+                next.ok @get 'parents'
             .flatten()
             .seqMap_ (next, parent_id) ~>
                 @wait()
@@ -132,10 +138,42 @@ Graph = exports.Graph = BaseModel.extend do # {{{
                 @optionCascade.addLookup parent.get('options')
                 @unwait()
                 next.ok()
+            
+            # Load DataSet...
+            .seq_ (next) ~>
+                @dataset.once 'ready', next.ok .load()
+            
+            # Done!
             .seq ~>
+                console.log "#{this}.load() complete!"
                 @loading = false
                 @unwait() # terminates the `load` wait
                 @triggerReady()
+        this
+    
+    
+    loadData: (opts={}) ->
+        @resetReady 'dataReady', 'data-ready' if opts.force
+        return this if @loading or @dataReady
+        
+        unless @dataset.metrics.length
+            return @triggerReady 'dataReady', 'data-ready'
+        
+        console.log "#this.loadData()..."
+        @wait()
+        @loading = true
+        @trigger 'load-data', this
+        Seq @dataset.metrics.models
+            .parEach_ (next, metric) ->
+                metric.once 'ready', next.ok .load()
+            .parEach_ (next, metric) ->
+                metric.source
+                    .on 'load-data-success', next.ok .loadData()
+            .seq ~>
+                console.log "#{this}.loadData() complete!"
+                @loading = false
+                @unwait() # terminates the `load` wait
+                @triggerReady 'dataReady', 'data-ready'
         this
     
     
@@ -308,7 +346,10 @@ Graph = exports.Graph = BaseModel.extend do # {{{
     toPermalink: ->
         "#{root.location.protocol}//#{window.location.host}#{@toLink()}"
     
-    
+
+### Graph Cache for parent-lookup
+new ModelCache Graph
+
 # }}}
 
 
@@ -318,15 +359,8 @@ GraphList = exports.GraphList = BaseList.extend do # {{{
     
     constructor : function GraphList then BaseList ...
     initialize  : -> BaseList::initialize ...
-    
-    toString: ->
-        modelIds = @models
-            .map -> "\"#{it.id ? it.cid}\""
-            .join ', '
-        "#{@getClassName()}(#modelIds)"
+    toString: -> @toStringWithIds()
 # }}}
 
 
-### Graph Cache for parent-lookup
-new ModelCache Graph
 

@@ -2,7 +2,7 @@
 } = require 'kraken/util'
 { TimeSeriesData, CSVData,
 } = require 'kraken/timeseries'
-{ BaseModel, BaseList, BaseView,
+{ BaseModel, BaseList, ModelCache,
 } = require 'kraken/base'
 { Metric, MetricList,
 } = require 'kraken/dataset/metric-model'
@@ -12,7 +12,7 @@
  * @class
  */
 DataSource = exports.DataSource = BaseModel.extend do # {{{
-    __bind__ : <[ onLoadSuccess onLoadError ]>
+    __bind__ : <[ onLoadDataSuccess onLoadDataError ]>
     urlRoot  : '/datasources'
     ready    : false
     
@@ -61,7 +61,6 @@ DataSource = exports.DataSource = BaseModel.extend do # {{{
         @constructor.register this
         @metrics = new MetricList @attributes.metrics
         @on 'change:metrics', @onMetricChange, this
-        # @load()
     
     
     canonicalize: (ds) ->
@@ -83,44 +82,59 @@ DataSource = exports.DataSource = BaseModel.extend do # {{{
                 {idx, label, type:cols.types[idx] or 'int'}
         ds
     
-    load: ->
-        @trigger 'load', this
-        url = @get 'url'
+    
+    
+    loadAll: ->
+        @loader start: ->
+            Seq()
+                .seq_ (next) ~>
+                    @once 'fetch-success', next.ok
+                    @loadModel()
+                .seq_ (next) ~>
+                    @once 'load-data-success', next.ok
+                    @loadData()
+                .seq ~>
+                    @trigger 'load-success', this
+        this
+    
+    loadData: ->
+        @wait()
+        @trigger 'load-data', this
+        return @onLoadDataSuccess @data if @data
         switch @get 'format'
-        case 'json'
-            @loadJSON url
-        case 'csv'
-            @loadCSV url
+        case 'json' then @loadJSON()
+        case 'csv'  then @loadCSV()
         default
             console.error "#this.load() Unknown Data Format!"
-            @onLoadError null, 'Unknown Data Format!', new Error 'Unknown Data Format!'
+            @onLoadDataError null, 'Unknown Data Format!', new Error 'Unknown Data Format!'
         this
     
-    loadJSON: (url) ->
+    loadJSON: ->
         $.ajax do
-            url      : url
+            url      : @get 'url'
             dataType : 'json'
-            success  : (data) ~> @onLoadSuccess new TimeSeriesData data
-            error    : @onLoadError
+            success  : (data) ~> @onLoadDataSuccess new TimeSeriesData data
+            error    : @onLoadDataError
         this
     
-    loadCSV: (url) ->
+    loadCSV: ->
         $.ajax do
-            url      : url
+            url      : @get 'url'
             dataType : 'text'
-            success  : (data) ~> @onLoadSuccess new CSVData data
-            error    : @onLoadError
+            success  : (data) ~> @onLoadDataSuccess new CSVData data
+            error    : @onLoadDataError
         this
     
-    onLoadSuccess: (@data) ->
-        console.log "#this.onLoadSuccess #{@data}"
-        @trigger 'load-success', this
-        @triggerReady()
+    onLoadDataSuccess: (@data) ->
+        console.log "#this.onLoadDataSuccess #{@data}"
+        @unwait()
+        @trigger 'load-data-success', this
     
-    onLoadError: (jqXHR, txtStatus, err) ->
-        @_errorLoading = true
+    onLoadDataError: (jqXHR, txtStatus, err) ->
         console.error "#this Error loading data! -- #msg: #{err or ''}"
-        @trigger 'load-error', this, txtStatus, err
+        @unwait()
+        @_errorLoading = true
+        @trigger 'load-data-error', this, txtStatus, err
     
     
     getDateColumn: ->
@@ -142,7 +156,7 @@ DataSource = exports.DataSource = BaseModel.extend do # {{{
     onMetricChange: ->
         @metrics.reset @get 'metrics'
     
-    
+
 # }}}
 
 
@@ -159,49 +173,17 @@ DataSourceList = exports.DataSourceList = BaseList.extend do # {{{
 
 
 
+### DataSource Cache
 
-/* * * *  DataSource Cache  * * * */
-
-DataSource import do
-    CACHE : new DataSourceList
-    ready : false
-    
-    register: (model) ->
-        return model unless model
-        # console.log "#{@CACHE}.register(#{model.id or model.get('id')})", model
-        if @CACHE.contains model
-            @CACHE.remove model, {+silent}
-        @CACHE.add model
-        model
-    
-    get: (id) ->
-        @CACHE.get id
-    
-    lookup: (id, cb, cxt=this) ->
-        # console.log "#{@CACHE}.lookup(#id, #{typeof cb})"
-        unless @ready
-            @on 'cache-ready', ~>
-                @off 'cache-ready', arguments.callee
-                @lookup id, cb, cxt
-            return
-        
-        if @CACHE.get id
-            cb.call cxt, null, that
-        else
-            Cls = this
-            @register new Cls {id}
-                .on 'ready', -> cb.call cxt, null, it
-                .load()
-    
-
-_.bindAll DataSource, 'register', 'get', 'lookup'
-
+ALL_SOURCES = new DataSourceList
+sourceCache = new ModelCache DataSource, {-ready, cache:ALL_SOURCES}
 
 # Fetch all DataSources
 $.getJSON '/datasources/all', (data) ->
-    DataSource.CACHE.reset _.map data, -> it
-    DataSource.ready = true
-    DataSource.trigger 'cache-ready', DataSource
+    ALL_SOURCES.reset _.map data, op.I
+    sourceCache.triggerReady()
 
+DataSource.getAllSources = ->
+    ALL_SOURCES
 
 
