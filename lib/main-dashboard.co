@@ -35,7 +35,7 @@ main = ->
 
 
 
-# Load data files
+# Load dygraph chart options
 Seq([   <[ CHART_OPTIONS_SPEC /schema/dygraph.json ]>
 ])
 .parEach_ (next, [key, url]) ->
@@ -47,6 +47,6 @@ Seq([   <[ CHART_OPTIONS_SPEC /schema/dygraph.json ]>
             next.ok()
         error : (err) -> console.error err
 .seq ->
-    console.log 'All data loaded!'
+    # console.log 'All data loaded!'
     jQuery main
 
