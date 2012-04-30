@@ -17,9 +17,10 @@ section.graph-display.graph(id=view.id)
     .graph-details-row.row
         .span6.offset1.graph-permalink 
                 input.span6(value="#{model.toPermalink()}", readonly="readonly")
-        .span1.a.export-button.btn(href="#")
-            i.icon-file
-            |  Export
+        if ENV == 'dev'
+            .span1.a.export-button.btn(href="#")
+                i.icon-file
+                |  Export
 
     .graph-details-row.row
         .span6.offset1.graph-notes
