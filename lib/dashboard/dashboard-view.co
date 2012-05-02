@@ -21,9 +21,9 @@ DashboardView = exports.DashboardView = BaseView.extend do # {{{
     
     graph_ids : <[
         unique_visitors
-        pageviews
-        pageviews_mobile
         reach
+        pageviews
+        pageviews_mobile        
         commons
         articles
         articles_per_day
