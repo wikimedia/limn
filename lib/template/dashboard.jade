@@ -5,3 +5,14 @@ section#graph-list
     
     section#graphs
 
+    .row
+        .graphs.tabbable 
+            nav           
+                ul.nav.subnav.nav-pills
+                    li:         h3 Graphs    
+                    li.active:  a(href="#core-graphs", data-toggle="tab") Core 
+                    li:         a(href="#other-graphs", data-toggle="tab") Others
+                            
+            .tab-content
+                .core-graphs-pane.tab-pane.active(id="core-graphs")
+                .other-graphs-pane.tab-pane(id="other-graphs")

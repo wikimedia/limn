@@ -33,6 +33,9 @@ DashboardView = exports.DashboardView = BaseView.extend do # {{{
         active_editors_target
         very_active_editors
     ]>
+
+    core_graph_ids : ["unique_visitors ","pageviews","pageviews_mobile", "new_editors","active_editors", "active_editors_target"]
+
     subviews : []
     graphs   : null
     ready    : false
@@ -46,7 +49,8 @@ DashboardView = exports.DashboardView = BaseView.extend do # {{{
     initialize: ->
         @model or= new Dashboard
         BaseView::initialize ...
-        @graphs.on 'add', @attachGraphs, this
+        # @graphs.on 'add', @attachGraphs, this
+        @graphs.on 'add', @attachGraph, this
         @load()
     
     
@@ -67,6 +71,29 @@ DashboardView = exports.DashboardView = BaseView.extend do # {{{
                 @attachGraphs()
                 @trigger 'ready', this
     
+    attachGraph: (graph) ->            
+        console.log 'Attach graph',graph
+
+        return if graph.view.isAttached       
+
+        # graphs_el = if graph.id in @core_graph_ids then @$el.find '.core-graphs-pane' else @$el.find '.other-graphs-pane'
+
+        graphs_el = @$el.find '.other-graphs-pane'   # @$el.find '.core-graphs-pane' 
+
+        console.log graph.id
+        console.log @core_graph_ids
+        console.log "if graph.id in @core_graph_ids" , (graph.id in @core_graph_ids)
+
+        graphs_el.append graph.view.el 
+        @subviews.push graph.view
+        graph.view.isAttached = true
+        graph.on 'ready', ->
+            graph.off 'ready', arguments.callee
+            graph.view.renderChart()
+
+        this
+
+
     attachGraphs: ->
         graphs_el = @$el.find '#graphs'
         for id of @graph_ids
