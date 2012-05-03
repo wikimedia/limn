@@ -33,10 +33,11 @@ DashboardView = exports.DashboardView = BaseView.extend do # {{{
         active_editors
         active_editors_target
         very_active_editors
-        mobile_devices
-        mobile_devices_browsers
-        mobile_devices_applications
     ]>
+    # mobile_devices
+    # mobile_devices_browsers
+    # mobile_devices_applications
+
     subviews : []
     graphs   : null
     ready    : false
