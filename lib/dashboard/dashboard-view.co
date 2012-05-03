@@ -33,12 +33,18 @@ DashboardView = exports.DashboardView = BaseView.extend do # {{{
         active_editors
         active_editors_target
         very_active_editors
-        mobile_devices
-        mobile_devices_browsers
-        mobile_devices_applications
     ]>
 
+    # mobile_devices
+    # mobile_devices_browsers
+    # mobile_devices_applications
+
     core_graph_ids : ["unique_visitors ","pageviews","pageviews_mobile", "new_editors","active_editors", "active_editors_target"]
+
+    events:
+        # Select the whole permalink URI text when it receives focus.
+        'click      .core_graphs a'             : 'redraw'             
+        #     'click    .load-button'                    : 'load'
 
     subviews : []
     graphs   : null
@@ -95,8 +101,12 @@ DashboardView = exports.DashboardView = BaseView.extend do # {{{
             graph.off 'ready', arguments.callee
             graph.view.renderChart()
 
+
+        @graph ... render
         this
 
+    redraw: ->
+        console.log 'redraw!', arguments
 
     attachGraphs: ->
         graphs_el = @$el.find '#graphs'
