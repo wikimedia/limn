@@ -23,7 +23,8 @@ DashboardView = exports.DashboardView = BaseView.extend do # {{{
         unique_visitors
         reach
         pageviews
-        pageviews_mobile        
+        pageviews_mobile
+        pageviews_mobile_target        
         commons
         articles
         articles_per_day
@@ -33,6 +34,10 @@ DashboardView = exports.DashboardView = BaseView.extend do # {{{
         active_editors_target
         very_active_editors
     ]>
+    # mobile_devices
+    # mobile_devices_browsers
+    # mobile_devices_applications
+
     subviews : []
     graphs   : null
     ready    : false
