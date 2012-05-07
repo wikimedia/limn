@@ -19,7 +19,10 @@ dev:
         - jquery.hotkeys.min
         - jquery.isotope.min
         - jquery.spin.min
+        
         - bootstrap.min
+        - bootstrap-colorpicker
+        - bootstrap-datepicker
         
         ### CommonJS Support Starts Here
         ### (this means Browserify must come before any .mod files)

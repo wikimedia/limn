@@ -33,6 +33,7 @@ DataView = exports.DataView = BaseView.extend do # {{{
         BaseView::initialize ...
         @metric_views = new ViewList
         @datasources = DataSource.getAllSources()
+        # @on 'update',           @onUpdate,      this
         @model.metrics
             .on 'add',          @addMetric,     this
             .on 'remove',       @removeMetric,  this
@@ -83,7 +84,8 @@ DataView = exports.DataView = BaseView.extend do # {{{
         console.log "#this.addMetric!", metric
         return metric if @metric_views.findByModel metric
         view = new MetricEditView {model:metric, @graph_id, dataset:@model, @datasources}
-        view.on 'update', @onUpdateMetric, this
+            .on 'metric-update', @onUpdateMetric, this
+            .on 'metric-change', @onUpdateMetric, this
         @metric_views.push @addSubview view
         metric
     
@@ -110,5 +112,9 @@ DataView = exports.DataView = BaseView.extend do # {{{
         @$el.css 'min-height', newMinHeight
     
     onUpdateMetric: ->
-        @renderSubviews()
+        console.log "#this.onUpdateMetric!"
+        @trigger 'metric-change', @model, this
+        @render()
+    
+    
 # }}}

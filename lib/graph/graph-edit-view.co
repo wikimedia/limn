@@ -108,7 +108,7 @@ GraphEditView = exports.GraphEditView = BaseView.extend do # {{{
         @data_view
             .on 'start-waiting', @wait,         this
             .on 'stop-waiting',  @unwait,       this
-            .on 'change',        @onDataChange, this
+            .on 'metric-change', @onDataChange, this
         
         
         # Rerender once the tab is visible
@@ -128,9 +128,9 @@ GraphEditView = exports.GraphEditView = BaseView.extend do # {{{
         @checkWaiting()
         Seq()
             .seq_ (next) ~>
-                @model.on 'ready', next.ok .load()
+                @model.once 'ready', next.ok .load()
             .seq_ (next) ~>
-                @model.on 'data-ready', next.ok .loadData()
+                @model.once 'data-ready', next.ok .loadData()
             .seq ~> @onReady()
     
     onReady: ->
@@ -262,6 +262,7 @@ GraphEditView = exports.GraphEditView = BaseView.extend do # {{{
         # XXX: use @model.changedAttributes() to calculate what to update
         options = @chartOptions() #import size
         options import do
+            colors             : dataset.getColors()
             labels             : dataset.getLabels()
             labelsDiv          : @$ '.graph-label' .0
             valueFormatter     : @numberFormatterHTML
@@ -327,50 +328,6 @@ GraphEditView = exports.GraphEditView = BaseView.extend do # {{{
         History.pushState data, title, url
     
     
-    /**
-     * Retrieve or construct the spinner.
-     */
-    spinner: ->
-        el = @$ '.graph-spinner'
-        unless el.data 'spinner'
-            ### Spin.js Options ###
-            opts =
-                lines     : 9           # [12]        The number of lines to draw
-                length    : 2           # [7]         The length of each line
-                width     : 1           # [5]         The line thickness
-                radius    : 7           # [10]        The radius of the inner circle
-                rotate    : -10.5       # [0]         rotation offset
-                trail     : 50          # [100]       Afterglow percentage
-                opacity   : 1/4         # [1/4]       Opacity of the lines
-                shadow    : false       # [false]     Whether to render a shadow
-                speed     : 1           # [1]         Spins per second
-                zIndex    : 2e9         # [2e9]       zIndex; uses a very high z-index by default
-                color     : '#000'      # ['#000']    Line color; '#rgb' or '#rrggbb'.
-                top       : 'auto'      # ['auto']    Top position relative to parent in px; 'auto' = center vertically.
-                left      : 'auto'      # ['auto']    Left position relative to parent in px; 'auto' = center horizontally.
-                className : 'spinner'   # ['spinner'] CSS class to assign to the element
-                fps       : 20          # [20]        Frames per second when falling back to `setTimeout()`.
-                hwaccel   : Modernizr.csstransforms3d   # [false]     Whether to use hardware acceleration.
-            
-            isHidden = el.css('display') is 'none'
-            el.show().spin opts
-            el.hide() if isHidden
-        el
-    
-    checkWaiting: ->
-        spinner = @spinner()
-        if isWaiting = (@waitingOn > 0)
-            spinner.show()
-            if spinner.find('.spinner').css('top') is '0px'
-                # delete spinner
-                spinner.spin(false)
-                # re-add to DOM with correct parent sizing
-                @spinner()
-        else
-            spinner.hide()
-        isWaiting
-    
-    
     ### }}}
     ### Formatters {{{
     
@@ -420,10 +377,12 @@ GraphEditView = exports.GraphEditView = BaseView.extend do # {{{
         @render()
     
     onStartWaiting: ->
-        console.log "#this.onStartWaiting!", @checkWaiting()
+        status = @checkWaiting()
+        # console.log "#this.onStartWaiting!", status
     
     onStopWaiting: ->
-        console.log "#this.onStopWaiting!", @checkWaiting()
+        status = @checkWaiting()
+        # console.log "#this.onStopWaiting!", status
     
     onModelError: ->
         console.error "#this.error!", arguments
@@ -459,7 +418,9 @@ GraphEditView = exports.GraphEditView = BaseView.extend do # {{{
             @model.setOption(key, value, {+silent})
     
     onDataChange: ->
-        console.log 'onDataChange!'
+        console.log "#this.onDataChange!"
+        @model.once 'data-ready', @render, this
+              .loadData {+force}
     
     onFirstClickRenderOptionsTab: ->
         @$el.off 'click', '.graph-options-tab', @onFirstClickRenderOptionsTab
@@ -485,6 +446,52 @@ GraphEditView = exports.GraphEditView = BaseView.extend do # {{{
     
     # Needed because (sigh) _.debounce returns undefined, and we need to preventDefault()
     stopAndRender    : -> @render ... ;     false
+    
+    # }}}
+    ### Spinner {{{
+    
+    /**
+     * Retrieve or construct the spinner.
+     */
+    spinner: ->
+        el = @$ '.graph-spinner'
+        unless el.data 'spinner'
+            ### Spin.js Options ###
+            opts =
+                lines     : 9           # [12]        The number of lines to draw
+                length    : 2           # [7]         The length of each line
+                width     : 1           # [5]         The line thickness
+                radius    : 7           # [10]        The radius of the inner circle
+                rotate    : -10.5       # [0]         rotation offset
+                trail     : 50          # [100]       Afterglow percentage
+                opacity   : 1/4         # [1/4]       Opacity of the lines
+                shadow    : false       # [false]     Whether to render a shadow
+                speed     : 1           # [1]         Spins per second
+                zIndex    : 2e9         # [2e9]       zIndex; uses a very high z-index by default
+                color     : '#000'      # ['#000']    Line color; '#rgb' or '#rrggbb'.
+                top       : 'auto'      # ['auto']    Top position relative to parent in px; 'auto' = center vertically.
+                left      : 'auto'      # ['auto']    Left position relative to parent in px; 'auto' = center horizontally.
+                className : 'spinner'   # ['spinner'] CSS class to assign to the element
+                fps       : 20          # [20]        Frames per second when falling back to `setTimeout()`.
+                hwaccel   : Modernizr.csstransforms3d   # [false]     Whether to use hardware acceleration.
+            
+            isHidden = el.css('display') is 'none'
+            el.show().spin opts
+            el.hide() if isHidden
+        el
+    
+    checkWaiting: ->
+        spinner = @spinner()
+        if isWaiting = (@waitingOn > 0)
+            spinner.show()
+            if spinner.find('.spinner').css('top') is '0px'
+                # delete spinner
+                spinner.spin(false)
+                # re-add to DOM with correct parent sizing
+                @spinner()
+        else
+            spinner.hide()
+        isWaiting
     
     # }}}
     

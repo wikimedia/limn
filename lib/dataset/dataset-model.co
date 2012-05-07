@@ -86,7 +86,7 @@ DataSet = exports.DataSet = BaseModel.extend do # {{{
      * @returns {Array<Date>} The date column.
      */
     getDateColumn: ->
-        dates = @metrics.invoke 'getDateColumn'
+        dates = @metrics.onlyOk().invoke 'getDateColumn'
         maxLen = _.max _.pluck dates, 'length'
         _.find dates, -> it.length is maxLen
     
@@ -94,16 +94,18 @@ DataSet = exports.DataSet = BaseModel.extend do # {{{
      * @returns {Array<Array>} List of all columns except the date column.
      */
     getDataColumns: ->
-        @metrics.invoke 'getData'
+        @metrics.onlyOk().invoke 'getData'
     
     /**
      * @returns {Array<String>} List of column labels.
      */
     getLabels: ->
-        ['Date'].concat @metrics.pluck 'label'
+        [ 'Date' ].concat @metrics.onlyOk().invoke 'getLabel'
     
     # }}}
     
+    getColors: ->
+        @metrics.onlyOk().pluck 'color'
     
     newMetric: ->
         index = @metrics.length
@@ -111,8 +113,9 @@ DataSet = exports.DataSet = BaseModel.extend do # {{{
         m
     
     onMetricChange: ->
+        console.log "#this.onMetricChange! ready=#{@ready}"
         @resetReady()
-        # @metrics.reset @get 'metrics'
+        @metrics.reset @get 'metrics'
         @load()
     
     # TODO: toJSON() must ensure columns in MetricList are ordered by index

@@ -8,6 +8,7 @@ DataSource = DataSourceList = null
  * @class
  */
 Metric = exports.Metric = BaseModel.extend do # {{{
+    NEW_METRIC_LABEL : 'New Metric'
     urlRoot  : '/metrics'
     
     /**
@@ -16,25 +17,27 @@ Metric = exports.Metric = BaseModel.extend do # {{{
      */
     source : null
     
+    is_def_label : true
+    
     defaults : ->
-        index           : 0
-        label           : 'New Metric'
-        type            : 'int'
-        timespan        : { start:null, end:null, step:null }
-        disabled        : false
+        index            : 0
+        label            : ''
+        type             : 'int'
+        timespan         : { start:null, end:null, step:null }
+        disabled         : false
         
         # DataSource
-        source_id  : null
-        source_col : -1
+        source_id        : null
+        source_col       : -1
         
         # Chart Options
-        color           : null
-        visible         : true
-        format_value    : null
-        format_axis     : null
+        color            : null
+        visible          : true
+        format_value     : null
+        format_axis      : null
         
-        transforms      : []
-        scale           : 1.0
+        transforms       : []
+        scale            : 1.0
     
     
     
@@ -43,8 +46,10 @@ Metric = exports.Metric = BaseModel.extend do # {{{
     
     initialize : ->
         BaseModel::initialize ...
-        @on 'change:source_id',  @load,     this
-        @on 'change:source_col', @updateId, this
+        @is_def_label = @isDefaultLabel()
+        @on 'change:source_id',     @load,          this
+        @on 'change:source_col',    @updateId,      this
+        @on 'change:label',         @updateLabel,   this
         @load()
     
     
@@ -53,6 +58,18 @@ Metric = exports.Metric = BaseModel.extend do # {{{
     
     getData: ->
         @source.getColumn @get 'source_col'
+    
+    getLabel: ->
+        @get('label') or @getPlaceholderLabel()
+    
+    getPlaceholderLabel: ->
+        col  = @get 'source_col'
+        name = "#{@source.get 'shortName'}, #{@source.getColumnName col}" if @source and col > 0
+        name or @NEW_METRIC_LABEL
+    
+    getSourceColumnName: ->
+        col = @get 'source_col'
+        @source.getColumnName col if @source and col > 0
     
     
     load: (opts={}) ->
@@ -75,14 +92,32 @@ Metric = exports.Metric = BaseModel.extend do # {{{
             else
                 console.log "#{this}.load() complete!"
                 @source = source
+                @is_def_label = @isDefaultLabel()
                 @updateId()
                 @triggerReady()
         this
     
     
+    isDefaultLabel: ->
+        label = @get 'label'
+        not label or label is @getSourceColumnName() or label is @NEW_METRIC_LABEL
+    
+    updateLabel: ->
+        return this unless @source
+        label = @get 'label'
+        if not label or @is_def_label
+            @set 'label', ''
+            @is_def_label = true
+        else
+            @is_def_label = @isDefaultLabel()
+        this
+    
     updateId: ->
-        if (source_id = @get('source_id')) and (source_col = @get('source_col'))
+        source_id  = @get 'source_id'
+        source_col = @get 'source_col'
+        if source_id and source_col?
             @id = "#source_id[#source_col]"
+        @updateLabel()
         this
     
     
@@ -91,12 +126,7 @@ Metric = exports.Metric = BaseModel.extend do # {{{
      * attempt to graph unconfigured crap.
      */
     isOk: ->
-        (label = @get('label')) and label is not 'New Metric'
-        and @get('source_id')   and @get('source_col') >= 0
-        and _.every @get('timespan'), op.ok
-    
-    getSourceColumnName: ->
-        @source?.getColumnName @get 'source_col'
+        @source # and _.every @get('timespan'), op.ok
     
 # }}}
 
@@ -113,6 +143,9 @@ MetricList = exports.MetricList = BaseList.extend do # {{{
     
     comparator: (metric) ->
         metric.get('index') ? Infinity
+    
+    onlyOk: ->
+        new MetricList @filter -> it.isOk()
     
 # }}}
 

@@ -83,8 +83,6 @@ DataSetView = exports.DataSetView = BaseView.extend do # {{{
         @trigger 'edit-metric', metric, view, this
         this
     
-    render: ->
-        this
     
 # }}}
 
@@ -106,12 +104,16 @@ DataSetMetricView = exports.DataSetMetricView = BaseView.extend do # {{{
     initialize: ->
         @graph_id = @options.graph_id
         BaseView::initialize ...
+        @on 'update', @onUpdate, this
     
     
     toTemplateLocals: ->
-        m = @model.toJSON()
+        m = DataSetMetricView.__super__.toTemplateLocals ...
+        
+        # XXX: Icons/classes for visible/disabled?
         m import
             graph_id : @graph_id
+            label    : @model.getLabel()
             viewClasses : _.compact([
                 if @model.isOk() then 'valid'   else 'invalid',
                 if m.visible     then 'visible' else 'hidden',
@@ -127,9 +129,9 @@ DataSetMetricView = exports.DataSetMetricView = BaseView.extend do # {{{
                     "#{ts.start} to #{ts.end} by #{ts.step}"
                 else
                     '&mdash;'
-        
-        # XXX: Icons/classes for visible/disabled?
-        { $, _, op, @model, view:this } import m
+    
+    onUpdate: ->
+        @$ '.col-color' .css 'color', @model.get 'color'
     
 # }}}
 
