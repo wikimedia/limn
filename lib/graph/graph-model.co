@@ -98,6 +98,7 @@ Graph = exports.Graph = BaseModel.extend do # {{{
         
         # Insert submodels in place of JSON
         @dataset = new DataSet {id:@id, ...@get 'data'}
+            # .on 'change', @onDataSetChange, this
         @set 'data', @dataset, {+silent}
         
         @trigger 'init', this
@@ -121,9 +122,9 @@ Graph = exports.Graph = BaseModel.extend do # {{{
                         next.ok()
                     success : @unwaitAnd (model, res) ~>
                         # console.log "#{this}.fetch() --> success!", res
+                        # Update the DataSet model with the new values
                         @dataset.set @get 'data'
-                        @trigger 'change:data', this, @dataset, 'data'
-                        @trigger 'change',      this, @dataset, 'data'
+                        @set 'data', @dataset, {+silent}
                         next.ok res
             
             # Load Parents...
@@ -166,9 +167,11 @@ Graph = exports.Graph = BaseModel.extend do # {{{
         Seq @dataset.metrics.models
             .parEach_ (next, metric) ->
                 metric.once 'ready', next.ok .load()
-            .parEach_ (next, metric) ->
-                metric.source
-                    .on 'load-data-success', next.ok .loadData()
+            .parEach_ (next, metric) ~>
+                unless metric.source
+                    console.warn "#{this}.loadData() -- Skipping metric #metric with invalid source!", metric
+                    return next.ok()
+                metric.source.on 'load-data-success', next.ok .loadData()
             .seq ~>
                 console.log "#{this}.loadData() complete!"
                 @loading = false
@@ -176,6 +179,9 @@ Graph = exports.Graph = BaseModel.extend do # {{{
                 @triggerReady 'dataReady', 'data-ready'
         this
     
+    onDataSetChange: ->
+        console.log "#this.onDataSetChange!"
+        @set 'data', @dataset, {+silent}
     
     
     ### Accessors
@@ -184,7 +190,7 @@ Graph = exports.Graph = BaseModel.extend do # {{{
         if _.startsWith key, 'options.'
             @getOption key.slice(8)
         else
-            (@..__super__ or BaseModel::).get.call this, key
+            Graph.__super__.get.call this, key
     
     
     set: (key, value, opts) ->
@@ -195,7 +201,7 @@ Graph = exports.Graph = BaseModel.extend do # {{{
             values = { "#key": value }
         values = @parse values
         
-        setter = (@..__super__ or BaseModel::).set
+        setter = Graph.__super__.set
         
         # Merge options in, firing granulated change events
         if values.options
@@ -215,7 +221,7 @@ Graph = exports.Graph = BaseModel.extend do # {{{
     
     
     
-    ### Chart Option Accessors ###
+    ### Chart Option Accessors {{{
     
     hasOption: (key) ->
         @getOption(key) is void
@@ -266,8 +272,8 @@ Graph = exports.Graph = BaseModel.extend do # {{{
         options
     
     
-    
-    ### Serialization
+    # }}}
+    ### Serialization {{{
     
     parse: (data) ->
         data = JSON.parse data if typeof data is 'string'
@@ -300,8 +306,8 @@ Graph = exports.Graph = BaseModel.extend do # {{{
     toJSON: (opts={}) ->
         opts = {+keepDefaults, +keepUnchanged} import opts
         # use jQuery's deep-copy implementation -- XXX: Deep-copy no longer necessary thanks to @getOptions()
-        # json = $.extend true, {}, @attributes
         json = _.clone(@attributes) import { options:@getOptions(opts) }
+        # { data: ...json }
     
     
     toKVPairs: (opts={}) ->
@@ -345,6 +351,8 @@ Graph = exports.Graph = BaseModel.extend do # {{{
      */
     toPermalink: ->
         "#{root.location.protocol}//#{window.location.host}#{@toLink()}"
+    
+    # }}}
     
 
 ### Graph Cache for parent-lookup

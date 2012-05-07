@@ -47,7 +47,7 @@ DataView = exports.DataView = BaseView.extend do # {{{
         @addSubview @dataset_view
             .on 'add-metric',       @onMetricsChanged,  this
             .on 'remove-metric',    @onMetricsChanged,  this
-            .on 'edit-metric',      @editMetric,        this
+            .on 'select-metric',    @selectMetric,      this
         
         @render()
         @triggerReady()
@@ -87,6 +87,7 @@ DataView = exports.DataView = BaseView.extend do # {{{
             .on 'metric-update', @onUpdateMetric, this
             .on 'metric-change', @onUpdateMetric, this
         @metric_views.push @addSubview view
+        @renderSubviews()
         metric
     
     removeMetric: (metric) ->
@@ -96,14 +97,15 @@ DataView = exports.DataView = BaseView.extend do # {{{
         @removeSubview view
         metric
     
-    editMetric: (metric) ->
-        console.log "#this.editMetric!", metric
+    selectMetric: (metric) ->
+        # console.log "#this.selectMetric!", metric
         @metric_views.invoke 'hide'
         @metric_edit_view = @metric_views.findByModel metric
         @metric_edit_view?.show()
         _.delay @onMetricsChanged, 10
     
     onMetricsChanged: ->
+        return unless @dataset_view
         oldMinHeight = parseInt @$el.css 'min-height'
         newMinHeight = Math.max do
             @dataset_view.$el.height()

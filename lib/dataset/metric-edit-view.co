@@ -52,6 +52,7 @@ MetricEditView = exports.MetricEditView = BaseView.extend do # {{{
     
     update: ->
         MetricEditView.__super__.update ...
+        @$ '.metric-label' .attr 'placeholder', @model.getPlaceholderLabel()
         
         # Update the color picker
         @$ '.color-swatch'
@@ -85,6 +86,7 @@ MetricEditView = exports.MetricEditView = BaseView.extend do # {{{
     
     onSourceMetricChange: (metric) ->
         console.log "#this.onSourceMetricChange!", metric
+        @$ '.metric-label' .attr 'placeholder', @model.getPlaceholderLabel()
         @trigger 'metric-change', @model, this
         this
     

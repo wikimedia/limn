@@ -104,7 +104,7 @@ GraphEditView = exports.GraphEditView = BaseView.extend do # {{{
         
         
         ### Graph Data UI
-        @data_view = @addSubview new DataView { model:@model.get('data'), graph_id:@id }
+        @data_view = @addSubview new DataView { model:@model.dataset, graph_id:@id }
         @data_view
             .on 'start-waiting', @wait,         this
             .on 'stop-waiting',  @unwait,       this
@@ -275,7 +275,7 @@ GraphEditView = exports.GraphEditView = BaseView.extend do # {{{
                     valueFormatter     : @numberFormatterHTML
         
         # console.log "#this.render!", dataset
-        _.dump options, 'options'
+        # _.dump options, 'options'
         
         # Always rerender the chart to sidestep the case where we need to push defaults into
         # dygraphs to reset the current option state.
@@ -308,7 +308,7 @@ GraphEditView = exports.GraphEditView = BaseView.extend do # {{{
         # @renderDetails()
         # @attachSubviews()
         # _.invoke @subviews, 'render'
-        BaseView::render ...
+        GraphEditView.__super__.render ...
         @renderChart()
         # @updateURL()
         @trigger 'render', this
@@ -321,11 +321,11 @@ GraphEditView = exports.GraphEditView = BaseView.extend do # {{{
      * Update the page URL using HTML5 History API
      */
     updateURL: ->
-        data  = @toJSON()
+        json  = @toJSON()
         title = "#{@model.get('name') or 'New Graph'} | Edit Graph | GraphKit"
         url   = @toURL('edit')
-        # console.log 'History.pushState', JSON.stringify(data), title, url
-        History.pushState data, title, url
+        # console.log 'History.pushState', JSON.stringify(json), title, url
+        History.pushState json, title, url
     
     
     ### }}}
@@ -397,7 +397,7 @@ GraphEditView = exports.GraphEditView = BaseView.extend do # {{{
         #     \toptions: #{JSON.stringify options}
         #     \t^opts: #{JSON.stringify _.intersection _.keys(changes), _.keys(options)}
         # """
-        @chart?.updateOptions file:that if changes?.dataset
+        # @chart?.updateOptions file:that if changes?.dataset
         @chartOptions options, {+silent} if changes?.options
     
     onScaffoldChange: (scaffold, value, key, field) ->
@@ -435,8 +435,8 @@ GraphEditView = exports.GraphEditView = BaseView.extend do # {{{
     
     onDetailsSubmit: ->
         console.log "#this.onDetailsSubmit!"
-        data = @$ 'form.graph-details' .formData()
-        @model.set data
+        details = @$ 'form.graph-details' .formData()
+        @model.set details
         false
     
     onOptionsSubmit: ->

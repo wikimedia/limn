@@ -64,7 +64,7 @@ Metric = exports.Metric = BaseModel.extend do # {{{
     
     getPlaceholderLabel: ->
         col  = @get 'source_col'
-        name = "#{@source.get 'shortName'}, #{@source.getColumnName col}" if @source and col > 0
+        name = "#{@source.get 'shortName'}, #{@source.getColumnName col}" if @source and col >= 0
         name or @NEW_METRIC_LABEL
     
     getSourceColumnName: ->
@@ -73,9 +73,12 @@ Metric = exports.Metric = BaseModel.extend do # {{{
     
     
     load: (opts={}) ->
-        source_id = @get 'source_id'
+        source_id  = @get 'source_id'
         @resetReady() if opts.force or @source?.id is not source_id
-        return this if not source_id or @loading or @ready
+        return this if @loading or @ready
+        
+        unless source_id and @get('source_col') >= 0
+            return @triggerReady()
         
         console.log "#this.load()..."
         @updateId()

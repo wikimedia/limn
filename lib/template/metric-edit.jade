@@ -7,7 +7,7 @@ section.metric-edit-ui
                 input.metric-color(type='hidden', id="#{graph_id}_metric", name="color", value=color)
             .color-swatch.input-append.color(data-color="#{color}", data-color-format="hex")
                 input.metric-color(type='hidden', id="#{graph_id}_metric_color", name="color", value=color)
-                span.add-on: i(style="background-color: #{color};")
+                span.add-on: i(style="background-color: #{color};", title="#{color}")
             
             input.metric-label(type='text', id="#{graph_id}_metric_label", name='label', placeholder='#{placeholder_label}', value=label)
         

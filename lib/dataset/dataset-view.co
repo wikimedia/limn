@@ -14,7 +14,7 @@ DataSetView = exports.DataSetView = BaseView.extend do # {{{
     
     events:
         'click .new-metric-button'       : 'newMetric'
-        'click .metrics .dataset-metric' : 'editMetric'
+        'click .metrics .dataset-metric' : 'selectMetric'
     
     views_by_cid : {}
     active_view : null
@@ -43,25 +43,24 @@ DataSetView = exports.DataSetView = BaseView.extend do # {{{
     
     addMetric: (metric) ->
         console.log "#this.addMetric!", metric
-        if metric.view
-            @removeSubview metric.view.remove()
+        if @views_by_cid[metric.cid]
+            @removeSubview that
             delete @views_by_cid[metric.cid]
         
         view = @addSubview new DataSetMetricView {model:metric, @graph_id}
         @views_by_cid[metric.cid] = view
-        @$ '.metrics' .append view.render().el
-        
-        # @render()
+        # @$ '.metrics' .append view.render().el
         @trigger 'add-metric', metric, view, this
+        @render()
         view
     
     removeMetric: (metric) ->
         console.log "#this.removeMetric!", metric
-        if view = metric.view
-            @removeSubview view.remove()
+        if view = @views_by_cid[metric.cid]
+            @removeSubview view
             delete @views_by_cid[metric.cid]
             @trigger 'remove-metric', metric, view, this
-        metric.view
+        view
     
     addAllMetrics: ->
         console.log "#this.addAllMetrics! --> #{@model.metrics}"
@@ -69,18 +68,17 @@ DataSetView = exports.DataSetView = BaseView.extend do # {{{
         @model.metrics.each @addMetric, this
         this
     
-    editMetric: (metric) ->
-        # console.log "#this.editMetric!", metric
+    selectMetric: (metric) ->
         if metric instanceof [jQuery.Event, Event]
             metric = $ metric.currentTarget .data 'model'
         view = @active_view = @views_by_cid[metric.cid]
-        console.log "#this.editMetric!", metric
+        # console.log "#this.selectMetric!", metric
         
         @$ '.metrics .dataset-metric' .removeClass 'metric-active'
         view.$el.addClass 'metric-active'
         view.$el.find '.activity-arrow' .css 'font-size', 2+view.$el.height()
         
-        @trigger 'edit-metric', metric, view, this
+        @trigger 'select-metric', metric, view, this
         this
     
     
@@ -120,8 +118,8 @@ DataSetMetricView = exports.DataSetMetricView = BaseView.extend do # {{{
                 'disabled' if m.disabled,
             ]).map( -> "metric-#it" ).join ' '
             source :
-                if m.source_id and m.source_col_name
-                    "#{m.source_id}.#{m.source_col_name}"
+                if m.source_id and m.source_col
+                    "#{m.source_id}[#{m.source_col}]"
                 else
                     'No source'
             timespan :
