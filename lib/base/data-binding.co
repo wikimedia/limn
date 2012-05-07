@@ -48,7 +48,10 @@ class exports.DataBinding
             else if bp.is 'input, textarea'
                 bp.val @serialize val
             else
-                bp.text @serialize val
+                if op.toBool bp.data 'data-bind-escape'
+                    bp.text @serialize val
+                else
+                    bp.html @serialize val
         else
             false and console.warn "#this.updateBinding(): Unable to find data bind-point for #key=#val!"
         this
