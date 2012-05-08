@@ -13,6 +13,7 @@ Backbone = require 'backbone'
  */
 BaseModel = exports.BaseModel = Backbone.Model.extend mixinBase do # {{{
     
+    
     constructor : function BaseModel
         @__class__      = @constructor
         @__superclass__ = @..__super__.constructor

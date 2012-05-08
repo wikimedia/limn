@@ -47,7 +47,6 @@ BaseView = exports.BaseView = Backbone.View.extend mixinBase do # {{{
     constructor : function BaseView
         @__class__      = @constructor
         @__superclass__ = @..__super__.constructor
-        @__view_type_id__ or= _.str.underscored @getClassName() .replace /_view$/, ''
         @waitingOn      = 0
         @subviews       = new ViewList
         @onReturnKeypress = _.debounce @onReturnKeypress.bind(this), 50

@@ -59,16 +59,18 @@ section.graph
     
     /* * * *  Graph Details & Info Pane  * * * {{{ */
     .graph-name-row
-        // margin 0 1em 1em
-        // max-width 900px
-        font-size 120%
-        line-height 2em
+        margin 0 0 1em
+        min-height 38px
         input.graph-name
-            font-size 120%
-            line-height 1.2
-            height 1.2em
+            display block
+            absolute top 0 left 0
+            right 0
+            width auto
+            font-size 18px
+            line-height 25px
+            height 25px
+            padding 6px
             border-color $light
-            width 98%
     .graph-info-pane
         .row-fluid
             .half.control-group
