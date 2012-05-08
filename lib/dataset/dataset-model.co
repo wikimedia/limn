@@ -73,8 +73,12 @@ DataSet = exports.DataSet = BaseModel.extend do # {{{
     #     this
     
     /**
-     * Override to handle the case where one of our rich sub-objects is attempted
-     * to be overridden with a native object.
+     * Override to handle the case where one of our rich sub-objects 
+     * (basically `metrics`) is set as a result of the `fetch()` call by the
+     * Graph object. To prevent it from blowing away the `MetricList`, we
+     * perform a `reset()` here. But that won't trigger a `change:metrics` event,
+     * so we do a little dance to set it twice, as object identity would otherwise
+     * cause it to think nothing has changed.
      */
     set: (key, value, opts) ->
         # return DataSet.__super__.set ... unless @metrics
