@@ -68,8 +68,9 @@ DashboardView = exports.DashboardView = BaseView.extend do # {{{
     
     events:
         # Select the whole permalink URI text when it receives focus.        
-        # 'click      a[data-target="#other-graphs"]'             : 'tab_shown'          
-        'shown      a'             : 'tab_shown'
+        # 'click      a[data-target="#other-graphs"]'             : 'tab_shown'
+        'click .graphs.tabbable .nav a' : 'onTabClick'
+        'shown .graphs.tabbable .nav a' : 'tab_shown'
         #     'click    .load-button'                    : 'load'
 
     subviews : []
@@ -111,9 +112,13 @@ DashboardView = exports.DashboardView = BaseView.extend do # {{{
                 view.isAttached = true
 
     tab_shown: (e) ->        
-        # console.log 'tab_shown!', e
+        console.log 'tab_shown!', e
         Seq(@subviews)
             .parMap (view) ->
+                # view.resizeViewport()
                 view.renderChart()
+    
+    onTabClick: (evt) ->
+        evt.preventDefault()
 
 
