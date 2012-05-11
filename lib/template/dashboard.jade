@@ -3,16 +3,20 @@ section#graph-list
         h1 Wikimedia Report Card 
             small March 2012
     
-    section#graphs
-
     .row
         .graphs.tabbable 
             nav           
                 ul.nav.subnav.nav-pills
                     li:         h3 Graphs    
-                    li.active:  a(href="#core-graphs", data-toggle="tab") Core                     
-                    li:         a(href="#other-graphs", data-toggle="tab") Others
+                    li.active:  a(data-target="#core-graphs",data-toggle="tab") Core                     
+                    li:         a(data-target="#other-graphs",data-toggle="tab") Others
+                    if ENV == 'dev'
+                        li:         a(data-target="#dev-graphs",data-toggle="tab") Dev
                             
             .tab-content
                 .core-graphs-pane.tab-pane.active(id="core-graphs")
                 .other-graphs-pane.tab-pane(id="other-graphs")
+                if ENV == 'dev'
+                    .dev-graphs-pane.tab-pane(id="dev-graphs")
+
+
