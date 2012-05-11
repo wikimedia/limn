@@ -13,8 +13,8 @@ FieldView = exports.FieldView = BaseView.extend do # {{{
     type : 'string'
     
     events :
-        'blur .value'   : 'change'
-        'submit .value' : 'change'
+        'blur .value'   : 'onChange'
+        'submit .value' : 'onChange'
     
     
     constructor: function FieldView
@@ -23,15 +23,9 @@ FieldView = exports.FieldView = BaseView.extend do # {{{
     initialize: ->
         # console.log "#this.initialize!"
         BaseView::initialize ...
-        @type = @model.get('type').toLowerCase() or 'string'
+        @type = @model.get 'type' .toLowerCase() or 'string'
     
-    toTemplateLocals: ->
-        json = {value:v} = @model.toJSON()
-        if _.isArray(v) or _.isPlainObject(v)
-            json.value = JSON.stringify v
-        json
-    
-    change: ->
+    onChange: ->
         if @type is 'boolean'
             val = !! @$('.value').attr('checked')
         else
@@ -39,26 +33,29 @@ FieldView = exports.FieldView = BaseView.extend do # {{{
         
         current = @model.getValue()
         return if _.isEqual val, current
-        console.log "#this.change( #current -> #val )"
+        console.log "#this.onChange( #current -> #val )"
         @model.setValue val, {+silent}
         @trigger 'change', this
     
-    render: ->
-        return @remove() if @model.get 'ignore', false
-        return BaseView::render ... if @template
-        
-        name  = @model.get 'name'
-        id    = _.camelize name
-        label = name
-        value = @model.get 'value'
-        value = '' if value!?
-        
-        @$el.html """
-            <label class="name" for="#id">#label</label>
-            <input class="value" type="text" id="#id" name="#id" value="#value">
+    toTemplateLocals: ->
+        json = FieldView.__super__.toTemplateLocals ...
+        json.id or= _.camelize json.name
+        json.value ?= ''
+        json.value = JSON.stringify v if v = json.value and (_.isArray(v) or _.isPlainObject(v))
+        json
+    
+    /**
+     * A ghetto default template, typically overridden by superclass.
+     */
+    template: (locals) ->
+        $ """
+            <label class="name" for="#{locals.id}">#{locals.name}</label>
+            <input class="value" type="text" id="#{locals.id}" name="#{locals.id}" value="#{locals.value}">
         """
-        
-        this
+    
+    render: ->
+        return @remove() if @model.get 'ignore'
+        FieldView.__super__.render ...
     
 # }}}
 
@@ -75,8 +72,8 @@ Scaffold = exports.Scaffold = BaseView.extend do # {{{
     subviewType    : FieldView
     
     
+    
     constructor: function Scaffold
-        @_subviews = []
         BaseView ...
     
     initialize: ->
@@ -86,22 +83,21 @@ Scaffold = exports.Scaffold = BaseView.extend do # {{{
         
         @collection.on 'add',   @addField, this
         @collection.on 'reset', @resetFields, this
-        
-        @$el.data { model:@collection, view:this } .addClass @className
+    
     
     
     addField: (field) ->
         @removeSubview field.view if field.view
         
         # avoid duplicating event propagation
-        field.off 'change:value', @change, this
+        field.off 'change:value', @onChange, this
         
         # propagate value-change events as key-value change events
-        field.on 'change:value', @change, this
+        field.on 'change:value', @onChange, this
         
         SubviewType = @subviewType
         view = @addSubview new SubviewType model:field
-        view.on 'change', @change.bind(this, field)
+        view.on 'change', @onChange.bind(this, field)
         
         @render()
         view
@@ -111,7 +107,7 @@ Scaffold = exports.Scaffold = BaseView.extend do # {{{
         @collection.each @addField
         this
     
-    change: (field) ->
+    onChange: (field) ->
         key   = field.get 'name'
         value = field.getValue()
         @trigger "change:#key", this, value, key, field
@@ -119,8 +115,6 @@ Scaffold = exports.Scaffold = BaseView.extend do # {{{
         this
     
     
-
-
 
 # Proxy collection methods
 <[ get at pluck invoke values toJSON toKVPairs toKV toURL ]>

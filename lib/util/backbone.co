@@ -41,6 +41,12 @@ _bb_events =
  */
 _backbone = do
     
+    # /**
+    #  * Mix the given object or prototype into this class
+    #  */
+    # addMixin: (mixin) ->
+    #     ...
+    
     /**
      * @returns {Array<Class>} The list of all superclasses for this class or object.
      */

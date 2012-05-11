@@ -31,7 +31,7 @@ class TimeSeriesData
         @labels  = @options.labels or []
         @types   = @options.types  or []
         
-        @parse that if data or @options.data
+        @parseData that if data or @options.data
         @rebuildDerived()
     
     
@@ -75,7 +75,7 @@ class TimeSeriesData
      * Subclass and override to perform preprocessing of the data.
      * @private
      */
-    parse : (rawData) ->
+    parseData : (rawData) ->
         this
     
     /**

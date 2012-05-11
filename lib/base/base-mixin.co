@@ -7,7 +7,6 @@ Backbone = require 'backbone'
 
 BaseBackboneMixin = exports.BaseBackboneMixin =
     
-    
     initialize: ->
         @__apply_bind__()
     
@@ -142,7 +141,76 @@ BaseBackboneMixin = exports.BaseBackboneMixin =
         "#{@getClassName()}()"
 
 
-mixinBase = exports.mixinBase = (body) ->
-    _.clone(BaseBackboneMixin) import body
+
+
+/**
+ * @class Base mixin class. Extend this to create a new mixin, attaching the
+ *  donor methods as you would instance methods. Your constructor must delegate
+ *  to its superclass, passing itself as the context.
+ * 
+ *  Then, to mingle your mixin with another class or object, invoke the mixin
+ *  *without* the `new` operator:
+ *  
+ *  class MyMixin extends Mixin
+ *      -> return Mixin.call MyMixin, it
+ *      foo: -> "foo!"
+ *  
+ *  # Mix into an object...
+ *  o = MyMixin { bar:1 }
+ *  
+ *  # Mix into a Coco class...
+ *  class Bar
+ *      MyMixin this
+ *      bar : 1
+ *  
+ */
+class exports.Mixin
+    
+    /**
+     * Mixes this mixin into If the target is not a class, a new object will be
+     * returned which inherits from the mixin.
+     * @constructor
+     */
+    (target) ->
+        return unless target
+        
+        MixinClass = Mixin
+        MixinClass = @constructor   if this instanceof Mixin
+        MixinClass = this           if this instanceof Function
+        
+        if typeof target is 'function'
+            target:: import MixinClass::
+        else
+            target = _.clone(MixinClass::) import target
+        
+        return target
+    
+
+
+
+# /**
+#  * @returns {Function} Function which takes a target object or class,
+#  *  mixes the MixinClass into it, and then returns it. If the target is
+#  *  not a class, a new object will be returned which inherits from the mixin.
+#  */
+# makeMixer = exports.makeMixer = (MixinClass) ->
+#     mixinBody = if typeof MixinClass is 'function' then MixinClass:: else MixinClass
+#     mixinMixer = (target) ->
+#         if typeof target is 'function'
+#             target:: import mixinBody
+#         else
+#             target = _.clone(mixinBody) import target
+#         target
+# 
+# mixinBase = exports.mixinBase = makeMixer BaseBackboneMixin
+
+
+/**
+ * Mixes BaseBackboneMixin into another object or prototype.
+ * @returns {Object} The merged prototype object.
+ */
+mixinBase = exports.mixinBase = (...bodies) ->
+    _.extend _.clone(BaseBackboneMixin), ...bodies
+
 
 

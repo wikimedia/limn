@@ -1,3 +1,5 @@
+DASH_PATTERN = /-/g
+
 STRIP_PAT = /(^\s*|\s*$)/g
 strip = (s) ->
     if s then s.replace STRIP_PAT, '' else s
@@ -62,11 +64,19 @@ module.exports = op =
     toInt       : (v) -> parseInt v
     toFloat     : (v) -> parseFloat v
     toStr       : (v) -> String v
-    toObject    : (v) ->
+    toRegExp    : (v) -> new RegExp v
+    
+    toObject : (v) ->
         if typeof v is 'string' and strip(v)
             JSON.parse v
         else
             v
+    
+    toDate : (v) ->
+        return v if v!? or v instanceof Date
+        return new Date v if typeof v is 'number'
+        return new Date String(v).replace DASH_PATTERN, '/'
+    
     
     ### comparison
     cmp       : (x,y)  ->  if x < y then -1 else (if x > y then 1 else 0)

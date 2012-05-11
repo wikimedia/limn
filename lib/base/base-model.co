@@ -13,7 +13,6 @@ Backbone = require 'backbone'
  */
 BaseModel = exports.BaseModel = Backbone.Model.extend mixinBase do # {{{
     
-    
     constructor : function BaseModel
         @__class__      = @constructor
         @__superclass__ = @..__super__.constructor
@@ -31,6 +30,8 @@ BaseModel = exports.BaseModel = Backbone.Model.extend mixinBase do # {{{
     
     get: (key) ->
         _.getNested @attributes, key
+    
+    # TODO: nested sets, handling events
     
     # set: (key, value, opts) ->
     #     if _.isObject(key) and key?
@@ -189,19 +190,20 @@ BaseModel import do
 # }}}
 
 
+
 /**
  * @class Base collection, extending Backbone.Collection, used by scaffold and others.
  * @extends Backbone.Collection
  */
 BaseList = exports.BaseList = Backbone.Collection.extend mixinBase do # {{{
     
-    
     constructor : function BaseList
         @__class__      = @constructor
         @__superclass__ = @..__super__.constructor
         @waitingOn      = 0
         Backbone.Collection ...
-        @trigger 'create', this
+        # @trigger 'create', this
+    
     
     getIds: ->
         @models.map -> it.id or it.get('id') or it.cid
