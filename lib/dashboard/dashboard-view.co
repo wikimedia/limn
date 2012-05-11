@@ -21,9 +21,10 @@ DashboardView = exports.DashboardView = BaseView.extend do # {{{
     
     graph_ids : <[
         unique_visitors
+        reach
         pageviews
         pageviews_mobile
-        reach
+        pageviews_mobile_target        
         commons
         articles
         articles_per_day
@@ -33,6 +34,44 @@ DashboardView = exports.DashboardView = BaseView.extend do # {{{
         active_editors_target
         very_active_editors
     ]>
+
+    core_tab :
+        graph_ids : <[
+        unique_visitors
+        pageviews
+        pageviews_mobile
+        pageviews_mobile_target        
+        new_editors
+        active_editors
+        active_editors_target
+    ]>
+        name: ".core-graphs-pane"
+
+    other_tab :
+        graph_ids : <[
+        reach
+        commons
+        articles
+        articles_per_day
+        edits
+        very_active_editors
+    ]>
+        name: ".other-graphs-pane"
+
+    dev_tab :
+        graph_ids : <[
+        mobile_devices
+        mobile_devices_browsers
+        mobile_devices_applications
+    ]>
+        name: ".dev-graphs-pane"
+    
+    events:
+        # Select the whole permalink URI text when it receives focus.        
+        # 'click      a[data-target="#other-graphs"]'             : 'tab_shown'          
+        'shown      a'             : 'tab_shown'
+        #     'click    .load-button'                    : 'load'
+
     subviews : []
     graphs   : null
     ready    : false
@@ -46,39 +85,35 @@ DashboardView = exports.DashboardView = BaseView.extend do # {{{
     initialize: ->
         @model or= new Dashboard
         BaseView::initialize ...
-        @graphs.on 'add', @attachGraphs, this
+        # @graphs.on 'add', @attachGraphs, this
+        # @graphs.on 'add', @attachGraph, this
         @load()
     
-    
+
     load: ->
-        self = this
-        Seq(@graph_ids)
-            .parMap_ (next_phase, id) ->
-                Seq()
-                    .seq Graph.lookup, id, Seq
-                    .seq (graph) ->
-                        view = new GraphDisplayView {model:graph}
-                        view.on 'ready', @ok
-                        self.graphs.add graph
-                    .seq next_phase.ok
-            .seq_ (next) ~>
-                console.log "#this.ready!"
-                @ready = true
-                @attachGraphs()
-                @trigger 'ready', this
-    
-    attachGraphs: ->
-        graphs_el = @$el.find '#graphs'
-        for id of @graph_ids
-            break unless graph = @graphs.get id
-            continue if graph.view.isAttached
-            graphs_el.append graph.view.el
-            @subviews.push graph.view
-            graph.view.isAttached = true
-            graph.on 'ready', ->
-                graph.off 'ready', arguments.callee
-                graph.view.renderChart()
-        this
-    
-# }}}
+        @addTab(@core_tab)
+        @addTab(@other_tab)
+        @addTab(@dev_tab)
+
+    addTab: (tab) ->
+        self = this        
+        Seq(tab.graph_ids)
+            .parMap (id) ->
+                Graph.lookup id, this
+            .parMap (graph) ->
+                self.graphs.add graph
+                this null, new GraphDisplayView {model:graph}
+            .parMap (view) ->                
+                return if view.isAttached     
+                graphs_el = self.$el.find tab.name
+                graphs_el.append view.el 
+                self.subviews.push view
+                view.isAttached = true
+
+    tab_shown: (e) ->        
+        # console.log 'tab_shown!', e
+        Seq(@subviews)
+            .parMap (view) ->
+                view.renderChart()
+
 
