@@ -168,12 +168,12 @@ GraphEditView = exports.GraphEditView = BaseView.extend do # {{{
         label = @$el.find '.graph-label'
         
         if width is 'auto'
-            vpWidth = @viewport.innerWidth()
-            labelW = label.outerWidth()
+            vpWidth = @viewport.innerWidth() or 300
+            labelW = label.outerWidth() or 228
             width = vpWidth - labelW - 10 - (vpWidth - label.position().left - labelW)
         width ?= modelW
         if height is 'auto'
-            height = @viewport.innerHeight()
+            height = @viewport.innerHeight() or 320
         height ?= modelH
         
         size = { width, height }
