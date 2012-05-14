@@ -38,14 +38,14 @@ GraphEditView = exports.GraphEditView = BaseView.extend do # {{{
     template  : require 'kraken/template/graph-edit'
     
     events:
-        'click    .redraw-button'                  : 'stopAndRender'
-        'click    .load-button'                    : 'load'
-        'click    .save-button'                    : 'save'
-        'click    .done-button'                    : 'done'
+        'click    .redraw-button'                        : 'stopAndRender'
+        'click    .load-button'                          : 'load'
+        'click    .save-button'                          : 'save'
+        'click    .done-button'                          : 'done'
         'keypress .graph-details input[type="text"]'     : 'onKeypress'
+        'keypress .chart-options .value'                 : 'onKeypress'
         'submit   form.graph-details'                    : 'onDetailsSubmit'
         'change   :not(.chart-options) select'           : 'onDetailsSubmit'
-        'keypress .chart-options .value'                 : 'onKeypress'
         'submit   form.chart-options'                    : 'onOptionsSubmit'
         'change   .chart-options input[type="checkbox"]' : 'onOptionsSubmit'
     

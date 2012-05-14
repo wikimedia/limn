@@ -21,7 +21,7 @@ class exports.DataBinding
         @el = @$el.get 0
         
         # Find all bind-points under this element, but not under a subview
-        @bindPoints = @$ '[data-bind], [name]' .not @$ '[data-subview] [data-bind], [data-subview] [name]'
+        @bindPoints = @$ '[data-bind], [name]' .not @$('[data-subview]').find('[data-bind], [name]')
     
     $: (sel) ->
         @$el.find sel
