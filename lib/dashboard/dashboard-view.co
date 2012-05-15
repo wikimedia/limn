@@ -24,7 +24,7 @@ DashboardView = exports.DashboardView = BaseView.extend do # {{{
         reach
         pageviews
         pageviews_mobile
-        pageviews_mobile_target        
+        pageviews_mobile_target
         commons
         articles
         articles_per_day
@@ -34,19 +34,19 @@ DashboardView = exports.DashboardView = BaseView.extend do # {{{
         active_editors_target
         very_active_editors
     ]>
-
+    
     core_tab :
         graph_ids : <[
         unique_visitors
         pageviews
         pageviews_mobile
-        pageviews_mobile_target        
+        pageviews_mobile_target
         new_editors
         active_editors
         active_editors_target
     ]>
         name: ".core-graphs-pane"
-
+    
     other_tab :
         graph_ids : <[
         reach
@@ -57,7 +57,7 @@ DashboardView = exports.DashboardView = BaseView.extend do # {{{
         very_active_editors
     ]>
         name: ".other-graphs-pane"
-
+    
     dev_tab :
         graph_ids : <[
         mobile_devices
@@ -67,12 +67,12 @@ DashboardView = exports.DashboardView = BaseView.extend do # {{{
         name: ".dev-graphs-pane"
     
     events:
-        # Select the whole permalink URI text when it receives focus.        
-        # 'click      a[data-target="#other-graphs"]'             : 'tab_shown'
+        # Select the whole permalink URI text when it receives focus.
         'click .graphs.tabbable .nav a' : 'onTabClick'
         'shown .graphs.tabbable .nav a' : 'tab_shown'
-        #     'click    .load-button'                    : 'load'
-
+        # 'click  a[data-target="#other-graphs"]' : 'tab_shown'
+        # 'click    .load-button'         : 'load'
+    
     subviews : []
     graphs   : null
     ready    : false
@@ -90,28 +90,28 @@ DashboardView = exports.DashboardView = BaseView.extend do # {{{
         # @graphs.on 'add', @attachGraph, this
         @load()
     
-
+    
     load: ->
         @addTab(@core_tab)
         @addTab(@other_tab)
         @addTab(@dev_tab)
-
+    
     addTab: (tab) ->
-        self = this        
+        self = this
         Seq(tab.graph_ids)
             .parMap (id) ->
                 Graph.lookup id, this
             .parMap (graph) ->
                 self.graphs.add graph
                 this null, new GraphDisplayView {model:graph}
-            .parMap (view) ->                
-                return if view.isAttached     
+            .parMap (view) ->
+                return if view.isAttached
                 graphs_el = self.$el.find tab.name
-                graphs_el.append view.el 
+                graphs_el.append view.el
                 self.subviews.push view
                 view.isAttached = true
-
-    tab_shown: (e) ->        
+    
+    tab_shown: (e) ->
         console.log 'tab_shown!', e
         Seq(@subviews)
             .parMap (view) ->

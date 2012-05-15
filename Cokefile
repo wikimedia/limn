@@ -83,7 +83,10 @@ task \clean 'Clean up environment and artifacts' ->
 task \source_list 'Print a list of the source file paths.' ->
     invoke \setup
     {sources} = require 'kraken/server/view-helpers'
-    say sources("www/modules.yaml", 'dev').join '\n'
+    say do
+        sources("www/modules.yaml", 'dev')
+            .map -> it.slice 1
+            .join '\n'
 
 # task \dist 'Assemble a distribution package for deploy' ->
 #     invoke \cleanup_tests
