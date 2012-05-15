@@ -8,14 +8,13 @@
  * @class
  */
 DataSetView = exports.DataSetView = BaseView.extend do # {{{
-    ctorName  : 'DataSetView'
     tagName   : 'section'
     className : 'dataset-ui dataset'
     template  : require 'kraken/template/dataset'
     
     events:
         'click .new-metric-button'       : 'newMetric'
-        'click .metrics .dataset-metric' : 'editMetric'
+        'click .metrics .dataset-metric' : 'selectMetric'
     
     views_by_cid : {}
     active_view : null
@@ -25,41 +24,63 @@ DataSetView = exports.DataSetView = BaseView.extend do # {{{
         BaseView ...
     
     initialize: ->
-        @graph_id = @options.graph_id
+        {@graph_id, @datasources, @dataset} = @options
         BaseView::initialize ...
         @views_by_cid = {}
-        @model.metrics.on 'add', @addMetric, this
+        @model
+            .on 'ready',  @addAllMetrics,     this
+        @model.metrics
+            .on 'add',    @addMetric,         this
+            .on 'remove', @removeMetric,      this
+            .on 'reset',  @addAllMetrics,     this
     
     
     newMetric: ->
+        console.log "#this.newMetric!"
         # triggers 'add' on @model.metrics
         @model.newMetric()
         false
     
     addMetric: (metric) ->
         console.log "#this.addMetric!", metric
-        if metric.view
-            _.remove @subviews, metric.view
+        if @views_by_cid[metric.cid]
+            @removeSubview that
             delete @views_by_cid[metric.cid]
         
-        @subviews.push view = new DataSetMetricView {model:metric, @graph_id}
+        view = @addSubview new DataSetMetricView {model:metric, @graph_id}
         @views_by_cid[metric.cid] = view
-        @$el.find '.metrics' .append view.render().el
-        
-        # @render()
+        # @$ '.metrics' .append view.render().el
+        @trigger 'add-metric', metric, view, this
+        @render()
         view
     
-    editMetric: (metric) ->
-        console.log "#this.editMetric!", metric
+    removeMetric: (metric) ->
+        console.log "#this.removeMetric!", metric
+        if view = @views_by_cid[metric.cid]
+            @removeSubview view
+            delete @views_by_cid[metric.cid]
+            @trigger 'remove-metric', metric, view, this
+        view
+    
+    addAllMetrics: ->
+        console.log "#this.addAllMetrics! --> #{@model.metrics}"
+        @removeAllSubviews()
+        @model.metrics.each @addMetric, this
+        this
+    
+    selectMetric: (metric) ->
         if metric instanceof [jQuery.Event, Event]
             metric = $ metric.currentTarget .data 'model'
-        view = @views_by_cid[metric.cid]
-        console.log '  --> metric:', metric, 'view:', view
+        view = @active_view = @views_by_cid[metric.cid]
+        # console.log "#this.selectMetric!", metric
         
-        @$el.find '.metrics' .removeClass 'metric-active'
+        @$ '.metrics .dataset-metric' .removeClass 'metric-active'
         view.$el.addClass 'metric-active'
         view.$el.find '.activity-arrow' .css 'font-size', 2+view.$el.height()
-        @trigger 'edit-metric', metric
+        
+        @trigger 'select-metric', metric, view, this
+        this
+    
     
 # }}}
 
@@ -69,7 +90,6 @@ DataSetView = exports.DataSetView = BaseView.extend do # {{{
  * @class
  */
 DataSetMetricView = exports.DataSetMetricView = BaseView.extend do # {{{
-    ctorName  : 'DataSetMetricView'
     tagName   : 'tr'
     className : 'dataset-metric metric'
     template  : require 'kraken/template/dataset-metric'
@@ -82,20 +102,24 @@ DataSetMetricView = exports.DataSetMetricView = BaseView.extend do # {{{
     initialize: ->
         @graph_id = @options.graph_id
         BaseView::initialize ...
+        @on 'update', @onUpdate, this
     
     
     toTemplateLocals: ->
-        m = @model.toJSON()
+        m = DataSetMetricView.__super__.toTemplateLocals ...
+        
+        # XXX: Icons/classes for visible/disabled?
         m import
             graph_id : @graph_id
+            label    : @model.getLabel()
             viewClasses : _.compact([
                 if @model.isOk() then 'valid'   else 'invalid',
                 if m.visible     then 'visible' else 'hidden',
                 'disabled' if m.disabled,
             ]).map( -> "metric-#it" ).join ' '
             source :
-                if m.source_id and m.source_col_name
-                    "#{m.source_id}.#{m.source_col_name}"
+                if m.source_id and m.source_col
+                    "#{m.source_id}[#{m.source_col}]"
                 else
                     'No source'
             timespan :
@@ -103,9 +127,9 @@ DataSetMetricView = exports.DataSetMetricView = BaseView.extend do # {{{
                     "#{ts.start} to #{ts.end} by #{ts.step}"
                 else
                     '&mdash;'
-        
-        # XXX: Icons/classes for visible/disabled?
-        { $, _, op, @model, view:this } import m
+    
+    onUpdate: ->
+        @$ '.col-color' .css 'color', @model.get 'color'
     
 # }}}
 

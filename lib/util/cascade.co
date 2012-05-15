@@ -18,7 +18,7 @@ TOMBSTONE = {}
  */
 class Cascade
     /**
-     * Default tombstone for deleted, non-passthrough keys.
+     * Sentinel tombstone for deleted, non-passthrough keys.
      * @type TOMBSTONE
      * @readonly
      */
@@ -79,6 +79,30 @@ class Cascade
         @_data = @_lookups[0] = data
         this
     
+    getTombstones: ->
+        @_tombstones
+    
+    # setTombstones: (tombstones) ->
+    #     @_tombstones = tombstones
+    #     for k, v in _.collapseObject @_tombstones
+    #         if v
+    #             _.setNested @_tombstones, k, TOMBSTONE, {+ensure}
+    #         else
+    #             _.unsetNested @_tombstones, k
+    #     this
+    
+    /**
+     * @returns {Number} Number of lookup dictionaries.
+     */
+    size: ->
+        @_lookups.length - 1
+    
+    /**
+     * @returns {Array<Object>} The array of lookup dictionaries.
+     */
+    getLookups: ->
+        @_lookups
+    
     /**
      * @returns {Array<Object>} The array of lookup dictionaries.
      */
@@ -96,18 +120,58 @@ class Cascade
         this
     
     /**
-     * Removes a lookup dictionary from the chain.
+     * Removes a lookup dictionary from the chain (but will not remove the data object).
      * @returns {this}
      */
     removeLookup: (dict) ->
-        _.remove @_lookups, dict if dict
+        _.remove @_lookups, dict if dict and dict is not @_data
         this
+    
+    /**
+     * Pops the last dictionary off the lookup chain and returns it.
+     * @returns {*} The last dictionary, or `undefined` if there are no additional lookups.
+     */
+    popLookup: ->
+        return if @size() <= 1
+        @_lookups.pop()
+    
+    /**
+     * Shifts the first additional lookup dictionary off the chain and returns it.
+     * @returns {*} The first dictionary, or `undefined` if there are no additional lookups.
+     */
+    shiftLookup: ->
+        return if @size() <= 1
+        @_lookups.splice(1, 1)[0]
+    
+    /**
+     * Adds a lookup dictionary to the front of the chain, just after the Cascade's own data
+     * object.
+     * @returns {this}
+     */
+    unshiftLookup: (dict) ->
+        return this unless dict?
+        throw new Error "Lookup dictionary must be an object! dict=#dict" unless _.isObject dict
+        @_lookups.splice 1, 0, dict
+        this
+    
+    
+    /**
+     * @returns {Boolean} Whether there is a tombstone set for `key`.
+     */
+    hasTombstone: (key) ->
+        o = @_tombstones
+        for part of key.split('.')
+            o = o[part]
+            return true if o is TOMBSTONE
+            return false unless o
+        false
     
     /**
      * @returns {Boolean} Whether `key` belongs to this object (not inherited
      *  from the cascade).
      */
-    hasOwnProperty: (key) ->
+    isOwnProperty: (key) ->
+        return true if @hasTombstone key
         meta = _.getNestedMeta(@_data, key)
         meta?.obj and hasOwn.call meta.obj, key
     
@@ -116,32 +180,29 @@ class Cascade
      *  from the cascade) and is defined.
      */
     isOwnValue: (key) ->
-        @hasOwnProperty(key) and _.getNested(@_data, key, MISSING) is not MISSING
-    
-    /**
-     * @returns {Boolean} Whether the value at `key` is different from that
-     *  inherited by from the cascade.
-     */
-    isChangedValue: (key, strict=false) ->
-        val = @get key
-        cVal = @_getInCascade key, MISSING, 1
-        if strict
-            val is not cVal
-        else
-            not _.isEqual val, cVal
+        not @hasTombstone key
+        and @isOwnProperty key
+        and _.getNested(@_data, key, MISSING) is not MISSING
     
     /**
      * @returns {Boolean} Whether the value at `key` is the same as that
      *  inherited by from the cascade.
      */
     isInheritedValue: (key, strict=false) ->
-        not @isChangedValue key, strict
+        return false if @hasTombstone key
+        val = @get key
+        cVal = @_getInCascade key, MISSING, 2
+        if strict
+            val is cVal
+        else
+            _.isEqual val, cVal
     
     /**
-     * @returns {Number} Number of lookup dictionaries.
+     * @returns {Boolean} Whether the value at `key` is different from that
+     *  inherited by from the cascade.
      */
-    size: ->
-        @_lookups.length
+    isModifiedValue: (key, strict=false) ->
+        not @isInheritedValue key, strict
     
     
     
@@ -156,8 +217,12 @@ class Cascade
      *  and `def` otherwise.
      */
     _getInCascade : (key, def, idx=0) ->
-        for data of @_lookups.slice(idx)
-            val = _.getNested data, key, MISSING
+        return def if @hasTombstone key
+        
+        lookups = if idx then @_lookups.slice(idx) else @_lookups
+        for data of lookups
+            val = _.getNested data, key, MISSING, {tombstone:TOMBSTONE}
+            return def if val is TOMBSTONE
             return val unless val is MISSING
         def
     
@@ -199,6 +264,7 @@ class Cascade
         
         # Set and ensure the creation of missing intermediate objects.
         for key, val in values
+            _.unsetNested @_tombstones, key, {+ensure}
             _.setNested @_data, key, val, {+ensure}
         
         this
@@ -216,7 +282,8 @@ class Cascade
      * @returns {undefined|*} If found, returns the old value, and otherwise `undefined`.
      */
     unset: (key) ->
-        old = _.unsetNested @_data, key
+        old = @get key
+        _.unsetNested @_data, key
         _.setNested @_tombstones, key, TOMBSTONE, {+ensure}
         old
     
@@ -229,7 +296,7 @@ class Cascade
      * @returns {this} 
      */
     inherit: (key) ->
-        _.unsetNested @_tombstones, key
+        _.unsetNested @_tombstones, key, {+ensure}
         _.unsetNested @_data, key
     
     
@@ -246,7 +313,10 @@ class Cascade
      * @returns {Object}
      */
     collapse: ->
-        _.merge {}, ...@_lookups.slice().reverse()
+        o = _.merge {}, ...@_lookups.slice(1).reverse()
+        for k in @_tombstones
+            delete o[k]
+        _.merge o, @_data
     
     /**
      * Returns a plain object for JSON serialization via {@link Cascade#collapse()}.
@@ -296,11 +366,14 @@ class Cascade
         "#{Cls.displayName or Cls.name}()"
 
 
+# Alias methods to alternate names
 ALIASES =
-    collapse : 'toObject'
-    each     : 'forEach'
+    setTombstone : 'unset'
+    toObject     : 'collapse'
+    forEach      : 'each'
 
-for src, dest in ALIASES
+for dest, src in ALIASES
     Cascade::[dest] = Cascade::[src]
+
 
 module.exports = exports = Cascade

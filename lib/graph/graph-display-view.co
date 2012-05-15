@@ -34,13 +34,14 @@ GraphDisplayView = exports.GraphDisplayView = BaseView.extend do # {{{
     
     events:
         # Select the whole permalink URI text when it receives focus.
-        'focus      .graph-permalink input'             : 'onPermalinkFocus'     
-        'click      .export-button'                     : 'exportChart'
-        #     'click    .load-button'                    : 'load'
-
+        'focus      .graph-permalink input' : 'onPermalinkFocus'
+        'click      .export-button'         : 'exportChart'
+        # 'click      .load-button'           : 'load'
+    
     data  : {}
     ready : false
-
+    
+    
     constructor: function GraphDisplayView
         BaseView ...
     
@@ -122,9 +123,9 @@ GraphDisplayView = exports.GraphDisplayView = BaseView.extend do # {{{
         return { width, height } unless @ready
         
         # Remove old style, as it confuses dygraph after options update
-        viewport = @$el.find '.viewport'
+        viewport = @$ '.viewport'
         viewport.attr 'style', ''
-        label = @$el.find '.graph-legend'
+        label = @$ '.graph-legend'
         
         if width is 'auto'
             vpWidth = viewport.innerWidth() or 300
@@ -146,12 +147,12 @@ GraphDisplayView = exports.GraphDisplayView = BaseView.extend do # {{{
     renderChart: ->
         data = @model.get 'dataset' #.getData()
         size = @resizeViewport()
-        viewport = @$el.find '.viewport'
+        viewport = @$ '.viewport'
         
         # XXX: use @model.changedAttributes() to calculate what to update
         options = @chartOptions() #import size
         options import do
-            labelsDiv          : @$el.find '.graph-legend' .0
+            labelsDiv          : @$ '.graph-legend' .0
             valueFormatter     : @numberFormatterHTML
             axes:
                 x:
@@ -204,8 +205,8 @@ GraphDisplayView = exports.GraphDisplayView = BaseView.extend do # {{{
     
     update: ->
         locals = @toTemplateLocals()
-        @$el.find '.graph-name a' .text(locals.name or '')
-        @$el.find '.graph-desc' .html jade.filters.markdown locals.desc or ''
+        @$ '.graph-name a' .text(locals.name or '')
+        @$ '.graph-desc' .html jade.filters.markdown locals.desc or ''
         this
     
     render: ->
@@ -216,7 +217,6 @@ GraphDisplayView = exports.GraphDisplayView = BaseView.extend do # {{{
         @renderChart()
         @trigger 'render', this
         false
-    
     
     
     
@@ -287,7 +287,7 @@ GraphDisplayView = exports.GraphDisplayView = BaseView.extend do # {{{
         # last action that happens.  If we don't
         # defer, the focusing click will 
         # unselect the text.
-        _.defer( ~> @$el.find '.graph-permalink input' .select() )
+        _.defer( ~> @$ '.graph-permalink input' .select() )
 
 
 

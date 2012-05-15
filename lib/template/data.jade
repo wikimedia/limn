@@ -1,14 +1,4 @@
 section.data-ui
-    .row-fluid
-        .dataset-controls.dropdown
-            select(name="dataset")
-                for datum, k in data
-                    - var selected = (datum.url === dataset ? 'selected' : null);
-                    option(value=datum.url, name=datum.id, selected=selected) #{datum.name}
-                
-            //- 
-                a.span3.dataset.dropdown-toggle(data-toggle="dropdown", data-target="#{graph_id} .dataset-dropdown", href="#dataset-dropdown") Select...
-                ul.dropdown-menu
-                    for datum, k in data
-                        li: a(href="#", data-dataset="#{datum.id}") #{datum.name}
-    
+    .metric_edit_view_pane(data-subview="MetricEditView")
+    .data_set_view_pane(data-subview="DataSetView")
+

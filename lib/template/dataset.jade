@@ -1,26 +1,25 @@
-section.dataset-ui.dataset
-    .inner
-        h4 Graph Data Set
-        
-        .dataset-buttons
-            a.new-metric-button.btn.btn-success.btn-small(href="#")
-                i.icon-plus-sign.icon-white
-                |  Add Metric
-            //- 
-                a.clear-metrics-button.btn.btn-danger.btn-small(href="#")
-                    i.icon-remove-sign.icon-white
-                    |  Remove All Metrics
-        
-        .dataset-metrics
-            table.table.table-striped
-                thead
-                    tr
-                        th.col-label    Label
-                        th.col-source   Source
-                        th.col-times    Timespan
-                        th.col-actions  Actions
-                tbody.metrics
-                    //- DataSetMetricViews attach here
-                
-            
+section.dataset-ui.dataset: div.inner
+    h4 Graph Data Set
+    
+    .dataset-buttons
+        a.new-metric-button.btn.btn-success.btn-small(href="#")
+            i.icon-plus-sign.icon-white
+            |  Add Metric
+        //- 
+            a.clear-metrics-button.btn.btn-danger.btn-small(href="#")
+                i.icon-remove-sign.icon-white
+                |  Remove All Metrics
+    
+    .dataset-metrics
+        table.table.table-striped
+            thead
+                tr
+                    th.col-label    Label
+                    th.col-source   Source
+                    th.col-times    Timespan
+                    th.col-actions  Actions
+            tbody.metrics(data-subview="DataSetMetricView")
+                //- DataSetMetricViews attach here
+    
+
 

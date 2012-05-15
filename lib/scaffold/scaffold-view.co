@@ -13,8 +13,8 @@ FieldView = exports.FieldView = BaseView.extend do # {{{
     type : 'string'
     
     events :
-        'blur .value'   : 'update'
-        'submit .value' : 'update'
+        'blur .value'   : 'onChange'
+        'submit .value' : 'onChange'
     
     
     constructor: function FieldView
@@ -23,36 +23,39 @@ FieldView = exports.FieldView = BaseView.extend do # {{{
     initialize: ->
         # console.log "#this.initialize!"
         BaseView::initialize ...
-        @type = @model.get('type', 'string').toLowerCase()
+        @type = @model.get 'type' .toLowerCase() or 'string'
     
-    update: ->
+    onChange: ->
         if @type is 'boolean'
-            val = !! @$el.find('.value').attr('checked')
+            val = !! @$('.value').attr('checked')
         else
-            val = @model.getParser() @$el.find('.value').val()
+            val = @model.getParser() @$('.value').val()
         
         current = @model.getValue()
         return if _.isEqual val, current
-        console.log "#this.update( #current -> #val )"
+        console.log "#this.onChange( #current -> #val )"
         @model.setValue val, {+silent}
-        @trigger 'update', this
+        @trigger 'change', this
+    
+    toTemplateLocals: ->
+        json = FieldView.__super__.toTemplateLocals ...
+        json.id or= _.camelize json.name
+        json.value ?= ''
+        json.value = JSON.stringify v if v = json.value and (_.isArray(v) or _.isPlainObject(v))
+        json
+    
+    /**
+     * A ghetto default template, typically overridden by superclass.
+     */
+    template: (locals) ->
+        $ """
+            <label class="name" for="#{locals.id}">#{locals.name}</label>
+            <input class="value" type="text" id="#{locals.id}" name="#{locals.id}" value="#{locals.value}">
+        """
     
     render: ->
-        return @remove() if @model.get 'ignore', false
-        return BaseView::render ... if @template
-        
-        name  = @model.get 'name'
-        id    = _.camelize name
-        label = name
-        value = @model.get 'value'
-        value = '' if value!?
-        
-        @$el.html """
-            <label class="name" for="#id">#label</label>
-            <input class="value" type="text" id="#id" name="#id" value="#value">
-        """
-        
-        this
+        return @remove() if @model.get 'ignore'
+        FieldView.__super__.render ...
     
 # }}}
 
@@ -61,7 +64,7 @@ FieldView = exports.FieldView = BaseView.extend do # {{{
 #   model, collection, el, id, className, tagName, attributes
 
 Scaffold = exports.Scaffold = BaseView.extend do # {{{
-    __bind__       : <[ addOne addAll ]>
+    __bind__       : <[ addField resetFields ]>
     tagName        : 'form'
     className      : 'scaffold'
     
@@ -69,47 +72,42 @@ Scaffold = exports.Scaffold = BaseView.extend do # {{{
     subviewType    : FieldView
     
     
+    
     constructor: function Scaffold
         BaseView ...
     
     initialize: ->
         CollectionType = @collectionType
-        @model = @collection or= new CollectionType
+        @model = (@collection or= new CollectionType)
         BaseView::initialize ...
         
-        @collection.on 'add',   @addOne
-        @collection.on 'reset', @addAll
-        
-        @$el.data { model:@collection, view:this } .addClass @className
+        @collection.on 'add',   @addField, this
+        @collection.on 'reset', @resetFields, this
     
     
-    addOne: (field) ->
-        # console.log "[S] #this.addOne!", @..__super__
-        _.remove @subviews, field.view if field.view
+    
+    addField: (field) ->
+        @removeSubview field.view if field.view
         
         # avoid duplicating event propagation
-        field.off 'change:value', @change, this
+        field.off 'change:value', @onChange, this
         
         # propagate value-change events as key-value change events
-        field.on 'change:value', @change, this
+        field.on 'change:value', @onChange, this
         
         SubviewType = @subviewType
-        view = new SubviewType model:field
-        @subviews.push view
-        container = if @fields then @$el.find @fields else @$el
-        container.append view.render().el unless field.get 'ignore'
-        view.on 'update', @change.bind(this, field)
+        view = @addSubview new SubviewType model:field
+        view.on 'change', @onChange.bind(this, field)
         
         @render()
         view
     
-    addAll: ->
-        # _.invoke @subviews, 'remove'
-        # @subviews = []
-        @collection.each @addOne
+    resetFields: ->
+        @removeAllSubviews()
+        @collection.each @addField
         this
     
-    change: (field) ->
+    onChange: (field) ->
         key   = field.get 'name'
         value = field.getValue()
         @trigger "change:#key", this, value, key, field
@@ -117,9 +115,6 @@ Scaffold = exports.Scaffold = BaseView.extend do # {{{
         this
     
     
-    toString: -> "#{@ctorName}(collection=#{@collection})"
-
-
 
 # Proxy collection methods
 <[ get at pluck invoke values toJSON toKVPairs toKV toURL ]>

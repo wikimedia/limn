@@ -1,6 +1,11 @@
-_  = require 'kraken/util/underscore'
-{EventEmitter} = require 'events'
-{Parsers, ParserMixin}  = require 'kraken/util/parser'
+{ EventEmitter,
+} = require 'events'
+
+{ _, op,
+} = require 'kraken/util'
+{ Parsers, ParserMixin,
+} = require 'kraken/util/parser'
+
 
 
 /**
@@ -24,9 +29,9 @@ class exports.ChartTypeOption
             v = @spec[k]
             @[k] = v if v?
         @tags or= []
-        @parse = @chartType.getParser @type
+        @parseValue = @chartType.getParser @type
     
-    parse : Parsers.parseString
+    parseValue : Parsers.parseString
     
     isDefault: (v) ->
         # @default is v
@@ -119,7 +124,7 @@ class exports.ChartType extends EventEmitter
      * When implementing a ChartType, you can add or override parsers
      * merely by subclassing.
      */
-    this:: import ParserMixin::
+    ParserMixin this
     
     getParserFor: (name) ->
         @getParser @get(name).type

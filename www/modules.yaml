@@ -18,12 +18,14 @@ dev:
         - jquery.history.min
         - jquery.hotkeys.min
         - jquery.isotope.min
-        - bootstrap.min
-        # - spin.min
-        # - jquery.spin.min
+        - jquery.spin.min
         
-        ### CommonJS Support Starts Here:
-        ### Browserify must come before any .mod files
+        - bootstrap.min
+        - bootstrap-colorpicker
+        - bootstrap-datepicker
+        
+        ### CommonJS Support Starts Here
+        ### (this means Browserify must come before any .mod files)
         - browserify
         
         - underscore.mod
@@ -45,18 +47,33 @@ dev:
     - js:
         - kraken:
             - util:
+                - op
                 - underscore:
                     - array
                     - object
                     - kv
                     - string
                     - index
-                - op
+                - event:
+                    - ready-emitter
+                    - waiting-emitter
+                    - index
                 - backbone
                 - parser
                 - cascade
                 - index
-            - base
+            - timeseries:
+                - timeseries
+                - csv
+                - index
+            - base:
+                - base-mixin
+                - base-model
+                - base-view
+                - data-binding
+                - model-cache
+                - cascading-model
+                - index
             - scaffold:
                 - scaffold-model
                 - scaffold-view

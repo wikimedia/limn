@@ -144,7 +144,6 @@ app.configure ->
 
 Controller   = require './controller'
 app.controller require './controllers/graph'
-app.controller require './controllers/datasource'
 
 YAML_EXT_PAT = /\.ya?ml$/i
 app.get '/datasources/all', (req, res, next) ->
@@ -177,8 +176,13 @@ app.get '/datasources/all', (req, res, next) ->
             console.error that if err.stack
             res.send { error:String(err), partial_data:data }
 
+app.controller require './controllers/datasource'
+
+
 app.get '/', (req, res) ->
-    res.render 'dashboard'
+    ### XXX: Temporary, while I implement backwards compat with the old data format
+    # res.render 'dashboard'
+    res.redirect '/graphs/ohai/edit'
 
 app.get '/geo', (req, res) ->
     res.render 'geo'

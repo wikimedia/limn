@@ -1,47 +1,189 @@
 { _, op,
 } = require 'kraken/util'
-{ BaseModel, BaseList, BaseView,
+{ TimeSeriesData, CSVData,
+} = require 'kraken/timeseries'
+{ BaseModel, BaseList, ModelCache,
 } = require 'kraken/base'
+{ Metric, MetricList,
+} = require 'kraken/dataset/metric-model'
 
 
 /**
  * @class
  */
 DataSource = exports.DataSource = BaseModel.extend do # {{{
-    ctorName : 'DataSource'
+    __bind__ : <[ onLoadDataSuccess onLoadDataError ]>
     urlRoot  : '/datasources'
+    ready    : false
+    
+    /**
+     * Parsed data for this datasource.
+     * @type Array
+     */
+    data : null
+    
+    defaults: ->
+        id            : ''
+        url           : ''
+        format        : 'json'
+        
+        name          : ''
+        shortName     : ''
+        title         : ''
+        subtitle      : ''
+        desc          : ''
+        notes         : ''
+        
+        timespan : 
+            start     : null
+            end       : null
+            step      : '1mo'
+        
+        columns       : []
+        
+        chart : 
+            chartType : 'dygraphs'
+            options   : {}
+    
+    url: ->
+        "/datasources/#{@id}.json"
+    
+    
+    
     
     
     constructor: function DataSource
         BaseModel ...
     
     initialize: ->
+        @attributes = @canonicalize @attributes
         BaseModel::initialize ...
+        @constructor.register this
+        @metrics = new MetricList @attributes.metrics
+        @on 'change:metrics', @onMetricChange, this
+    
+    
+    canonicalize: (ds) ->
+        ds.shortName    or= ds.name
+        ds.title        or= ds.name
+        ds.subtitle     or= ''
         
+        cols = ds.columns
+        if _.isArray cols
+            ds.metrics = _.map cols, (col, idx) ->
+                if _.isArray col
+                    [label, type] = col
+                    {idx, label, type or 'int'}
+                else
+                    col.type or= 'int'
+                    col
+        else
+            ds.metrics = _.map cols.labels, (label, idx) ->
+                {idx, label, type:cols.types[idx] or 'int'}
+        ds
     
-    defaults: ->
-        {}
     
-    url: ->
-        "/data/#{@id}.json"
     
-# }}}
+    loadAll: ->
+        @loader start: ->
+            Seq()
+                .seq_ (next) ~>
+                    @once 'fetch-success', next.ok
+                    @loadModel()
+                .seq_ (next) ~>
+                    @once 'load-data-success', next.ok
+                    @loadData()
+                .seq ~>
+                    @trigger 'load-success', this
+        this
+    
+    loadData: ->
+        @wait()
+        @trigger 'load-data', this
+        return @onLoadDataSuccess @data if @data
+        switch @get 'format'
+        case 'json' then @loadJSON()
+        case 'csv'  then @loadCSV()
+        default
+            console.error "#this.load() Unknown Data Format!"
+            @onLoadDataError null, 'Unknown Data Format!', new Error 'Unknown Data Format!'
+        this
+    
+    loadJSON: ->
+        $.ajax do
+            url      : @get 'url'
+            dataType : 'json'
+            success  : (data) ~> @onLoadDataSuccess new TimeSeriesData data
+            error    : @onLoadDataError
+        this
+    
+    loadCSV: ->
+        $.ajax do
+            url      : @get 'url'
+            dataType : 'text'
+            success  : (data) ~> @onLoadDataSuccess new CSVData data
+            error    : @onLoadDataError
+        this
+    
+    onLoadDataSuccess: (@data) ->
+        console.log "#this.onLoadDataSuccess #{@data}"
+        @unwait()
+        @trigger 'load-data-success', this
+    
+    onLoadDataError: (jqXHR, txtStatus, err) ->
+        console.error "#this Error loading data! -- #msg: #{err or ''}"
+        @unwait()
+        @_errorLoading = true
+        @trigger 'load-data-error', this, txtStatus, err
+    
+    
+    getDateColumn: ->
+        @data.dateColumn
+    
+    getData: ->
+        @data.toJSON?() or @data
+    
+    getColumn: (idx) ->
+        @data.columns[idx]
+    
+    getColumnName: (idx) ->
+        @get('metrics')?[idx]?.label
+    
+    getColumnIndex: (name) ->
+        return that.idx if _.find @get('metrics'), -> it.label is name
+        -1
+    
+    onMetricChange: ->
+        @metrics.reset @get 'metrics'
+    
 
+# }}}
 
 
 /**
  * @class
  */
 DataSourceList = exports.DataSourceList = BaseList.extend do # {{{
-    ctorName : 'DataSourceList'
     urlRoot  : '/datasources'
     model    : DataSource
     
-    constructor: function DataSourceList
-        BaseList ...
-    
-    initialize : ->
-        BaseList::initialize ...
-    
-    
+    constructor: function DataSourceList then BaseList ...
+    initialize : -> BaseList::initialize ...
 # }}}
+
+
+
+### DataSource Cache
+
+ALL_SOURCES = new DataSourceList
+sourceCache = new ModelCache DataSource, {-ready, cache:ALL_SOURCES}
+
+# Fetch all DataSources
+$.getJSON '/datasources/all', (data) ->
+    ALL_SOURCES.reset _.map data, op.I
+    sourceCache.triggerReady()
+
+DataSource.getAllSources = ->
+    ALL_SOURCES
+
+

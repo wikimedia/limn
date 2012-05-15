@@ -5,12 +5,10 @@ Backbone = require 'backbone'
 } = require 'kraken/util'
 { BaseView, BaseModel, BaseList,
 } = require 'kraken/base'
-{ Field, FieldList, FieldView, Scaffold,
-} = require 'kraken/scaffold'
 { ChartType, DygraphsChartType,
-  ChartOption, ChartOptionList, TagSet,
-  ChartOptionView, ChartOptionScaffold,
 } = require 'kraken/chart'
+{ DataSource, DataSourceList,
+} = require 'kraken/dataset'
 { Graph, GraphList, GraphEditView,
 } = require 'kraken/graph'
 
@@ -46,7 +44,8 @@ main = ->
     
     # Extract id from URL
     if match = /\/graphs\/([^\/?]+)/i.exec loc
-        data.id = data.slug = match[1]
+        id = match[1]
+        data.id = data.slug = id unless /(edit|new)/.test id
     
     # _.dump _.clone(data.options), 'data.options'
     
@@ -59,19 +58,16 @@ main = ->
     $ '#content .inner' .append view.el
 
 
-
 # Load data files
 Seq([   <[ CHART_OPTIONS_SPEC /schema/dygraph.json ]>
 ])
 .parEach_ (next, [key, url]) ->
     jQuery.ajax do
         url : url,
-        dataType : 'json'
         success : (res) ->
             root[key] = res
             next.ok()
         error : (err) -> console.error err
 .seq ->
-    console.log 'All data loaded!'
     jQuery main
 

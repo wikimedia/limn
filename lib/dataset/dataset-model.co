@@ -16,46 +16,158 @@ ColorBrewer = require 'colorbrewer'
  * @class
  */
 DataSet = exports.DataSet = BaseModel.extend do # {{{
-    ctorName : 'DataSet'
     urlRoot : '/datasets'
     
     /**
      * @type DataSourceList
      */
-    sources : []
+    sources : null
     
     /**
      * @type MetricList
      */
-    metrics : []
+    metrics : null
+    
+    defaults : ->
+        palette : null
+        lines   : []
+        metrics : []
     
     
-    constructor: function DataSet
-        BaseModel ...
+    constructor: function DataSet (attributes={}, opts)
+        @metrics = new MetricList attributes.metrics
+        BaseModel.call this, attributes, opts
     
     initialize : ->
         BaseModel::initialize ...
-        @sources = new DataSourceList @attributes.sources
-        @metrics = new MetricList     @attributes.metrics
+        @set 'metrics', @metrics, {+silent}
+        @on 'change:metrics', @onMetricChange, this
     
     
-    defaults : ->
-        sources : [] # XXX: needed? metrics now implies this info
-        metrics : []
-        # lines   : []
+    load: (opts={}) ->
+        @resetReady() if opts.force
+        return this if @loading or @ready
+        
+        unless @metrics.length
+            return @triggerReady()
+        
+        console.log "#this.load()..."
+        @wait()
+        @loading = true
+        @trigger 'load', this
+        Seq @metrics.models
+            .parEach_ (next, metric) ->
+                metric.once 'ready', next.ok .load()
+            # .parEach_ (next, metric) ->
+            #     metric.on 'load-data-success', next.ok .loadData()
+            .seq ~>
+                console.log "#{this}.load() complete!"
+                @loading = false
+                @unwait() # terminates the `load` wait
+                @triggerReady()
+        this
     
+    # refreshSubModels: ->
+    #     # @set 'metrics', @metrics.toJSON(), {+silent}
+    #     @set 'metrics', _.pluck(@metrics.models, 'attributes'), {+silent}
+    #     this
     
     /**
-     * @returns {Array} The reified dataset, materialized to an array of data-series arrays.
+     * Override to handle the case where one of our rich sub-objects 
+     * (basically `metrics`) is set as a result of the `fetch()` call by the
+     * Graph object. To prevent it from blowing away the `MetricList`, we
+     * perform a `reset()` here. But that won't trigger a `change:metrics` event,
+     * so we do a little dance to set it twice, as object identity would otherwise
+     * cause it to think nothing has changed.
+     */
+    set: (key, value, opts) ->
+        # return DataSet.__super__.set ... unless @metrics
+        
+        if _.isObject(key) and key?
+            [values, opts] = [key, value]
+        else
+            values = { "#key": value }
+        opts or= {}
+        
+        for key, value in values
+            continue unless key is 'metrics' and _.isArray value
+            @metrics.reset value
+            delete values[key]
+            unless opts.silent
+                DataSet.__super__.set.call this, 'metrics', value, {+silent}
+                DataSet.__super__.set.call this, 'metrics', @metrics, opts
+        
+        DataSet.__super__.set.call this, values, opts
+    
+    
+    /* * * *  TimeSeriesData interface  * * * {{{ */
+    
+    /**
+     * @returns {Array<Array>} The reified dataset, materialized to a list of rows including timestamps.
      */
     getData: ->
-        '/data/datasources/rc/rc_comscore_region_uv.csv'
+        return [] unless @ready
+        _.zip ...@getColumns()
+    
+    /**
+     * @returns {Array<Array>} List of all columns (including date column).
+     */
+    getColumns: ->
+        return [] unless @ready
+        _.compact [ @getDateColumn() ].concat @getDataColumns()
+    
+    /**
+     * @returns {Array<Date>} The date column.
+     */
+    getDateColumn: ->
+        return [] unless @ready
+        dates = @metrics.onlyOk().invoke 'getDateColumn'
+        maxLen = _.max _.pluck dates, 'length'
+        _.find dates, -> it.length is maxLen
+    
+    /**
+     * @returns {Array<Array>} List of all columns except the date column.
+     */
+    getDataColumns: ->
+        return [] unless @ready
+        @metrics.onlyOk().invoke 'getData'
+    
+    /**
+     * @returns {Array<String>} List of column labels.
+     */
+    getLabels: ->
+        return [] unless @ready
+        [ 'Date' ].concat @metrics.onlyOk().invoke 'getLabel'
+    
+    getColors: ->
+        return [] unless @ready
+        @metrics.onlyOk().pluck 'color'
+    
+    # }}}
+    
     
     newMetric: ->
         index = @metrics.length
         @metrics.add m = new Metric { index, color:ColorBrewer.Spectral[11][index] }
+        # @get 'metrics' .push m.attributes
+        # @trigger 'change:metrics',  this, @metrics, 'metrics'
+        # @trigger 'change',          this, @metrics, 'metrics'
         m
     
+    onMetricChange: ->
+        console.log "#this.onMetricChange! ready=#{@ready}"
+        @resetReady()
+        @load()
+    
+    
+    # XXX: toJSON() must ensure columns in MetricList are ordered by index
+    #   ...in theory, MetricList.comparator now does this
+    
+    # toJSON: ->
+    #     @refreshSubModels()
+    #     json = DataSet.__super__.toJSON ...
+    #     json.metrics = json.metrics.map -> it.toJSON?() or it
+    #     json
     
 # }}}
 

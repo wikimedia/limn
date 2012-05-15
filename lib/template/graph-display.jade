@@ -1,9 +1,9 @@
 include browser-helpers
 - var graph_id = view.id
-section.graph-display.graph(id=view.id)
-        
+section.graph-display.graph(id=graph_id)
+    
     .graph-name-row.page-header.row-fluid
-        h2.graph-name 
+        h2.graph-name
             a(id="graph-title", href="#{model.toLink()}") #{name}
     
     .graph-viewport-row.row-fluid
@@ -12,19 +12,18 @@ section.graph-display.graph(id=view.id)
     
     .graph-details-row.row
         .span7.offset1.graph-desc
-                != jade.filters.markdown(desc)
-
+            != jade.filters.markdown(desc)
+    
     .graph-details-row.row
-        .span6.offset1.graph-permalink 
-                input.span6(value="#{model.toPermalink()}", readonly="readonly")
+        .span6.offset1.graph-permalink
+            input.span6(value="#{model.toPermalink()}", readonly="readonly")
         if ENV == 'dev'
             .span1.a.export-button.btn(href="#")
                 i.icon-file
                 |  Export
-
+    
     .graph-details-row.row
         .span6.offset1.graph-notes
-            != jade.filters.markdown(notes)        
-        
-
+            != jade.filters.markdown(notes)
+    
 

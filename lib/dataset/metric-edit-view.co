@@ -11,15 +11,21 @@
 
 /**
  * @class
+ * Model is a Metric.
  */
 MetricEditView = exports.MetricEditView = BaseView.extend do # {{{
-    ctorName       : 'MetricEditView'
+    __bind__       : <[ onChange ]>
     tagName        : 'section'
     className      : 'metric-edit-ui'
     template       : require 'kraken/template/metric-edit'
     
+    callOnReturnKeypress : 'onChange'
+    events:
+        'keydown .metric-label' : 'onReturnKeypress'
+    
     graph_id           : null
     dataset            : null
+    datasources        : null
     datasource_ui_view : null
     
     
@@ -27,28 +33,61 @@ MetricEditView = exports.MetricEditView = BaseView.extend do # {{{
         BaseView ...
     
     initialize: ->
-        this import @options.{graph_id, dataset}
+        this import @options.{graph_id, dataset, datasources}
         @model or= new Metric
         BaseView::initialize ...
-        @subviews.push @datasource_ui_view = new DataSourceUIView {@model, @graph_id}
-        @$el.find '.metric-datasource' .append @datasource_ui_view.render().el
+        @on     'attach',       @onAttach,              this
+        @datasource_ui_view = new DataSourceUIView {@model, @graph_id, @dataset, @datasources}
+        @addSubview @datasource_ui_view
+            .on 'metric-update', ~> @trigger 'update',  this
+            .on 'metric-change', @onSourceMetricChange, this
     
     
     toTemplateLocals: ->
-        locals = BaseView::toTemplateLocals ...
-        locals import {@graph_id}
+        locals = MetricEditView.__super__.toTemplateLocals ...
+        locals import {
+            @graph_id, @dataset, @datasources
+            placeholder_label: @model.getPlaceholderLabel()
+        }
     
-    build: ->
-        BaseView::build ...
-        if @datasource_ui_view
-            @$el.find '.metric-datasource' .append @datasource_ui_view.render().el
+    update: ->
+        MetricEditView.__super__.update ...
+        @$ '.metric-label' .attr 'placeholder', @model.getPlaceholderLabel()
+        
+        # Update the color picker
+        @$ '.color-swatch'
+            .data 'color', @model.get 'color'
+            .colorpicker 'update'
+        
+        # @$ '.color-swatch' .css 'background-color', color
+        # @$ '.metric-color' .val color
         this
     
-    editMetric: (metric) ->
-        console.log "#this.editMetric!", metric
-        @model = metric
-        @render()
-        @show()
+    onAttach: ->
+        console.log "#this.onAttach!"
+        @$ '.color-swatch'
+            .data 'color', @model.get 'color'
+            .colorpicker()
+            .on 'hide', @onChange
+    
+    onChange: (evt) ->
+        attrs = @$ 'form.metric-edit-form' .formData()
+        # attrs.color = that if evt?.color
+        same = _.isEqual @model.attributes, attrs
+        
+        console.log "#this.onChange! (same? #same)"
+        _.dump @model.attributes, 'old', not same
+        _.dump attrs, 'new', not same
+        # _.dump attrs, "#this.onChange! (same? #same)", not same
+        
+        unless _.isEqual @model.attributes, attrs
+            @model.set attrs, {+silent}
+            @trigger 'metric-update', this
+    
+    onSourceMetricChange: (metric) ->
+        console.log "#this.onSourceMetricChange!", metric
+        @$ '.metric-label' .attr 'placeholder', @model.getPlaceholderLabel()
+        @trigger 'metric-change', @model, this
         this
     
 # }}}

@@ -8,9 +8,17 @@ op = require 'kraken/util/op'
 ### Scaffold Models
 
 Field = exports.Field = BaseModel.extend do # {{{
-    ctorName       : 'Field'
-    idAttribute    : 'name'
     valueAttribute : 'value'
+    
+    defaults: ->
+        name     : ''
+        type     : 'String'
+        default  : null
+        desc     : ''
+        include  : 'diff'
+        tags     : []
+        examples : []
+    
     
     
     constructor: function Field
@@ -18,61 +26,17 @@ Field = exports.Field = BaseModel.extend do # {{{
     
     initialize: ->
         _.bindAll this, ...(_.functions this .filter -> _.startsWith(it, 'parse'))
+        @set 'id', @id = _.camelize @get 'name'
         @set 'value', @get('default'), {+silent} if not @has 'value'
-        # console.log "#this.initialize!"
-        # @on 'all', (evt) ~> console.log "#this.trigger(#evt)"
-    
-    # Model defaults
-    defaults: ->
-        {
-            name     : ''
-            type     : 'String'
-            default  : null
-            desc     : ''
-            include  : 'diff'
-            tags     : []
-            examples : []
-        }
+        Field.__super__.initialize ...
     
     
-    /* * *  Parsers  * * */
     
-    getParser: (type) ->
-        # XXX: handle 'or' by returning an array of parsers?
-        type = _ (type or @get 'type').toLowerCase()
-        for t of <[ Integer Float Boolean Object Array Function ]>
-            if type.startsWith t.toLowerCase()
-                return @["parse#t"]
-        @parseString
     
-    parseString: (v) ->
-        if v? then op.toStr v else null
-    
-    parseInteger: (v) ->
-        r = op.toInt v
-        unless isNaN r then r else null
-    
-    parseFloat: (v) ->
-        r = op.toFloat v
-        unless isNaN r then r else null
-    
-    parseBoolean: (v) ->
-        op.toBool v
-    
-    parseArray: (v) ->
-        if v then op.toObject v else null
-    
-    parseObject: (v) ->
-        if v then op.toObject v else null
-    
-    parseFunction: (fn) ->
-        if fn and _.startswith String(fn), 'function'
-            try eval "(#fn)" catch err then null
-        else
-            null
     
     
     /* * * Value Accessors * * */
+    
     getValue: (def) ->
         @getParser() @get @valueAttribute, def
     
@@ -85,33 +49,35 @@ Field = exports.Field = BaseModel.extend do # {{{
         @set @valueAttribute, val, options
     
     clearValue: ->
-        @set @valueAttribute, @get('default')
+        @set @valueAttribute, @get 'default'
     
     isDefault: ->
-        @get(@valueAttribute) is @get('default')
+        @get(@valueAttribute) is @get 'default'
     
     
     /* * * Serializers * * */
+    
     serializeValue: ->
         @serialize @getValue()
     
     toJSON: ->
         {id:@id} import do
-            _.clone(@attributes) import { value:@getValue(), def:@get('default') }
+            _.clone(@attributes) import { value:@getValue(), def:@get 'default' }
     
     toKVPairs: ->
         { "#{@id}":@serializeValue() }
     
     toString: -> "(#{@id}: #{@serializeValue()})"
+    
 # }}}
 
 
 FieldList = exports.FieldList = BaseList.extend do # {{{
-    ctorName : 'FieldList'
-    model    : Field
+    model : Field
     
+    constructor: function FieldList
+        BaseList ...
     
-    constructor: function FieldList then BaseList ...
     
     /**
      * Collects a map of fields to their values, excluding those set to `null` or their default.
@@ -135,6 +101,5 @@ FieldList = exports.FieldList = BaseList.extend do # {{{
     toURL: (item_delim='&', kv_delim='=') ->
         "?#{@toKV ...}"
     
-    toString: -> "#{@ctorName}(length=#{@length})"
 # }}}
 

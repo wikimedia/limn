@@ -6,27 +6,64 @@
 
 /**
  * @class
+ * Model is a Metric.
  */
 DataSourceUIView = exports.DataSourceUIView = BaseView.extend do # {{{
     __bind__       : <[  ]>
-    ctorName       : 'DataSourceUIView'
     tagName        : 'section'
     className      : 'datasource-ui'
     template       : require 'kraken/template/datasource-ui'
+    
+    events :
+        'click .datasource-summary'       : 'onHeaderClick'
+        'click .datasource-source-metric' : 'onSelectMetric'
+    
+    graph_id           : null
+    dataset            : null
+    datasources        : null
+    
     
     
     constructor: function DataSourceUIView
         BaseView ...
     
     initialize: ->
-        @graph_id = @options.graph_id
+        this import @options.{graph_id, dataset, datasources}
         BaseView::initialize ...
     
     toTemplateLocals: ->
         locals = @model.toJSON()
-        locals import
-            graph_id         : @graph_id
-            source_summary   : 'Source Summary'
-            metric_summary   : 'Metric Summary'
-            timespan_summary : 'Timespan Summary'
+        locals import {@graph_id, @dataset, @datasources}
+        
+        ds = @model.source
+        hasSource = @model.get('source_id')? and ds
+        locals.source_summary   = unless hasSource then '<Select Source>' else ds.get 'shortName'
+        
+        hasMetric = hasSource and @model.get('source_col')?
+        locals.metric_summary   = unless hasMetric then '<Select Metric>' else @model.getSourceColumnName()
+        
+        dsts = ds?.get('timespan') or {}
+        ts = locals.timespan = _.defaults _.clone(@model.get('timespan')), dsts
+        hasTimespan = hasMetric and ts.start and ts.end and ts.step
+        locals.timespan_summary = unless hasTimespan then '<Select Timespan>' else "#{ts.start} &mdash; #{ts.end}"
+        
+        locals
+    
+    onHeaderClick: ->
+        @$el.toggleClass 'in'
+    
+    onSelectMetric: (evt) ->
+        # tr = evt.currentTarget
+        # idx = @$ '.source-metrics .datasource-source-metric' .toArray().indexOf tr
+        # return unless idx is not -1
+        el = $ evt.currentTarget
+        {source_id, source_col} = el.data()
+        source_col = parseInt source_col
+        return if not source_id or isNaN source_col
+        
+        @$ '.source-metrics .datasource-source-metric' .removeClass 'active'
+        el.addClass 'active'
+        @model.set {source_col, source_id}
+        @trigger 'metric-change', @model, this
+    
 # }}}

@@ -1,3 +1,4 @@
+### Patches to make Backbone work with browserify
 
 # Expose Underscore so Backbone can find it
 _ = require 'underscore'
@@ -11,20 +12,81 @@ window?.Backbone = Backbone
 Backbone.setDomLibrary that if window? and (window.jQuery or window.Zepto or window.ender)
 
 
+_bb_events =
+    
+    /**
+     * Registers an event listener on the given event(s) to be fired only once.
+     * 
+     * @param {String} events Space delimited list of event names.
+     * @param {Function} callback Event listener function.
+     * @param {Object} [context=this] Object to be supplied as the context for the listener.
+     * @returns {this}
+     */
+    once: (events, callback, context) ->
+        fn = ~>
+            @off events, arguments.callee, this
+            callback.apply (context or this), arguments
+        @on events, fn, this
+        this
+    
+    /**
+     * Compatibility with Node's `EventEmitter`.
+     */
+    emit: Backbone.Events.trigger
+
+
+
+/**
+ * @namespace Meta-utilities for working with Backbone classes.
+ */
 _backbone = do
+    
+    # /**
+    #  * Mix the given object or prototype into this class
+    #  */
+    # addMixin: (mixin) ->
+    #     ...
     
     /**
      * @returns {Array<Class>} The list of all superclasses for this class or object.
      */
     getSuperClasses: function getSuperClasses(Cls)
-        Cls .= constructor if cls and typeof Cls is not 'function'
-        if superclass = Cls?.__super__?.constructor
+        return [] unless Cls
+        
+        if Cls.__superclass__
+            superclass = that
+        else
+            Cls = Cls.constructor unless typeof Cls is 'function'
+            superclass = Cls.__super__?.constructor
+        
+        if superclass
             [superclass].concat getSuperClasses superclass
         else
             []
     
+    /**
+     * Looks up an attribute on the prototype of each class in the class
+     * hierarchy.
+     * @returns {Array}
+     */
+    pluckSuper: (obj, prop) ->
+        return [] unless obj
+        _ _backbone.getSuperClasses(obj) .chain()
+        .pluck 'prototype'
+        .pluck prop 
+        .value()
+    
+    /**
+     * As `.pluckSuper()` but includes value of `prop` on passed `obj`.
+     * @returns {Array}
+     */
+    pluckSuperAndSelf: (obj, prop) ->
+        return [] unless obj
+        [ obj[prop] ].concat _backbone.pluckSuper(obj, prop)
+
 
 exports import _backbone
+
 
 
 /**
@@ -55,7 +117,9 @@ _methodized = exports._methodized = _.reduce do
         o
     {}
 
+
+_.extend Backbone.Events, _bb_events
 for Cls of Backbone.<[ Model Collection View ]>
-    Cls     import _methodized
-    Cls::   import _methodized
+    Cls     import _methodized import _bb_events import Backbone.Events
+    Cls::   import _methodized import _bb_events
 

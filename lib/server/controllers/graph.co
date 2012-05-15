@@ -1,11 +1,12 @@
-_        = require 'underscore'
-fs       = require 'fs'
-path     = require 'path'
-yaml     = require 'js-yaml'
-Seq      = require 'seq'
-
+fs         = require 'fs'
+path       = require 'path'
 {existsSync:exists} = path
+
+_          = require 'underscore'
+Seq        = require 'seq'
+yaml       = require 'js-yaml'
 {mkdirp, mkdirpAsync} = require '../mkdirp'
+
 { readJSONFilesAsync,
 } = require '../files'
 

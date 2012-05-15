@@ -1,0 +1,1 @@
+bootstrap-colorpicker/js/bootstrap-colorpicker.js

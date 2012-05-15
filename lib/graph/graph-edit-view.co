@@ -27,75 +27,95 @@ GraphEditView = exports.GraphEditView = BaseView.extend do # {{{
         valueFormatter xValueFormatter yValueFormatter
     ]>
     __bind__  : <[
-        render renderAll stopAndRender stopAndRenderAll resizeViewport
+        render stopAndRender resizeViewport wait unwait checkWaiting
         numberFormatter numberFormatterHTML
-        onReady onSync onModelChange onScaffoldChange onDataChange onFirstClickRenderOptionsTab
+        onReady onSync onModelChange onScaffoldChange 
+        onFirstClickRenderOptionsTab onFirstClickRenderDataTab
     ]>
-    __debounce__: <[ render renderAll ]>
-    ctorName  : 'GraphEditView'
+    __debounce__: <[ render ]>
     tagName   : 'section'
     className : 'graph-edit graph'
     template  : require 'kraken/template/graph-edit'
     
     events:
-        'click    .redraw-button'                  : 'stopAndRender'
-        'click    .load-button'                    : 'load'
-        'click    .save-button'                    : 'save'
-        'click    .done-button'                    : 'done'
+        'click    .redraw-button'                        : 'stopAndRender'
+        'click    .load-button'                          : 'load'
+        'click    .save-button'                          : 'save'
+        'click    .done-button'                          : 'done'
         'keypress .graph-details input[type="text"]'     : 'onKeypress'
-        'submit   .graph-details'                        : 'onDetailsSubmit'
-        'change   :not(.chart-options) select'           : 'onDetailsSubmit'
         'keypress .chart-options .value'                 : 'onKeypress'
-        'submit   .chart-options'                        : 'onOptionsSubmit'
+        'submit   form.graph-details'                    : 'onDetailsSubmit'
+        'change   :not(.chart-options) select'           : 'onDetailsSubmit'
+        'submit   form.chart-options'                    : 'onOptionsSubmit'
         'change   .chart-options input[type="checkbox"]' : 'onOptionsSubmit'
     
-    data  : {}
+    
+    /**
+     * Count of outstanding tasks until we stop the spinner.
+     * @type Number
+     */
+    waitingOn : 0
+    
+    /**
+     * Whether we're ready.
+     * @type Boolean
+     */
     ready : false
+    
     
     
     constructor: function GraphEditView
         BaseView ...
     
     initialize : (o={}) ->
-        @data = {}
         @model or= new Graph
-        @id = _.domize 'graph', (@model.id or @model.get('slug') or @model.cid)
+        @id = @graph_id = _.domize 'graph', (@model.id or @model.get('slug') or @model.cid)
         BaseView::initialize ...
         # console.log "#this.initialize!"
         
         for name of @__debounce__
             @[name] = _.debounce @[name], DEBOUNCE_RENDER
         
-        @viewport = @$el.find '.viewport'
+        # Set up the spinner
+        @on 'start-waiting', @onStartWaiting, this
+        @on 'stop-waiting',  @onStopWaiting,  this
+        @onStartWaiting() if @waitingOn # In case we missed the first call to @wait() somehow
+        
+        # Start a wait for the `ready` event
+        @wait()
         
         ### Model Events
         @model
-            .on 'ready',            @onReady, this
-            .on 'sync',             @onSync,  this
-            .on 'destroy',          @remove,  this
-            .on 'change',           @render,  this
-            .on 'change:dataset',   @onModelChange
-            .on 'change:options',   @onModelChange
-            .on 'error', ~>
-                console.error "#this.error!", arguments
-                # TODO: UI alert
+            .on 'start-waiting',    @wait,          this
+            .on 'stop-waiting',     @unwait,        this
+            .on 'sync',             @onSync,        this
+            .on 'destroy',          @remove,        this
+            .on 'change',           @render,        this
+            .on 'change:dataset',   @onModelChange, this
+            .on 'change:options',   @onModelChange, this
+            .on 'error',            @onModelError,  this
+            # .on 'ready',            @onReady,       this
         
         ### Chart Options Tab, Scaffold
-        @scaffold = new ChartOptionScaffold
-        @$el.find '.graph-options-pane' .append @scaffold.el
+        @scaffold = @addSubview new ChartOptionScaffold
         @scaffold.collection.reset that if o.graph_spec
-        
         @scaffold.on 'change', @onScaffoldChange
         @chartOptions @model.getOptions(), {+silent}
         
-        # Rerender the options boxes once the tab is visible
-        @$el.on 'click', '.graph-options-tab', @onFirstClickRenderOptionsTab
         
         ### Graph Data UI
-        # @subviews.push @data = new DataView { model:@model.get('dataset'), graph_id:@id }
-        @subviews.push @data = new DataView { @model, graph_id:@id }
-        @$el.find '.graph-data-pane' .append @data.render().el
-        @data.on 'change', @onDataChange
+        @data_view = @addSubview new DataView { model:@model.dataset, graph_id:@id }
+        @data_view
+            .on 'start-waiting', @wait,         this
+            .on 'stop-waiting',  @unwait,       this
+            .on 'metric-change', @onDataChange, this
+        
+        
+        # Rerender once the tab is visible
+        # Can't use @events because we need to bind before registering
+        @$el.on 'click', '.graph-data-tab',     @onFirstClickRenderDataTab
+        @$el.on 'click', '.graph-options-tab',  @onFirstClickRenderOptionsTab
+        
         
         ### Chart Viewport
         @resizeViewport()
@@ -103,19 +123,45 @@ GraphEditView = exports.GraphEditView = BaseView.extend do # {{{
         # Resize chart on window resize
         # Note: can't debounce the method itself, as the debounce wrapper returns undefined
         $ root .on 'resize', _.debounce @resizeViewport, DEBOUNCE_RENDER
+        
+        # Kick off model load chain
+        @checkWaiting()
+        Seq()
+            .seq_ (next) ~>
+                @model.once 'ready', next.ok .load()
+            .seq_ (next) ~>
+                @model.once 'data-ready', next.ok .loadData()
+            .seq ~> @onReady()
+    
+    onReady: ->
+        return if @ready
+        console.log "(#this via GraphEditView).ready!"
+        @unwait() # clears `wait()` from `initialize`
+        # @ready = @scaffold.ready = true
+        @triggerReady()
+        @scaffold.triggerReady()
+        @chartOptions @model.getOptions(), {+silent}
+        @render()
+        
+        # fix up the spinner element once the DOM is settled
+        _.delay @checkWaiting, 50
     
     
     
+    
+    ### Persistence {{{
     
     load: ->
         console.log "#this.load!"
-        @model.fetch()
+        @wait()
+        @model.fetch { success:@unwait, error:@unwait }
         false
     
     save: ->
         console.log "#this.save!"
+        @wait()
         id = @model.get('slug') or @model.id
-        @model.save {id}, {+wait}
+        @model.save {id}, { +wait, success:@unwait, error:@unwait }
         false
     
     done: ->
@@ -125,6 +171,10 @@ GraphEditView = exports.GraphEditView = BaseView.extend do # {{{
         @model.change()
         @scaffold.invoke 'change'
         this
+    
+    
+    ### }}}
+    ### Rendering {{{
     
     chartOptions: (values, opts) ->
         # Handle @chartOptions(k, v, opts)
@@ -145,13 +195,10 @@ GraphEditView = exports.GraphEditView = BaseView.extend do # {{{
                     delete options[k]
             options
     
-    
     toTemplateLocals: ->
         attrs = _.clone @model.attributes
         delete attrs.options
-        # delete attrs.dataset
-        attrs.data = @data
-        { $, _, op, @model, view:this } import attrs
+        { @model, view:this, @graph_id, slug:'', name:'', desc:'' } import attrs
     
     
     /**
@@ -163,29 +210,31 @@ GraphEditView = exports.GraphEditView = BaseView.extend do # {{{
         modelH = height = @model.get 'height'
         return { width, height } unless @ready
         
+        viewport = @$ '.viewport'
+        
         # Remove old style, as it confuses dygraph after options update
-        @viewport.attr 'style', ''
-        label = @$el.find '.graph-label'
+        viewport.attr 'style', ''
+        label = @$ '.graph-label'
         
         if width is 'auto'
-            vpWidth = @viewport.innerWidth() or 300
+            vpWidth = viewport.innerWidth() or 300
             labelW = label.outerWidth() or 228
             width = vpWidth - labelW - 10 - (vpWidth - label.position().left - labelW)
         width ?= modelW
         if height is 'auto'
-            height = @viewport.innerHeight() or 320
+            height = viewport.innerHeight() or 320
         height ?= modelH
         
         size = { width, height }
-        @viewport.css size
-        # console.log 'resizeViewport!', JSON.stringify(size), @viewport
+        viewport.css size
+        # console.log 'resizeViewport!', JSON.stringify(size), viewport
         # @chart.resize size if forceRedraw
         size
     
     
     # Repopulate UI from Model
     renderDetails: ->
-        form = @$el.find 'form.graph-details'
+        form = @$ 'form.graph-details'
         for k, v in @model.attributes
             continue if k is 'options'
             txt = @model.serialize v
@@ -197,17 +246,25 @@ GraphEditView = exports.GraphEditView = BaseView.extend do # {{{
                 el.val txt
             
             form.find "textarea[name=#k]" .text txt
+        
+        # Graph Name field is not part of the form due to the layout.
+        @$ "input.graph-name[name='name']" .val @get 'name'
         this
     
     # Redraw chart inside viewport.
     renderChart: ->
-        data = @model.get 'dataset' #.getData()
+        # data = @model.get 'dataset'
+        # data = data.getData() if typeof data is not 'string'
+        dataset = @model.dataset
+        data = dataset.getData()
         size = @resizeViewport()
         
         # XXX: use @model.changedAttributes() to calculate what to update
         options = @chartOptions() #import size
         options import do
-            labelsDiv          : @$el.find '.graph-label' .0
+            colors             : dataset.getColors()
+            labels             : dataset.getLabels()
+            labelsDiv          : @$ '.graph-label' .0
             valueFormatter     : @numberFormatterHTML
             axes:
                 x:
@@ -218,19 +275,19 @@ GraphEditView = exports.GraphEditView = BaseView.extend do # {{{
                     valueFormatter     : @numberFormatterHTML
         
         # console.log "#this.render!", dataset
-        _.dump options, 'options'
+        # _.dump options, 'options'
         
         # Always rerender the chart to sidestep the case where we need to push defaults into
         # dygraphs to reset the current option state.
         @chart?.destroy()
         @chart = new Dygraph do
-            @viewport.0
+            @$ '.viewport' .0
             data
             options
         
         # unless @chart
         #     @chart = new Dygraph do
-        #         @viewport.0
+        #         @$ '.viewport' .0
         #         data
         #         options
         # else
@@ -239,35 +296,39 @@ GraphEditView = exports.GraphEditView = BaseView.extend do # {{{
         
         this
     
+    attachSubviews: ->
+        BaseView::attachSubviews ...
+        @checkWaiting()
     
     render: ->
-        return this unless @ready
-        @renderDetails()
-        _.invoke @subviews, 'render'
+        return this unless @ready and not @_rendering
+        @_rendering = true
+        @wait()
+        @checkWaiting()
+        # @renderDetails()
+        # @attachSubviews()
+        # _.invoke @subviews, 'render'
+        GraphEditView.__super__.render ...
         @renderChart()
-        @updateURL()
+        # @updateURL()
         @trigger 'render', this
-        false
+        @unwait()
+        @_rendering = false
+        this
     
-    renderAll: ->
-        return this unless @ready
-        # console.log "#this.renderAll!"
-        _.invoke @scaffold.subviews, 'render'
-        @scaffold.render()
-        @render()
     
     /**
      * Update the page URL using HTML5 History API
      */
     updateURL: ->
-        data  = @toJSON()
+        json  = @toJSON()
         title = "#{@model.get('name') or 'New Graph'} | Edit Graph | GraphKit"
         url   = @toURL('edit')
-        # console.log 'History.pushState', JSON.stringify(data), title, url
-        History.pushState data, title, url
+        # console.log 'History.pushState', JSON.stringify(json), title, url
+        History.pushState json, title, url
     
     
-    
+    ### }}}
     ### Formatters {{{
     
     axisFormatter: (fmttr) ->
@@ -298,35 +359,45 @@ GraphEditView = exports.GraphEditView = BaseView.extend do # {{{
     numberFormatterHTML: (n, opts, g) ->
         digits = opts('digitsAfterDecimal') ? 2
         { whole, fraction, suffix } = @_numberFormatter n, digits
-        """
-        <span class="value"><span class="whole">#whole</span><span class="fraction">#fraction</span><span class="suffix">#suffix</span></span>
-        """
+        # coco will trim all the whitespace
+        "<span class='value'>
+        <span class='whole'>#whole</span>
+        <span class='fraction'>#fraction</span>
+        <span class='suffix'>#suffix</span>
+        </span>"
     
     ### }}}
     ### Event Handlers {{{
-    
-    
-    onReady: ->
-        return if @ready
-        $.getJSON '/datasources/all', (@data) ~>
-            console.log "(#this via GraphEditView).ready!"
-            @ready = @scaffold.ready = true
-            @onSync()
     
     onSync: ->
         return unless @ready
         console.info "#this.sync() --> success!"
         # TODO: UI alert
-        # @change()
-        # @model.change()
         @chartOptions @model.getOptions(), {+silent}
-        @renderAll()
+        @render()
+    
+    onStartWaiting: ->
+        status = @checkWaiting()
+        # console.log "#this.onStartWaiting!", status
+    
+    onStopWaiting: ->
+        status = @checkWaiting()
+        # console.log "#this.onStopWaiting!", status
+    
+    onModelError: ->
+        console.error "#this.error!", arguments
+        # TODO: UI alert
     
     onModelChange: ->
         changes = @model.changedAttributes()
         options = @model.getOptions()
-        # console.log "Graph.changed( options ) ->\n\tchanges: #{JSON.stringify changes}\n\toptions: #{JSON.stringify options}" #"\n\t^opts: #{JSON.stringify _.intersection _.keys(changes), _.keys(options)}"
-        @chart?.updateOptions file:that if changes?.dataset
+        # console.log """
+        #     Graph.changed( options ) ->
+        #     \tchanges: #{JSON.stringify changes}
+        #     \toptions: #{JSON.stringify options}
+        #     \t^opts: #{JSON.stringify _.intersection _.keys(changes), _.keys(options)}
+        # """
+        # @chart?.updateOptions file:that if changes?.dataset
         @chartOptions options, {+silent} if changes?.options
     
     onScaffoldChange: (scaffold, value, key, field) ->
@@ -347,21 +418,25 @@ GraphEditView = exports.GraphEditView = BaseView.extend do # {{{
             @model.setOption(key, value, {+silent})
     
     onDataChange: ->
-        console.log 'onDataChange!'
+        console.log "#this.onDataChange!"
+        @model.once 'data-ready', @render, this
+              .loadData {+force}
     
     onFirstClickRenderOptionsTab: ->
         @$el.off 'click', '.graph-options-tab', @onFirstClickRenderOptionsTab
         @scaffold.render()
+    
+    onFirstClickRenderDataTab: ->
+        @$el.off 'click', '.graph-data-tab', @onFirstClickRenderDataTab
+        _.defer ~> @data_view.onMetricsChanged()
     
     onKeypress: (evt) ->
         $(evt.target).submit() if evt.keyCode is 13
     
     onDetailsSubmit: ->
         console.log "#this.onDetailsSubmit!"
-        data = _.synthesize do
-            @$el.find('form.graph-details').serializeArray()
-            -> [it.name, it.value]
-        @model.set data
+        details = @$ 'form.graph-details' .formData()
+        @model.set details
         false
     
     onOptionsSubmit: ->
@@ -369,17 +444,56 @@ GraphEditView = exports.GraphEditView = BaseView.extend do # {{{
         @render()
         false
     
-    # Needed because (sigh) _.debounce returns undefined
-    stopAndRender: ->
-        @render ...
-        false
+    # Needed because (sigh) _.debounce returns undefined, and we need to preventDefault()
+    stopAndRender    : -> @render ... ;     false
     
-    stopAndRenderAll: ->
-        @renderAll ...
-        false
+    # }}}
+    ### Spinner {{{
+    
+    /**
+     * Retrieve or construct the spinner.
+     */
+    spinner: ->
+        el = @$ '.graph-spinner'
+        unless el.data 'spinner'
+            ### Spin.js Options ###
+            opts =
+                lines     : 9           # [12]        The number of lines to draw
+                length    : 2           # [7]         The length of each line
+                width     : 1           # [5]         The line thickness
+                radius    : 7           # [10]        The radius of the inner circle
+                rotate    : -10.5       # [0]         rotation offset
+                trail     : 50          # [100]       Afterglow percentage
+                opacity   : 1/4         # [1/4]       Opacity of the lines
+                shadow    : false       # [false]     Whether to render a shadow
+                speed     : 1           # [1]         Spins per second
+                zIndex    : 2e9         # [2e9]       zIndex; uses a very high z-index by default
+                color     : '#000'      # ['#000']    Line color; '#rgb' or '#rrggbb'.
+                top       : 'auto'      # ['auto']    Top position relative to parent in px; 'auto' = center vertically.
+                left      : 'auto'      # ['auto']    Left position relative to parent in px; 'auto' = center horizontally.
+                className : 'spinner'   # ['spinner'] CSS class to assign to the element
+                fps       : 20          # [20]        Frames per second when falling back to `setTimeout()`.
+                hwaccel   : Modernizr.csstransforms3d   # [false]     Whether to use hardware acceleration.
+            
+            isHidden = el.css('display') is 'none'
+            el.show().spin opts
+            el.hide() if isHidden
+        el
+    
+    checkWaiting: ->
+        spinner = @spinner()
+        if isWaiting = (@waitingOn > 0)
+            spinner.show()
+            if spinner.find('.spinner').css('top') is '0px'
+                # delete spinner
+                spinner.spin(false)
+                # re-add to DOM with correct parent sizing
+                @spinner()
+        else
+            spinner.hide()
+        isWaiting
     
     # }}}
     
-    toString: -> "#{@ctorName}(#{@model})"
 # }}}
 
