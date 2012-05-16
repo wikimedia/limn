@@ -111,6 +111,7 @@ dev:
                 - index
             - graph:
                 - graph-model
+                - graph-view
                 - graph-display-view
                 - graph-edit-view
                 - graph-list-view

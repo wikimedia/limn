@@ -209,12 +209,14 @@ BaseView = exports.BaseView = Backbone.View.extend mixinBase do # {{{
         this
     
     render: ->
+        @wait()
         if @isBuilt
             @update()
         else
             @build()
         @renderSubviews()
         @trigger 'render', this
+        @unwait()
         this
     
     renderSubviews: ->
