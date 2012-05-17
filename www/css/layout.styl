@@ -1,7 +1,7 @@
 @import 'nib'
 @import 'colors'
+@import 'mixins'
 @import 'text'
-
 
 .clearer
     clearfix()
@@ -22,6 +22,10 @@
     background transparent no-repeat 0 0
     border 0 !important
     
+    // Enable CSS Transitions
+    transition-duration 0.8s
+    transition-property opacity
+    
     &.wmf-logo
         width 45px
         height 45px
@@ -40,6 +44,12 @@
         &:hover
             opacity 0.25
 
+html, body
+    absolute top 0 left 0
+    width 100%
+
+html
+    min-height 100%
 
 body
     min-height 100%
@@ -207,16 +217,30 @@ footer
 
 .rilke
     absolute bottom 1em right 1em
-    width 210px
-    color darken($foot_text, 20%)
-    opacity 0.15
+    z-index 30
+    width 185px
+    
+    opacity 0.1
+    &:hover
+        opacity 1
+    
+    // Enable CSS Transitions
+    transition-duration 0.8s
+    transition-property opacity
+    
     &, & *
         font-size 10px
         line-height 1.3
         text-indent -1em
         border 0
-    small
-        text-align right
         color $foot_text
+    small
+        margin-top 5px
+        text-align right
+        color $foot_header
+    blockquote
+        margin 0
+        padding 0
+
 
 

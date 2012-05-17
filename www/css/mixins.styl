@@ -1,0 +1,33 @@
+@import 'nib'
+
+
+column-span()
+    -webkit-column-span arguments
+    -moz-column-span arguments
+    column-span arguments
+
+transition-property()
+    -webkit-transition-property arguments
+    -moz-transition-property arguments
+    transition-property arguments
+
+transition-duration()
+    -webkit-transition-duration arguments
+    -moz-transition-duration arguments
+    transition-duration arguments
+
+text-stroke($size, $color)
+    $neg = -($size)
+    text-shadow $neg $neg 0 $color, $size $neg 0 $color, $neg $size 0 $color, $size $size 0 $color
+
+break-something($what, $args)
+    -webkit-column-break-{$what} $args
+    -moz-column-break-{$what} $args
+    column-break-{$what} $args
+    -webkit-break-{$what} $args
+    -moz-break-{$what} $args
+    break-{$what} $args
+
+break-inside()
+    break-something inside, arguments
+
