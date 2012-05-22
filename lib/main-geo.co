@@ -13,22 +13,22 @@ fill = d3.scale.log()
     .domain [1, 10000]
     .range ["black", "red"]
 
-quantize = (d) -> 
+quantize = (d) ->
     # console.log d.properties.name
-    if root.data[d.properties.name]?    
+    if root.data[d.properties.name]?
         return fill root.data[d.properties.name]['editors']
-    else 
+    else
         # console.log 'Country '+d.properties.name+' not in data'
         return fill "rgb(0,0,0)"
 
-move = -> 
+move = ->
     # console.log d3.event
     projection
-        .translate d3.event.translate 
-        .scale d3.event.scale              
+        .translate d3.event.translate
+        .scale d3.event.scale
     feature.attr "d", path
 
-## zooming/panning 
+## zooming/panning
 
 projection = d3.geo.mercator()
     .scale width
@@ -77,7 +77,7 @@ map.append "rect"
 infobox =   d3.select '#infobox'
                 .style "display","none"
 
-infobox.select '#ball'                     
+infobox.select '#ball'
     .append "svg"
         .attr "width", "100%"
         .attr "height", "20px"
@@ -91,57 +91,57 @@ setInfoBox = (d) ->
     c = d.properties.name
     ae = 0
     e5 = 0
-    e100 = 0   
+    e100 = 0
     if root.data[d.properties.name]?
         ae = parseInt(root.data[d.properties.name]['editors'])
         e5 = parseInt(root.data[d.properties.name]['editors5'])
         e100 = parseInt(root.data[d.properties.name]['editors100'])
-
-
+    
+    
     infobox.select '#country' .text c
     infobox.select '#ae' .text ae
     infobox.select '#e5' .text e5+" ("+(100.0*e5/ae).toPrecision(3)+"%)"
     infobox.select '#e100' .text e100+" ("+(100.0*e100/ae).toPrecision(3)+"%)"
-
+    
     xy = d3.svg.mouse this
     infobox.style "left", xy[0]+'px'
     infobox.style "top", xy[1]+'px'
     infobox.style "display", "block"
 
 
-worldmap = -> 
+worldmap = ->
     d3.json do
         "/data/geo/maps/world-countries.json"
-        (json) -> 
+        (json) ->
             root.feature = feature
                 .data json.features
                 .enter().append "path"
                     .attr "class", "feature"
-                    .attr "d", path    
-                    .attr "fill", quantize                        
+                    .attr "d", path
+                    .attr "fill", quantize
                     .attr do
-                        "id" 
-                        (d) ->                         
-                            d.properties.name  
-                    .on "mouseover",setInfoBox                         
-                    # .on do 
-                    #     "mouseover" 
-                    #     (d) ->                          
+                        "id"
+                        (d) ->
+                            d.properties.name
+                    .on "mouseover",setInfoBox
+                    # .on do
+                    #     "mouseover"
+                    #     (d) ->
                     #         if root.data[d.properties.name]?
-
-                    #             p.text d.properties.name+" - All:"+root.data[d.properties.name]['editors']+' 5+:'+root.data[d.properties.name]['editors5']+' 100+:'+root.data[d.properties.name]['editors100']                         
+                    
+                    #             p.text d.properties.name+" - All:"+root.data[d.properties.name]['editors']+' 5+:'+root.data[d.properties.name]['editors5']+' 100+:'+root.data[d.properties.name]['editors100']
                     #             # console.log root.data[d.properties.name]['editors']
-                    #         else 
-                    #             p.text d.properties.name+": No edits" 
+                    #         else
+                    #             p.text d.properties.name+": No edits"
                     #             # console.log 'Country '+d.properties.name+' not in data'
-
+                    
                     #         # xy = path.centroid d
                     #         xy = d3.svg.mouse this
                     #         infobox.style "left", xy[0]+'px'
                     #         infobox.style "top", xy[1]+'px'
                     #         infobox.style "display", "block"
                     .on do
-                        "mouseout" 
+                        "mouseout"
                         (d) ->
                             infobox.style "display", "none"
 
@@ -154,16 +154,16 @@ jQuery.ajax do
         # result will be the returned JSON
         
         root.data = res
-
+        
         # load the world map
         worldmap()
-
+        
         # adding bootstrap tooltips
         # $ '.page-header' .tooltip title:"for the header it works but is useless"
         # $ '.feature' .tooltip title:"here it doesn't work"
-
+        
         console.log 'Loaded geo coding map!'
-
+    
     error : (err) -> console.error err
-
+    
         
