@@ -94,8 +94,9 @@ class exports.DygraphsChartType extends ChartType
     
     
     resizeViewport: ->
-        @getElementsForRole 'viewport' .css @determineSize()
-        this
+        size = @determineSize()
+        @getElementsForRole 'viewport' .css size
+        size
     
     
     /**

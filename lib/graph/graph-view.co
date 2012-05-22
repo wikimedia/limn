@@ -23,7 +23,6 @@ GraphView = exports.GraphView = BaseView.extend do # {{{
     ]>
     __bind__  : <[
         render stopAndRender resizeViewport checkWaiting
-        numberFormatter numberFormatterHTML
         onReady onSync onModelChange
     ]>
     __debounce__: <[ render ]>
@@ -71,6 +70,7 @@ GraphView = exports.GraphView = BaseView.extend do # {{{
         # Resize chart on window resize
         # Note: can't debounce the method itself, as the debounce wrapper returns undefined
         $ root .on 'resize', _.debounce @resizeViewport, DEBOUNCE_RENDER
+    
     
     loadData: ->
         @resizeViewport()
@@ -140,80 +140,17 @@ GraphView = exports.GraphView = BaseView.extend do # {{{
     
     
     /**
-     * Resizes chart according to the model's width and height.
-     * @return { width, height }
+     * Resize the viewport to the model-specified bounds.
      */
     resizeViewport: ->
-        modelW = width  = @model.get 'width'
-        modelH = height = @model.get 'height'
-        return { width, height } unless @ready
-        
-        # Remove old style, as it confuses dygraph after options update
-        viewport = @$ '.viewport'
-        viewport.attr 'style', ''
-        label = @$ '.graph-legend'
-        
-        if width is 'auto'
-            vpWidth = viewport.innerWidth() or 300
-            labelW = label.outerWidth() or 228
-            width = vpWidth - labelW - 10 - (vpWidth - label.position().left - labelW)
-        width ?= modelW
-        if height is 'auto'
-            height = viewport.innerHeight() or 320
-        height ?= modelH
-        
-        size = { width, height }
-        viewport.css size
-        # console.log 'resizeViewport!', JSON.stringify(size), viewport
-        # @chart.resize size if forceRedraw
-        size
+        @chartType.resizeViewport()
     
     
     /**
      * Redraw chart inside viewport.
      */
     renderChart: ->
-        # data = @model.get 'dataset'
-        # data = data.getData() if typeof data is not 'string'
-        dataset = @model.dataset
-        data = dataset.getData()
-        size = @resizeViewport()
-        
-        # XXX: use @model.changedAttributes() to calculate what to update?
-        options = @chartOptions() #import size
-        options import do
-            colors             : dataset.getColors()
-            labels             : dataset.getLabels()
-            labelsDiv          : @$ '.graph-legend' .0
-            valueFormatter     : @numberFormatterHTML
-            axes:
-                x:
-                    axisLabelFormatter : @axisDateFormatter
-                    valueFormatter     : @dateFormatter
-                y:
-                    axisLabelFormatter : @axisFormatter @numberFormatter
-                    valueFormatter     : @numberFormatterHTML
-        
-        # console.log "#this.render!", dataset
-        # _.dump options, 'options'
-        
-        # Always rerender the chart to sidestep the case where we need to push defaults into
-        # dygraphs to reset the current option state.
-        @chart?.destroy()
-        @chart = new Dygraph do
-            @$ '.viewport' .0
-            data
-            options
-        
-        # unless @chart
-        #     @chart = new Dygraph do
-        #         @$ '.viewport' .0
-        #         data
-        #         options
-        # else
-        #     @chart.updateOptions options
-        #     @chart.resize size
-        
+        @chart = @chartType.render()
         this
     
     
@@ -225,57 +162,11 @@ GraphView = exports.GraphView = BaseView.extend do # {{{
         @wait()
         @checkWaiting()
         GraphView.__super__.render ...
-        
-        # @renderChart()
-        @chart = @chartType.render()
-        
+        @renderChart()
         @unwait()
         @checkWaiting()
         this
     
-    
-    ### }}}
-    ### Formatters {{{
-    
-    # XXX: Dygraphs-specific
-    axisFormatter: (fmttr) ->
-        (n, granularity, opts, g) -> fmttr n, opts, g
-    
-    # XXX: Dygraphs-specific
-    axisDateFormatter: (n, granularity, opts, g) ->
-        moment(n).format 'MM/YYYY'
-    
-    # XXX: Dygraphs-specific
-    dateFormatter: (n, opts, g) ->
-        moment(n).format 'DD MMM YYYY'
-    
-    _numberFormatter: (n, digits=2) ->
-        for [suffix, d] of [['B', 1000000000], ['M', 1000000], ['K', 1000], ['', NaN]]
-            if n >= d
-                n = n / d
-                break
-        s = n.toFixed(digits)
-        parts = s.split '.'
-        whole = _.rchop parts[0], 3 .join ','
-        fraction = '.' + parts.slice(1).join '.'
-        { n, digits, whole, fraction, suffix }
-    
-    # XXX: Dygraphs-specific
-    numberFormatter: (n, opts, g) ->
-        digits = opts('digitsAfterDecimal') ? 2
-        { whole, fraction, suffix } = @_numberFormatter n, digits
-        "#whole#fraction#suffix"
-    
-    # XXX: Dygraphs-specific
-    numberFormatterHTML: (n, opts, g) ->
-        digits = opts('digitsAfterDecimal') ? 2
-        { whole, fraction, suffix } = @_numberFormatter n, digits
-        # coco will trim the whitespace
-        "<span class='value'>
-        <span class='whole'>#whole</span>
-        <span class='fraction'>#fraction</span>
-        <span class='suffix'>#suffix</span>
-        </span>"
     
     ### }}}
     ### Event Handlers {{{
