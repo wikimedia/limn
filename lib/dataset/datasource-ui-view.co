@@ -33,7 +33,7 @@ DataSourceUIView = exports.DataSourceUIView = BaseView.extend do # {{{
     
     toTemplateLocals: ->
         locals = @model.toJSON()
-        locals import {@graph_id, @dataset, @datasources}
+        locals import {@graph_id, @dataset, @datasources, cid:@model.cid}
         
         ds = @model.source
         hasSource = @model.get('source_id')? and ds

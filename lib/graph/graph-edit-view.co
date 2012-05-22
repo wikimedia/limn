@@ -21,7 +21,10 @@ root = do -> this
  * - Chart options, using ChartOptionScaffold
  */
 GraphEditView = exports.GraphEditView = GraphView.extend do # {{{
-    __bind__  : <[ wait unwait onScaffoldChange onFirstClickRenderOptionsTab onFirstClickRenderDataTab ]>
+    __bind__  : <[
+        wait unwait onChartTypeReady onScaffoldChange
+        onFirstClickRenderOptionsTab onFirstClickRenderDataTab
+    ]>
     className : 'graph-edit graph'
     template  : require 'kraken/template/graph-edit'
     
@@ -53,9 +56,9 @@ GraphEditView = exports.GraphEditView = GraphView.extend do # {{{
         
         ### Chart Options Tab, Scaffold
         @scaffold = @addSubview new ChartOptionScaffold
-        @scaffold.collection.reset that if o.graph_spec
-        @scaffold.on 'change', @onScaffoldChange
-        @chartOptions @model.getOptions(), {+silent}
+        # @scaffold.collection.reset that if o.graph_spec
+        # @scaffold.on 'change', @onScaffoldChange
+        @chartType.on 'ready', @onChartTypeReady
         
         
         ### Graph Data UI
@@ -70,9 +73,13 @@ GraphEditView = exports.GraphEditView = GraphView.extend do # {{{
         @$el.on 'click', '.graph-data-tab',     @onFirstClickRenderDataTab
         @$el.on 'click', '.graph-options-tab',  @onFirstClickRenderOptionsTab
         
-        
         # Kick off model load chain
         @loadData()
+    
+    onChartTypeReady: ->
+        @scaffold.collection.reset @chartType.options_ordered
+        @scaffold.on 'change', @onScaffoldChange
+        @chartOptions @model.getOptions(), {+silent}
     
     onReady: ->
         return if @ready
@@ -83,6 +90,11 @@ GraphEditView = exports.GraphEditView = GraphView.extend do # {{{
         @scaffold.triggerReady()
         @chartOptions @model.getOptions(), {+silent}
         @render()
+        
+        @model.dataset.metrics
+            .on 'add remove change', @render, this
+        @model
+            .on 'metric-data-loaded', @render, this
         
         # fix up the spinner element once the DOM is settled
         _.delay @checkWaiting, 50

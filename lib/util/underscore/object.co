@@ -63,7 +63,7 @@ _obj = do
      */
     remove: (obj, v) ->
         values = [].slice.call arguments, 1
-        if _.isArray obj
+        if _.isArray(obj) or obj instanceof Array
             for v of values
                 idx = obj.indexOf v
                 obj.splice idx, 1 if idx is not -1

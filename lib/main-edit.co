@@ -26,7 +26,7 @@ main = ->
     
     # Bind to URL changes
     History.Adapter.bind window, 'statechange', ->
-        console.log 'StateChange!\n\n', String(root.location), '\n\n'
+        # console.log 'StateChange!\n\n', String(root.location), '\n\n'
     
     
     

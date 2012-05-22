@@ -24,7 +24,7 @@ main = ->
     
     # Bind to URL changes
     History.Adapter.bind window, 'statechange', ->
-        console.log 'StateChange!\n\n', String(root.location), '\n\n'
+        # console.log 'StateChange!\n\n', String(root.location), '\n\n'
     
     
     
@@ -69,6 +69,6 @@ Seq([   <[ CHART_OPTIONS_SPEC /schema/dygraph.json ]>
             next.ok()
         error : (err) -> console.error err
 .seq ->
-    console.log 'All data loaded!'
+    # console.log 'All data loaded!'
     jQuery main
 

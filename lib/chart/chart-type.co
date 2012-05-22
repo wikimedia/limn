@@ -70,7 +70,7 @@ class exports.ChartType extends ReadyEmitter
      * @type String
      * @readonly
      */
-    CHART_SPEC_URL : null
+    SPEC_URL : null
     
     /**
      * Chart-type name.
@@ -160,8 +160,9 @@ class exports.ChartType extends ReadyEmitter
         return this if @ready
         proto = @constructor::
         jQuery.ajax do
-            url     : @CHART_SPEC_URL
+            url     : @SPEC_URL
             success : (spec) ~>
+                proto.spec = spec
                 proto.options_ordered = spec
                 proto.options = _.synthesize spec, -> [it.name, it]
                 proto.ready = true
@@ -351,6 +352,7 @@ class exports.ChartType extends ReadyEmitter
         data       = @getData()
         options    = @getDefaultOptions() import @transform @model, @view
         viewport   = @getElementsForRole 'viewport'
+        return @lastChart unless data?.length and viewport?.length
         @lastChart = @renderChart data, viewport, options, @chart
     
     

@@ -129,7 +129,7 @@ Metric = exports.Metric = BaseModel.extend do # {{{
      * attempt to graph unconfigured crap.
      */
     isOk: ->
-        @source # and _.every @get('timespan'), op.ok
+        @source?.ready # and _.every @get('timespan'), op.ok
     
 # }}}
 

@@ -42,6 +42,8 @@ DataSet = exports.DataSet = BaseModel.extend do # {{{
         BaseModel::initialize ...
         @set 'metrics', @metrics, {+silent}
         @on 'change:metrics', @onMetricChange, this
+        # @metrics.on 'add remove reset', ~>
+        #     @trigger 'change:metrics', @metrics, this
     
     
     load: (opts={}) ->
@@ -51,17 +53,15 @@ DataSet = exports.DataSet = BaseModel.extend do # {{{
         unless @metrics.length
             return @triggerReady()
         
-        console.log "#this.load()..."
+        # console.log "#this.load()..."
         @wait()
         @loading = true
         @trigger 'load', this
         Seq @metrics.models
             .parEach_ (next, metric) ->
                 metric.once 'ready', next.ok .load()
-            # .parEach_ (next, metric) ->
-            #     metric.on 'load-data-success', next.ok .loadData()
             .seq ~>
-                console.log "#{this}.load() complete!"
+                # console.log "#{this}.load() complete!"
                 @loading = false
                 @unwait() # terminates the `load` wait
                 @triggerReady()
@@ -107,7 +107,11 @@ DataSet = exports.DataSet = BaseModel.extend do # {{{
      */
     getData: ->
         return [] unless @ready
-        _.zip ...@getColumns()
+        columns = @getColumns()
+        if columns?.length
+            _.zip ...columns
+        else
+            []
     
     /**
      * @returns {Array<Array>} List of all columns (including date column).
@@ -149,13 +153,13 @@ DataSet = exports.DataSet = BaseModel.extend do # {{{
     newMetric: ->
         index = @metrics.length
         @metrics.add m = new Metric { index, color:ColorBrewer.Spectral[11][index] }
-        # @get 'metrics' .push m.attributes
+        m.on 'ready', ~> @trigger 'metric-data-loaded', this, m
         # @trigger 'change:metrics',  this, @metrics, 'metrics'
         # @trigger 'change',          this, @metrics, 'metrics'
         m
     
     onMetricChange: ->
-        console.log "#this.onMetricChange! ready=#{@ready}"
+        # console.log "#this.onMetricChange! ready=#{@ready}"
         @resetReady()
         @load()
     

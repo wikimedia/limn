@@ -129,6 +129,7 @@ DataSource = exports.DataSource = BaseModel.extend do # {{{
         console.log "#this.onLoadDataSuccess #{@data}"
         @unwait()
         @trigger 'load-data-success', this
+        @triggerReady()
     
     onLoadDataError: (jqXHR, txtStatus, err) ->
         console.error "#this Error loading data! -- #msg: #{err or ''}"

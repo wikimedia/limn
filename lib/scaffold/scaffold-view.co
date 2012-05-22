@@ -33,7 +33,7 @@ FieldView = exports.FieldView = BaseView.extend do # {{{
         
         current = @model.getValue()
         return if _.isEqual val, current
-        console.log "#this.onChange( #current -> #val )"
+        # console.log "#this.onChange( #current -> #val )"
         @model.setValue val, {+silent}
         @trigger 'change', this
     

@@ -5,7 +5,9 @@ _ = require 'kraken/util/underscore'
 
 class exports.DygraphsChartType extends ChartType
     __bind__ : <[ dygNumberFormatter dygNumberFormatterHTML ]>
-    CHART_SPEC_URL : '/schema/dygraph.json'
+    SPEC_URL : '/schema/dygraph.json'
+    
+    # NOTE: ChartType.register() must come AFTER `typeName` declaration.
     typeName : 'dygraphs'
     ChartType.register this
     
@@ -93,6 +95,9 @@ class exports.DygraphsChartType extends ChartType
         { width, height }
     
     
+    /**
+     * Resizes the HTML viewport.
+     */
     resizeViewport: ->
         size = @determineSize()
         @getElementsForRole 'viewport' .css size

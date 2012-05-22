@@ -64,7 +64,7 @@ MetricEditView = exports.MetricEditView = BaseView.extend do # {{{
         this
     
     onAttach: ->
-        console.log "#this.onAttach!"
+        # console.log "#this.onAttach!"
         @$ '.color-swatch'
             .data 'color', @model.get 'color'
             .colorpicker()

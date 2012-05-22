@@ -40,7 +40,7 @@ DataView = exports.DataView = BaseView.extend do # {{{
         @model.once 'ready',    @onReady,       this
     
     onReady: ->
-        console.log "#this.onReady! #{@model.metrics}"
+        # console.log "#this.onReady! #{@model.metrics}"
         dataset = @model
         @model.metrics.each @addMetric, this
         @dataset_view = new DataSetView {@model, @graph_id, dataset, @datasources}
@@ -81,7 +81,7 @@ DataView = exports.DataView = BaseView.extend do # {{{
         { @graph_id, @datasources } import attrs
     
     addMetric: (metric) ->
-        console.log "#this.addMetric!", metric
+        # console.log "#this.addMetric!", metric
         return metric if @metric_views.findByModel metric
         view = new MetricEditView {model:metric, @graph_id, dataset:@model, @datasources}
             .on 'metric-update', @onUpdateMetric, this
@@ -91,7 +91,7 @@ DataView = exports.DataView = BaseView.extend do # {{{
         metric
     
     removeMetric: (metric) ->
-        console.log "#this.removeMetric!", metric
+        # console.log "#this.removeMetric!", metric
         return unless view = @metric_views.findByModel metric
         @metric_views.remove view
         @removeSubview view
@@ -114,7 +114,7 @@ DataView = exports.DataView = BaseView.extend do # {{{
         @$el.css 'min-height', newMinHeight
     
     onUpdateMetric: ->
-        console.log "#this.onUpdateMetric!"
+        # console.log "#this.onUpdateMetric!"
         @trigger 'metric-change', @model, this
         @render()
     

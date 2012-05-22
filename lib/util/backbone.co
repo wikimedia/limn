@@ -56,8 +56,11 @@ _backbone = do
         if Cls.__superclass__
             superclass = that
         else
-            Cls = Cls.constructor unless typeof Cls is 'function'
-            superclass = Cls.__super__?.constructor
+            Cls = Cls.constructor if typeof Cls is not 'function'
+            if Cls.__super__?.constructor
+                superclass = that
+            else if Cls::constructor is not Cls
+                superclass
         
         if superclass
             [superclass].concat getSuperClasses superclass

@@ -13,8 +13,9 @@ DataSetView = exports.DataSetView = BaseView.extend do # {{{
     template  : require 'kraken/template/dataset'
     
     events:
-        'click .new-metric-button'       : 'newMetric'
-        'click .metrics .dataset-metric' : 'selectMetric'
+        'click  .new-metric-button'                     : 'onNewMetric'
+        'click  .delete-metric-button'                  : 'onDeleteMetric'
+        'click  .metrics .dataset-metric' : 'selectMetric'
     
     views_by_cid : {}
     active_view : null
@@ -32,30 +33,27 @@ DataSetView = exports.DataSetView = BaseView.extend do # {{{
         @model.metrics
             .on 'add',    @addMetric,         this
             .on 'remove', @removeMetric,      this
+            .on 'change', @onMetricChange,    this
             .on 'reset',  @addAllMetrics,     this
     
     
-    newMetric: ->
-        console.log "#this.newMetric!"
-        # triggers 'add' on @model.metrics
-        @model.newMetric()
-        false
-    
     addMetric: (metric) ->
-        console.log "#this.addMetric!", metric
+        # console.log "#this.addMetric!", metric
         if @views_by_cid[metric.cid]
             @removeSubview that
             delete @views_by_cid[metric.cid]
         
         view = @addSubview new DataSetMetricView {model:metric, @graph_id}
         @views_by_cid[metric.cid] = view
-        # @$ '.metrics' .append view.render().el
         @trigger 'add-metric', metric, view, this
         @render()
         view
     
     removeMetric: (metric) ->
-        console.log "#this.removeMetric!", metric
+        if metric instanceof [jQuery.Event, Event]
+            metric = @getMetricForElement metric.target
+        # console.log "#this.removeMetric!", metric
+        return unless metric
         if view = @views_by_cid[metric.cid]
             @removeSubview view
             delete @views_by_cid[metric.cid]
@@ -63,24 +61,46 @@ DataSetView = exports.DataSetView = BaseView.extend do # {{{
         view
     
     addAllMetrics: ->
-        console.log "#this.addAllMetrics! --> #{@model.metrics}"
+        # console.log "#this.addAllMetrics! --> #{@model.metrics}"
         @removeAllSubviews()
         @model.metrics.each @addMetric, this
         this
     
+    
     selectMetric: (metric) ->
         if metric instanceof [jQuery.Event, Event]
-            metric = $ metric.currentTarget .data 'model'
-        view = @active_view = @views_by_cid[metric.cid]
+            metric = @getMetricForElement metric.target
         # console.log "#this.selectMetric!", metric
+        return unless metric
+        view = @active_view = @views_by_cid[metric.cid]
         
         @$ '.metrics .dataset-metric' .removeClass 'metric-active'
         view.$el.addClass 'metric-active'
-        view.$el.find '.activity-arrow' .css 'font-size', 2+view.$el.height()
+        view.$ '.activity-arrow' .css 'font-size', 2+view.$el.height()
         
         @trigger 'select-metric', metric, view, this
         this
     
+    onMetricChange: (metric) ->
+        return unless view = @views_by_cid[metric?.cid]
+        view.$ '.activity-arrow:visible' .css 'font-size', 2+view.$el.height()
+    
+    onNewMetric: ->
+        # console.log "#this.newMetric!"
+        # triggers 'add' on @model.metrics
+        @model.newMetric()
+        false
+    
+    onDeleteMetric: (evt) ->
+        metric = @getMetricForElement evt.target
+        # console.log "#this.onDeleteMetric!", metric
+        # Triggers a 'remove' event, which in turn calls `removeMetric()`
+        @model.metrics.remove metric
+        false
+    
+    
+    getMetricForElement: (el) ->
+        $ el .parents '.dataset-metric' .eq(0).data 'model'
     
 # }}}
 

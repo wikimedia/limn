@@ -111,7 +111,7 @@ BaseView = exports.BaseView = Backbone.View.extend mixinBase do # {{{
     
     removeAllSubviews: ->
         @subviews.forEach @removeSubview, this
-        @subviews = new ViewList
+        # @subviews = new ViewList
         this
     
     
@@ -232,12 +232,12 @@ BaseView = exports.BaseView = Backbone.View.extend mixinBase do # {{{
     
     /* * * *  Events  * * * */
     
-    bubbleEvent: (evt) ->
+    bubbleEventDown: (evt) ->
         @invokeSubviews 'trigger', ...arguments
         this
     
-    redispatch: (evt) ->
-        @trigger ...arguments
+    redispatch: (evt, ...args) ->
+        @trigger evt, this, ...args
         this
     
     onlyOnReturn: (fn, ...args) ->

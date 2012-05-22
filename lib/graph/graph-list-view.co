@@ -27,7 +27,7 @@ GraphListView = exports.GraphListView = BaseView.extend do # {{{
     initialize : ->
         @model = @collection or= new GraphList
         BaseView::initialize ...
-        console.log "#this.initialize!"
+        # console.log "#this.initialize!"
     
     toTemplateLocals: ->
         locals = BaseView::toTemplateLocals ...

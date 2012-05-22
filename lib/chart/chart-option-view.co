@@ -43,7 +43,8 @@ ChartOptionView = exports.ChartOptionView = BaseView.extend do # {{{
         json = ChartOptionView.__super__.toTemplateLocals ...
         json.id or= _.camelize json.name
         json.value ?= ''
-        json.value = JSON.stringify v if v = json.value and (_.isArray(v) or _.isPlainObject(v))
+        v = json.value
+        json.value = JSON.stringify(v) if v and ( _.isArray(v) or _.isPlainObject(v) )
         json
     
     /**
