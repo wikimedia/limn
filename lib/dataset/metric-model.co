@@ -80,7 +80,7 @@ Metric = exports.Metric = BaseModel.extend do # {{{
         unless source_id and @get('source_col') >= 0
             return @triggerReady()
         
-        console.log "#this.load()..."
+        # console.log "#this.load()..."
         @updateId()
         @loading = true
         @wait()
@@ -93,7 +93,7 @@ Metric = exports.Metric = BaseModel.extend do # {{{
             if err
                 console.error "#{this} Error loading DataSource! #err"
             else
-                console.log "#{this}.load() complete!"
+                # console.log "#{this}.load() complete!"
                 @source = source
                 @is_def_label = @isDefaultLabel()
                 @updateId()
