@@ -29,6 +29,13 @@ GraphView = exports.GraphView = BaseView.extend do # {{{
     __debounce__: <[ render ]>
     tagName   : 'section'
     
+    /**
+     * The chart type backing this graph.
+     * @type ChartType
+     */
+    chartType : null
+    
+    
     
     constructor: function GraphView
         BaseView ...
@@ -36,6 +43,7 @@ GraphView = exports.GraphView = BaseView.extend do # {{{
     initialize : (o={}) ->
         @model or= new Graph
         @id = @graph_id = _.domize 'graph', (@model.id or @model.get('slug') or @model.cid)
+        @chartType = @model.chartType.withView this
         GraphView.__super__.initialize ...
         
         for name of @__debounce__
@@ -68,6 +76,8 @@ GraphView = exports.GraphView = BaseView.extend do # {{{
         @resizeViewport()
         @wait()
         Seq()
+            .seq_ (next) ~>
+                @chartType.once 'ready', next.ok
             .seq_ (next) ~>
                 @model.once 'ready', next.ok .load()
             .seq_ (next) ~>
@@ -124,7 +134,7 @@ GraphView = exports.GraphView = BaseView.extend do # {{{
     
     
     toTemplateLocals: ->
-        attrs = _.clone @model.attributes
+        attrs = _.extend {}, @model.attributes
         delete attrs.options
         { @model, view:this, @graph_id, slug:'', name:'', desc:'' } import attrs
     
@@ -215,7 +225,10 @@ GraphView = exports.GraphView = BaseView.extend do # {{{
         @wait()
         @checkWaiting()
         GraphView.__super__.render ...
-        @renderChart()
+        
+        # @renderChart()
+        @chart = @chartType.render()
+        
         @unwait()
         @checkWaiting()
         this

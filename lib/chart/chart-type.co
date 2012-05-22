@@ -1,43 +1,12 @@
-{ EventEmitter,
-} = require 'events'
+moment = require 'moment'
+Backbone = require 'backbone'
 
 { _, op,
 } = require 'kraken/util'
+{ ReadyEmitter,
+} = require 'kraken/util/event'
 { Parsers, ParserMixin,
 } = require 'kraken/util/parser'
-
-
-
-/**
- * @class Specification for an option.
- */
-class exports.ChartTypeOption
-    SPEC_KEYS : <[ name type default desc tags examples ]>
-    
-    name     : null
-    type     : 'String'
-    default  : null
-    desc     : ''
-    tags     : null
-    examples : null
-    
-    
-    (@chartType, @spec) ->
-        throw new Error('Each ChartTypeOption requires a name!') unless @spec.name
-        
-        for k of @SPEC_KEYS
-            v = @spec[k]
-            @[k] = v if v?
-        @tags or= []
-        @parseValue = @chartType.getParser @type
-    
-    parseValue : Parsers.parseString
-    
-    isDefault: (v) ->
-        # @default is v
-        _.isEqual @default, v
-    
-    toString: -> "(#{@name}: #{@type})"
 
 
 
@@ -50,64 +19,234 @@ KNOWN_CHART_TYPES = exports.KNOWN_CHART_TYPES = {}
 
 /**
  * @class Abstraction of a chart-type or charting library, encapsulating its
- *  logic and options.
+ *  logic and options. In addition, a `ChartType` also mediates the
+ *  transformation of the domain-specific data types (the model and its view)
+ *  with its specific needs.
+ *  
+ *  `ChartType`s mix in `ParserMixin`: when implementing a `ChartType`, you can
+ *  add or supplement parsers merely by subclassing and overriding the
+ *  corresponding `parseXXX` method (such as `parseArray` or `parseDate`).
+ * 
+ * @extends EventEmitter
+ * @borrows ParserMixin
  */
-class exports.ChartType extends EventEmitter
+class exports.ChartType extends ReadyEmitter
+    
+    ### Class Methods
+    
     /**
-     * Ordered ChartTypeOption objects.
-     * @type ChartTypeOption[]
+     * Register a new chart type.
+     */
+    @register = (Subclass) ->
+        KNOWN_CHART_TYPES[ Subclass::typeName ] = Subclass
+    
+    /**
+     * Look up a `ChartType` by `typeName`.
+     */
+    @lookup = (name) ->
+        name = name.get('chartType') if name instanceof Backbone.Model
+        KNOWN_CHART_TYPES[name]
+    
+    /**
+     * Look up a chart type by name, returning a new instance
+     * with the given model (and, optionally, view).
+     * @returns {ChartType}
+     */
+    @create = (model, view) ->
+        return null unless Type = @lookup model
+        new Type model, view
+    
+    
+    ### Class Properties
+    /*
+     * These are "class properties": each is set on the prototype at the class-level,
+     * and the reference is therefore shared by all instances. It is expected you
+     * will not modify this on the instance-level.
+     */
+    
+    /**
+     * URL for the Chart Spec JSON. Loaded once, the first time an instance of
+     * that class is created.
+     * @type String
+     * @readonly
+     */
+    CHART_SPEC_URL : null
+    
+    /**
+     * Chart-type name.
+     * @type String
+     * @readonly
+     */
+    typeName: null
+    
+    /**
+     * Map of option name to ChartOption objects.
+     * @type { name:ChartOption, ... }
+     * @readonly
+     */
+    options : null
+    
+    /**
+     * Ordered ChartOption objects.
+     * 
+     * This is a "class-property": it is set on the prototype at the class-level,
+     * and the reference is shared by all instances. It is expected you will not
+     * modify that instance.
+     * 
+     * @type ChartOption[]
+     * @readonly
      */
     options_ordered : null
     
     /**
-     * Map of option name to ChartTypeOption objects.
-     * @type { name:ChartTypeOption, ... }
+     * Hash of role-names to the selector which, when applied to the view,
+     * returns the correct element.
+     * @type Object
      */
-    options : null
+    roles :
+        viewport : '.viewport'
+    
+    /**
+     * Whether the ChartType has loaded all its data and is ready.
+     * @type Boolean
+     */
+    ready: false
+    
+    
+    
+    ### Instance properties
+    
+    /**
+     * Model to be rendered as a chart.
+     * @type Backbone.Model
+     */
+    model : null
+    
+    /**
+     * View to render the chart into.
+     * @type Backbone.View
+     */
+    view  : null
+    
+    /**
+     * Last chart rendered by this ChartType.
+     * @private
+     */
+    chart: null
+    
     
     
     
     /**
      * @constructor
-     * @param {String} name Library name.
-     * @param {Array} options List of options objects, each specifying the
-     *  name, type, default, description (etc) of a chart option.
      */
-    (@name, options) ->
-        @options_ordered = _.map options, (opt) ~> new ChartTypeOption this, opt
-        @options = _.synthesize @options_ordered, -> [it.name, it]
-        ChartType.register this
+    (@model, @view) ->
+        @roles or= {}
+        _.bindAll this, ...@__bind__ # TODO: roll up MRO
+        @loadSpec() unless @ready
+    
+    
+    # Builder Pattern
+    withModel : (@model) -> this
+    withView  : (@view)  -> this
+    
     
     
     /**
-     * @returns {ChartTypeOption} Get an option's spec by name.
+     * Load the corresponding chart specification, which includes
+     * info about valid options, along with their types and defaults.
      */
-    get: (name, def) ->
+    loadSpec: ->
+        return this if @ready
+        proto = @constructor::
+        jQuery.ajax do
+            url     : @CHART_SPEC_URL
+            success : (spec) ~>
+                proto.options_ordered = spec
+                proto.options = _.synthesize spec, -> [it.name, it]
+                proto.ready = true
+                @emit 'ready', this
+            error: ~> console.error "Error loading #{@typeName} spec! #it"
+        this
+    
+    
+    /**
+     * @returns {ChartOption} Get an option's spec by name.
+     */
+    getOption: (name, def) ->
         @options[name] or def
     
-    /**
-     * @returns {Array} List of values found at the given attr on each
-     *  option spec object.
-     */
-    pluck: (attr) ->
-        _.pluck @spec, attr
     
     /**
      * @returns {Object} An object, mapping from option.name to the
      *  result of the supplied function.
      */
     map: (fn, context=this) ->
-        _.synthesize @spec, ~> [it.name, fn.call(context, it, it.name, this)]
+        _.synthesize @options, ~> [it.name, fn.call(context, it, it.name, this)]
+    
+    
+    /**
+     * @param {String} attr Attribute to look up on each options object.
+     * @returns {Object} Map from name to the value found at the given attr.
+     */
+    pluck: (attr) ->
+        @map -> it[attr]
     
     
     /**
      * @returns {Boolean} Whether the supplied value is the same as
-     * the default value for the given key.
+     *  the default value for the given key.
      */
     isDefault: (name, value) ->
-        @get name .isDefault value
+        _.isEqual @getOption(name).default, value
     
     
+    ### }}}
+    ### Parsers & Serialization {{{
+    
+    /**
+     * When implementing a ChartType, you can add or override parsers
+     * merely by subclassing.
+     * @borrows ParserMixin
+     */
+    ParserMixin.mix this
+    
+    /**
+     * @returns {Function} Parser for the given option name.
+     */
+    getParserFor: (name) ->
+        @getParser @getOption(name).type
+    
+    /**
+     * Parses a single serialized option value into its proper type.
+     * 
+     * @param {String} name Option-name of the value being parsed.
+     * @param {String} value Value to parse.
+     * @returns {*} Parsed value.
+     */
+    parseOption: (name, value) ->
+        @getParserFor(name)(value)
+    
+    /**
+     * Parses options using `parseOption(name, value)`.
+     * 
+     * @param {Object} options Options to parse.
+     * @returns {Object} Parsed options.
+     */
+    parseOptions: (options) ->
+        out = {}
+        for k, v in options
+            out[k] = @parseOption k, v
+        out
+    
+    
+    /**
+     * Serializes option-value to a String.
+     * 
+     * @param {*} v Value to serialize.
+     * @param {String} k Option-name of the given value.
+     * @returns {String} The serialized value
+     */
     serialize: (v, k) ->
         # if v!?
         #     v = ''
@@ -118,43 +257,157 @@ class exports.ChartType extends EventEmitter
         String v
     
     
-    ### Parsers
+    ### }}}
+    ### Formatters {{{
     
     /**
-     * When implementing a ChartType, you can add or override parsers
-     * merely by subclassing.
+     * Formats a date for display on an axis: `MM/YYYY`
+     * @param {Date} d Date to format.
+     * @returns {String}
      */
-    ParserMixin this
-    
-    getParserFor: (name) ->
-        @getParser @get(name).type
-    
-    parseOption: (name, value) ->
-        @getParserFor(name)(value)
-    
-    parseOptions: (options) ->
-        out = {}
-        for k, v in options
-            out[k] = @parseOption k, v
-        out
-    
-    
-    
-    ### Class Methods
+    axisDateFormatter: (d) ->
+        moment(d).format 'MM/YYYY'
     
     /**
-     * Register a new chart type.
+     * Formats a date for display in the legend: `DD MMM YYYY`
+     * @param {Date} d Date to format.
+     * @returns {String}
      */
-    @register = (chartType) ->
-        KNOWN_CHART_TYPES[chartType.name] = chartType
+    dateFormatter: (d) ->
+        moment(d).format 'DD MMM YYYY'
     
     /**
-     * Look up a chart type by name.
+     * Formats a number for display, first dividing by the greatest suffix
+     *  of {B = Billions, M = Millions, K = Thousands} that results in a
+     *  absolute value greater than 0, and then rounding to `digits` using
+     *  `result.toFixed(digits)`.
+     * 
+     * @param {Number} n Number to format.
+     * @param {Number} [digits=2] Number of digits after the decimal to always display.
+     * @returns {String} Formatted number.
      */
-    @lookup = (name) ->
-        KNOWN_CHART_TYPES[name]
+    numberFormatter: (n, digits=2) ->
+        for [suffix, d] of [['B', 1000000000], ['M', 1000000], ['K', 1000], ['', NaN]]
+            break if isNaN d
+            if n >= d
+                n = n / d
+                break
+        s = n.toFixed(digits)
+        parts = s.split '.'
+        whole = _.rchop parts[0], 3 .join ','
+        fraction = '.' + parts.slice(1).join '.'
+        { n, digits, whole, fraction, suffix }
     
     
+    ### }}}
+    ### Rendering {{{
+    
+    /**
+     * Finds the element in the view which plays the given role in the chart.
+     * Canonically, all charts have a "viewport" element. Other roles might
+     * include a "legend" element, or several "axis" elements.
+     * 
+     * Default implementation looks up a selector in the `roles` hash, and if
+     * found, queries the view for matching children.
+     * 
+     * @param {String} role Name of the role to look up.
+     * @returns {jQuery|null} $-wrapped DOM element.
+     */
+    getElementsForRole: (role) ->
+        return null unless @view
+        if @roles[role]
+            @view.$ that
+        else
+            null
+    
+    
+    /**
+     * Transform/extract the data for this chart from the model. Default
+     * implementation calls `model.getData()`.
+     * 
+     * @returns {*} Data object for the chart.
+     */
+    getData: ->
+        @model.getData()
+    
+    
+    /**
+     * Map from option-name to default value. Note that this reference will be
+     * modified by `.render()`.
+     * 
+     * @returns {Object} Default options.
+     */
+    getDefaultOptions: ->
+        @pluck 'default'
+    
+    
+    /**
+     * Transforms domain data and applies it to the chart library to
+     * render or update the corresponding chart.
+     * 
+     * @returns {Chart}
+     */
+    render: ->
+        data       = @getData()
+        options    = @getDefaultOptions() import @transform @model, @view
+        viewport   = @getElementsForRole 'viewport'
+        @lastChart = @renderChart data, viewport, options, @chart
+    
+    
+    /**
+     * Transforms the domain objects into a hash of derived values using
+     * chart-type-specific keys.
+     * 
+     * @abstract
+     * @returns {Object} The derived data.
+     */
+    transform: ->
+        ...
+    
+    
+    /**
+     * Called to render the chart.
+     * 
+     * @abstract
+     * @returns {Chart}
+     */
+    renderChart: (data, viewport, options, lastChart) ->
+        ...
+    
+    
+    ### }}}
 
 
 
+
+# 
+# /**
+#  * @class Specification for an option.
+#  */
+# class exports.ChartOption
+#     SPEC_KEYS : <[ name type default desc tags examples ]>
+#     
+#     name     : null
+#     type     : 'String'
+#     default  : null
+#     desc     : ''
+#     tags     : null
+#     examples : null
+#     
+#     
+#     (@spec) ->
+#         throw new Error('Each ChartOption requires a name!') unless @spec.name
+#         
+#         for k of @SPEC_KEYS
+#             v = @spec[k]
+#             @[k] = v if v?
+#         @tags or= []
+#     
+#     isDefault: (v) ->
+#         # @default is v
+#         _.isEqual @default, v
+#     
+#     toString: -> "(#{@name}: #{@type})"
+# 
+# 
+# 

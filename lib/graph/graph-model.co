@@ -92,9 +92,7 @@ Graph = exports.Graph = BaseModel.extend do # {{{
         
         @constructor.register this
         @parents = new GraphList
-        
-        # TODO: Load on-demand
-        @chartType = ChartType.lookup @get 'chartType'
+        @chartType = ChartType.create this
         
         # Insert submodels in place of JSON
         @dataset = new DataSet {id:@id, ...@get 'data'}
@@ -178,6 +176,9 @@ Graph = exports.Graph = BaseModel.extend do # {{{
                 @unwait() # terminates the `load` wait
                 @triggerReady 'dataReady', 'data-ready'
         this
+    
+    getData: ->
+        @dataset.getData()
     
     onDataSetChange: ->
         console.log "#this.onDataSetChange!"

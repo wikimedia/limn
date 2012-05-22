@@ -1,5 +1,5 @@
-chart_type = require 'kraken/chart/chart-type'
+chart      = require 'kraken/chart/chart-type'
 dygraphs   = require 'kraken/chart/dygraphs'
 models     = require 'kraken/chart/chart-option-model'
 views      = require 'kraken/chart/chart-option-view'
-exports import chart_type import dygraphs import models import views
+exports import chart import dygraphs import models import views

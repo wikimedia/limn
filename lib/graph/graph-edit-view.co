@@ -110,6 +110,7 @@ GraphEditView = exports.GraphEditView = GraphView.extend do # {{{
     ### }}}
     ### Rendering {{{
     
+    # TODO: refactor this to ChartType?
     chartOptions: (values, opts) ->
         # Handle @chartOptions(k, v, opts)
         if arguments.length > 1 and typeof values is 'string'
@@ -139,7 +140,6 @@ GraphEditView = exports.GraphEditView = GraphView.extend do # {{{
         @checkWaiting()
         root.title = "#{@get 'name'} | GraphKit"
         GraphEditView.__super__.render ...
-        @renderChart()
         # @updateURL()
         @unwait()
         @isRendering = false

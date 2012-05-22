@@ -12,10 +12,11 @@ class ReadyEmitter extends EventEmitter
     /**
      * Triggers the 'ready' event if it has not yet been triggered.
      * Subsequent listeners added to this event will be auto-triggered.
+     * @param {Boolean} [force=false] Trigger the event even if already ready.
      * @returns {this}
      */
-    triggerReady: ->
-        return this if @ready
+    triggerReady: (force) ->
+        return this if @ready and not force
         @ready = true
         @emit @readyEventName, this
         this
@@ -23,10 +24,11 @@ class ReadyEmitter extends EventEmitter
     /**
      * Resets the 'ready' event to its non-triggered state, firing a
      * 'ready-reset' event.
+     * @param {Boolean} [force=false] Trigger the event even if already reset.
      * @returns {this}
      */
-    resetReady: ->
-        return this unless @ready
+    resetReady: (force) ->
+        return this unless @ready and not force
         @ready = false
         @emit "#{@readyEventName}-reset", this
         this
@@ -46,7 +48,7 @@ class ReadyEmitter extends EventEmitter
         return this if not callback
         super ...
         if @ready and -1 is not events.split(/\s+/).indexOf @readyEventName
-            callback.call context, this
+            setTimeout ~> callback.call context, this
         this
 
 

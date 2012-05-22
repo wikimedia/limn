@@ -145,34 +145,30 @@ BaseBackboneMixin = exports.BaseBackboneMixin =
 
 /**
  * @class Base mixin class. Extend this to create a new mixin, attaching the
- *  donor methods as you would instance methods. Your constructor must delegate
- *  to its superclass, passing itself as the context.
- * 
- *  Then, to mingle your mixin with another class or object, invoke the mixin
- *  *without* the `new` operator:
+ *  donor methods as you would instance methods.
+ *  
+ *  To mingle your mixin with another class or object:
  *  
  *  class MyMixin extends Mixin
- *      -> return Mixin.call MyMixin, it
  *      foo: -> "foo!"
  *  
  *  # Mix into an object...
- *  o = MyMixin { bar:1 }
+ *  o = MyMixin.mix { bar:1 }
  *  
  *  # Mix into a Coco class...
  *  class Bar
- *      MyMixin this
+ *      MyMixin.mix this
  *      bar : 1
  *  
  */
 class exports.Mixin
     
     /**
-     * Mixes this mixin into If the target is not a class, a new object will be
-     * returned which inherits from the mixin.
-     * @constructor
+     * Mixes this mixin into the target. If `target` is not a class, a new
+     * object will be returned which inherits from the mixin.
      */
-    (target) ->
-        return unless target
+    @mix = (target) ->
+        return that unless target
         
         MixinClass = Mixin
         MixinClass = @constructor   if this instanceof Mixin
@@ -183,8 +179,17 @@ class exports.Mixin
         else
             target = _.clone(MixinClass::) import target
         
-        return target
+        (target.__mixins__ or= []).push MixinClass
+        target
     
+    /**
+     * Coco metaprogramming hook to propagate class properties and methods.
+     */
+    @extended = (SubClass) ->
+        SuperClass = this
+        for own k, v in SuperClass
+            SubClass[k] = v unless SubClass[k]
+        SubClass
 
 
 

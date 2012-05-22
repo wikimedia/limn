@@ -69,7 +69,7 @@ GraphDisplayView = exports.GraphDisplayView = GraphView.extend do # {{{
      */
     exportChart: (evt) ->
         # The following code is dygraph specific, thus should not 
-        # be implemented in this class. Rather in the Dygraphs ChartType-subclass. 
+        # be implemented in this class. Rather in the Dygraphs Chart-subclass. 
         # The same is true for the 'renderChart' method above.
         # 
         # The Dygraph.Export module is from http://cavorite.com/labs/js/dygraphs-export/

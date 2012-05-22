@@ -62,11 +62,11 @@ class exports.ParserMixin extends Mixin
     # - Pros: mixing in `parseXXX()` methods makes it easy to
     #   override in the target class.
     # - Cons: `parse()` is a Backbone method, which bit me once
-    #   already, so conflicts aren't unlikely.
+    #   already (hence `parseValue()`), so conflicts aren't unlikely.
     # 
     # Other ideas:
     # - Parsers live at `@__parsers__`, and each instance gets its own clone
-    # - Parser lookup uses a Cascade from the object. (Why not just use prototype, tho?)
+    # -> Parser lookup uses a Cascade from the object. (Why not just use prototype, tho?)
     
     parseValue: (v, type) ->
         @getParser(type)(v)
@@ -103,7 +103,7 @@ class exports.ParserMixin extends Mixin
  * @extends BaseModel
  * @borrows ParserMixin
  */
-ParsingModel = exports.ParsingModel = BaseModel.extend ParserMixin do
+ParsingModel = exports.ParsingModel = BaseModel.extend ParserMixin.mix do
     constructor: function ParsingModel then BaseModel ...
 
 
@@ -112,7 +112,7 @@ ParsingModel = exports.ParsingModel = BaseModel.extend ParserMixin do
  * @extends BaseList
  * @borrows ParserMixin
  */
-ParsingList = exports.ParsingList = BaseList.extend ParserMixin do
+ParsingList = exports.ParsingList = BaseList.extend ParserMixin.mix do
     constructor: function ParsingList then BaseList ...
 
 
@@ -121,7 +121,7 @@ ParsingList = exports.ParsingList = BaseList.extend ParserMixin do
  * @extends BaseView
  * @borrows ParserMixin
  */
-ParsingView = exports.ParsingView = BaseView.extend ParserMixin do
+ParsingView = exports.ParsingView = BaseView.extend ParserMixin.mix do
     constructor: function ParsingView then BaseView ...
 
 
