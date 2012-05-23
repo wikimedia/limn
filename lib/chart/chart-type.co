@@ -379,37 +379,3 @@ class exports.ChartType extends ReadyEmitter
     
     ### }}}
 
-
-
-
-# 
-# /**
-#  * @class Specification for an option.
-#  */
-# class exports.ChartOption
-#     SPEC_KEYS : <[ name type default desc tags examples ]>
-#     
-#     name     : null
-#     type     : 'String'
-#     default  : null
-#     desc     : ''
-#     tags     : null
-#     examples : null
-#     
-#     
-#     (@spec) ->
-#         throw new Error('Each ChartOption requires a name!') unless @spec.name
-#         
-#         for k of @SPEC_KEYS
-#             v = @spec[k]
-#             @[k] = v if v?
-#         @tags or= []
-#     
-#     isDefault: (v) ->
-#         # @default is v
-#         _.isEqual @default, v
-#     
-#     toString: -> "(#{@name}: #{@type})"
-# 
-# 
-# 
