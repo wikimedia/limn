@@ -10,7 +10,7 @@
 DataSetView = exports.DataSetView = BaseView.extend do # {{{
     tagName   : 'section'
     className : 'dataset-ui dataset'
-    template  : require 'kraken/template/dataset'
+    template  : require 'kraken/template/data/dataset'
     
     events:
         'click  .new-metric-button'                     : 'onNewMetric'
@@ -112,7 +112,7 @@ DataSetView = exports.DataSetView = BaseView.extend do # {{{
 DataSetMetricView = exports.DataSetMetricView = BaseView.extend do # {{{
     tagName   : 'tr'
     className : 'dataset-metric metric'
-    template  : require 'kraken/template/dataset-metric'
+    template  : require 'kraken/template/data/dataset-metric'
     
     
     

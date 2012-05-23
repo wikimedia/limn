@@ -6,9 +6,9 @@ ColorBrewer = require 'colorbrewer'
 { BaseModel, BaseList,
 } = require 'kraken/base'
 { Metric, MetricList,
-} = require 'kraken/dataset/metric-model'
+} = require 'kraken/data/metric-model'
 { DataSource, DataSourceList,
-} = require 'kraken/dataset/datasource-model'
+} = require 'kraken/data/datasource-model'
 
 
 

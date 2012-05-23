@@ -154,6 +154,6 @@ MetricList = exports.MetricList = BaseList.extend do # {{{
 
 ### FIXME: LOLHACKS ###
 setTimeout do
-    -> { DataSource, DataSourceList, } := require 'kraken/dataset/datasource-model'
+    -> { DataSource, DataSourceList, } := require 'kraken/data/datasource-model'
     10
 

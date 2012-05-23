@@ -1,2 +1,0 @@
-exports.TimeSeriesData = require 'kraken/timeseries/timeseries'
-exports.CSVData        = require 'kraken/timeseries/csv'

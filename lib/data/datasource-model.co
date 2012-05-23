@@ -1,11 +1,11 @@
 { _, op,
 } = require 'kraken/util'
 { TimeSeriesData, CSVData,
-} = require 'kraken/timeseries'
+} = require 'kraken/util/timeseries'
 { BaseModel, BaseList, ModelCache,
 } = require 'kraken/base'
 { Metric, MetricList,
-} = require 'kraken/dataset/metric-model'
+} = require 'kraken/data/metric-model'
 
 
 /**

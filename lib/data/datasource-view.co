@@ -11,7 +11,7 @@ DataSourceView = exports.DataSourceView = BaseView.extend do # {{{
     __bind__       : <[  ]>
     tagName        : 'section'
     className      : 'datasource'
-    template       : require 'kraken/template/datasource'
+    template       : require 'kraken/template/data/datasource'
     
     
     

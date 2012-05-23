@@ -14,7 +14,7 @@ DEBOUNCE_RENDER = exports.DEBOUNCE_RENDER = 100ms
 ChartOptionView = exports.ChartOptionView = BaseView.extend do # {{{
     tagName   : 'section'
     className : 'chart-option field'
-    template  : require 'kraken/template/chart-option'
+    template  : require 'kraken/template/chart/chart-option'
     
     type : 'string'
     isCollapsed : true
@@ -129,7 +129,7 @@ ChartOptionScaffold = exports.ChartOptionScaffold = BaseView.extend do # {{{
     __bind__       : <[ addField ]>
     tagName        : 'form'
     className      : 'chart-options scaffold'
-    template       : require 'kraken/template/chart-scaffold'
+    template       : require 'kraken/template/chart/chart-scaffold'
     
     collectionType : ChartOptionList
     subviewType    : ChartOptionView

@@ -8,7 +8,7 @@ _ = require 'kraken/util/underscore'
 { ChartOptionScaffold, DEBOUNCE_RENDER,
 } = require 'kraken/chart'
 { DataView, DataSetView, DataSet,
-} = require 'kraken/dataset'
+} = require 'kraken/data'
 
 root = do -> this
 
@@ -26,7 +26,7 @@ GraphEditView = exports.GraphEditView = GraphView.extend do # {{{
         onFirstClickRenderOptionsTab onFirstClickRenderDataTab
     ]>
     className : 'graph-edit graph'
-    template  : require 'kraken/template/graph-edit'
+    template  : require 'kraken/template/graph/graph-edit'
     
     events:
         'click    .redraw-button'                        : 'stopAndRender'

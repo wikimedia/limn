@@ -17,7 +17,7 @@ root = do -> this
 GraphDisplayView = exports.GraphDisplayView = GraphView.extend do # {{{
     tagName   : 'section'
     className : 'graph graph-display'
-    template  : require 'kraken/template/graph-display'
+    template  : require 'kraken/template/graph/graph-display'
     
     events:
         # Select the whole permalink URI text when it receives focus.

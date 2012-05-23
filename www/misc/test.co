@@ -6,7 +6,7 @@ Backbone = require 'backbone'
 { BaseView, BaseModel, BaseList,
 } = require 'kraken/base'
 { Field, FieldList, FieldView, Scaffold,
-} = require 'kraken/scaffold'
+} = require 'kraken/base/scaffold'
 { ChartType, DygraphsChartType,
   ChartOption, ChartOptionList, TagSet,
   ChartOptionView, ChartOptionScaffold,

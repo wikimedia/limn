@@ -12,7 +12,7 @@ DataSourceUIView = exports.DataSourceUIView = BaseView.extend do # {{{
     __bind__       : <[  ]>
     tagName        : 'section'
     className      : 'datasource-ui'
-    template       : require 'kraken/template/datasource-ui'
+    template       : require 'kraken/template/data/datasource-ui'
     
     events :
         'click .datasource-summary'       : 'onHeaderClick'

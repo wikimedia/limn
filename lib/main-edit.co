@@ -8,7 +8,7 @@ Backbone = require 'backbone'
 { ChartType,
 } = require 'kraken/chart'
 { DataSource, DataSourceList,
-} = require 'kraken/dataset'
+} = require 'kraken/data'
 { Graph, GraphList, GraphEditView,
 } = require 'kraken/graph'
 

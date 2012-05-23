@@ -3,9 +3,9 @@
 { BaseView,
 } = require 'kraken/base'
 { Metric,
-} = require 'kraken/dataset/metric-model'
+} = require 'kraken/data/metric-model'
 { DataSourceUIView,
-} = require 'kraken/dataset/datasource-ui-view'
+} = require 'kraken/data/datasource-ui-view'
 
 
 
@@ -17,7 +17,7 @@ MetricEditView = exports.MetricEditView = BaseView.extend do # {{{
     __bind__       : <[ onChange ]>
     tagName        : 'section'
     className      : 'metric-edit-ui'
-    template       : require 'kraken/template/metric-edit'
+    template       : require 'kraken/template/data/metric-edit'
     
     callOnReturnKeypress : 'onChange'
     events:

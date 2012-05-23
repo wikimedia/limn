@@ -7,7 +7,7 @@ Seq = require 'seq'
 { ChartType,
 } = require 'kraken/chart'
 { DataSet
-} = require 'kraken/dataset'
+} = require 'kraken/data'
 
 root = do -> this
 

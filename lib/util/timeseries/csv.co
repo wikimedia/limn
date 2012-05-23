@@ -1,5 +1,5 @@
 _  = require 'kraken/util/underscore'
-TimeSeriesData = require 'kraken/timeseries/timeseries'
+TimeSeriesData = require 'kraken/util/timeseries/timeseries'
 
 
 DASH_PATTERN       = /-/g

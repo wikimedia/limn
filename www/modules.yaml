@@ -46,8 +46,24 @@ dev:
     paths:
     - js:
         - kraken:
+            - template:
+                - chart:
+                    - chart-option.jade
+                    - chart-scaffold.jade
+                - dashboard:
+                    - dashboard.jade
+                - data:
+                    - dataset.jade
+                    - dataset-metric.jade
+                    - metric-edit.jade
+                    - datasource.jade
+                    - datasource-ui.jade
+                    - data.jade
+                - graph:
+                    - graph-display.jade
+                    - graph-edit.jade
+                    - graph-list.jade
             - util:
-                - op
                 - underscore:
                     - array
                     - object
@@ -58,15 +74,20 @@ dev:
                     - ready-emitter
                     - waiting-emitter
                     - index
+                - timeseries:
+                    - timeseries
+                    - csv
+                    - index
+                - op
                 - backbone
                 - parser
                 - cascade
                 - index
-            - timeseries:
-                - timeseries
-                - csv
-                - index
             - base:
+                - scaffold:
+                    - scaffold-model
+                    - scaffold-view
+                    - index
                 - base-mixin
                 - base-model
                 - base-view
@@ -74,33 +95,21 @@ dev:
                 - model-cache
                 - cascading-model
                 - index
-            - scaffold:
-                - scaffold-model
-                - scaffold-view
+            - graph:
+                - graph-model
+                - graph-view
+                - graph-display-view
+                - graph-edit-view
+                - graph-list-view
                 - index
-            - template:
-                - chart-option.jade
-                - chart-scaffold.jade
-                - dataset.jade
-                - dataset-metric.jade
-                - metric.jade
-                - metric-edit.jade
-                - datasource.jade
-                - datasource-ui.jade
-                - data.jade
-                - graph-display.jade
-                - graph-edit.jade
-                - dashboard.jade
-                - graph-list.jade
             - chart:
                 - chart-type
                 - dygraphs
                 - chart-option-view
                 - chart-option-model
                 - index
-            - dataset:
+            - data:
                 - metric-model
-                - metric-view
                 - metric-edit-view
                 - datasource-model
                 - datasource-view
@@ -108,13 +117,6 @@ dev:
                 - dataset-model
                 - dataset-view
                 - data-view
-                - index
-            - graph:
-                - graph-model
-                - graph-view
-                - graph-display-view
-                - graph-edit-view
-                - graph-list-view
                 - index
             - dashboard:
                 - dashboard-model

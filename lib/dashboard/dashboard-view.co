@@ -17,7 +17,7 @@ DashboardView = exports.DashboardView = BaseView.extend do # {{{
     __bind__       : <[  ]>
     tagName        : 'section'
     className      : 'dashboard'
-    template       : require 'kraken/template/dashboard'
+    template       : require 'kraken/template/dashboard/dashboard'
     
     graph_ids : <[
         unique_visitors
