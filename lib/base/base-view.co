@@ -58,6 +58,7 @@ BaseView = exports.BaseView = Backbone.View.extend mixinBase do # {{{
         
         @setModel @model
         @build()
+        @$el.on 'form submit', -> false
     
     setModel: (model) ->
         if @model

@@ -117,7 +117,7 @@ class TimeSeriesData
      */
     applyTransforms: ->
         for fns, idx of @transforms
-            for fn of fns
+            for [fn, ctx] of fns
                 @columns[idx] .= map fn, ctx
         @rebuildData()
     
@@ -153,7 +153,7 @@ class TimeSeriesData
         for idx of indices
             idx %= num_cols
             idx += num_cols if idx < 0
-            @transforms[idx].push fn
+            @transforms[idx].push [fn, ctx]
         @applyTransforms()
     
     /**
