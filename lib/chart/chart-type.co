@@ -151,7 +151,6 @@ class exports.ChartType extends ReadyEmitter
     withView  : (@view)  -> this
     
     
-    
     /**
      * Load the corresponding chart specification, which includes
      * info about valid options, along with their types and defaults.
@@ -343,6 +342,28 @@ class exports.ChartType extends ReadyEmitter
     
     
     /**
+     * Determines chart viewport size.
+     * @return { width, height }
+     */
+    determineSize: ->
+        modelW = width  = @model.get 'width'
+        modelH = height = @model.get 'height'
+        return { width, height } unless @view.ready and width and height
+        
+        viewport = @getElementsForRole 'viewport'
+        
+        if width is 'auto'
+            Width = viewport.innerWidth() or 300
+        width ?= modelW
+        
+        if height is 'auto'
+            height = viewport.innerHeight() or 320
+        height ?= modelH
+        
+        { width, height }
+    
+    
+    /**
      * Transforms domain data and applies it to the chart library to
      * render or update the corresponding chart.
      * 
@@ -360,11 +381,12 @@ class exports.ChartType extends ReadyEmitter
      * Transforms the domain objects into a hash of derived values using
      * chart-type-specific keys.
      * 
-     * @abstract
+     * Default implementation returns `model.getOptions()`.
+     * 
      * @returns {Object} The derived data.
      */
     transform: ->
-        ...
+        @model.getOptions()
     
     
     /**

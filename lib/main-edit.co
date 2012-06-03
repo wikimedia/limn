@@ -1,8 +1,12 @@
+{EventEmitter} = require 'events'
+
 Seq      = require 'seq'
 Backbone = require 'backbone'
 
 { _, op,
 } = require 'kraken/util'
+{ AppView, 
+} = require 'kraken/app'
 { BaseView, BaseModel, BaseList,
 } = require 'kraken/base'
 { ChartType,
@@ -49,12 +53,10 @@ main = ->
     
     # _.dump _.clone(data.options), 'data.options'
     
-    # Instantiate model & view
-    graph = root.graph = new Graph data, {+parse}
-    view  = root.view  = new GraphEditView do
-        model      : graph
-    
-    $ '#content .inner' .append view.el
+    # Instantiate app with model & view
+    root.app = new AppView ->
+        @model = root.graph = new Graph data, {+parse}
+        @view  = root.view  = new GraphEditView {@model}
 
 
 # Load data files

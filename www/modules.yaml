@@ -103,10 +103,14 @@ dev:
                 - graph-list-view
                 - index
             - chart:
+                - option:
+                    - chart-option-model
+                    - chart-option-view
+                    - index
+                - type:
+                    - dygraphs
+                    - index
                 - chart-type
-                - dygraphs
-                - chart-option-view
-                - chart-option-model
                 - index
             - data:
                 - metric-model
@@ -122,6 +126,7 @@ dev:
                 - dashboard-model
                 - dashboard-view
                 - index
+            - app
 
 # -   suffix: .js
 #     paths:

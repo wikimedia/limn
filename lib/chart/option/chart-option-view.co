@@ -3,7 +3,7 @@
 { BaseView,
 }  = require 'kraken/base'
 { ChartOption, ChartOptionList,
-} = require 'kraken/chart/chart-option-model'
+} = require 'kraken/chart/option/chart-option-model'
 
 DEBOUNCE_RENDER = exports.DEBOUNCE_RENDER = 100ms
 

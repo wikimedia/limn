@@ -1,0 +1,52 @@
+Backbone = require 'backbone'
+
+{ _, op,
+} = require 'kraken/util'
+
+
+/**
+ * @class Application view, automatically attaching to an existing element
+ *  found at `appSelector`.
+ * @extends Backbone.View
+ */
+AppView = exports.AppView = Backbone.View.extend do # {{{
+    appSelector : '#content .inner'
+    
+    
+    /**
+     * @constructor
+     */
+    constructor: function AppView (options={})
+        if typeof options is 'function'
+            @initialize = options
+            options = {}
+        else
+            @initialize = that if options.initialize
+        
+        @appSelector = that if options.appSelector
+        options.el or= jQuery @appSelector .0
+        console.log "new #this", options
+        Backbone.View.call this, options
+        
+        jQuery ~> @render()
+        this
+    
+    /**
+     * Override to set up your app. This method may be passed
+     * as an option to the constructor.
+     */
+    initialize: -> # stub
+    
+    /**
+     * Append subviews.
+     */
+    render : ->
+        @$el.append @view.el if @view and not @view.$el.parent()?.length
+    
+    getClassName: ->
+        "#{@..name or @..displayName}"
+    
+    toString: ->
+        "#{@getClassName()}()"
+# }}}
+

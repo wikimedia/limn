@@ -60,19 +60,17 @@ Graph = exports.Graph = BaseModel.extend do # {{{
      * Attribute defaults.
      */
     defaults: ->
-        {
-            slug    : ''
-            name    : ''
-            desc    : ''
-            notes   : ''
-            # dataset : '/data/datasources/rc/rc_comscore_region_uv.csv'
-            # dataset : null
-            width   : 'auto'
-            height  : 320
-            chartType : 'dygraphs'
-            parents : <[ root ]>
-            options : {}
-        }
+        slug    : ''
+        name    : ''
+        desc    : ''
+        notes   : ''
+        # dataset : '/data/datasources/rc/rc_comscore_region_uv.csv'
+        # dataset : null
+        width   : 'auto'
+        height  : 320
+        chartType : 'dygraphs'
+        parents : <[ root ]>
+        options : {}
     
     url: ->
         "#{@urlRoot}/#{@get('slug')}.json"

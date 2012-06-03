@@ -34,7 +34,7 @@ devDependencies                 :
     'uglify-js'                 : '>= 1.2.6'
 
 scripts                         : test:'expresso'
-repository                      : type:'git', url:'git://git@less.ly:kraken-ui.git'
+repository                      : type:'git', url:'git://less.ly/kraken-ui.git'
 
 engine                          : node:'>=0.6.2'
 license                         : 'MIT'
