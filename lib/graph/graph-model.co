@@ -68,8 +68,12 @@ Graph = exports.Graph = BaseModel.extend do # {{{
         # dataset : null
         width   : 'auto'
         height  : 320
-        chartType : 'dygraphs'
         parents : <[ root ]>
+        callout :
+            enabled     : true
+            metric_idx  : 0
+            label       : ''
+        chartType : 'dygraphs'
         options : {}
     
     url: ->

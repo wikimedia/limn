@@ -21,13 +21,7 @@ root = this
 CHART_OPTIONS_SPEC    = []
 CHART_DEFAULT_OPTIONS = {}
 
-
-# Create the Graph Scaffold
 main = ->
-    # Set up Dygraph chart type spec
-    # TODO: load this on-demand
-    # dyglib = new DygraphsChartType CHART_OPTIONS_SPEC
-    
     # Bind to URL changes
     History.Adapter.bind window, 'statechange', ->
         # console.log 'StateChange!\n\n', String(root.location), '\n\n'
@@ -57,19 +51,5 @@ main = ->
     root.app = new AppView ->
         @model = root.graph = new Graph data, {+parse}
         @view  = root.view  = new GraphEditView {@model}
-
-
-# Load data files
-# Seq([   <[ CHART_OPTIONS_SPEC /schema/dygraph.json ]>
-# ])
-# .parEach_ (next, [key, url]) ->
-#     jQuery.ajax do
-#         url : url,
-#         success : (res) ->
-#             root[key] = res
-#             next.ok()
-#         error : (err) -> console.error err
-# .seq ->
-#     jQuery main
 
 jQuery main
