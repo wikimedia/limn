@@ -43,7 +43,7 @@ main = ->
     # Extract id from URL
     if match = /\/graphs\/([^\/?]+)/i.exec loc
         id = match[1]
-        data.id = data.slug = id unless /(edit|new)/.test id
+        data.id = data.slug = id unless _ <[ edit new ]> .contains id
     
     # _.dump _.clone(data.options), 'data.options'
     
