@@ -284,10 +284,17 @@ class exports.ChartType extends ReadyEmitter
      * 
      * @param {Number} n Number to format.
      * @param {Number} [digits=2] Number of digits after the decimal to always display.
-     * @returns {String} Formatted number.
+     * @param {Boolean} [abbrev=true] Expand number suffixes if false.
+     * @returns {Object} Formatted number parts.
      */
-    numberFormatter: (n, digits=2) ->
-        for [suffix, d] of [['B', 1000000000], ['M', 1000000], ['K', 1000], ['', NaN]]
+    numberFormatter: (n, digits=2, abbrev=true) ->
+        suffixes = do
+            if abbrev
+                [['B', 1000000000], ['M', 1000000], ['K', 1000], ['', NaN]]
+            else
+                [['Billion', 1000000000], ['Million', 1000000], ['', NaN]]
+        
+        for [suffix, d] of suffixes
             break if isNaN d
             if n >= d
                 n = n / d
@@ -296,7 +303,9 @@ class exports.ChartType extends ReadyEmitter
         parts = s.split '.'
         whole = _.rchop parts[0], 3 .join ','
         fraction = '.' + parts.slice(1).join '.'
-        { n, digits, whole, fraction, suffix }
+        { n, digits, whole, fraction, suffix, toString: -> 
+            "#{@whole}#{@fraction}#{if abbrev then '' else ' '}#{@suffix}"
+        }
     
     
     ### }}}

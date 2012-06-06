@@ -4,14 +4,22 @@ section.graph-display.graph(id=graph_id)
     
     .graph-name-row.page-header.row-fluid
         h2.graph-name
-            a(id="graph-title", href="#{model.toLink()}") #{name}
+            a(id="graph-title", href="#{model.toLink()}", data-bind='name') #{name}
+        .callout
+            .latest-metric(data-bind='callout.latest') #{callout.latest}
+            .metric-change.year-over-year
+                span.dates(data-bind='callout.year.dates') #{callout.year.dates}
+                span.value(data-bind='callout.year.value') #{callout.year.value}
+            .metric-change.month-over-month
+                span.dates(data-bind='callout.month.dates') #{callout.month.dates}
+                span.value(data-bind='callout.month.value') #{callout.month.value}
     
     .graph-viewport-row.row-fluid
         .viewport
         .graph-legend
     
     .graph-details-row.row
-        .span7.offset1.graph-desc
+        .span7.offset1.graph-desc(data-bind='desc')
             != jade.filters.markdown(desc)
     
     .graph-details-row.row
@@ -23,7 +31,7 @@ section.graph-display.graph(id=graph_id)
                 |  Export
     
     .graph-details-row.row
-        .span6.offset1.graph-notes
+        .span6.offset1.graph-notes(data-bind='notes')
             != jade.filters.markdown(notes)
     
 

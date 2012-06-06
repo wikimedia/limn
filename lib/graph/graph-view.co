@@ -135,8 +135,27 @@ GraphView = exports.GraphView = BaseView.extend do # {{{
     
     toTemplateLocals: ->
         attrs = _.extend {}, @model.attributes
+        attrs.desc  = jade.filters.markdown that if attrs.desc
+        attrs.notes = jade.filters.markdown that if attrs.notes
         delete attrs.options
-        { @model, view:this, @graph_id, slug:'', name:'', desc:'' } import attrs
+        delete attrs.callout
+        
+        if callout = @model.getCalloutData()
+            {year:yoy, month:mom} = callout
+            attrs.callout = 
+                latest : @chartType.numberFormatter(callout.latest, 2, false).toString()
+                year :
+                    dates : yoy.dates.map( -> moment(it).format('MMM YY') ).join(' &mdash; ')
+                    value : ( 100 * yoy.value[2] / yoy.value[0] ).toFixed(2) + '%'
+                month :
+                    dates : mom.dates.map( -> moment(it).format('MMM YY') ).join(' &mdash; ')
+                    value : ( 100 * mom.value[2] / mom.value[0] ).toFixed(2) + '%'
+        
+        { @model, @graph_id, view:this, slug:'', name:'', desc:'', callout: {
+            latest : '',
+            year   : { dates:'', value:'' },
+            month  : { dates:'', value:'' } }
+        } import attrs
     
     
     /**

@@ -226,8 +226,8 @@ BaseView = exports.BaseView = Backbone.View.extend mixinBase do # {{{
         this
     
     update: ->
-        new DataBinding this .update @toTemplateLocals()
-        @trigger 'update', this
+        new DataBinding this .update locals = @toTemplateLocals()
+        @trigger 'update', this, locals
         this
     
     

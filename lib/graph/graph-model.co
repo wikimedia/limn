@@ -228,6 +228,31 @@ Graph = exports.Graph = BaseModel.extend do # {{{
         # Deal with everything else
         setter.call this, values, opts
     
+    getCalloutData: ->
+        # For now, always operate on the first Metric
+        return unless m = @dataset.metrics.at 0
+        
+        data  = m.getData()
+        dates = m.getDateColumn()
+        
+        # trim cols to match the right timespan
+        len = Math.min data.length, dates.length
+        data  .= slice(data.length  - len) if data.length  < len
+        dates .= slice(dates.length - len) if dates.length < len
+        
+        # Calc index offsets
+        latest     = len - 1
+        last_month = latest - 1
+        last_year  = latest - 12
+        
+        callout =
+            latest    : data[latest]
+            month : 
+                dates : [ dates[last_month], dates[latest] ]
+                value : [ data[last_month],  data[latest], data[latest] - data[last_month] ]
+            year : 
+                dates : [ dates[last_year], dates[latest]  ]
+                value : [ data[last_year],  data[latest],  data[latest] - data[last_year]  ]
     
     
     ### Chart Option Accessors {{{

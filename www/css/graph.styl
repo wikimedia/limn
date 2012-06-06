@@ -26,11 +26,28 @@ section.graph
         min-height 320px
         overflow hidden
     
-    .graph-legend
-        position absolute
+    .callout
+        absolute top 0 right 1em
         z-index 100
-        top 1em
-        right 1em
+        width 200px
+        padding 0 0 2em 4em
+        font 12px/1.5 "helvetica neue", helvetica, arial, sans-serif
+        border-radius 5px
+        background-color white
+        text-align right
+        
+        .latest-metric
+            font-size 18px
+            line-height 36px
+        .metric-change
+            // line-height 24px
+            span
+                display inline-block
+                width 100px
+    
+    .graph-legend
+        absolute top 2em right 1em
+        z-index 100
         width 200px
         
         padding 1em
@@ -59,8 +76,11 @@ section.graph
     
     /* * * *  Graph Details & Info Pane  * * * {{{ */
     .graph-name-row
+        // Accommodate the callout box
+        padding-right 272px
         margin 0 0 1em
         min-height 38px
+        
         input.graph-name
             display block
             absolute top 0 left 0
@@ -71,6 +91,7 @@ section.graph
             height 25px
             padding 6px
             border-color $light
+    
     .graph-info-pane
         .row-fluid
             .half.control-group
@@ -85,6 +106,7 @@ section.graph
         .help-block
             font-size 11px
             line-height 1.3
+    
     /* }}} */
     
     

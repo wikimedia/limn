@@ -30,7 +30,7 @@ class exports.DataBinding
         it
     
     update: (@data) ->
-        for key, val in @data
+        for key, val in _.collapseObject(@data)
             @updateBinding key, val
         this
     

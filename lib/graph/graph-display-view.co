@@ -47,12 +47,6 @@ GraphDisplayView = exports.GraphDisplayView = GraphView.extend do # {{{
     
     ### Rendering {{{
     
-    update: ->
-        locals = @toTemplateLocals()
-        @$ '.graph-name a' .text(locals.name or '')
-        @$ '.graph-desc' .html jade.filters.markdown locals.desc or ''
-        this
-    
     render: ->
         return this unless @ready and not @isRendering
         @wait()

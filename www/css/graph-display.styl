@@ -10,11 +10,28 @@ section.graph-display.graph
         position relative
     
     /* * * *  Chart & Viewport  * * * {{{ */
-    .graph-legend
-        position absolute
+    .callout
+        absolute top 0 right 1em
         z-index 100
-        top 1em
-        right 1em
+        width 200px
+        padding 0 0 2em 4em
+        font 11px/1.5 "helvetica neue", helvetica, arial, sans-serif
+        border-radius 5px
+        background-color white
+        text-align right
+        
+        .latest-metric
+            font-size 18px
+            line-height 36px
+        .metric-change
+            // line-height 24px
+            span
+                display inline-block
+                width 100px
+    
+    .graph-legend
+        absolute top 2em right 1em
+        z-index 100
         width 200px
         
         padding 1em
