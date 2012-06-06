@@ -54,6 +54,7 @@ class GraphController extends Controller
             parser = yaml.load
         
         err, data <- fs.readFile file, 'utf8'
+        
         if 'ENOENT' is err?.code
             return cb null, {}
         if err
