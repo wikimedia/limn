@@ -100,6 +100,12 @@ DataSet = exports.DataSet = BaseModel.extend do # {{{
         DataSet.__super__.set.call this, values, opts
     
     
+    toJSON: ->
+        json = DataSet.__super__.toJSON ...
+        delete json.id
+        json
+    
+    
     /* * * *  TimeSeriesData interface  * * * {{{ */
     
     /**
