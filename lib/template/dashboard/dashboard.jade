@@ -1,6 +1,6 @@
-section#dashboard
+section#dashboard.centered
     .page-header
-        h1 Wikimedia Report Card
+        h1 Wikimedia Report Card 
             small March 2012
     
     .row
@@ -10,13 +10,14 @@ section#dashboard
                     li:         h3 Graphs
                     li.active:  a(href="#core-graphs", data-toggle="tab") Core
                     li:         a(href="#other-graphs", data-toggle="tab") Others
-                    if ENV == 'dev'
+                    if ENV === 'dev'
                         li:     a(href="#dev-graphs", data-toggle="tab") Dev
                     
             .tab-content
                 .core-graphs-pane.tab-pane.active(id="core-graphs")
                 .other-graphs-pane.tab-pane(id="other-graphs")
-                if ENV == 'dev'
+                if ENV === 'dev'
                     .dev-graphs-pane.tab-pane(id="dev-graphs")
+        
 
 
