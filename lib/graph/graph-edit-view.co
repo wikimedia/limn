@@ -151,7 +151,7 @@ GraphEditView = exports.GraphEditView = GraphView.extend do # {{{
         return this unless @ready and not @isRendering
         @wait()
         @checkWaiting()
-        root.title = "#{@get 'name'} | GraphKit"
+        root.title = "#{@get 'name'} | Limn"
         GraphEditView.__super__.render ...
         # @updateURL()
         @unwait()
@@ -164,7 +164,7 @@ GraphEditView = exports.GraphEditView = GraphView.extend do # {{{
      */
     updateURL: ->
         json  = @toJSON()
-        title = "#{@model.get('name') or 'New Graph'} | Edit Graph | GraphKit"
+        title = "#{@model.get('name') or 'New Graph'} | Edit Graph | Limn"
         url   = @toURL('edit')
         # console.log 'History.pushState', JSON.stringify(json), title, url
         History.pushState json, title, url

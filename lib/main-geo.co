@@ -176,6 +176,6 @@ main = ->
             console.log 'Loaded geo coding map!'
         error : (err) -> console.error err
 
-# jQuery main
+jQuery main
 
 

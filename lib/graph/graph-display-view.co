@@ -51,7 +51,7 @@ GraphDisplayView = exports.GraphDisplayView = GraphView.extend do # {{{
         return this unless @ready and not @isRendering
         @wait()
         @checkWaiting()
-        root.title = "#{@get 'name'} | GraphKit"
+        root.title = "#{@get 'name'} | Limn"
         GraphDisplayView.__super__.render ...
         @unwait()
         @checkWaiting()
