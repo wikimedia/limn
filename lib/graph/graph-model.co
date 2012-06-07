@@ -239,8 +239,24 @@ Graph = exports.Graph = BaseModel.extend do # {{{
         data  .= slice(data.length  - len) if data.length  < len
         dates .= slice(dates.length - len) if dates.length < len
         
+        for i til len
+            v = data[i]
+            break if v? and not isNaN(v)
+        if i > 0
+            data  .= slice i
+            dates .= slice i
+        
+        # Compare against latest non-null value
+        last = len - 1
+        for i til len
+            v = data[last - i]
+            break if v? and not isNaN(v)
+        if i > 0
+            data  .= slice 0, last - i
+            dates .= slice 0, last - i
+        
         # Calc index offsets
-        latest     = len - 1
+        latest     = data.length - 1
         last_month = latest - 1
         last_year  = latest - 12
         
