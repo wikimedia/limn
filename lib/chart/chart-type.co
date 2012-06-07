@@ -160,6 +160,7 @@ class exports.ChartType extends ReadyEmitter
         proto = @constructor::
         jQuery.ajax do
             url     : @SPEC_URL
+            dataType : 'json'
             success : (spec) ~>
                 proto.spec = spec
                 proto.options_ordered = spec
