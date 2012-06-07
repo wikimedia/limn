@@ -53,6 +53,9 @@ GraphView = exports.GraphView = BaseView.extend do # {{{
         @on 'stop-waiting',  @onStopWaiting,  this
         @onStartWaiting() if @waitingOn # In case we missed the first call to @wait() somehow
         
+        # Recolor callout on update
+        @on 'update',        @onUpdate,       this
+        
         ### Model Events
         @model
             .on 'start-waiting',    @wait,          this
@@ -147,9 +150,11 @@ GraphView = exports.GraphView = BaseView.extend do # {{{
                 year :
                     dates : yoy.dates.map( -> moment(it).format('MMM YY') ).join(' &mdash; ')
                     value : ( 100 * yoy.value[2] / yoy.value[0] ).toFixed(2) + '%'
+                    delta : yoy.value[2]
                 month :
                     dates : mom.dates.map( -> moment(it).format('MMM YY') ).join(' &mdash; ')
                     value : ( 100 * mom.value[2] / mom.value[0] ).toFixed(2) + '%'
+                    delta : mom.value[2]
         
         { @model, @graph_id, view:this, slug:'', name:'', desc:'', callout: {
             latest : '',
@@ -188,6 +193,22 @@ GraphView = exports.GraphView = BaseView.extend do # {{{
     
     ### }}}
     ### Event Handlers {{{
+    
+    onUpdate: (self, locals) ->
+        co = locals.callout
+        el = @$ '.callout'
+        el.find '.metric-change .value' .removeClass 'delta-positive delta-negative'
+        
+        if co.year.delta > 0
+            el.find ' .metric-change.year-over-year .value' .addClass 'delta-positive'
+        else if co.year.delta < 0
+            el.find ' .metric-change.year-over-year .value' .addClass 'delta-negative'
+        
+        if co.month.delta > 0
+            el.find ' .metric-change.month-over-month .value' .addClass 'delta-positive'
+        else if co.month.delta < 0
+            el.find ' .metric-change.month-over-month .value' .addClass 'delta-negative'
+        this
     
     onSync: ->
         return unless @ready
