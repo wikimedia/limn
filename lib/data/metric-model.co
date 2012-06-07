@@ -103,7 +103,7 @@ Metric = exports.Metric = BaseModel.extend do # {{{
     
     isDefaultLabel: ->
         label = @get 'label'
-        not label or label is @getSourceColumnName() or label is @NEW_METRIC_LABEL
+        not label or label is @getPlaceholderLabel() or label is @NEW_METRIC_LABEL
     
     updateLabel: ->
         return this unless @source
