@@ -11,8 +11,8 @@ section.graph-display.graph(id=graph_id)
             .metric-change.month-over-month
                 span.dates(data-bind='callout.month.dates') #{callout.month.dates}
                 span.value(data-bind='callout.month.value') #{callout.month.value}
-        h2.graph-name
-            a(id="graph-title", href="#{model.toLink()}", data-bind='name') #{name}
+        h2
+            a.graph-name(href="#{model.toLink()}", data-bind='name') #{name}
     
     .graph-viewport-row.row-fluid: .inner
         .viewport
