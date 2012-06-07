@@ -139,13 +139,13 @@ DataSource = exports.DataSource = BaseModel.extend do # {{{
     
     
     getDateColumn: ->
-        @data.dateColumn
+        @data?.dateColumn
     
     getData: ->
-        @data.toJSON?() or @data
+        @data?.toJSON?() or @data
     
     getColumn: (idx) ->
-        @data.columns[idx]
+        @data?.columns[idx]
     
     getColumnName: (idx) ->
         @get('metrics')?[idx]?.label

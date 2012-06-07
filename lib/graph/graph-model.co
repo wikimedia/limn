@@ -230,10 +230,9 @@ Graph = exports.Graph = BaseModel.extend do # {{{
     
     getCalloutData: ->
         # For now, always operate on the first Metric
-        return unless m = @dataset.metrics.at 0
-        
-        data  = m.getData()
-        dates = m.getDateColumn()
+        return unless (m = @dataset.metrics.at 0) and
+            (data  = m.getData()) and
+            (dates = m.getDateColumn())
         
         # trim cols to match the right timespan
         len = Math.min data.length, dates.length

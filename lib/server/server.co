@@ -182,8 +182,8 @@ app.controller require './controllers/datasource'
 
 app.get '/', (req, res) ->
     ### XXX: Temporary, while I implement backwards compat with the old data format
-    # res.render 'dashboard'
-    res.redirect '/graphs/ohai/edit'
+    res.render 'dashboard'
+    # res.redirect '/graphs/ohai/edit'
 
 app.get '/geo', (req, res) ->
     res.render 'geo'
