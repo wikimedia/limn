@@ -173,13 +173,6 @@ GraphView = exports.GraphView = BaseView.extend do # {{{
         this
     
     /**
-     * Render the callout element.
-     */
-    renderCallout: ->
-        
-        this
-    
-    /**
      * Render the chart and other Graph-derived view components.
      */
     render: ->

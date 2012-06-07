@@ -9,14 +9,16 @@ section.graph-display.graph
     *
         position relative
     
+    .graph-name-row
+        clearfix()
+    
     /* * * *  Chart & Viewport  * * * {{{ */
     .callout
-        absolute top 0 right 1em
+        float right
         z-index 100
         width 200px
-        padding 0 0 2em 4em
+        padding 0 1em 0 0
         font 11px/1.5 "helvetica neue", helvetica, arial, sans-serif
-        border-radius 5px
         background-color white
         text-align right
         
@@ -27,10 +29,13 @@ section.graph-display.graph
             // line-height 24px
             span
                 display inline-block
-                width 100px
+                &.dates
+                    width 140px
+                &.value
+                    width 60px
     
     .graph-legend
-        absolute top 2em right 1em
+        absolute top 1em right 1em
         z-index 100
         width 200px
         

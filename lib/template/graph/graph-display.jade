@@ -2,9 +2,7 @@ include ../browser-helpers
 - var graph_id = view.id
 section.graph-display.graph(id=graph_id)
     
-    .graph-name-row.page-header.row-fluid
-        h2.graph-name
-            a(id="graph-title", href="#{model.toLink()}", data-bind='name') #{name}
+    .graph-name-row.row-fluid
         .callout
             .latest-metric(data-bind='callout.latest') #{callout.latest}
             .metric-change.year-over-year
@@ -13,6 +11,8 @@ section.graph-display.graph(id=graph_id)
             .metric-change.month-over-month
                 span.dates(data-bind='callout.month.dates') #{callout.month.dates}
                 span.value(data-bind='callout.month.value') #{callout.month.value}
+        h2.graph-name
+            a(id="graph-title", href="#{model.toLink()}", data-bind='name') #{name}
     
     .graph-viewport-row.row-fluid
         .viewport

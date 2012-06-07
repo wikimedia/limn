@@ -65,7 +65,7 @@ class GraphController extends Controller
         catch err
             console.error "GraphController.autoload(#id, #{typeof cb}) -->\nerr"
             cb err
-
+    
     # GET /graphs.:format?
     index: (req, res) ->
         # if format is json, then return the graph JSON
@@ -79,7 +79,7 @@ class GraphController extends Controller
                     .seq   (graphs) -> res.send _.values graphs
             default 
                 res.render 'graph/index'
-
+    
     # GET /graphs/:graph
     show: (req, res) ->
         if req.format is 'json'
