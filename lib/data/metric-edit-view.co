@@ -56,7 +56,7 @@ MetricEditView = exports.MetricEditView = BaseView.extend do # {{{
         
         # Update the color picker
         @$ '.color-swatch'
-            .data 'color', @model.get 'color'
+            .data 'color', @model.getColor()
             .colorpicker 'update'
         
         # @$ '.color-swatch' .css 'background-color', color
