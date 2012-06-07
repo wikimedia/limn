@@ -2,7 +2,12 @@
 } = require 'kraken/util'
 { BaseModel, BaseList,
 } = require 'kraken/base'
+ProjectColors = require 'kraken/data/project-colors'
 DataSource = DataSourceList = null
+
+
+
+
 
 /**
  * @class
@@ -53,6 +58,12 @@ Metric = exports.Metric = BaseModel.extend do # {{{
         @load()
     
     
+    # toJSON: ->
+    #     json = Metric.__super__.toJSON ...
+    #     json.color or= ProjectColors.lookup(json.label) or 'black'
+    #     json
+    
+    
     getDateColumn: ->
         @source.getDateColumn()
     
@@ -70,6 +81,9 @@ Metric = exports.Metric = BaseModel.extend do # {{{
     getSourceColumnName: ->
         col = @get 'source_col'
         @source.getColumnName col if @source and col > 0
+    
+    getColor: ->
+        @get('color') or ProjectColors.lookup(@get('label')) or 'black'
     
     
     load: (opts={}) ->

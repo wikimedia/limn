@@ -151,7 +151,7 @@ DataSet = exports.DataSet = BaseModel.extend do # {{{
     
     getColors: ->
         return [] unless @ready
-        @metrics.onlyOk().pluck 'color'
+        @metrics.onlyOk().invoke 'getColor'
     
     # }}}
     

@@ -113,6 +113,7 @@ dev:
                 - chart-type
                 - index
             - data:
+                - project-colors
                 - metric-model
                 - metric-edit-view
                 - datasource-model

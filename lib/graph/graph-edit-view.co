@@ -33,6 +33,7 @@ GraphEditView = exports.GraphEditView = GraphView.extend do # {{{
         'click    .load-button'                          : 'load'
         'click    .save-button'                          : 'save'
         'click    .done-button'                          : 'done'
+        'keypress .graph-name'                           : 'onNameKeypress'
         'keypress .graph-details input[type="text"]'     : 'onKeypress'
         'keypress .chart-options .value'                 : 'onKeypress'
         'submit   form.graph-details'                    : 'onDetailsSubmit'
@@ -204,6 +205,9 @@ GraphEditView = exports.GraphEditView = GraphView.extend do # {{{
     
     onKeypress: (evt) ->
         $(evt.target).submit() if evt.keyCode is 13
+    
+    onNameKeypress: (evt) ->
+        @$ 'form.graph-details' .submit() if evt.keyCode is 13
     
     onDetailsSubmit: ->
         console.log "#this.onDetailsSubmit!"
