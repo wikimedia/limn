@@ -3,6 +3,12 @@ extends layout
 block title
     title Editors by Location, February 2012 | English Wikipedia
 
+append styles
+    mixin css('geo-display.css')
+
+block main-scripts
+    script(src="/js/kraken/main-geo.js?"+version)
+
 block content
     section.geo
         .page-header
@@ -28,10 +34,4 @@ block content
         
         .help
             h6 Zoom/Pan using mouse.
-
-append styles
-    mixin css('geo-display.css')
-
-block main-scripts
-    script(src="/js/kraken/main-geo.js?"+version)
 
