@@ -4,21 +4,21 @@
 section.graph-display.graph
     position relative
     max-width 900px
-    margin 0 auto
+    margin 3em auto
     
     *
         position relative
     
     .graph-name-row
+        margin-bottom 1em
         clearfix()
     
     /* * * *  Chart & Viewport  * * * {{{ */
     .callout
-        float right
+        float left
         z-index 100
-        width 200px
-        padding 0 1em 0 0
-        font 11px/1.5 "helvetica neue", helvetica, arial, sans-serif
+        width 15.385em
+        padding 0 6em 0 0
         background-color white
         text-align right
         
@@ -26,7 +26,7 @@ section.graph-display.graph
             font-size 18px
             line-height 36px
         .metric-change
-            // line-height 24px
+            font 11px/1.5 "helvetica neue", helvetica, arial, sans-serif
             span
                 display inline-block
                 &.dates
@@ -35,9 +35,9 @@ section.graph-display.graph
                     width 60px
     
     .graph-legend
-        absolute top 1em right 1em
+        absolute top 1em left 0
         z-index 100
-        width 200px
+        width 14.667em
         
         padding 1em
         background-color rgba(255,255,255, 0.75)
@@ -47,15 +47,18 @@ section.graph-display.graph
         
         b
             display inline-block
-            width 140px
+            width 10em
         .whole
             display inline-block
-            width 30px
+            width 2.5em
             text-align right
         .fraction
             text-align left
         .suffix
             text-align left
+    
+    .graph-viewport-row > .inner
+        padding-left 17.385em
     
     .viewport:hover + .graph-legend
         border 1px solid $light
@@ -104,6 +107,14 @@ section.graph-display.graph
         input[type="button"]
             min-width 5em
             text-align center
+    
+    .graph-permalink
+        display inline-block
+        input
+            cursor auto
+    
+    .ug
+        padding-left 3em
     
     /* }}} */
     

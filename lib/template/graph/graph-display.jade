@@ -14,24 +14,24 @@ section.graph-display.graph(id=graph_id)
         h2.graph-name
             a(id="graph-title", href="#{model.toLink()}", data-bind='name') #{name}
     
-    .graph-viewport-row.row-fluid
+    .graph-viewport-row.row-fluid: .inner
         .viewport
         .graph-legend
     
     .graph-details-row.row
-        .span7.offset1.graph-desc(data-bind='desc')
+        .span7.offset3.ug.graph-desc(data-bind='desc')
             != jade.filters.markdown(desc)
     
-    .graph-details-row.row
-        .span6.offset1.graph-permalink
+    .graph-links-row.row
+        .span6.offset3.ug.graph-permalink
             input.span6(value="#{model.toPermalink()}", readonly="readonly")
         if ENV == 'dev'
-            .span1.a.export-button.btn(href="#")
+            a.span1.export-button.btn(href="#")
                 i.icon-file
                 |  Export
     
-    .graph-details-row.row
-        .span6.offset1.graph-notes(data-bind='notes')
+    .graph-notes-row.row
+        .span7.offset3.ug.graph-notes(data-bind='notes')
             != jade.filters.markdown(notes)
     
 

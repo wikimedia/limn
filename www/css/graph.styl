@@ -27,11 +27,10 @@ section.graph
         overflow hidden
     
     .callout
-        float right
+        float left
         z-index 100
-        width 200px
-        padding 0 1em 0 0
-        font 11px/1.5 "helvetica neue", helvetica, arial, sans-serif
+        width 15.385em
+        padding 0 6em 0 0
         background-color white
         text-align right
         
@@ -39,9 +38,13 @@ section.graph
             font-size 18px
             line-height 36px
         .metric-change
+            font 11px/1.5 "helvetica neue", helvetica, arial, sans-serif
             span
                 display inline-block
-                width 100px
+                &.dates
+                    width 140px
+                &.value
+                    width 60px
     
     .graph-legend
         absolute top 1em right 1em
@@ -167,6 +170,9 @@ section.graph
         input[type="button"]
             min-width 5em
             text-align center
+    
+    .graph-permalink input
+        cursor auto
     
     .graph-spinner
         display none
