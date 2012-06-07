@@ -252,8 +252,8 @@ Graph = exports.Graph = BaseModel.extend do # {{{
             v = data[last - i]
             break if v? and not isNaN(v)
         if i > 0
-            data  .= slice 0, last - i
-            dates .= slice 0, last - i
+            data  .= slice 0, last - (i-1)
+            dates .= slice 0, last - (i-1)
         
         # Calc index offsets
         latest     = data.length - 1
