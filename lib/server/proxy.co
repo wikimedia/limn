@@ -26,6 +26,9 @@ ProxyMiddleware = (options={}) ->
         unless matchesList whitelist, target.hostname
             return res.send {error:'Domain is not whitelisted'}, 403
         
+        # Set the no-buffering flag for nginx
+        res.header 'X-Accel-Buffering', 'no'
+        
         console.log "[Proxy] #targetUrl"
         request.get targetUrl .pipe res
 
