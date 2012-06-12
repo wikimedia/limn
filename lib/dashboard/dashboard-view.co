@@ -113,12 +113,43 @@ DashboardView = exports.DashboardView = BaseView.extend do # {{{
     
     tab_shown: (e) ->
         console.log 'tab_shown!', e
-        Seq(@subviews)
+        Seq @subviews
             .parMap (view) ->
                 # view.resizeViewport()
                 view.renderChart()
     
     onTabClick: (evt) ->
         evt.preventDefault()
+    
+    
+    /**
+     * Scroll to the specified graph.
+     * 
+     * @param {String|Number|Graph} graph The Graph to scroll to; can be specified as a
+     *  Graph id, an index into the Graphs list, or a Graph object.
+     * @returns {this} 
+     */
+    scrollToGraph: (graph) ->
+        if typeof graph is 'string'
+            graph = @graphs.get graph
+        else if typeof graph is 'number'
+            graph = @graphs.at graph
+        unless graph instanceof Graph
+            console.error "#this.scrollToGraph() Unknown graph #graph!"
+            return this
+        
+        return this unless view = _.find @subviews, -> it.model is graph
+        $ 'body' .scrollTop view.$el.offset().top if view.$el.is ':visible'
+        
+        this
+    
+    # FIXME
+    getClosestGraph: ->
+        top = $ 'body' .scrollTop()
+        views = @subviews
+            .map -> [ it.$el.scrollTop() - top, it ]
+            .filter -> it[0] > 0
+            .sort()
+        return views[0] if views.length
 
 
