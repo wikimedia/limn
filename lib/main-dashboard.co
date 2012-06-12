@@ -3,6 +3,8 @@ Backbone = require 'backbone'
 
 { _, op,
 } = require 'kraken/util'
+{ AppView, 
+} = require 'kraken/app'
 { BaseView, BaseModel, BaseList,
 } = require 'kraken/base'
 { ChartType, DygraphsChartType,
@@ -13,40 +15,15 @@ Backbone = require 'backbone'
 } = require 'kraken/dashboard'
 
 
-
 root = this
-CHART_OPTIONS_SPEC    = []
-CHART_DEFAULT_OPTIONS = {}
 
 
 # Create the Graph Scaffold
 main = ->
-    # Set up Dygraph chart type spec
-    # TODO: load this on-demand
-    dyglib = new DygraphsChartType CHART_OPTIONS_SPEC
-    
-    # _.dump _.clone(data.options), 'data.options'
-    
     # Instantiate model & view
-    dashboard = root.dashboard = new DashboardView do
-        graph_spec : root.CHART_OPTIONS_SPEC # FIXME: necessary?
-    
-    $ '#content .inner' .append dashboard.el
+    root.app = new AppView ->
+        @view  = root.dashboard  = new DashboardView {@model}
 
 
-
-# Load dygraph chart options
-Seq([   <[ CHART_OPTIONS_SPEC /schema/dygraph.json ]>
-])
-.parEach_ (next, [key, url]) ->
-    jQuery.ajax do
-        url : url,
-        dataType : 'json'
-        success : (res) ->
-            root[key] = res
-            next.ok()
-        error : (err) -> console.error err
-.seq ->
-    # console.log 'All data loaded!'
-    jQuery main
+jQuery main
 
