@@ -145,6 +145,7 @@ app.configure ->
 
 Controller   = require './controller'
 app.controller require './controllers/graph'
+app.controller require './controllers/dashboard'
 
 YAML_EXT_PAT = /\.ya?ml$/i
 app.get '/datasources/all', (req, res, next) ->

@@ -65,8 +65,10 @@ dev:
                     - graph-list.jade
             - util:
                 - underscore:
+                    - function
                     - array
                     - object
+                    - class
                     - kv
                     - string
                     - index
@@ -88,6 +90,7 @@ dev:
                     - scaffold-model
                     - scaffold-view
                     - index
+                - base
                 - base-mixin
                 - base-model
                 - base-view
