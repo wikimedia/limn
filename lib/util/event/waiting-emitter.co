@@ -1,12 +1,11 @@
-{EventEmitter} = require 'events'
-EventEmitter::trigger = EventEmitter::emit
-
+Base = require 'kraken/base/base'
 
 
 /**
  * @class An EventEmitter with a ratchet-up waiting counter.
+ * @extends Base
  */
-class WaitingEmitter extends EventEmitter
+class WaitingEmitter extends Base
     
     /**
      * Count of outstanding tasks.

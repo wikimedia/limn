@@ -1,11 +1,10 @@
-{EventEmitter} = require 'events'
-EventEmitter::trigger = EventEmitter::emit
+Base = require 'kraken/base/base'
 
 
 /**
  * @class An EventEmitter that auto-triggers new handlers once "ready".
  */
-class ReadyEmitter extends EventEmitter
+class ReadyEmitter extends Base
     readyEventName : 'ready'
     ready : false
     

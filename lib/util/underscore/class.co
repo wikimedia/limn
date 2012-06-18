@@ -1,0 +1,53 @@
+_ = require 'underscore'
+
+
+_cls =
+    
+    /**
+     * @returns {Array<Class>} The list of all superclasses for this class
+     *  or object. Typically does not include Object or Function due to
+     *  the prototype's constructor being set by the subclass.
+     */
+    getSuperClasses : function getSuperClasses(Cls)
+        return [] unless Cls
+        
+        if Cls.__superclass__ or Cls.superclass or Cls.__super__?.constructor
+            superclass = that unless that is Cls
+        unless superclass
+            Cls = Cls.constructor if typeof Cls is not 'function'
+            if Cls.__superclass__ or Cls.superclass or Cls.__super__?.constructor
+                superclass = that unless that is Cls
+        unless superclass then []
+        else [superclass].concat getSuperClasses superclass
+    
+    /**
+     * Looks up an attribute on the prototype of each class in the class
+     * hierarchy. Values from Object or Function are not typically included --
+     * see the note at `getSuperClasses()`.
+     * 
+     * @param {Object} obj Object on which to reflect.
+     * @param {String} prop Property to nab.
+     * @returns {Array} List of the values, from closest parent to furthest.
+     */
+    pluckSuper : (obj, prop) ->
+        return [] unless obj
+        _ _cls.getSuperClasses(obj) .chain()
+            .pluck 'prototype'
+            .pluck prop 
+            .value()
+    
+    /**
+     * As `.pluckSuper()` but includes value of `prop` on passed `obj`. Values
+     *  from Object or Function are not typically included -- see the note
+     *  at `getSuperClasses()`.
+     * 
+     * @returns {Array} List of the values, starting with the object's own
+     *  value, and then moving from closest parent to furthest.
+     */
+    pluckSuperAndSelf : (obj, prop) ->
+        return [] unless obj
+        [ obj[prop] ].concat _cls.pluckSuper(obj, prop)
+    
+
+
+exports import _cls
