@@ -57,9 +57,6 @@ GraphEditView = exports.GraphEditView = GraphView.extend do # {{{
         
         ### Chart Options Tab, Scaffold
         @scaffold = @addSubview new ChartOptionScaffold
-        # @scaffold.collection.reset that if o.graph_spec
-        # @scaffold.on 'change', @onScaffoldChange
-        @chartType.on 'ready', @onChartTypeReady
         
         
         ### Graph Data UI
@@ -78,7 +75,7 @@ GraphEditView = exports.GraphEditView = GraphView.extend do # {{{
         @loadData()
     
     onChartTypeReady: ->
-        @scaffold.collection.reset @chartType.options_ordered
+        @scaffold.collection.reset @model.chartType.options_ordered
         @scaffold.on 'change', @onScaffoldChange
         @chartOptions @model.getOptions(), {+silent}
     
@@ -86,7 +83,7 @@ GraphEditView = exports.GraphEditView = GraphView.extend do # {{{
         return if @ready
         console.log "(#this via GraphEditView).ready!"
         @unwait() # clears `wait()` from `initialize`
-        # @ready = @scaffold.ready = true
+        @model.chartType.on 'ready', @onChartTypeReady
         @triggerReady()
         @scaffold.triggerReady()
         @chartOptions @model.getOptions(), {+silent}

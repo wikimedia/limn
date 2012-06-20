@@ -42,7 +42,6 @@ GraphView = exports.GraphView = BaseView.extend do # {{{
     initialize : (o={}) ->
         @model or= new Graph
         @id = @graph_id = _.domize 'graph', (@model.id or @model.get('slug') or @model.cid)
-        @chartType = @model.chartType.withView this
         GraphView.__super__.initialize ...
         
         for name of @__debounce__
@@ -80,15 +79,19 @@ GraphView = exports.GraphView = BaseView.extend do # {{{
         @wait()
         Seq()
             .seq_ (next) ~>
-                @chartType.once 'ready', next.ok
-            .seq_ (next) ~>
                 @model.once 'ready', next.ok .load()
+            .seq_ (next) ~>
+                @model.chartType.once 'ready', next.ok
             .seq_ (next) ~>
                 @model.once 'data-ready', next.ok .loadData()
             .seq ~>
                 @unwait()
                 @onReady()
     
+    onReady: ->
+        return if @ready
+        @triggerReady()
+        @onSync()
     
     ### Persistence {{{
     
@@ -146,7 +149,7 @@ GraphView = exports.GraphView = BaseView.extend do # {{{
         if callout = @model.getCalloutData()
             {year:yoy, month:mom} = callout
             attrs.callout = 
-                latest : @chartType.numberFormatter(callout.latest, 2, false).toString()
+                latest : @model.chartType.numberFormatter(callout.latest, 2, false).toString()
                 year :
                     dates : yoy.dates.map( -> moment(it).format('MMM YY') ).join(' &mdash; ')
                     value : ( 100 * yoy.value[2] / yoy.value[0] ).toFixed(2) + '%'
@@ -167,14 +170,14 @@ GraphView = exports.GraphView = BaseView.extend do # {{{
      * Resize the viewport to the model-specified bounds.
      */
     resizeViewport: ->
-        @chartType.resizeViewport()
+        @model.chartType?.withView(this).resizeViewport()
     
     
     /**
      * Redraw chart inside viewport.
      */
     renderChart: ->
-        @chart = @chartType.render()
+        @chart = @model.chartType?.withView(this).render()
         this
     
     /**

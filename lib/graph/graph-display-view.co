@@ -38,10 +38,6 @@ GraphDisplayView = exports.GraphDisplayView = GraphView.extend do # {{{
         @chartOptions @model.getOptions(), {+silent}
         @loadData()
     
-    onReady: ->
-        return if @ready
-        @triggerReady()
-        @onSync()
     
     
     
