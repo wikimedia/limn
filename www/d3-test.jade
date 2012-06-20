@@ -1,0 +1,23 @@
+extends layout
+
+block title
+    title Edit Graph | Limn
+
+append styles
+    mixin css('/vendor/bootstrap-colorpicker/css/colorpicker.css')
+    mixin css('/vendor/bootstrap-datepicker/css/datepicker.css')
+    mixin css('graph.css')
+    mixin css('chart.css')
+    mixin css('data.css')
+    mixin css('isotope.css')
+
+block main-scripts
+    script
+        d3 = require('d3')
+        LineChartType = require('kraken/chart/type/d3/d3-line-chart-type')
+        jQuery(function(){
+            setTimeout(function(){
+                ct = view.chartType = graph.chartType = new LineChartType(graph, view); 
+            }, 100);
+        });
+    script(src="/js/kraken/main-edit.js?"+version)

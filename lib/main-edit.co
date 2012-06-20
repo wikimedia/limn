@@ -1,5 +1,3 @@
-{EventEmitter} = require 'events'
-
 Seq      = require 'seq'
 Backbone = require 'backbone'
 

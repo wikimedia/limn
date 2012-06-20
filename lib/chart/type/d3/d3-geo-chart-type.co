@@ -5,6 +5,9 @@ ColorBrewer = require 'colorbrewer'
 { ChartType,
 } = require 'kraken/chart'
 
+
+
+
 class GeoWorldChartType extends ChartType
     __bind__ : <[ dygNumberFormatter dygNumberFormatterHTML ]>
     SPEC_URL : '/schema/d3/d3-geo-world.json'
@@ -72,6 +75,11 @@ class GeoWorldChartType extends ChartType
         path = d3.geo.path()
             .projection projection
         
+        # path objects
+        feature = map.selectAll ".feature"
+        infobox = d3.select '.infobox'
+        
+        
         move = ->
             projection
                 .translate d3.event.translate
@@ -95,9 +103,6 @@ class GeoWorldChartType extends ChartType
                     .attr "transform", "translate(0,0)"
                     .call zoom
         
-        # path objects
-        feature := map.selectAll ".feature"
-        
         # rectangle
         map.append "svg:rect"
             .attr "class", "frame"
@@ -106,8 +111,6 @@ class GeoWorldChartType extends ChartType
         
         
         ### infobox
-        infobox := d3.select '#infobox'
-        
         infobox.select '#ball'
             .append "svg:svg"
                 .attr "width", "100%"
@@ -157,7 +160,7 @@ class GeoWorldChartType extends ChartType
         
     
 
-
+data = null
 main = ->
     jQuery.ajax do
         url : "/data/geo/data/en_geo_editors.json"

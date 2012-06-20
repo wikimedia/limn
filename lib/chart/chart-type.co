@@ -395,7 +395,7 @@ class exports.ChartType extends ReadyEmitter
      * 
      * @returns {Object} The derived data.
      */
-    transform: ->
+    transform: (model, view) ->
         @model.getOptions()
     
     

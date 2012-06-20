@@ -1,8 +1,8 @@
 { _, op,
 } = require 'kraken/util'
-{ BaseView,
+{ BaseModel,
 } = require 'kraken/base'
-{ Graph,
+{ Graph, GraphList,
 } = require 'kraken/graph/graph-model'
 
 
@@ -10,10 +10,14 @@
  * @class
  */
 Dashboard = exports.Dashboard = BaseModel.extend do # {{{
-    urlRoot  : '/dashboards'
+    urlRoot : '/dashboards'
+    graphs  : null # GraphList
+    byTab   : null # GraphList[]
     
     
     constructor: function Dashboard
+        @graphs = new GraphList
+        @byTab  = []
         BaseModel ...
     
     initialize: ->
@@ -22,7 +26,31 @@ Dashboard = exports.Dashboard = BaseModel.extend do # {{{
     
     defaults: ->
         name : null
-        graphs : []
+        tabs : [ { name:"Main", graph_ids:[] } ]
+    
+    
+    
+    
+    addTab: (tabName) ->
+        ...
+    
+    
+    /**
+     * Look up a tab.
+     * 
+     * @param {String|Number} tab Tab name or index.
+     * @returns {Tab} Tab object.
+     */
+    getTab: (tab) ->
+        tabs = @get 'tabs'
+        return tabs[tab] if typeof tab is 'number'
+        _.find tabs, -> it.name is tab
+    
+    addGraph: (graph, tabName) ->
+        ...
+    
+    getGraphs: (tab) ->
+        ...
     
     
 # }}}

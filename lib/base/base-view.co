@@ -4,6 +4,8 @@ Backbone = require 'backbone'
 } = require 'kraken/util'
 { BaseBackboneMixin, mixinBase,
 } = require 'kraken/base/base-mixin'
+{ BaseModel,
+} = require 'kraken/base/base-mixin'
 { DataBinding,
 } = require 'kraken/base/data-binding'
 

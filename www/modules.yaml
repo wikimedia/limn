@@ -40,7 +40,7 @@ dev:
         - moment.mod.min
         - dygraph
         - dygraph-extra
-        - d3
+        # - d3
 
 -   suffix: .mod.js
     paths:
@@ -111,6 +111,11 @@ dev:
                     - chart-option-view
                     - index
                 - type:
+                    - d3:
+                        - d3-line-chart-type
+                        - d3-geo-chart-type
+                        - d3-bar-chart-type
+                        - index
                     - dygraphs
                     - index
                 - chart-type
