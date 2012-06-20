@@ -78,7 +78,7 @@ BaseView = exports.BaseView = Backbone.View.extend mixinBase do # {{{
     
     
     
-    ### Subviews
+    ### Subviews {{{
     
     setParent: (parent) ->
         [old_parent, @parent] = [@parent, parent]
@@ -117,7 +117,8 @@ BaseView = exports.BaseView = Backbone.View.extend mixinBase do # {{{
     
     
     
-    ### UI Utilities
+    ### }}}
+    ### DOM Utilities {{{
     
     attach: (el) ->
         # @undelegateEvents()
@@ -189,8 +190,8 @@ BaseView = exports.BaseView = Backbone.View.extend mixinBase do # {{{
         return bp.eq 0 if bp.length
     
     
-    
-    ### Rendering Chain
+    ### }}}
+    ### Rendering Chain {{{
     
     toTemplateLocals: ->
         @model.toJSON()

@@ -108,6 +108,9 @@ Graph = exports.Graph = BaseModel.extend do # {{{
         @trigger 'init', this
     
     
+    
+    ### Loading {{{
+    
     load: (opts={}) ->
         return this if (@loading or @ready) and not opts.force
         console.log "#this.load()..."
@@ -193,7 +196,8 @@ Graph = exports.Graph = BaseModel.extend do # {{{
         @trigger 'change',      this, @dataset, 'data'
     
     
-    ### Accessors
+    ### }}}
+    ### Accessors {{{
     
     get: (key) ->
         if _.startsWith key, 'options.'
@@ -269,7 +273,7 @@ Graph = exports.Graph = BaseModel.extend do # {{{
                 dates : [ dates[last_year], dates[latest]  ]
                 value : [ data[last_year],  data[latest],  data[latest] - data[last_year]  ]
     
-    
+    ### }}}
     ### Chart Option Accessors {{{
     
     hasOption: (key) ->
