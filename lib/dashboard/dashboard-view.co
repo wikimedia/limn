@@ -69,8 +69,8 @@ DashboardView = exports.DashboardView = BaseView.extend do # {{{
     events:
         # Select the whole permalink URI text when it receives focus.
         'click .graphs.tabbable .nav a' : 'onTabClick'
-        'shown .graphs.tabbable .nav a' : 'tab_shown'
-        # 'click  a[data-target="#other-graphs"]' : 'tab_shown'
+        'shown .graphs.tabbable .nav a' : 'onTabShown'
+        # 'click  a[data-target="#other-graphs"]' : 'onTabShown'
         # 'click    .load-button'         : 'load'
     
     subviews : []
@@ -91,6 +91,11 @@ DashboardView = exports.DashboardView = BaseView.extend do # {{{
         @load()
     
     
+    # FIXME:
+    #   - combine all loads into one seq so...
+    #   - trigger ready when finished
+    # TODO:
+    #   - only render graph when scrolling makes it visible
     load: ->
         @addTab(@core_tab)
         @addTab(@other_tab)
@@ -111,8 +116,10 @@ DashboardView = exports.DashboardView = BaseView.extend do # {{{
                 self.subviews.push view
                 view.isAttached = true
     
-    tab_shown: (e) ->
-        console.log 'tab_shown!', e
+    
+    ### Tabs {{{
+    
+    onTabShown: (e) ->
         Seq @subviews
             .parMap (view) ->
                 # view.resizeViewport()
@@ -121,6 +128,9 @@ DashboardView = exports.DashboardView = BaseView.extend do # {{{
     onTabClick: (evt) ->
         evt.preventDefault()
     
+    
+    ### }}}
+    ### Navigation Between Graphs {{{
     
     /**
      * Scroll to the specified graph.
@@ -143,13 +153,15 @@ DashboardView = exports.DashboardView = BaseView.extend do # {{{
         
         this
     
-    # FIXME
-    getClosestGraph: ->
-        top = $ 'body' .scrollTop()
+    findClosestGraph: (scroll) ->
+        scroll or= $ 'body' .scrollTop()
         views = @subviews
-            .map -> [ it.$el.scrollTop() - top, it ]
-            .filter -> it[0] > 0
-            .sort()
-        return views[0] if views.length
+            .filter -> it.$el.is ':visible'
+            .map -> [ it.$el.offset().top, it ]
+            .filter -> it[0] >= scroll
+            .sort (a,b) -> op.cmp a[0], b[0]
+        return views[0][1] if views.length
+    
+    ### }}}
 
 
