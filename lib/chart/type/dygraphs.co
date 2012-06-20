@@ -91,15 +91,6 @@ class exports.DygraphsChartType extends ChartType
     
     
     /**
-     * Resizes the HTML viewport.
-     */
-    resizeViewport: ->
-        size = @determineSize()
-        @getElementsForRole 'viewport' .css size
-        size
-    
-    
-    /**
      * Transforms the domain objects into a hash of derived values using
      *  chart-type-specific keys.
      * @returns {Object} The derived chart options.

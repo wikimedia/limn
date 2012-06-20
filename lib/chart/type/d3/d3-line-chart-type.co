@@ -29,6 +29,8 @@ class LineChartType extends ChartType
     
     -> super ...
     
+    
+    
     transform: ->
         dataset = @model.dataset
         options = @model.getOptions() import @determineSize()

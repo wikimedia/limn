@@ -351,6 +351,16 @@ class exports.ChartType extends ReadyEmitter
         @pluck 'default'
     
     
+    
+    
+    /**
+     * Resizes the HTML viewport. Override to disable, etc.
+     */
+    resizeViewport: ->
+        size = @determineSize()
+        @getElementsForRole 'viewport' .css size
+        size
+    
     /**
      * Determines chart viewport size.
      * @return { width, height }
