@@ -26,14 +26,13 @@ block main-scripts
         ChartType     = require('kraken/chart').ChartType
         data          = require('kraken/data'); DataSource = data.DataSource; DataSourceList = data.DataSourceList
         _graph        = require('kraken/graph'); Graph = _graph.Graph; GraphList = _graph.GraphList; GraphEditView = _graph.GraphEditView
-        LineChartType = require('kraken/chart/type/d3/d3-line-chart-type')
+        //LineChartType = require('kraken/chart/type/d3/d3-line-chart-type')
         
         // run on DOM-ready
         jQuery(function(){
             root.app = new AppView(function(){
                 this.model = root.graph = new Graph({ id:'d3-test' }, { parse:true })
                 this.view  = root.view  = new GraphEditView({ model:this.model })
-                this.view.chartType = this.model.chartType = new LineChartType(this.model, this.view);
             });
         });
     

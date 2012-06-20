@@ -24,6 +24,7 @@ module.exports = op =
     ok      : (o)     -> o?
     notOk   : (o)     -> o!?
     
+    ### manipulate function args/arity
     first   : (a)     -> a
     second  : (_,a)   -> a
     nth     : (n) ->
@@ -32,11 +33,23 @@ module.exports = op =
             case 1 then op.second
             default     -> arguments[n]
     
+    # reverse the order of the first two args
     flip    : (fn) ->
         (a, b) ->
             arguments[0] = b
             arguments[1] = a
             fn.apply this, arguments
+    
+    # only pass n args
+    aritize : (fn, cxt, n) ->
+        [n, cxt] = [cxt, null] if arguments.length < 3
+        -> fn.apply cxt ? this, [].slice.call(arguments, 0, n)
+    
+    # only pass the first argument
+    it      : (fn, cxt) ->
+        -> fn.call cxt ? this, it
+    
+    
     
     ### reduce-ordered values & accessors
     khas      : (k,o)       ->  k in o

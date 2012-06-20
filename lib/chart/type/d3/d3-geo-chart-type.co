@@ -3,12 +3,12 @@ ColorBrewer = require 'colorbrewer'
 { _, op,
 } = require 'kraken/util'
 { ChartType,
-} = require 'kraken/chart'
+} = require 'kraken/chart/chart-type'
 
 
 
 
-class GeoWorldChartType extends ChartType
+class exports.GeoWorldChartType extends ChartType
     __bind__ : <[ dygNumberFormatter dygNumberFormatterHTML ]>
     SPEC_URL : '/schema/d3/d3-geo-world.json'
     

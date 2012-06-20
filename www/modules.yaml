@@ -113,8 +113,8 @@ dev:
                 - type:
                     - d3:
                         - d3-line-chart-type
-                        - d3-geo-chart-type
-                        - d3-bar-chart-type
+                        # - d3-geo-chart-type
+                        # - d3-bar-chart-type
                         - index
                     - dygraphs
                     - index

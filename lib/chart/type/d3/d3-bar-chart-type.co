@@ -3,8 +3,30 @@ d3 = require 'd3'
 { _, op,
 } = require 'kraken/util'
 { ChartType,
-} = require 'kraken/chart'
+} = require 'kraken/chart/chart-type'
 
 
 
-exports.foo = 1
+class exports.BarChartType extends ChartType
+    __bind__ : <[ determineSize ]>
+    SPEC_URL : '/schema/d3/d3-bar.json'
+    
+    # NOTE: ChartType.register() must come AFTER `typeName` declaration.
+    typeName : 'd3-bar'
+    ChartType.register this
+    
+    
+    /**
+     * Hash of role-names to the selector which, when applied to the view,
+     * returns the correct element.
+     * @type Object
+     */
+    roles :
+        viewport : '.viewport'
+        legend   : '.graph-legend'
+    
+    
+    
+    -> super ...
+    
+    

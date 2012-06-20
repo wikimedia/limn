@@ -166,7 +166,7 @@ class exports.ChartType extends ReadyEmitter
                 proto.options_ordered = spec
                 proto.options = _.synthesize spec, -> [it.name, it]
                 proto.ready = true
-                @emit 'ready', this
+                @triggerReady()
             error: ~> console.error "Error loading #{@typeName} spec! #it"
         this
     
