@@ -88,7 +88,6 @@ Graph = exports.Graph = BaseModel.extend do # {{{
         attributes.options or= {}
         attributes.slug    or= attributes.id if attributes.id?
         @optionCascade = new Cascade attributes.options
-        @on 'change:chartType', ~> @chartType = ChartType.create this
         BaseModel.call this, attributes, opts
     
     
@@ -97,6 +96,8 @@ Graph = exports.Graph = BaseModel.extend do # {{{
         
         @constructor.register this
         @parents = new GraphList
+        @chartType = ChartType.create this
+        @on 'change:chartType', ~> @chartType = ChartType.create this
         
         # Insert submodels in place of JSON
         @dataset = new DataSet {id:@id, ...@get 'data'}

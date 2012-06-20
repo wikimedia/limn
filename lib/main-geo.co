@@ -1,5 +1,5 @@
-# Seq      = require 'seq'
-# d3          = require 'd3'
+Seq         = require 'seq'
+d3          = require 'd3'
 ColorBrewer = require 'colorbrewer'
 
 
