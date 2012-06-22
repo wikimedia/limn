@@ -6,6 +6,8 @@ ColorBrewer = require 'colorbrewer'
 { ChartType,
 } = require 'kraken/chart/chart-type'
 
+root = do -> this
+
 
 class exports.LineChartType extends ChartType
     __bind__ : <[ determineSize ]>
@@ -40,6 +42,7 @@ class exports.LineChartType extends ChartType
         options = @model.getOptions() import @determineSize()
         options import do
             colors             : dataset.getColors()
+            labels             : dataset.getLabels()
         options
     
     
@@ -93,19 +96,88 @@ class exports.LineChartType extends ChartType
             .attr "transform", "translate(0,#{yScale.range()[0]})"
             .call xAxis
         
-        # Create/Update the line paths.
-        lines = frame.selectAll "path.line"
+        
+        ### Render the line paths
+        lines = root.lines = frame.selectAll "path.line"
             .data cols.map -> d3.zip dates, it
         lines.enter().append "path"
-            .attr "class", "line"
+            .attr "class", "metric line"
         lines.exit().remove()
         
         X = (d, i) -> xScale d[0]
         Y = (d, i) -> yScale d[1]
         line = d3.svg.line().x(X).y(Y)
-        # frame.selectAll "path.line"
         lines.attr "d", line
+            .attr "class", (col, i) -> "metric line metric#i"
             .style "stroke", (col, i) -> options.colors[i]
+            .each (col, i) ->
+                {width} = bbox = @getBBox()
+                # Add line-to-data position conversions
+                @indexAtX = d3.scale.quantize()
+                    .domain [0, width]
+                    .range d3.range col.length
+                @indexToPoint = (idx) ->
+                    @pathSegList.getItem idx
+        
+        ### Render Points
+        points = frame.selectAll "g.points"
+            .data cols
+        points.enter().append "g"
+            .attr "class", (col, i)     ->  "points points#i"
+            .property "line", (col, i)  -> $(this).parent().find('path.metric.line')[i]
+        points.exit().remove()
+        
+        points.selectAll ".point"
+            .data op.first
+            .enter().append "circle"
+                .attr "class", "point"
+                .attr "r", "2px"
+                .property "line", -> $ this .parentsUntil('svg', 'g')[0].line
+                .style "fill", -> $ this.line .css 'stroke'
+                .attr "transform", (d, i) ->
+                    {x,y} = @line.indexToPoint i
+                    "translate(#x, #y)"
+        
+        
+        ### Mouse Lens
+        lens = root.lens = frame.selectAll "g.lens"
+            .data [[]]
+        gLens = lens.enter().append "g"
+            .attr "class", "lens"
+            .style "z-index", 1e9
+        gInner = gLens.append "g"
+            .attr "transform", "translate(1.5em,0)"
+        gInner.append "circle"
+            .attr "r", "1.5em"
+            # .style "opacity", "0.4"
+            # .style "fill", "white"
+            .style "fill", "rgba(255, 255, 255, 0.4)"
+            .style "stroke", "white"
+            .style "stroke-width", "3px"
+        gInner.append "text"
+            .attr "y", "0.5em"
+            .attr "text-anchor", "middle"
+            .style "fill", "white"
+            .style "font", "12px Helvetica"
+            .style "font-weight", "bold"
+        
+        lines.on "mouseover", (col, i) ->
+            line = root.line = this # DOM element of event
+            {r,g,b} = color = d3.rgb options.colors[i]
+            
+            # quantize mouse x-location to get for closest data-point (index into data array)
+            [x,y] = root.pos = d3.mouse line
+            idx = root.idx = line.indexAtX x
+            {x:lineX, y:lineY} = root.pt = line.indexToPoint idx
+            
+            lens = frame.select "g.lens"
+                .data d3.select(line).data()
+                .attr "transform", "translate(#lineX, #lineY)"
+            lens.select "circle" .style "fill", "rgba(#r, #g, #b, 0.4)"
+            lens.select "text" .text (col) -> col[idx][1]
+        
+        
+        
         
         svg
     

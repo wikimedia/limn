@@ -1,4 +1,5 @@
 {EventEmitter} = require 'events'
+EventEmitter::off     = EventEmitter::removeListener
 EventEmitter::trigger = EventEmitter::emit
 
 { _, op
