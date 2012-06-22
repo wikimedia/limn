@@ -114,7 +114,7 @@ Graph = exports.Graph = BaseModel.extend do # {{{
     
     load: (opts={}) ->
         return this if (@loading or @ready) and not opts.force
-        console.log "#this.load()..."
+        # console.log "#this.load()..."
         @loading = true
         @wait()
         @trigger 'load', this
@@ -168,7 +168,7 @@ Graph = exports.Graph = BaseModel.extend do # {{{
         unless @dataset.metrics.length
             return @triggerReady 'dataReady', 'data-ready'
         
-        console.log "#this.loadData()..."
+        # console.log "#this.loadData()..."
         @wait()
         @loading = true
         @trigger 'load-data', this
@@ -181,7 +181,7 @@ Graph = exports.Graph = BaseModel.extend do # {{{
                     return next.ok()
                 metric.source.once 'load-data-success', next.ok .loadData()
             .seq ~>
-                console.log "#{this}.loadData() complete!"
+                # console.log "#{this}.loadData() complete!"
                 @loading = false
                 @unwait() # terminates the `load` wait
                 @triggerReady 'dataReady', 'data-ready'
@@ -191,7 +191,7 @@ Graph = exports.Graph = BaseModel.extend do # {{{
         @dataset.getData()
     
     onDataSetChange: ->
-        console.log "#this.onDataSetChange!"
+        # console.log "#this.onDataSetChange!"
         # @set 'data', @dataset, {+silent}
         # @trigger 'change:data', this, @dataset, 'data'
         @trigger 'change',      this, @dataset, 'data'

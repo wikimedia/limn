@@ -126,7 +126,7 @@ DataSource = exports.DataSource = BaseModel.extend do # {{{
         this
     
     onLoadDataSuccess: (@data) ->
-        console.log "#this.onLoadDataSuccess #{@data}"
+        # console.log "#this.onLoadDataSuccess #{@data}"
         @unwait()
         @trigger 'load-data-success', this
         @triggerReady()

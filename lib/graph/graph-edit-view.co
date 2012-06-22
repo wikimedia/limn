@@ -81,7 +81,6 @@ GraphEditView = exports.GraphEditView = GraphView.extend do # {{{
     
     onReady: ->
         return if @ready
-        console.log "(#this via GraphEditView).ready!"
         @unwait() # clears `wait()` from `initialize`
         @model.chartType.on 'ready', @onChartTypeReady
         @triggerReady()

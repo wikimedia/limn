@@ -25,7 +25,6 @@ AppView = exports.AppView = Backbone.View.extend do # {{{
         
         @appSelector = that if options.appSelector
         options.el or= jQuery @appSelector .0
-        console.log "new #this", options
         Backbone.View.call this, options
         
         jQuery ~> @render()
