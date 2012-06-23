@@ -170,14 +170,26 @@ class exports.LineChartType extends ChartType
             idx = root.idx = line.indexAtX x
             {x:lineX, y:lineY} = root.pt = line.indexToPoint idx
             
-            lens = frame.select "g.lens"
-                .data d3.select(line).data()
+            lens = frame.select "g.lens"                
                 .attr "transform", "translate(#lineX, #lineY)"
             lens.select "circle" .style "fill", "rgba(#r, #g, #b, 0.4)"
-            lens.select "text" .text (col) -> col[idx][1]
+            lens.select "text" .text -> col[idx][1]
         
         
-        
+        points.on "mouseover", (d, i) ->
+            line = root.line = this.line # this is the DOM element of point
+            {r,g,b} = color = d3.rgb options.colors[i]
+                        
+            # quantize mouse x-location to get for closest data-point (index into data array)
+            [x,y] = root.pos = d3.mouse line
+            idx = root.idx = line.indexAtX x
+            {x:lineX, y:lineY} = root.pt = line.indexToPoint idx
+            
+            lens = frame.select "g.lens"                
+                .attr "transform", "translate(#lineX, #lineY)"
+            lens.select "circle" .style "fill", "rgba(#r, #g, #b, 0.4)"
+            lens.select "text" .text -> d[idx]
+
         
         svg
     
