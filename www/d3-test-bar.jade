@@ -30,8 +30,8 @@ block main-scripts
         
         // run on DOM-ready
         jQuery(function(){
-            root.app = new AppView(function(){
-                this.model = root.graph = new Graph({ id:'d3-test' }, { parse:true })
+            root.app = new AppView(function(){                
+                this.model = root.graph = new Graph({ id:'d3-test-bar' }, { parse:true })
                 this.view  = root.view  = new GraphEditView({ model:this.model })
             });
         });

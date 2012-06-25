@@ -1,5 +1,5 @@
 line = require 'kraken/chart/type/d3/d3-line-chart-type'
 # geo  = require 'kraken/chart/type/d3/d3-geo-chart-type'
-# bar  = require 'kraken/chart/type/d3/d3-bar-chart-type'
+bar  = require 'kraken/chart/type/d3/d3-bar-chart-type'
 
-exports import line # import geo import bar
+exports import line import bar # import geo 
