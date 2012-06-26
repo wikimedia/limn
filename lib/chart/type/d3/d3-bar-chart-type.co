@@ -13,7 +13,7 @@ class exports.BarChartType extends ChartType
     SPEC_URL : '/schema/d3/d3-bar.json'
     
     # NOTE: ChartType.register() must come AFTER `typeName` declaration.
-    typeName : 'd3-bar'    
+    typeName : 'd3-bar'
     ChartType.register this
     
     
@@ -40,38 +40,38 @@ class exports.BarChartType extends ChartType
             colors             : dataset.getColors()
             labels             : dataset.getLabels()
         options
-
-
-    renderChartType: (metric, svgEl ,xScale, yScale) ->        
+    
+    
+    renderChartType: (metric, svgEl ,xScale, yScale) ->
         
         X = (d, i) -> xScale d[0]
         Y = (d, i) -> yScale d[1]
         
-
+       
         ### Render the line path
         metricBars = root.metricBars = svgEl.append "g"
             .attr "class", "metric bars "+metric.get 'label'
                 
-        data = d3.zip metric.getDateColumn(),metric.getData()                
-
+        data = d3.zip metric.getDateColumn(),metric.getData()
+        
         ### Render Bars
         barWidth = svgEl.attr('width')/data.length
         barHeight = (d) ->  svgEl.attr('height')-Y(d)
-
-        metricBars.selectAll "bar"    
+        
+        metricBars.selectAll "bar"
             .data data
             .enter().append "rect"
                 .attr "class", (d, i) ->  "metric bar #i"
                 .attr "x", X
                 .attr "y", Y
                 .attr "height", barHeight
-                .attr "width", -> barWidth                
+                .attr "width", -> barWidth
                 .attr "fill", metric.get 'color'
                 .attr "stroke", "white"
                 .style "opacity", "0.4"
                 .style "z-index", -10
-
-
+        
+        
         # adding event listeners
         chT = this
         metricBars.selectAll ".metric.bar"
@@ -80,14 +80,14 @@ class exports.BarChartType extends ChartType
                 svgEl.append "text"
                     .attr "class", "mf"
                     .attr "dx", 50
-                    .attr "dy", 100   
-                    .style "font-size", "0px"                                
+                    .attr "dy", 100
+                    .style "font-size", "0px"
                     .transition()
-                    .duration(800)                
+                    .duration(800)
                         .text "Uh boy, the target would be:  "+chT.numberFormatter(d[1]).toString()
-                        .style "font-size", "25px"                    
+                        .style "font-size", "25px"
             .on "mouseout", (d, i) ->
-
+            
                 svgEl.selectAll ".mf"
                     .transition()
                     .duration(300)
@@ -95,9 +95,9 @@ class exports.BarChartType extends ChartType
                     .style "font-size", "0px"
                     .remove()
                 
-
-
-        svgEl        
+        
+        
+        svgEl
     
     renderChart: (data, viewport, options, lastChart) ->
         ### Starting with http://bost.ocks.org/mike/chart/
@@ -151,11 +151,11 @@ class exports.BarChartType extends ChartType
                     
         X = (d, i) -> xScale d[0]
         Y = (d, i) -> yScale d[1]
-
+        
         ### Render Bars
         barWidth = svg.attr('width')/dates.length
         barHeight = (d) -> svg.attr('height')-Y(d)
-
+        
         bars = frame.selectAll "g.bars"
             .data cols.map -> d3.zip dates, it
         bars.enter().append "g"
@@ -171,7 +171,7 @@ class exports.BarChartType extends ChartType
                 .attr "height", barHeight
                 .attr "width", -> barWidth
                 # TODO grab color from graph spec
-                .attr "fill", "red" 
+                .attr "fill", "red"
                 .attr "stroke", "white"
                         
         
@@ -197,22 +197,22 @@ class exports.BarChartType extends ChartType
             .style "font", "12px Helvetica"
             .style "font-weight", "bold"
         
-
+       
         mf = frame.selectAll "g.mf"
             .data ["mf"]
             .enter().append "g"
-                .attr "class", "mf"                
+                .attr "class", "mf"
             .append "text"
                 .attr "class", "yoyo"
                 .attr "dx", 50
                 .attr "dy", 100
-
-
-
+        
+        
+        
         bars.selectAll ".bar"
             .on "mouseover", (d, i) ->
                 el = root.el = el # DOM element of event
-                # {r,g,b} = color = d3.rgb options.colors[i]                            
+                # {r,g,b} = color = d3.rgb options.colors[i]
                 mf
                     .transition()
                     .duration(300)
@@ -220,18 +220,18 @@ class exports.BarChartType extends ChartType
                         .text "Uh boy, the target would be:"+d[1]
                         .style "font-size", "25px"
                 
-
+            
             .on "mouseout", (d, i) ->
                 mf
                     .transition()
                     .duration(1000)
                     .text "BUMMER!!!"
                     .style "font-size", "0px"
-
+                
                 
                 
                 # {x:lineX, y:lineY} = root.pt = line.indexToPoint idx
-                # lens = frame.select "g.lens"                
+                # lens = frame.select "g.lens"
                 #     .attr "transform", "translate(#lineX, #lineY)"
                 # lens.select "circle" .style "fill", "rgba(#r, #g, #b, 0.4)"
                 # lens.select "text" .text Y
