@@ -43,6 +43,8 @@ Metric = exports.Metric = BaseModel.extend do # {{{
         
         transforms       : []
         scale            : 1.0
+
+        chartType        : null
     
     
     
