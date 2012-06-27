@@ -10,18 +10,21 @@
  * @class
  */
 Dashboard = exports.Dashboard = BaseModel.extend do # {{{
-    urlRoot : '/dashboards'
-    graphs  : null # GraphList
-    byTab   : null # GraphList[]
+    urlRoot : '/dashboards'    
+    
+    # graph_ids : null
+    graphs : null    
+    # tabs : null
     
     
     constructor: function Dashboard
         @graphs = new GraphList
-        @byTab  = []
         BaseModel ...
+    
     
     initialize: ->
         BaseModel::initialize ...
+        @getGraphs null @trigger 'ready'
     
     
     defaults: ->
@@ -29,7 +32,55 @@ Dashboard = exports.Dashboard = BaseModel.extend do # {{{
         tabs : [ { name:"Main", graph_ids:[] } ]
     
     
+    graph_ids : <[
+        unique_visitors
+        reach
+        pageviews
+        pageviews_mobile
+        pageviews_mobile_target
+        commons
+        articles
+        articles_per_day
+        edits
+        new_editors
+        active_editors
+        active_editors_target
+        very_active_editors
+    ]>
     
+    
+    tabs : {
+        core :
+            graph_ids : <[
+            unique_visitors
+            pageviews
+            pageviews_mobile
+            pageviews_mobile_target
+            new_editors
+            active_editors
+            active_editors_target
+        ]>
+            name: ".core-graphs-pane"
+    
+        other :
+            graph_ids : <[
+            reach
+            commons
+            articles
+            articles_per_day
+            edits
+            very_active_editors
+        ]>
+            name: ".other-graphs-pane"
+    
+        dev :
+            graph_ids : <[
+            mobile_devices
+            mobile_devices_browsers
+            mobile_devices_applications
+        ]>
+            name: ".dev-graphs-pane"
+    }
     
     addTab: (tabName) ->
         ...
@@ -41,16 +92,92 @@ Dashboard = exports.Dashboard = BaseModel.extend do # {{{
      * @param {String|Number} tab Tab name or index.
      * @returns {Tab} Tab object.
      */
-    getTab: (tab) ->
+    getTab : (tab) ->
         tabs = @get 'tabs'
         return tabs[tab] if typeof tab is 'number'
         _.find tabs, -> it.name is tab
     
-    addGraph: (graph, tabName) ->
-        ...
+#    addGraph: (graph, tabName) ->
+#        ...
+        
     
-    getGraphs: (tab) ->
-        ...
+    getGraphIds : (cb, tabs) ->
+        console.log('[getGraphIds]\tentering')
+        tab_ids = _.keys(tabs)
+        tab_objs = _.values(tabs)
+        graph_ids = _.map tab_objs, (tab_obj) -> tab_obj.graph_ids
+        kvlists = _.zip(tab_ids, graph_ids)
+        # console.log(keys)
+        # console.log(values)
+        # console.log(kvlists)
+        cb null, kvlists
+
+    expand : (cb, kvlist) ->
+        console.log('[expand]\tentering')
+        # console.log(kvlist)
+        [key, vlist] = kvlist
+        # console.log('[expand]\tkey:')
+        # console.log(key)
+        # console.log('[expand]\tvlist:')
+        # console.log(vlist)
+        tmp = [[key, v] for v of vlist]
+        # console.log('[expand]\ttmp:')
+        # console.log(tmp)
+        cb null [[key, v] for v of vlist]
+
+    nest : (cb, records) ->
+        console.log('[nest]\tentering')
+        console.log('[nest]\torig:')
+        console.log(records)
+        tab_tree = d3.nest()
+            .key (graph_rec) ->
+                graph_rec[0]
+            .key (graph_rec) ->
+                graph_rec[1]
+            .rollup (arr) -> arr[0][2]
+            # .key (graph_rec) ->
+            #     graph_rec[2]
+            .map(records)
+        console.log('[nest]\tnew:')
+        console.log(tab_tree)
+        cb null tab_tree
     
+    show : (cb, obj) ->
+        console.log('[show]')
+        console.log(obj)
+        cb null, obj
+    
+    pushAsync : (cb, arr) ->
+        (err, elem) ->
+            console.log('[appendInner]\tentering')
+            console.log('[appendInner]\tarr:')
+            console.log(arr)
+            arr.push elem
+            cb null
+    
+    
+    getGraphs : (err, cb) ->
+        console.log('[getGraphs]\tentering')
+        _this = this
+        Seq [@tabs]
+        .seq_ @getGraphIds
+        # .parEach_ @show
+        .flatten(false)
+        # .parEach_ @show
+        .parMap_ @expand # turn ['core', ['x','y','z']] into [['core','x'],['core','y'],['core','z']]
+        # .parEach_ @show  
+        .flatten(false)
+        .flatten(false)
+        # .parEach_ @show
+        .parEach_ (next, kv) ->
+            console.log('this:')
+            console.log(this)
+            Graph.lookup kv[1], _this.pushAsync next, kv
+        # .parEach_ @show
+        .unflatten()
+        .seq_ @nest
+        .parEach_ @show
+        
+        
     
 # }}}
