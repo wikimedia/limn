@@ -5,6 +5,9 @@ ColorBrewer = require 'colorbrewer'
 } = require 'kraken/util'
 { ChartType,
 } = require 'kraken/chart/chart-type'
+{ D3ChartElement,
+} = require 'kraken/chart/type/d3/d3-chart-element'
+
 
 root = do -> this
 
@@ -28,9 +31,8 @@ class exports.D3ChartType extends ChartType
         legend   : '.graph-legend'
     
     
-    # constructor: function D3ChartType
-    -> super ...
     
+    -> super ...
     
     
     getData: ->
@@ -61,7 +63,7 @@ class exports.D3ChartType extends ChartType
         # Calculate extents using all the data points (but not dates)
         # allValues = d3.merge @model.dataset.getDataColumns()
         allValues = d3.merge cols
-                
+        
         # Update the x-scale with the extents of the dates.
         xScale
             .domain d3.extent dates
@@ -102,17 +104,21 @@ class exports.D3ChartType extends ChartType
             .attr "transform", "translate(0,#{yScale.range()[0]})"
             .call xAxis
         
+        # this is wrong. should work using d3 datajoins.
+        # i.e. use the enter/exit function to add/remove
+        # metrics from the graph
         for i,metric in @model.dataset.metrics.models
             # metric defined charttype
-            chartType = metric.get "chartType"
+            chartElement = metric.get "chartElement"
             # otherwise the graph defined charttype
             # FOR NOW take line as default
-            chartType or= 'd3-line' # @model.get "chartType"
-            
-            # create d3 charttype and render it
-            model = ChartType.create chartType
-            model.renderChartType metric, frame ,xScale, yScale
-        
+            chartElement ?= 'd3-line' # @model.get "chartType"
+                    
+
+            # create d3 chart element and render it
+            chEl = D3ChartElement.create chartElement
+            console.log chEl
+            chEl.renderChartElement metric, frame ,xScale, yScale
         
         svg
     

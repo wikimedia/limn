@@ -30,10 +30,17 @@ _fmt = do
      * 
      * @param {Number} n Number to format.
      * @param {Number} [digits=2] Number of digits after the decimal to always display.
-     * @returns {String} Formatted number.
+     * @param {Boolean} [abbrev=true] Expand number suffixes if false.
+     * @returns {Object} Formatted number parts.
      */
-    _numberFormatter: (n, digits=2) ->
-        for [suffix, d] of [['B', 1000000000], ['M', 1000000], ['K', 1000], ['', NaN]]
+    numberFormatter: (n, digits=2, abbrev=true) ->
+        suffixes = do
+            if abbrev
+                [['B', 1000000000], ['M', 1000000], ['K', 1000], ['', NaN]]
+            else
+                [['Billion', 1000000000], ['Million', 1000000], ['', NaN]]
+        
+        for [suffix, d] of suffixes
             break if isNaN d
             if n >= d
                 n = n / d
@@ -42,12 +49,9 @@ _fmt = do
         parts = s.split '.'
         whole = _.rchop parts[0], 3 .join ','
         fraction = '.' + parts.slice(1).join '.'
-        { n, digits, whole, fraction, suffix }
-    
-    
-    numberFormatter: (n, digits=2) ->
-        { whole, fraction, suffix } = _fmt._numberFormatter n, digits
-        "#whole#fraction#suffix"
+        { n, digits, whole, fraction, suffix, toString: -> 
+            "#{@whole}#{@fraction}#{if abbrev then '' else ' '}#{@suffix}"
+        }
     
     numberFormatterHTML: (n, digits=2) ->
         { whole, fraction, suffix } = _fmt._numberFormatter n, digits
@@ -61,4 +65,4 @@ _fmt = do
     
 
 
-exports = _fmt
+module.exports = exports =  _fmt
