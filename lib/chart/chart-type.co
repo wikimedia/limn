@@ -38,6 +38,7 @@ class exports.ChartType extends ReadyEmitter
      * Register a new chart type.
      */
     @register = (Subclass) ->
+        console.log "ChartType.register(#Subclass)"
         KNOWN_CHART_TYPES[ Subclass::typeName ] = Subclass
     
     /**
@@ -53,6 +54,7 @@ class exports.ChartType extends ReadyEmitter
      * @returns {ChartType}
      */
     @create = (model, view) ->
+        console.log "ChartType.create(#model) ->", model
         return null unless Type = @lookup model
         new Type model, view
     

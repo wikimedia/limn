@@ -80,10 +80,11 @@ dev:
                     - timeseries
                     - csv
                     - index
-                - op
+                - op            
                 - backbone
                 - parser
                 - cascade
+                - formatters
                 - index
             - base:
                 - scaffold:
@@ -112,11 +113,12 @@ dev:
                     - index
                 - type:
                     - d3:
-                        - d3-chart-type
-                        - d3-line-chart-type                        
-                        - d3-bar-chart-type
+                        - d3-chart-element
+                        - d3-line-element
+                        - d3-bar-element
                         # - d3-geo-chart-type
                         - index
+                    - d3-chart
                     - dygraphs
                     - index
                 - chart-type
