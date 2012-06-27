@@ -24,8 +24,7 @@ Dashboard = exports.Dashboard = BaseModel.extend do # {{{
     
     initialize: ->
         BaseModel::initialize ...
-        @getGraphs null @trigger 'ready'
-    
+        @getGraphs null, ~> @triggerReady
     
     defaults: ->
         name : null
@@ -99,48 +98,20 @@ Dashboard = exports.Dashboard = BaseModel.extend do # {{{
     
 #    addGraph: (graph, tabName) ->
 #        ...
-        
     
-    getGraphIds : (cb, tabs) ->
-        console.log('[getGraphIds]\tentering')
-        tab_ids = _.keys(tabs)
-        tab_objs = _.values(tabs)
-        graph_ids = _.map tab_objs, (tab_obj) -> tab_obj.graph_ids
-        kvlists = _.zip(tab_ids, graph_ids)
-        # console.log(keys)
-        # console.log(values)
-        # console.log(kvlists)
-        cb null, kvlists
-
-    expand : (cb, kvlist) ->
-        console.log('[expand]\tentering')
-        # console.log(kvlist)
-        [key, vlist] = kvlist
-        # console.log('[expand]\tkey:')
-        # console.log(key)
-        # console.log('[expand]\tvlist:')
-        # console.log(vlist)
-        tmp = [[key, v] for v of vlist]
-        # console.log('[expand]\ttmp:')
-        # console.log(tmp)
-        cb null [[key, v] for v of vlist]
-
     nest : (cb, records) ->
         console.log('[nest]\tentering')
-        console.log('[nest]\torig:')
-        console.log(records)
-        tab_tree = d3.nest()
+        # console.log('[nest]\torig:')
+        # console.log(records)
+        graph_map = d3.nest()
             .key (graph_rec) ->
                 graph_rec[0]
-            .key (graph_rec) ->
-                graph_rec[1]
-            .rollup (arr) -> arr[0][2]
-            # .key (graph_rec) ->
-            #     graph_rec[2]
+            .rollup (arr) -> 
+                arr[0][1]
             .map(records)
-        console.log('[nest]\tnew:')
-        console.log(tab_tree)
-        cb null tab_tree
+        # console.log('[nest]\tnew:')
+        # console.log(graph_map)
+        cb null graph_map
     
     show : (cb, obj) ->
         console.log('[show]')
@@ -149,34 +120,33 @@ Dashboard = exports.Dashboard = BaseModel.extend do # {{{
     
     pushAsync : (cb, arr) ->
         (err, elem) ->
-            console.log('[appendInner]\tentering')
-            console.log('[appendInner]\tarr:')
-            console.log(arr)
             arr.push elem
             cb null
-    
-    
+
     getGraphs : (err, cb) ->
         console.log('[getGraphs]\tentering')
-        _this = this
-        Seq [@tabs]
-        .seq_ @getGraphIds
-        # .parEach_ @show
-        .flatten(false)
-        # .parEach_ @show
-        .parMap_ @expand # turn ['core', ['x','y','z']] into [['core','x'],['core','y'],['core','z']]
-        # .parEach_ @show  
-        .flatten(false)
-        .flatten(false)
-        # .parEach_ @show
-        .parEach_ (next, kv) ->
-            console.log('this:')
-            console.log(this)
-            Graph.lookup kv[1], _this.pushAsync next, kv
+        # consolidate graph_ids to one array
+        graph_ids = _(@tabs).chain().values().map((tab_obj) -> tab_obj.graph_ids).flatten().value()
+        
+        Seq [graph_ids]
+        .flatten()
+        .parMap_ (next, graph_id) ->
+            next null [graph_id]
+        .parEach_ (next, graph_id_arr) ~>
+            Graph.lookup graph_id_arr[0], @pushAsync next, graph_id_arr
+            # Graph.lookup graph_id_arr[0], (err, el) ->
+            #     graph_id_arr.push el
+            #     next null
         # .parEach_ @show
         .unflatten()
-        .seq_ @nest
-        .parEach_ @show
+        .seq_ (next, graph_tuples) ->
+            # console.log('[setter]\tgraph_tuples:')
+            # console.log(graph_tuples)
+            @graphs = _.generate graph_tuples
+            # console.log('[setter]\t@graphs:')
+            # console.log(@graphs)            
+            cb null
+        # .parEach_ @show
         
         
     

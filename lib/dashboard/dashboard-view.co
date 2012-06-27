@@ -19,52 +19,6 @@ DashboardView = exports.DashboardView = BaseView.extend do # {{{
     className      : 'dashboard'
     template       : require 'kraken/template/dashboard/dashboard'
     
-    graph_ids : <[
-        unique_visitors
-        reach
-        pageviews
-        pageviews_mobile
-        pageviews_mobile_target
-        commons
-        articles
-        articles_per_day
-        edits
-        new_editors
-        active_editors
-        active_editors_target
-        very_active_editors
-    ]>
-    
-    core_tab :
-        graph_ids : <[
-        unique_visitors
-        pageviews
-        pageviews_mobile
-        pageviews_mobile_target
-        new_editors
-        active_editors
-        active_editors_target
-    ]>
-        name: ".core-graphs-pane"
-    
-    other_tab :
-        graph_ids : <[
-        reach
-        commons
-        articles
-        articles_per_day
-        edits
-        very_active_editors
-    ]>
-        name: ".other-graphs-pane"
-    
-    dev_tab :
-        graph_ids : <[
-        mobile_devices
-        mobile_devices_browsers
-        mobile_devices_applications
-    ]>
-        name: ".dev-graphs-pane"
     
     events:
         # Select the whole permalink URI text when it receives focus.
@@ -78,7 +32,8 @@ DashboardView = exports.DashboardView = BaseView.extend do # {{{
     ready    : false
     
     
-    constructor: function DashboardView
+    constructor: function DashboardView(options={})
+        @model = options.model
         @subviews = []
         @graphs   = new GraphList
         Backbone.View ...
@@ -88,7 +43,8 @@ DashboardView = exports.DashboardView = BaseView.extend do # {{{
         BaseView::initialize ...
         # @graphs.on 'add', @attachGraphs, this
         # @graphs.on 'add', @attachGraph, this
-        @load()
+        console.log('[dashboard-view::initialize]\tentering')
+        @model.on('ready', @load, this)
     
     
     # FIXME:
@@ -97,15 +53,14 @@ DashboardView = exports.DashboardView = BaseView.extend do # {{{
     # TODO:
     #   - only render graph when scrolling makes it visible
     load: ->
-        @addTab(@core_tab)
-        @addTab(@other_tab)
-        @addTab(@dev_tab)
+        console.log('[dashboard-view::load]\tentering')
+        _.map(@model.tabs, @addTab)
     
     addTab: (tab) ->
+        console.log('[dashboard-view::addTab]\tentering')
         self = this
-        Seq(tab.graph_ids)
-            .parMap (id) ->
-                Graph.lookup id, this
+        graphs = _(tab.graph_ids).map((graph_id) -> @model.graphs[graph_id])
+        Seq(graphs)
             .parMap (graph) ->
                 self.graphs.add graph
                 this null, new GraphDisplayView {model:graph}
@@ -115,7 +70,6 @@ DashboardView = exports.DashboardView = BaseView.extend do # {{{
                 graphs_el.append view.el
                 self.subviews.push view
                 view.isAttached = true
-    
     
     ### Tabs {{{
     
