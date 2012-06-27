@@ -84,36 +84,35 @@ class exports.D3ChartType extends ChartType
         # Update chart dimensions.
         svg .attr "width", width
             .attr "height", height
-
+        
         frame = svg.select "g.frame"
             .attr "transform", "translate(#{margin.left},#{margin.top})"
             .attr "width", width - margin.left - margin.right
             .attr "height", height - margin.top - margin.bottom
-
-
+        
+        
         # x-axis.
         # TODO move axis to separate chart-type
         enterFrame.append "g"
-            .attr "class", "x axis time"        
+            .attr "class", "x axis time"
         
-
+        
         xAxis = d3.svg.axis().scale(xScale).orient("bottom").tickSize(6, 0)
         frame.select ".x.axis.time"
             .attr "transform", "translate(0,#{yScale.range()[0]})"
-            .call xAxis        
-                
+            .call xAxis
+        
         for i,metric in @model.dataset.metrics.models
             # metric defined charttype
-            chartType = metric.get "chartType"            
+            chartType = metric.get "chartType"
             # otherwise the graph defined charttype
             # FOR NOW take line as default
             chartType or= 'd3-line' # @model.get "chartType"
-                    
-
+            
             # create d3 charttype and render it
-            model = ChartType.create chartType                
+            model = ChartType.create chartType
             model.renderChartType metric, frame ,xScale, yScale
-
+        
         
         svg
     

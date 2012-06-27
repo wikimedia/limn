@@ -173,7 +173,7 @@ class exports.BarChartType extends ChartType
                 # TODO grab color from graph spec
                 .attr "fill", "red"
                 .attr "stroke", "white"
-                        
+        
         
         ### Mouse Lens
         lens = root.lens = frame.selectAll "g.lens"
@@ -197,7 +197,7 @@ class exports.BarChartType extends ChartType
             .style "font", "12px Helvetica"
             .style "font-weight", "bold"
         
-       
+        
         mf = frame.selectAll "g.mf"
             .data ["mf"]
             .enter().append "g"
@@ -219,7 +219,6 @@ class exports.BarChartType extends ChartType
                     .ease("exp")
                         .text "Uh boy, the target would be:"+d[1]
                         .style "font-size", "25px"
-                
             
             .on "mouseout", (d, i) ->
                 mf
@@ -227,7 +226,6 @@ class exports.BarChartType extends ChartType
                     .duration(1000)
                     .text "BUMMER!!!"
                     .style "font-size", "0px"
-                
                 
                 
                 # {x:lineX, y:lineY} = root.pt = line.indexToPoint idx
