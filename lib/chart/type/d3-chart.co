@@ -92,7 +92,8 @@ class exports.D3ChartType extends ChartType
             .attr "width", width - margin.left - margin.right
             .attr "height", height - margin.top - margin.bottom
         
-        
+
+
         # x-axis.
         # TODO move axis to separate chart-type
         enterFrame.append "g"
@@ -104,23 +105,28 @@ class exports.D3ChartType extends ChartType
             .attr "transform", "translate(0,#{yScale.range()[0]})"
             .call xAxis
         
-        # this is wrong. should work using d3 datajoins.
-        # i.e. use the enter/exit function to add/remove
-        # metrics from the graph
-        for i,metric in @model.dataset.metrics.models
-            # metric defined charttype
-            chartElement = metric.get "chartElement"
-            # otherwise the graph defined charttype
-            # FOR NOW take line as default
-            chartElement ?= 'd3-line' # @model.get "chartType"
-                    
 
-            # create d3 chart element and render it
-            chEl = D3ChartElement.create chartElement
-            console.log chEl
-            chEl.renderChartElement metric, frame ,xScale, yScale
+        metrics = frame.selectAll "metric"
+            .data @model.dataset.metrics.models
+
+        metrics.enter()
+            .append("g")
+                .attr "class", (d) -> 
+                    "g metric line "+d.get 'label'
+                .each (d) -> 
+                    # console.log d
+                    # metric defined charttype
+                    chartElement = d.get "chartElement"
+                    # otherwise the graph defined charttype
+                    # FOR NOW take line as default
+                    chartElement ?= 'd3-line' # @model.get "chartElement"                 
+                    # create d3 chart element and render it
+                    chEl = D3ChartElement.create chartElement
+
+                    chEl.renderChartElement d, frame ,xScale, yScale
+
+        metrics.exit().remove()
         
         svg
-    
     
     
