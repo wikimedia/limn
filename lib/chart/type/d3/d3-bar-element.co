@@ -42,7 +42,7 @@ class exports.BarChartType extends D3ChartElement
                 .attr "x", X
                 .attr "y", Y
                 .attr "height", barHeight
-                .attr "width", -> barWidth                
+                .attr "width", barWidth                
                 .attr "fill", metric.get 'color'
                 .attr "stroke", "white"
                 .style "opacity", "0.4"

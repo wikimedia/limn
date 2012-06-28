@@ -27,7 +27,7 @@ class exports.D3ChartElement extends ReadyEmitter
      * Register a new d3 element
      */
     @register = (Subclass) ->
-        console.log "D3ChartElement.register(#Subclass)"
+        # console.log "D3ChartElement.register(#Subclass)"
         KNOWN_CHART_ELEMENTS[ Subclass::chartElement ] = Subclass
     
     /**
@@ -43,13 +43,13 @@ class exports.D3ChartElement extends ReadyEmitter
      * @returns {D3ChartElement}
      */
     @create = (name) ->
-        console.log "D3ChartElement.create(#name)"        
+        # console.log "D3ChartElement.create(#name)"        
         return null unless Type = @lookup name
         
         new Type 
             
     
-    () ->        
+    ->        
         _.bindAll this, ...@__bind__ # TODO: roll up MRO
         @loadSpec() unless @ready
         super ...
@@ -74,6 +74,10 @@ class exports.D3ChartElement extends ReadyEmitter
                 @triggerReady()
             error: ~> console.error "Error loading #{@typeName} spec! #it"
         this
+
+    renderChartElement: (metric, svgEl ,xScale, yScale) ->  svgEl        
+        
+
     
     
     
