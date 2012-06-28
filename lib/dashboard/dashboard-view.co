@@ -14,7 +14,7 @@ Seq = require 'seq'
  * @class
  */
 DashboardView = exports.DashboardView = BaseView.extend do # {{{
-    __bind__       : <[  ]>
+    __bind__       : <[ addTab ]>
     tagName        : 'section'
     className      : 'dashboard'
     template       : require 'kraken/template/dashboard/dashboard'
@@ -43,7 +43,6 @@ DashboardView = exports.DashboardView = BaseView.extend do # {{{
         BaseView::initialize ...
         # @graphs.on 'add', @attachGraphs, this
         # @graphs.on 'add', @attachGraph, this
-        console.log('[dashboard-view::initialize]\tentering')
         @model.on('ready', @load, this)
     
     
@@ -53,13 +52,11 @@ DashboardView = exports.DashboardView = BaseView.extend do # {{{
     # TODO:
     #   - only render graph when scrolling makes it visible
     load: ->
-        console.log('[dashboard-view::load]\tentering')
         _.map(@model.tabs, @addTab)
     
     addTab: (tab) ->
-        console.log('[dashboard-view::addTab]\tentering')
         self = this
-        graphs = _(tab.graph_ids).map((graph_id) -> @model.graphs[graph_id])
+        graphs = _(tab.graph_ids).map((graph_id) ~> @model.graphs[graph_id])
         Seq(graphs)
             .parMap (graph) ->
                 self.graphs.add graph

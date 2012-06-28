@@ -13,7 +13,7 @@ Dashboard = exports.Dashboard = BaseModel.extend do # {{{
     urlRoot : '/dashboards'    
     
     # graph_ids : null
-    graphs : null    
+    graphs : null 
     # tabs : null
     
     
@@ -24,7 +24,7 @@ Dashboard = exports.Dashboard = BaseModel.extend do # {{{
     
     initialize: ->
         BaseModel::initialize ...
-        @getGraphs null, ~> @triggerReady
+        @getGraphs()
     
     defaults: ->
         name : null
@@ -98,21 +98,7 @@ Dashboard = exports.Dashboard = BaseModel.extend do # {{{
     
 #    addGraph: (graph, tabName) ->
 #        ...
-    
-    nest : (cb, records) ->
-        console.log('[nest]\tentering')
-        # console.log('[nest]\torig:')
-        # console.log(records)
-        graph_map = d3.nest()
-            .key (graph_rec) ->
-                graph_rec[0]
-            .rollup (arr) -> 
-                arr[0][1]
-            .map(records)
-        # console.log('[nest]\tnew:')
-        # console.log(graph_map)
-        cb null graph_map
-    
+
     show : (cb, obj) ->
         console.log('[show]')
         console.log(obj)
@@ -122,8 +108,8 @@ Dashboard = exports.Dashboard = BaseModel.extend do # {{{
         (err, elem) ->
             arr.push elem
             cb null
-
-    getGraphs : (err, cb) ->
+    
+    getGraphs : ->
         console.log('[getGraphs]\tentering')
         # consolidate graph_ids to one array
         graph_ids = _(@tabs).chain().values().map((tab_obj) -> tab_obj.graph_ids).flatten().value()
@@ -139,15 +125,11 @@ Dashboard = exports.Dashboard = BaseModel.extend do # {{{
             #     next null
         # .parEach_ @show
         .unflatten()
-        .seq_ (next, graph_tuples) ->
-            # console.log('[setter]\tgraph_tuples:')
-            # console.log(graph_tuples)
+        .seq_ (next, graph_tuples) ~>
             @graphs = _.generate graph_tuples
-            # console.log('[setter]\t@graphs:')
-            # console.log(@graphs)            
-            cb null
-        # .parEach_ @show
-        
+            console.log('[setter]\tcalling ready')
+            @triggerReady()
+        this
         
     
 # }}}
