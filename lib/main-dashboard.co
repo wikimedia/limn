@@ -11,7 +11,7 @@ Backbone = require 'backbone'
 } = require 'kraken/chart'
 { Graph, GraphList, GraphDisplayView,
 } = require 'kraken/graph'
-{ DashboardView,
+{ DashboardView, Dashboard,
 } = require 'kraken/dashboard'
 
 
@@ -22,7 +22,8 @@ root = this
 main = ->
     # Instantiate model & view
     root.app = new AppView ->
-        @view  = root.dashboard  = new DashboardView {@model}
+        @model  = root.dashboard  = new Dashboard
+        @view  = root.view  = new DashboardView {@model}
 
 
 jQuery main
