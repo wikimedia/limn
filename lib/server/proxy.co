@@ -1,0 +1,37 @@
+_         = require 'underscore'
+url       = require 'url'
+minimatch = require 'minimatch'
+request   = require 'request'
+
+
+matchesList = (list, value) ->
+    for pat of list
+        return true if pat(value)
+    false
+
+ProxyMiddleware = (options={}) ->
+    {whitelist, blacklist} = options = {whitelist:[], blacklist:[], ...options}
+    whitelist .= map -> minimatch.filter it, {+nocase}
+    blacklist .= map -> minimatch.filter it, {+nocase}
+    
+    return (req, res) ->
+        targetUrl = ( req.params.url or url.parse(req.url).pathname.slice(3) ).trim()
+        return res.send {error:'URL required'}, 400 unless targetUrl
+        
+        targetUrl = "http://#targetUrl" unless /^https?:\/\//.test targetUrl
+        target = url.parse targetUrl, true, true
+        
+        if matchesList blacklist, target.hostname
+            return res.send {error:'Domain is blacklisted'}, 403
+        unless matchesList whitelist, target.hostname
+            return res.send {error:'Domain is not whitelisted'}, 403
+        
+        # Set the no-buffering flag for nginx
+        res.header 'X-Accel-Buffering', 'no'
+        
+        console.log "[Proxy] #targetUrl"
+        request.get targetUrl .pipe res
+
+
+module.exports = exports = ProxyMiddleware
+exports.ProxyMiddleware = ProxyMiddleware

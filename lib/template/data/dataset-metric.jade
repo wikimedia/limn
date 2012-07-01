@@ -1,0 +1,8 @@
+tr.dataset-metric(class=viewClasses)
+    td.col-label.col-color(style="color: #{color};", data-bind="label") #{label}
+    td.col-source(data-bind="source") #{source}
+    td.col-time(data-bind="timespan", data-bind-escape="false") #{timespan}
+    td.col-actions
+        a.delete-metric-button.control.close(href="#") &times;
+        .activity-arrow: div.inner
+    

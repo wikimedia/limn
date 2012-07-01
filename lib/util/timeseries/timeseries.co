@@ -1,0 +1,191 @@
+_  = require 'kraken/util/underscore'
+
+
+
+/**
+ * @class Represents a collection of data columns aligned along a common timeline.
+ */
+class TimeSeriesData
+    DEFAULT_OPTIONS : {}
+    
+    options         : {}
+    labels          : []
+    types           : []
+    
+    untransformedRows        : null # row-oriented (untransformed)
+    rows            : null # row-oriented
+    columns         : null # column-oriented (includes date column)
+    dateColumn      : null # only date column
+    dataColumns     : null # column-oriented (excludes date column)
+    
+    
+    /**
+     * @constructor
+     */
+    (data, opts) ->
+        unless typeof data is 'string' or _.isArray data
+            [opts, data] = [data, null]
+        @options = _.clone(@DEFAULT_OPTIONS) import (opts or {})
+        
+        @transforms = []
+        @labels  = @options.labels or []
+        @types   = @options.types  or []
+        
+        @parseData that if data or @options.data
+        @rebuildDerived()
+    
+    
+    /* * * *  TimeSeriesData interface  * * * */
+    
+    
+    /**
+     * @returns {Array<Array>} List of rows, each of which includes all columns.
+     */
+    getData: ->
+        @data
+    
+    /**
+     * @returns {Array<Array>} List of all columns (including date column).
+     */
+    getColumns: ->
+        @columns
+    
+    /**
+     * @returns {Array<Date>} The date column.
+     */
+    getDateColumn: ->
+        @dateColumn
+    
+    /**
+     * @returns {Array<Array>} List of all columns except the date column.
+     */
+    getDataColumns: ->
+        @dataColumns
+    
+    /**
+     * @returns {Array<String>} List of column labels.
+     */
+    getLabels: ->
+        @labels
+    
+    
+    /* * * *  Parsing  * * * */
+    
+    /**
+     * Subclass and override to perform preprocessing of the data.
+     * @private
+     */
+    parseData : (rawData) ->
+        this
+    
+    /**
+     * Rebuilds the row-oriented data matrix from the columns.
+     * @private
+     */
+    rebuildData: ->
+        @rows = _.zip ...@columns
+        @rebuildDerived()
+    
+    /**
+     * Rebuilds the column-oriented data matrix from the columns.
+     * @private
+     */
+    rebuildColumns: ->
+        @columns = _.zip ...@rows
+        @rebuildDerived()
+    
+    /**
+     * @private
+     */
+    rebuildDerived: ->
+        while @transforms.length < @columns.length
+            @transforms.push []
+        @dateColumn  = @columns[0]
+        @dataColumns = @columns.slice(1)
+        this
+    
+    
+    
+    /* * * *  Data Transformation  * * * */
+    
+    /**
+     * Applies the stack of transforms to the data.
+     * 
+     * TODO: Apply transforms in @getData()?
+     * @private
+     * @returns {this}
+     */
+    applyTransforms: ->
+        for fns, idx of @transforms
+            for [fn, ctx] of fns
+                @columns[idx] .= map fn, ctx
+        @rebuildData()
+    
+    /**
+     * Clears all transforms and restores the original data.
+     * @returns {this}
+     */
+    clearTransforms: ->
+        @transforms = []
+        @rows = _.merge [], @untransformedRows
+        @rebuildColumns()
+    
+    /**
+     * Add a data transform to the specified columns. The function is
+     * applied one-by-one (in column-major order), replacing the data
+     * with the mapped result.
+     * 
+     * @param {Number|Array} indices List one or more column indices to map. Negative
+     *  numbers are offset from the end of the columns list.
+     * @param {Function} fn Mapping function of the form:
+     *  `(single_value, row_idx, column) -> new_value`
+     * @param {Object} [ctx=this] Execution context for the function.
+     * @returns {this}
+     */
+    addTransform: (indices, fn, ctx=this) ->
+        num_cols = @columns.length
+        if typeof idx is 'function'
+            [ctx, fn, indices] = [fn, indices, null]
+        unless indices?
+            indices = _.range num_cols
+        unless _.isArray indices
+            indices = [indices]
+        for idx of indices
+            idx %= num_cols
+            idx += num_cols if idx < 0
+            @transforms[idx].push [fn, ctx]
+        @applyTransforms()
+    
+    /**
+     * Add a data transform to all columns except the date column. The function
+     * is applied one-by-one (in column-major order), replacing the data
+     * with the mapped result.
+     * 
+     * @param {Function} fn Mapping function of the form:
+     *  `(single_value, row_idx, column) -> new_value`
+     * @param {Object} [ctx=this] Execution context for the function.
+     * @returns {this}
+     */
+    addDataTransform: (fn, ctx=this) ->
+        @addTransform _.range(1, @columns.length), fn, ctx
+    
+    
+    
+    /* * * *  Misc  * * * */
+    
+    /**
+     * @returns {Array<Array>} Deep copy of the data rows (including all columns).
+     */
+    toJSON: ->
+        _.merge [], @getData()
+    
+    toString: ->
+        labels = @labels
+            .map -> "'#it'"
+            .join ', '
+        "#{@..name or @..displayName}(#labels)"
+    
+
+
+module.exports = exports = TimeSeriesData
+

@@ -1,13 +1,13 @@
 Seq = require 'seq'
 
-_ = require 'kraken/util/underscore'
-Cascade = require 'kraken/util/cascade'
+{ _, Cascade,
+} = require 'kraken/util'
+{ BaseModel, BaseList, ModelCache,
+} = require 'kraken/base'
 { ChartType,
 } = require 'kraken/chart'
-{ BaseModel, BaseList,
-} = require 'kraken/base'
 { DataSet
-} = require 'kraken/dataset'
+} = require 'kraken/data'
 
 root = do -> this
 
@@ -18,7 +18,6 @@ root = do -> this
  * other settings for both its content and presentation.
  */
 Graph = exports.Graph = BaseModel.extend do # {{{
-    ctorName       : 'Graph'
     IGNORE_OPTIONS : <[ width height timingName ]>
     urlRoot        : '/graphs'
     
@@ -28,6 +27,12 @@ Graph = exports.Graph = BaseModel.extend do # {{{
      * @type Boolean
      */
     ready : false
+    
+    /**
+     * Whether this Graph has loaded the actual data needed to draw the chart.
+     * @type Boolean
+     */
+    dataReady : false
     
     /**
      * The chart type backing this graph.
@@ -55,19 +60,23 @@ Graph = exports.Graph = BaseModel.extend do # {{{
      * Attribute defaults.
      */
     defaults: ->
-        {
-            slug    : ''
-            name    : ''
-            desc    : ''
-            notes   : ''
-            dataset : '/data/datasources/rc/rc_comscore_region_uv.csv'
-            # dataset : null
-            width   : 'auto'
-            height  : 320
-            chartType : 'dygraphs'
-            parents : <[ root ]>
-            options : {}
-        }
+        slug    : ''
+        name    : ''
+        desc    : ''
+        notes   : ''
+        width   : 'auto'
+        height  : 320
+        parents : <[ root ]>
+        data    :
+            palette : null
+            metrics : []
+            lines   : []
+        callout :
+            enabled     : true
+            metric_idx  : 0
+            label       : ''
+        chartType : 'dygraphs'
+        options : {}
     
     url: ->
         "#{@urlRoot}/#{@get('slug')}.json"
@@ -77,65 +86,125 @@ Graph = exports.Graph = BaseModel.extend do # {{{
     constructor: function Graph (attributes={}, opts)
         # @on 'ready', ~> console.log "(#this via Graph).ready!"
         attributes.options or= {}
+        attributes.slug    or= attributes.id if attributes.id?
         @optionCascade = new Cascade attributes.options
         BaseModel.call this, attributes, opts
     
     
-    initialize: (attributes, opts) ->
+    initialize: (attributes) ->
         BaseModel::initialize ...
-        opts = {+autoload} import (opts or {})
         
         @constructor.register this
         @parents = new GraphList
-        
-        # TODO: Load on-demand
-        @chartType = ChartType.lookup @get('chartType')
+        @chartType = ChartType.create this
+        @on 'change:chartType', ~> @chartType = ChartType.create this
         
         # Insert submodels in place of JSON
-        # @set 'dataset', new DataSet(@get('dataset')), {+silent}
+        @dataset = new DataSet {id:@id, ...@get 'data'}
+            .on 'change',               @onDataSetChange, this
+            .on 'metric-data-loaded',   (dataset, metric) ~>
+                @trigger 'metric-data-loaded', this, metric
+        @set 'data', @dataset, {+silent}
         
         @trigger 'init', this
-        @load() if opts.autoload
     
+    
+    
+    ### Loading {{{
     
     load: (opts={}) ->
-        return this if @ready and not opts.force
+        return this if (@loading or @ready) and not opts.force
+        # console.log "#this.load()..."
+        @loading = true
+        @wait()
         @trigger 'load', this
         Seq()
+            # Fetch model if 
             .seq_ (next) ~>
-                if @isNew()
-                    next.ok()
-                else
-                    console.log "#{this}.fetch()..."
-                    @fetch do
-                        error : (err) ~>
-                            console.error "#{this}.fetch() --> error! #arguments"
-                            next.ok()
-                        success : (model, res) ~>
-                            # console.log "#{this}.fetch() --> success!", res
-                            next.ok res
+                return next.ok() if @isNew()
+                # console.log "#{this}.fetch()..."
+                @wait()
+                @fetch do
+                    error : @unwaitAnd (err) ~>
+                        console.error "#{this}.fetch() --> error! #arguments"
+                        next.ok()
+                    success : @unwaitAnd (model, res) ~>
+                        # console.log "#{this}.fetch() --> success!", res
+                        # Update the DataSet model with the new values
+                        @dataset.set @get 'data'
+                        @set 'data', @dataset, {+silent}
+                        next.ok res
+            
+            # Load Parents...
             .seq_ (next) ~>
-                next.ok @get('parents')
+                next.ok @get 'parents'
             .flatten()
-            .seqMap -> Graph.lookup it, this
+            .seqMap_ (next, parent_id) ~>
+                @wait()
+                Graph.lookup parent_id, next
             .seqEach_ (next, parent) ~>
                 @parents.add parent
                 @optionCascade.addLookup parent.get('options')
+                @unwait()
                 next.ok()
+            
+            # Load DataSet...
+            .seq_ (next) ~>
+                @dataset.once 'ready', next.ok .load()
+            
+            # Done!
             .seq ~>
-                @ready = true
-                @trigger 'ready', this
+                # console.log "#{this}.load() complete!"
+                @loading = false
+                @unwait() # terminates the `load` wait
+                @triggerReady()
         this
     
     
+    loadData: (opts={}) ->
+        @resetReady 'dataReady', 'data-ready' if opts.force
+        return this if @loading or @dataReady
+        
+        unless @dataset.metrics.length
+            return @triggerReady 'dataReady', 'data-ready'
+        
+        # console.log "#this.loadData()..."
+        @wait()
+        @loading = true
+        @trigger 'load-data', this
+        Seq @dataset.metrics.models
+            .parEach_ (next, metric) ->
+                metric.once 'ready', next.ok .load()
+            .parEach_ (next, metric) ~>
+                unless metric.source
+                    console.warn "#{this}.loadData() -- Skipping metric #metric with invalid source!", metric
+                    return next.ok()
+                metric.source.once 'load-data-success', next.ok .loadData()
+            .seq ~>
+                # console.log "#{this}.loadData() complete!"
+                @loading = false
+                @unwait() # terminates the `load` wait
+                @triggerReady 'dataReady', 'data-ready'
+        this
     
-    ### Accessors
+    getData: ->
+        @dataset.getData()
+    
+    onDataSetChange: ->
+        # console.log "#this.onDataSetChange!"
+        # @set 'data', @dataset, {+silent}
+        # @trigger 'change:data', this, @dataset, 'data'
+        @trigger 'change',      this, @dataset, 'data'
+    
+    
+    ### }}}
+    ### Accessors {{{
     
     get: (key) ->
         if _.startsWith key, 'options.'
             @getOption key.slice(8)
         else
-            (@..__super__ or BaseModel::).get.call this, key
+            Graph.__super__.get.call this, key
     
     
     set: (key, value, opts) ->
@@ -146,7 +215,7 @@ Graph = exports.Graph = BaseModel.extend do # {{{
             values = { "#key": value }
         values = @parse values
         
-        setter = (@..__super__ or BaseModel::).set
+        setter = Graph.__super__.set
         
         # Merge options in, firing granulated change events
         if values.options
@@ -164,9 +233,49 @@ Graph = exports.Graph = BaseModel.extend do # {{{
         # Deal with everything else
         setter.call this, values, opts
     
+    getCalloutData: ->
+        # For now, always operate on the first Metric
+        return unless (m = @dataset.metrics.at 0) and
+            (data  = m.getData()) and
+            (dates = m.getDateColumn())
+        
+        # trim cols to match the right timespan
+        len = Math.min data.length, dates.length
+        data  .= slice(data.length  - len) if data.length  < len
+        dates .= slice(dates.length - len) if dates.length < len
+        
+        for i til len
+            v = data[i]
+            break if v? and not isNaN(v)
+        if i > 0
+            data  .= slice i
+            dates .= slice i
+        
+        # Compare against latest non-null value
+        last = len - 1
+        for i til len
+            v = data[last - i]
+            break if v? and not isNaN(v)
+        if i > 0
+            data  .= slice 0, last - (i-1)
+            dates .= slice 0, last - (i-1)
+        
+        # Calc index offsets
+        latest     = data.length - 1
+        last_month = latest - 1
+        last_year  = latest - 12
+        
+        callout =
+            latest    : data[latest]
+            month : 
+                dates : [ dates[last_month], dates[latest] ]
+                value : [ data[last_month],  data[latest], data[latest] - data[last_month] ]
+            year : 
+                dates : [ dates[last_year], dates[latest]  ]
+                value : [ data[last_year],  data[latest],  data[latest] - data[last_year]  ]
     
-    
-    ### Chart Option Accessors ###
+    ### }}}
+    ### Chart Option Accessors {{{
     
     hasOption: (key) ->
         @getOption(key) is void
@@ -190,18 +299,31 @@ Graph = exports.Graph = BaseModel.extend do # {{{
             @trigger "change:options.#key", this, value, key, opts unless opts.silent
         
         if changed and not opts.silent
-            @trigger "change:options", this, options, 'options', opts
+            @trigger "change:options",  this, options, 'options', opts
+            @trigger "change",          this, options, 'options', opts
         this
     
     unsetOption: (key, opts={}) ->
         unless @optionCascade.unset(key) is void or opts.silent
+            options = @get 'options'
             @trigger "change:options.#key", this, void, key, opts
-            @trigger "change:options", this, @get('options'), 'options', opts
+            @trigger "change:options",      this, options, 'options', opts
+            @trigger "change",              this, options, 'options', opts
+        this
+    
+    inheritOption: (key, opts={}) ->
+        old = @getOption(key)
+        @optionCascade.inherit(key)
+        unless @getOption(key) is old or opts.silent
+            options = @get 'options'
+            @trigger "change:options.#key", this, void, key, opts
+            @trigger "change:options",      this, options, 'options', opts
+            @trigger "change:options",      this, options, 'options', opts
         this
     
     getOptions: (opts={}) ->
         opts = {+keepDefaults, +keepUnchanged} import opts
-        options = @optionCascade.toObject()
+        options = @optionCascade.collapse()
         for k, v in options
             delete options[k] if v is void or
                 (not opts.keepDefaults  and @isDefaultOption k) or
@@ -209,7 +331,8 @@ Graph = exports.Graph = BaseModel.extend do # {{{
         options
     
     
-    ### Serialization
+    # }}}
+    ### Serialization {{{
     
     parse: (data) ->
         data = JSON.parse data if typeof data is 'string'
@@ -235,15 +358,15 @@ Graph = exports.Graph = BaseModel.extend do # {{{
      * @returns {Boolean}
      */
     isChangedOption: (k) ->
-        @optionCascade.isChangedValue k
+        @optionCascade.isModifiedValue k
         and not @isDefaultOption k
     
     
     toJSON: (opts={}) ->
         opts = {+keepDefaults, +keepUnchanged} import opts
         # use jQuery's deep-copy implementation -- XXX: Deep-copy no longer necessary thanks to @getOptions()
-        # json = $.extend true, {}, @attributes
         json = _.clone(@attributes) import { options:@getOptions(opts) }
+        # { data: ...json }
     
     
     toKVPairs: (opts={}) ->
@@ -253,6 +376,7 @@ Graph = exports.Graph = BaseModel.extend do # {{{
         kvo = @toJSON opts
         kvo.parents = JSON.stringify kvo.parents
         delete kvo.slug unless opts.keepSlug
+        delete kvo.data
         
         # console.group 'toKVPairs'
         # console.log '[IN]', JSON.stringify kvo
@@ -285,57 +409,25 @@ Graph = exports.Graph = BaseModel.extend do # {{{
      * @returns {String} Permalinked URI, e.g. http://reportcard.wmflabs.org/:slug
      */
     toPermalink: ->
-        "#{window.location.protocol}//#{window.location.host}#{@toLink()}"
+        "#{root.location.protocol}//#{window.location.host}#{@toLink()}"
+    
+    # }}}
     
 
-    toString: -> "#{@ctorName}(id=#{@id}, cid=#{@cid})"
+### Graph Cache for parent-lookup
+new ModelCache Graph
+
 # }}}
 
 
 GraphList = exports.GraphList = BaseList.extend do # {{{
-    ctorName : 'GraphList'
     urlRoot  : '/graphs'
     model    : Graph
     
-    initialize : ->
-        BaseList::initialize ...
-    
-    toString: ->
-        modelIds = _.pluck @models, 'id' 
-            .map -> "\"#it\""
-            .join ', '
-        "#{@ctorName}(#modelIds)"
+    constructor : function GraphList then BaseList ...
+    initialize  : -> BaseList::initialize ...
+    toString: -> @toStringWithIds()
 # }}}
 
 
-/* * * *  Visualization Cache for parent-lookup  * * * {{{ */
 
-GRAPH_CACHE = exports.GRAPH_CACHE = new GraphList
-
-Graph import do
-    CACHE : GRAPH_CACHE
-    
-    register: (model) ->
-        # console.log "#{@CACHE}.register(#{model.id or model.get('id')})", model
-        if @CACHE.contains model
-            @CACHE.remove model, {+silent}
-        @CACHE.add model
-        model
-    
-    get: (id) ->
-        @CACHE.get id
-    
-    lookup: (id, cb) ->
-        # console.log "#{@CACHE}.lookup(#id, #{typeof cb})"
-        if @CACHE.get id
-            cb null, that
-        else
-            Cls = this
-            @register new Cls { id, slug:id }
-                .on 'ready', -> cb null, it
-    
-
-
-_.bindAll Graph, 'register', 'get', 'lookup'
-
-/* }}} */

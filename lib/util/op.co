@@ -1,11 +1,17 @@
+DASH_PATTERN = /-/g
+
+STRIP_PAT = /(^\s*|\s*$)/g
+strip = (s) ->
+    if s then s.replace STRIP_PAT, '' else s
 
 FALSEY = /^\s*(?:no|off|false)\s*$/i
 parseBool = (s) ->
     i = parseInt(s or 0)
     !! if isNaN(i) then not FALSEY.test(s) else i
 
+
+
 module.exports = op =
-    
     I       : (x) -> x
     K       : (k) -> -> k
     nop     : ->
@@ -13,11 +19,12 @@ module.exports = op =
     kObject : -> {}
     kArray  : -> []
     
-    # values
+    ### values
     val     : (def,o) -> o ? def
     ok      : (o)     -> o?
     notOk   : (o)     -> o!?
     
+    ### manipulate function args/arity
     first   : (a)     -> a
     second  : (_,a)   -> a
     nth     : (n) ->
@@ -26,20 +33,32 @@ module.exports = op =
             case 1 then op.second
             default     -> arguments[n]
     
+    # reverse the order of the first two args
     flip    : (fn) ->
         (a, b) ->
             arguments[0] = b
             arguments[1] = a
             fn.apply this, arguments
     
-    # reduce-ordered values & accessors
+    # only pass n args
+    aritize : (fn, cxt, n) ->
+        [n, cxt] = [cxt, null] if arguments.length < 3
+        -> fn.apply cxt ? this, [].slice.call(arguments, 0, n)
+    
+    # only pass the first argument
+    it      : (fn, cxt) ->
+        -> fn.call cxt ? this, it
+    
+    
+    
+    ### reduce-ordered values & accessors
     khas      : (k,o)       ->  k in o
     kget      : (k,o)       ->  o[k]
     defkget   : (def,k,o)   ->  if k in o then o[k] else def
     thisget   : (k)         ->  this[k]
     vkset     : (o,v,k)     ->  o[k] = v if o and k?; o
     
-    # curry-ordered values & accessors
+    ### curry-ordered values & accessors
     has       : (o,k)       ->  k in o
     get       : (o,k)       ->  o[k]
     getdef    : (o,k,def)   ->  if k in o then o[k] else def
@@ -52,15 +71,27 @@ module.exports = op =
             obj[name] ...args.concat(_args) if obj?[name]
     isK       : (k) -> (v) -> v is k
     
-    # type coercion (w/ limited parameters for mapping)
+    ### type coercion (w/ limited parameters for mapping)
     parseBool   : parseBool
     toBool      : parseBool
     toInt       : (v) -> parseInt v
     toFloat     : (v) -> parseFloat v
     toStr       : (v) -> String v
-    toObject    : (v) -> if typeof v is 'string' then JSON.parse(v) else v
+    toRegExp    : (v) -> new RegExp v
     
-    # comparison
+    toObject : (v) ->
+        if typeof v is 'string' and strip(v)
+            JSON.parse v
+        else
+            v
+    
+    toDate : (v) ->
+        return v if v!? or v instanceof Date
+        return new Date v if typeof v is 'number'
+        return new Date String(v).replace DASH_PATTERN, '/'
+    
+    
+    ### comparison
     cmp       : (x,y)  ->  if x < y then -1 else (if x > y then 1 else 0)
     eq        : (x,y)  ->  x == y
     ne        : (x,y)  ->  x != y
@@ -69,7 +100,7 @@ module.exports = op =
     lt        : (x,y)  ->  x  < y
     le        : (x,y)  ->  x <= y
     
-    # math
+    ### math
     add       : (x,y)  ->  x  + y
     sub       : (x,y)  ->  x  - y
     mul       : (x,y)  ->  x  * y
@@ -80,14 +111,14 @@ module.exports = op =
     log2      : (n)    -> Math.log n / Math.LN2
     
     
-    # logic
+    ### logic
     is        : (x,y)  ->  x is y
     isnt      : (x,y)  ->  x is not y
     and       : (x,y)  ->  x and y
     or        : (x,y)  ->  x or y
     not       : (x)    ->  not x
     
-    # bitwise
+    ### bitwise
     bitnot    : (x)    ->  ~x
     bitand    : (x,y)  ->  x  & y
     bitor     : (x,y)  ->  x  | y
@@ -96,7 +127,7 @@ module.exports = op =
     rshift    : (x,y)  ->  x >> y
     # zrshift   : (x,y)     ->  x >>> y
     
-    # binary
+    ### binary
     
     # Binary representation of the number.
     bin : (n) ->
@@ -119,5 +150,5 @@ module.exports = op =
     ord    : -> String(it).charCodeAt 0
     encode : -> it and $ "<div>#it</div>" .html().replace /"/g, '&quot;'
     decode : -> it and $ "<div>#it</div>" .text()
-    
+    strip  : strip
 

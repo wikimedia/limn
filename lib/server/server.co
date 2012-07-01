@@ -118,8 +118,9 @@ app.configure ->
         log_level : LOG_LEVEL
     app.use require('browserify') do
         mount   : '/vendor/browserify.js'
-        require : <[ events seq ]>
-        cache   : "#CWD/.cache/browserify/cache.json"
+        require : <[ seq d3 events ]>
+        cache   : false
+        # cache   : "#CWD/.cache/browserify/cache.json"
     
     # Serve static files
     app.use express.static WWW
@@ -144,7 +145,7 @@ app.configure ->
 
 Controller   = require './controller'
 app.controller require './controllers/graph'
-app.controller require './controllers/datasource'
+app.controller require './controllers/dashboard'
 
 YAML_EXT_PAT = /\.ya?ml$/i
 app.get '/datasources/all', (req, res, next) ->
@@ -177,6 +178,31 @@ app.get '/datasources/all', (req, res, next) ->
             console.error that if err.stack
             res.send { error:String(err), partial_data:data }
 
+app.controller require './controllers/datasource'
+
+
+# Data Proxy
+PROXY_DOMAIN_BLACKLIST = <[
+    *.ru
+]>
+PROXY_DOMAIN_WHITELIST = <[
+    wmflabs.org mediawiki.org wikimedia.org wikipedia.org
+    *.wmflabs.org *.mediawiki.org *.wikimedia.org *.wikipedia.org
+]>
+
+if NODE_ENV is 'dev'
+    PROXY_DOMAIN_WHITELIST.push 'localhost', 'github.com', '*.github.com'
+
+
+proxy = require('./proxy')({
+    blacklist: PROXY_DOMAIN_BLACKLIST
+    whitelist: PROXY_DOMAIN_WHITELIST
+})
+app.get '/x',   proxy
+app.get '/x/*', proxy
+
+
+
 app.get '/', (req, res) ->
     res.render 'dashboard'
 
@@ -187,6 +213,13 @@ app.get '/:type/:action/?', (req, res, next) ->
     {type, action} = req.params
     if exists "#WWW/#type/#action.jade"
         res.render "#type/#action"
+    else
+        next()
+
+app.get '/:type/?', (req, res, next) ->
+    {type} = req.params
+    if exists "#WWW/#type.jade"
+        res.render "#type"
     else
         next()
 

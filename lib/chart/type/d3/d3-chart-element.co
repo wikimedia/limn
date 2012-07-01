@@ -1,0 +1,83 @@
+d3 = require 'd3'
+ColorBrewer = require 'colorbrewer'
+
+{ _, op,
+} = require 'kraken/util'
+{ ReadyEmitter,
+} = require 'kraken/util/event'
+# Base = require 'kraken/base/base'
+
+
+root = do -> this
+
+/**
+ * Map of known libraries by name.
+ * @type Object
+ */
+KNOWN_CHART_ELEMENTS = exports.KNOWN_CHART_ELEMENTS = {}
+
+class exports.D3ChartElement extends ReadyEmitter
+    __bind__ : <[ ]>
+    SPEC_URL : '/schema/d3/d3-chart.json'
+    
+    
+    ### Class Methods
+    
+    /**
+     * Register a new d3 element
+     */
+    @register = (Subclass) ->
+        # console.log "D3ChartElement.register(#Subclass)"
+        KNOWN_CHART_ELEMENTS[ Subclass::chartElement ] = Subclass
+    
+    /**
+     * Look up a `charttype` by `typeName`.
+     */
+    @lookup = (name) ->
+        name = name.get('chartElement') if name instanceof Backbone.Model
+        KNOWN_CHART_ELEMENTS[name]
+    
+    /**
+     * Look up a chart type by name, returning a new instance
+     * with the given model (and, optionally, view).
+     * @returns {D3ChartElement}
+     */
+    @create = (name) ->
+        # console.log "D3ChartElement.create(#name)"        
+        return null unless Type = @lookup name
+        
+        new Type 
+            
+    
+    ->        
+        _.bindAll this, ...@__bind__ # TODO: roll up MRO
+        @loadSpec() unless @ready
+        super ...
+
+    
+
+    /**
+     * Load the corresponding chart specification, which includes
+     * info about valid options, along with their types and defaults.
+     */
+    loadSpec: ->
+        return this if @ready
+        proto = @constructor::
+        jQuery.ajax do
+            url     : @SPEC_URL
+            dataType : 'json'
+            success : (spec) ~>
+                proto.spec = spec
+                proto.options_ordered = spec
+                proto.options = _.synthesize spec, -> [it.name, it]
+                proto.ready = true
+                @triggerReady()
+            error: ~> console.error "Error loading #{@typeName} spec! #it"
+        this
+
+    renderChartElement: (metric, svgEl ,xScale, yScale) ->  svgEl        
+        
+
+    
+    
+    

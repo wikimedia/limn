@@ -19,7 +19,7 @@ GraphListView = exports.GraphListView = BaseView.extend do # {{{
     
     tagName   : 'section'
     className : 'graph-list-view'
-    template  : require 'kraken/template/graph-list'
+    template  : require 'kraken/template/graph/graph-list'
     
     data  : {}
     ready : false
@@ -27,7 +27,7 @@ GraphListView = exports.GraphListView = BaseView.extend do # {{{
     initialize : ->
         @model = @collection or= new GraphList
         BaseView::initialize ...
-        console.log "#this.initialize!"
+        # console.log "#this.initialize!"
     
     toTemplateLocals: ->
         locals = BaseView::toTemplateLocals ...

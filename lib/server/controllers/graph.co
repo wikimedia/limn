@@ -1,11 +1,12 @@
-_        = require 'underscore'
-fs       = require 'fs'
-path     = require 'path'
-yaml     = require 'js-yaml'
-Seq      = require 'seq'
-
+fs         = require 'fs'
+path       = require 'path'
 {existsSync:exists} = path
+
+_          = require 'underscore'
+Seq        = require 'seq'
+yaml       = require 'js-yaml'
 {mkdirp, mkdirpAsync} = require '../mkdirp'
+
 { readJSONFilesAsync,
 } = require '../files'
 
@@ -53,6 +54,7 @@ class GraphController extends Controller
             parser = yaml.load
         
         err, data <- fs.readFile file, 'utf8'
+        
         if 'ENOENT' is err?.code
             return cb null, {}
         if err
@@ -63,7 +65,7 @@ class GraphController extends Controller
         catch err
             console.error "GraphController.autoload(#id, #{typeof cb}) -->\nerr"
             cb err
-
+    
     # GET /graphs.:format?
     index: (req, res) ->
         # if format is json, then return the graph JSON
@@ -77,7 +79,7 @@ class GraphController extends Controller
                     .seq   (graphs) -> res.send _.values graphs
             default 
                 res.render 'graph/index'
-
+    
     # GET /graphs/:graph
     show: (req, res) ->
         if req.format is 'json'

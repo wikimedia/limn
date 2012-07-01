@@ -1,0 +1,78 @@
+d3 = require 'd3'
+
+{ _, op,
+} = require 'kraken/util'
+{ D3ChartElement    
+} = require 'kraken/chart/type/d3/d3-chart-element'
+
+_fmt = require 'kraken/util/formatters'
+
+root = do -> this
+
+class exports.BarChartType extends D3ChartElement
+    __bind__ : <[ ]>
+    SPEC_URL : '/schema/d3/d3-bar.json'
+    
+    # NOTE: D3ChartElement.register() must come AFTER `typeName` declaration.
+    chartElement : 'd3-bar'    
+    D3ChartElement.register this            
+
+    -> super ...
+
+    renderChartElement: (metric, svgEl ,xScale, yScale) ->        
+        
+        X = (d, i) -> xScale d[0]
+        Y = (d, i) -> yScale d[1]
+        
+
+        ### Render the line path
+        metricBars = root.metricBars = svgEl.append "g"
+            .attr "class", "metric bars "+metric.get 'label'
+                
+        data = d3.zip metric.getDateColumn(),metric.getData()                
+
+        ### Render Bars
+        barWidth = svgEl.attr('width')/data.length
+        barHeight = (d) ->  svgEl.attr('height')-Y(d)
+
+        metricBars.selectAll "bar"    
+            .data data
+            .enter().append "rect"
+                .attr "class", (d, i) ->  "metric bar #i"
+                .attr "x", X
+                .attr "y", Y
+                .attr "height", barHeight
+                .attr "width", barWidth                
+                .attr "fill", metric.get 'color'
+                .attr "stroke", "white"
+                .style "opacity", "0.4"
+                .style "z-index", -10
+
+
+        # adding event listeners
+        chT = this
+        metricBars.selectAll ".metric.bar"
+            .on "mouseover", (d, i) ->
+                
+                svgEl.append "text"
+                    .attr "class", "mf"
+                    .attr "dx", 50
+                    .attr "dy", 100   
+                    .style "font-size", "0px"                                
+                    .transition()
+                    .duration(800)                
+                        .text "Uh boy, the target would be:  "+_fmt.numberFormatter(d[1]).toString()
+                        .style "font-size", "25px"                    
+            .on "mouseout", (d, i) ->
+
+                svgEl.selectAll ".mf"
+                    .transition()
+                    .duration(300)
+                    .text "BUMMER!!!"
+                    .style "font-size", "0px"
+                    .remove()
+                
+
+
+        svgEl        
+    

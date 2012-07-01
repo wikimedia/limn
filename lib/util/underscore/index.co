@@ -2,16 +2,21 @@ _     = require 'underscore'
 _.str = require 'underscore.string'
 _.mixin _.str.exports()
 
+_.mixin require 'kraken/util/underscore/function'
 _.mixin require 'kraken/util/underscore/array'
 _.mixin require 'kraken/util/underscore/object'
+_.mixin require 'kraken/util/underscore/class'
 _.mixin require 'kraken/util/underscore/kv'
 _.mixin require 'kraken/util/underscore/string'
 
 
 ## Debug
-_.dump = (o, label='dump') ->
+_.dump = (o, label='dump', expanded=true) ->
     if not _.isArray(o) and _.isObject(o)
-        console.group label
+        if expanded
+            console.group label
+        else
+            console.groupCollapsed label
         for k, v in o
             console.log "#k:", v
         console.groupEnd()

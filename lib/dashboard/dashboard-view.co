@@ -14,36 +14,26 @@ Seq = require 'seq'
  * @class
  */
 DashboardView = exports.DashboardView = BaseView.extend do # {{{
-    __bind__       : <[  ]>
+    __bind__       : <[ addTab ]>
     tagName        : 'section'
     className      : 'dashboard'
-    template       : require 'kraken/template/dashboard'
+    template       : require 'kraken/template/dashboard/dashboard'
     
-    graph_ids : <[
-        unique_visitors
-        reach
-        pageviews
-        pageviews_mobile
-        pageviews_mobile_target        
-        commons
-        articles
-        articles_per_day
-        edits
-        new_editors
-        active_editors
-        active_editors_target
-        very_active_editors
-    ]>
-    # mobile_devices
-    # mobile_devices_browsers
-    # mobile_devices_applications
-
+    
+    events:
+        # Select the whole permalink URI text when it receives focus.
+        'click .graphs.tabbable .nav a' : 'onTabClick'
+        'shown .graphs.tabbable .nav a' : 'onTabShown'
+        # 'click  a[data-target="#other-graphs"]' : 'onTabShown'
+        # 'click    .load-button'         : 'load'
+    
     subviews : []
     graphs   : null
     ready    : false
     
     
-    constructor: function DashboardView
+    constructor: function DashboardView(options={})
+        @model = options.model
         @subviews = []
         @graphs   = new GraphList
         Backbone.View ...
@@ -51,39 +41,78 @@ DashboardView = exports.DashboardView = BaseView.extend do # {{{
     initialize: ->
         @model or= new Dashboard
         BaseView::initialize ...
-        @graphs.on 'add', @attachGraphs, this
-        @load()
+        # @graphs.on 'add', @attachGraphs, this
+        # @graphs.on 'add', @attachGraph, this
+        @model.on('ready', @load, this)
     
     
+    # FIXME:
+    #   - combine all loads into one seq so...
+    #   - trigger ready when finished
+    # TODO:
+    #   - only render graph when scrolling makes it visible
     load: ->
-        self = this
-        Seq(@graph_ids)
-            .parMap_ (next_phase, id) ->
-                Seq()
-                    .seq Graph.lookup, id, Seq
-                    .seq (graph) ->
-                        view = new GraphDisplayView {model:graph}
-                        view.on 'ready', @ok
-                        self.graphs.add graph
-                    .seq next_phase.ok
-            .seq_ (next) ~>
-                console.log "#this.ready!"
-                @ready = true
-                @attachGraphs()
-                @trigger 'ready', this
+        _.map(@model.tabs, @addTab)
     
-    attachGraphs: ->
-        graphs_el = @$el.find '#graphs'
-        for id of @graph_ids
-            break unless graph = @graphs.get id
-            continue if graph.view.isAttached
-            graphs_el.append graph.view.el
-            @subviews.push graph.view
-            graph.view.isAttached = true
-            graph.on 'ready', ->
-                graph.off 'ready', arguments.callee
-                graph.view.renderChart()
+    addTab: (tab) ->
+        self = this
+        graphs = _(tab.graph_ids).map((graph_id) ~> @model.graphs[graph_id])
+        Seq(graphs)
+            .parMap (graph) ->
+                self.graphs.add graph
+                this null, new GraphDisplayView {model:graph}
+            .parMap (view) ->
+                return if view.isAttached
+                graphs_el = self.$el.find tab.name
+                graphs_el.append view.el
+                self.subviews.push view
+                view.isAttached = true
+    
+    ### Tabs {{{
+    
+    onTabShown: (e) ->
+        Seq @subviews
+            .parMap (view) ->
+                # view.resizeViewport()
+                view.renderChart()
+    
+    onTabClick: (evt) ->
+        evt.preventDefault()
+    
+    
+    ### }}}
+    ### Navigation Between Graphs {{{
+    
+    /**
+     * Scroll to the specified graph.
+     * 
+     * @param {String|Number|Graph} graph The Graph to scroll to; can be specified as a
+     *  Graph id, an index into the Graphs list, or a Graph object.
+     * @returns {this} 
+     */
+    scrollToGraph: (graph) ->
+        if typeof graph is 'string'
+            graph = @graphs.get graph
+        else if typeof graph is 'number'
+            graph = @graphs.at graph
+        unless graph instanceof Graph
+            console.error "#this.scrollToGraph() Unknown graph #graph!"
+            return this
+        
+        return this unless view = _.find @subviews, -> it.model is graph
+        $ 'body' .scrollTop view.$el.offset().top if view.$el.is ':visible'
+        
         this
     
-# }}}
+    findClosestGraph: (scroll) ->
+        scroll or= $ 'body' .scrollTop()
+        views = @subviews
+            .filter -> it.$el.is ':visible'
+            .map -> [ it.$el.offset().top, it ]
+            .filter -> it[0] >= scroll
+            .sort (a,b) -> op.cmp a[0], b[0]
+        return views[0][1] if views.length
+    
+    ### }}}
+
 

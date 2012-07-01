@@ -1,5 +1,8 @@
-chart_type = require 'kraken/chart/chart-type'
-dygraphs   = require 'kraken/chart/dygraphs'
-models     = require 'kraken/chart/chart-option-model'
-views      = require 'kraken/chart/chart-option-view'
-exports import chart_type import dygraphs import models import views
+chart_type   = require 'kraken/chart/chart-type'
+chart_option = require 'kraken/chart/option'
+dygraphs     = require 'kraken/chart/type/dygraphs'
+d3_chart     = require 'kraken/chart/type/d3-chart'
+d3_elements  = require 'kraken/chart/type/d3'
+
+exports import chart_type import chart_option \
+        import dygraphs import d3_chart import d3_elements

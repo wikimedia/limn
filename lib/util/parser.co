@@ -1,5 +1,7 @@
 _  = require 'kraken/util/underscore'
 op = require 'kraken/util/op'
+{ BaseModel, BaseList, BaseView, Mixin,
+}  = require 'kraken/base'
 
 
 /**
@@ -21,6 +23,12 @@ Parsers = exports.Parsers =
     parseString: (v) ->
         if v? then op.toStr v else null
     
+    parseDate: (v) ->
+        if v then op.toDate v else null
+    
+    parseRegExp: (v) ->
+        if v then op.toRegExp v else null
+    
     parseArray: (v) ->
         if v then op.toObject v else null
     
@@ -34,12 +42,33 @@ Parsers = exports.Parsers =
             null
     
 
+# Aliases
+Parsers.parseNumber = Parsers.parseFloat
 
-class exports.ParserMixin
+
+/**
+ * @class Methods for a class to select parsers by type reflection.
+ * @mixin
+ */
+class exports.ParserMixin extends Mixin
     this:: import Parsers
     
+    (target) ->
+        return Mixin.call ParserMixin, target
     
-    parse: (v, type) ->
+    
+    # XXX: So I'm meh about mixing in the Parsers dictionary.
+    # 
+    # - Pros: mixing in `parseXXX()` methods makes it easy to
+    #   override in the target class.
+    # - Cons: `parse()` is a Backbone method, which bit me once
+    #   already (hence `parseValue()`), so conflicts aren't unlikely.
+    # 
+    # Other ideas:
+    # - Parsers live at `@__parsers__`, and each instance gets its own clone
+    # -> Parser lookup uses a Cascade from the object. (Why not just use prototype, tho?)
+    
+    parseValue: (v, type) ->
         @getParser(type)(v)
     
     getParser: (type='String') ->
@@ -50,7 +79,7 @@ class exports.ParserMixin
         # Handle compound/optional types
         # XXX: handle 'or' by returning an array of parsers?
         type = _ String(type).toLowerCase()
-        for t of <[ Integer Float Boolean Object Array Function ]>
+        for t of <[ Integer Float Number Boolean Object Array Function ]>
             if type.startsWith t.toLowerCase()
                 return @["parse#t"]
         @defaultParser or @parseString
@@ -66,6 +95,33 @@ class exports.ParserMixin
         else
             @getParser 'Object'
     
-    
+
+
+
+/**
+ * @class Basic model which mixes in the ParserMixin.
+ * @extends BaseModel
+ * @borrows ParserMixin
+ */
+ParsingModel = exports.ParsingModel = BaseModel.extend ParserMixin.mix do
+    constructor: function ParsingModel then BaseModel ...
+
+
+/**
+ * @class Basic collection which mixes in the ParserMixin.
+ * @extends BaseList
+ * @borrows ParserMixin
+ */
+ParsingList = exports.ParsingList = BaseList.extend ParserMixin.mix do
+    constructor: function ParsingList then BaseList ...
+
+
+/**
+ * @class Basic view which mixes in the ParserMixin.
+ * @extends BaseView
+ * @borrows ParserMixin
+ */
+ParsingView = exports.ParsingView = BaseView.extend ParserMixin.mix do
+    constructor: function ParsingView then BaseView ...
 
 

@@ -1,0 +1,39 @@
+extends layout
+
+block title
+    title Edit Graph | Limn
+
+append styles
+    mixin css('/vendor/bootstrap-colorpicker/css/colorpicker.css')
+    mixin css('/vendor/bootstrap-datepicker/css/datepicker.css')
+    mixin css('graph.css')
+    // new for SVG
+    mixin css('chart.css')
+    mixin css('data.css')
+    mixin css('isotope.css')
+
+block main-scripts
+    script
+        root = this
+        
+        // import all the things, ugly JS-style
+        d3            = require('d3')
+        Seq           = require('seq')
+        Backbone      = require('backbone')
+        util          = require('kraken/util'); _ = util._; op = util.op
+        AppView       = require('kraken/app').AppView
+        base          = require('kraken/base'); BaseView = base.BaseView; BaseModel = base.BaseModel; BaseList = base.BaseList
+        ChartType     = require('kraken/chart').ChartType
+        data          = require('kraken/data'); DataSource = data.DataSource; DataSourceList = data.DataSourceList
+        _graph        = require('kraken/graph'); Graph = _graph.Graph; GraphList = _graph.GraphList; GraphEditView = _graph.GraphEditView
+        //LineChartType = require('kraken/chart/type/d3/d3-line-chart-type')
+        
+        // run on DOM-ready
+        jQuery(function(){
+            root.app = new AppView(function(){
+                this.model = root.graph = new Graph({ id:'d3-test' }, { parse:true })
+                this.view  = root.view  = new GraphEditView({ model:this.model })
+            });
+        });
+    
+    

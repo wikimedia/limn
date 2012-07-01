@@ -63,7 +63,7 @@ _obj = do
      */
     remove: (obj, v) ->
         values = [].slice.call arguments, 1
-        if _.isArray obj
+        if _.isArray(obj) or obj instanceof Array
             for v of values
                 idx = obj.indexOf v
                 obj.splice idx, 1 if idx is not -1
@@ -143,7 +143,7 @@ _obj = do
      * @param {String} [opts.setter="set"] Name of the sub-object setter method use if it exists.
      * @param {String} [opts.deleter="unset"] Name of the sub-object deleter method use if it exists.
      * @param {Object} [opts.tombstone=TOMBSTONE] Sentinel value to be interpreted as no-passthrough,
-     *  forcing the lookup to fail and return `undefined`.
+     *  forcing the lookup to fail and return `undefined`. TODO: opts.returnTombstone
      * @returns {undefined|Object} If found, the object is of the form 
      *  `{ key: Qualified key name, obj: Parent object of key, val: Value at obj[key], opts: Options }`. 
      *  Otherwise `undefined`.
@@ -155,9 +155,14 @@ _obj = do
         
         _.reduce do
             chain
-            (obj, key, idx, chain) ->
-                return void unless obj?
+            (obj, key, idx) ->
+                return unless obj?
                 val = _.get obj, key, void, opts
+                
+                if val is opts.tombstone
+                    return unless ops.ensure
+                    val = void
+                
                 if idx is len
                     return { key, val, obj, opts }
                 if not val? and opts.ensure
