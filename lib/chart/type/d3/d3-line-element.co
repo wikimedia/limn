@@ -19,7 +19,7 @@ class exports.LineChartElement extends D3ChartElement
     D3ChartElement.register this            
     
     -> super ...
-    
+
     renderChartElement: (metric, svgEl ,xScale, yScale) ->        
         
         X = (d, i) -> xScale d[0]
@@ -37,7 +37,7 @@ class exports.LineChartElement extends D3ChartElement
             .enter().append "path"
                 .attr "d", line
                 .attr "class", (d, i) -> "metric line segment #i"
-                .style "stroke", metric.get 'color'
+                .style "stroke", metric.getColor 'color'
 
         
         ### Mouse Lens
@@ -66,7 +66,7 @@ class exports.LineChartElement extends D3ChartElement
         metricLine.selectAll ".line.segment"
             .on "mouseover", (d, i) ->
                 
-                {r,g,b} = color = d3.rgb metric.get 'color'                
+                {r,g,b} = color = d3.rgb metric.getColor 'color'                
                 lineX = (X(d[0])+X(d[1]))/2
                 lineY = (Y(d[0])+Y(d[1]))/2
                                 
@@ -79,6 +79,33 @@ class exports.LineChartElement extends D3ChartElement
         svgEl        
 
     
-    
-    
-    
+# If instead of a line segment for each month we want to use one line segment per metric, we have to have a way of accessing the data associated with a given time step.
+
+# lines.attr "d", line
+#         .attr "class", (col, i) -> "metric line metric#i"
+#         .style "stroke", (col, i) -> options.colors[i]
+#         .each (col, i) ->
+#             {width} = bbox = @getBBox()
+#             # Add line-to-data position conversions
+#             @indexAtX = d3.scale.quantize()
+#                 .domain [0, width]
+#                 .range d3.range col.length
+#             @indexToPoint = (idx) ->
+#                 @pathSegList.getItem idx
+
+# lines.on "mouseover", (col, i) ->
+#         line = root.line = this # DOM element of event
+#         {r,g,b} = color = d3.rgb options.colors[i]
+        
+#         # quantize mouse x-location to get for closest data-point (index into data array)
+#         [x,y] = root.pos = d3.mouse line
+#         idx = root.idx = line.indexAtX x
+#         {x:lineX, y:lineY} = root.pt = line.indexToPoint idx
+        
+#         lens = frame.select "g.lens"
+#             .data d3.select(line).data()
+#             .attr "transform", "translate(#lineX, #lineY)"
+#         lens.select "circle" .style "fill", "rgba(#r, #g, #b, 0.4)"
+#         lens.select "text" .text (col) -> col[idx][1]
+
+
