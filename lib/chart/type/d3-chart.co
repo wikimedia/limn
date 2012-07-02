@@ -74,10 +74,13 @@ class exports.D3ChartType extends ChartType
             .domain d3.extent allValues
             .range [ height - margin.top - margin.bottom, 0 ]
         
+        
+        # Hack. Remove svg if it exists. If @model changes, the graph will be redrawn
+        svg = d3.select viewport.0 .selectAll "svg"            
+            .remove()
         # Select the svg element, if it exists.
         svg = d3.select viewport.0 .selectAll "svg"
             .data [cols]
-        
         # ...Otherwise, create the skeletal chart.
         enterFrame = svg.enter()
             .append "svg" .append "g"
@@ -121,7 +124,7 @@ class exports.D3ChartType extends ChartType
                     # FOR NOW take line as default
                     chartElement ?= 'd3-line' # @model.get "chartElement"                 
                     # create d3 chart element and render it
-                    chEl = D3ChartElement.create chartElement
+                    chEl = D3ChartElement.create chartElement                
 
                     chEl.renderChartElement d, frame ,xScale, yScale
 
