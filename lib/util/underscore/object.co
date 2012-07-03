@@ -90,6 +90,11 @@ _obj = do
     
     ### Delegating Accessors
     
+    isMember: (obj, v) ->
+        values = _.unique [].slice.call arguments, 1
+        common = _.intersection _.values(obj), values
+        _.isEqual values, common
+    
     get: (obj, key, def, opts) ->
         return unless obj?
         getter = opts?.getter or 'get'
