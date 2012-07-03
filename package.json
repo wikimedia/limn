@@ -12,6 +12,11 @@
     "graph"
   ],
   "author": "David Schoonover <dsc@less.ly> (http://less.ly)",
+  "contributors": [
+    "Andrew Otto <otto@wikimedia.org>",
+    "Evan Rosen <erosen@wikimedia.org>",
+    "Diederik van Liere <dvanliere@wikimedia.org>"
+  ],
   "dependencies": {
     "coco": "== 0.7.0",
     "request": "== 2.9.x",
@@ -38,11 +43,7 @@
   },
   "devDependencies": {
     "buildtools": "https://github.com/dsc/node-buildtools/tarball/master",
-    "expresso": "== 0.9.2",
     "uglify-js": "== 1.2.6"
-  },
-  "scripts": {
-    "test": "expresso"
   },
   "repository": {
     "type": "git",
