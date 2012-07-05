@@ -95,6 +95,7 @@ application = limn.application =
             @set 'view options', {
                 layout  : false
                 version : REV
+                IS_DEV, IS_PROD
             } import require './view-helpers'
             
             # @helpers require './view-helpers'
