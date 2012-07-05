@@ -1,12 +1,12 @@
 all: []
 
-prod:
+production:
 -   suffix: .js
     paths:
     - vendor/vendor-bundle.min
     - js/kraken/app-bundle
 
-dev:
+development:
 -   suffix: .js
     paths:
     - vendor:
@@ -80,7 +80,7 @@ dev:
                     - timeseries
                     - csv
                     - index
-                - op            
+                - op
                 - backbone
                 - parser
                 - cascade

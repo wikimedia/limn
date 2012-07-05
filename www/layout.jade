@@ -41,7 +41,7 @@ html(lang="en", dir="ltr")
                                     i.icon-home.icon-white
                                     a(href="/") Home
                                 //- FIXME: put link to /graphs only if dev env, for now.
-                                if NODE_ENV == 'dev'
+                                if IS_DEV
                                     li
                                         i.icon-th.icon-white
                                         a(href='/graphs') Browse
@@ -124,6 +124,7 @@ html(lang="en", dir="ltr")
                     script
                         var VERSION = !{ JSON.stringify(version)  };
                         var ENV     = !{ JSON.stringify(NODE_ENV) };
+                        var IS_DEV = ENV === 'development', IS_PROD = ENV === 'production';
                     
                     block lib-scripts
                         for src in sources(WWW+'/modules.yaml')

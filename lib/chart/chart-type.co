@@ -159,7 +159,7 @@ class exports.ChartType extends ReadyEmitter
      */
     loadSpec: ->
         return this if @ready
-        proto = @constructor::
+        proto = @constructor::        
         jQuery.ajax do
             url     : @SPEC_URL
             dataType : 'json'

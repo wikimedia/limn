@@ -4,8 +4,7 @@ require 'buildtools/tasks'
 {removeSync:remove} = require 'remove'
 
 
-MODULE_LINK      = 'node_modules/kraken'
-EXPRESS_DEP_MIME = 'node_modules/express/node_modules/mime'
+MODULE_LINK = 'node_modules/kraken'
 
 
 
@@ -20,10 +19,6 @@ task \link 'Link package source to node_modules so the name resolves correctly' 
 
 task \install 'Install project dependencies.' ->
     <- sh 'npm install', {-verbose, +errors, +die}
-    
-    # Remove express's copy of node-mime so we can add our own extensions
-    # and have it pick them up by default.
-    remove EXPRESS_DEP_MIME, {+ignoreMissing}
 
 task \setup 'Ensure project is set up for development.' ->
     invoke \install
@@ -76,7 +71,7 @@ task \cleanup_tests 'Removes compiled tests' ->
 
 task \clean 'Clean up environment and artifacts' ->
     invoke \cleanup_tests
-    remove [MODULE_LINK, EXPRESS_DEP_MIME, 'var', 'tmp/dist'], {+ignoreMissing, +verbose}
+    remove [MODULE_LINK, 'var', 'tmp/dist'], {+ignoreMissing, +verbose}
 
 
 
@@ -84,7 +79,7 @@ task \source_list 'Print a list of the source file paths.' ->
     invoke \setup
     {sources} = require 'kraken/server/view-helpers'
     say do
-        sources("www/modules.yaml", 'dev')
+        sources("www/modules.yaml", 'development')
             .map -> it.slice 1
             .join '\n'
 
