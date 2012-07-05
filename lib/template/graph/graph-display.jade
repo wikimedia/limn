@@ -25,7 +25,7 @@ section.graph-display.graph(id=graph_id)
     .graph-links-row.row
         .span6.offset3.ug.graph-permalink
             input.span6(value="#{model.toPermalink()}", readonly="readonly")
-        if ENV == 'dev'
+        if IS_DEV
             a.span1.export-button.btn(href="#")
                 i.icon-file
                 |  Export

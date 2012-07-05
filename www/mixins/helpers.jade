@@ -1,6 +1,6 @@
 - root = (function(){ return this; })();
-- if (typeof version == 'undefined') root.version = 'dev';
-- if (version == null || !version || version === 'dev') { version = String(new Date().getTime()); }
+- if (typeof version == 'undefined') root.version = 'HEAD';
+- if (version == null || !version || version === 'HEAD') { version = String(new Date().getTime()); }
 
 mixin css(href, media, path_root)
     - media = media || 'screen'

@@ -41,7 +41,7 @@ html(lang="en", dir="ltr")
                                     i.icon-home.icon-white
                                     a(href="/") Home
                                 //- FIXME: put link to /graphs only if dev env, for now.
-                                if NODE_ENV == 'dev'
+                                if IS_DEV
                                     li
                                         i.icon-th.icon-white
                                         a(href='/graphs') Browse
