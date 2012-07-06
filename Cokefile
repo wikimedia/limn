@@ -25,17 +25,11 @@ task \setup 'Ensure project is set up for development.' ->
     invoke \link
 
 
-
 task \server 'Start dev server' ->
     invoke \setup
     invoke \update_version
     say ''
     run 'lib/server/server.co'
-
-
-### Build Helpers
-
-
 
 
 task \build 'Build coco sources' ->
@@ -53,6 +47,7 @@ task \build 'Build coco sources' ->
     matchExt = /((?:\.min)?)\.mod((?:\.min)?)\.js$/i
     targetDir = 'var'
     
+    console.log 'Compiling Coco src/ -> JS lib/ ...'
     Seq()
         .seq ->
             console.log '  Bundling Browserify bundle'
@@ -97,6 +92,7 @@ task \build 'Build coco sources' ->
             infile = (if _.startsWith src, 'vendor' then 'static' else targetDir) + '/' + src.replace matchExt, '$1$2.js'
             return @ok() unless exists infile
             outfile = targetDir + '/' + src
+            return @ok() if exists outfile
             parts = infile.replace matchExt, '' .split '/' .slice 2
             parts.pop() if 'index' is _.last parts
             ID = parts.join '/' 
@@ -119,15 +115,32 @@ task \build 'Build coco sources' ->
         
         .set glob 'www/schema/**/*.yaml', {+sync}
         .seqEach (infile) ->
-            outfile = infile.replace /^www\//, "#targetDir/" .replace /\.yaml$/, '.json'
+            # outfile = infile.replace /^www\//, "#targetDir/" .replace /\.yaml$/, '.json'
+            outfile = infile.replace /\.yaml$/, '.json'
             console.log "  Compiling YAML to JSON:\t #infile \t-->\t #outfile"
             mkdirp dirname outfile
             write outfile, JSON.stringify yaml.load read infile
             @ok()
         
+        .catch (err) ->
+            console.error "Error! #err", err
+            err = new Error err if typeof err is 'string'
+            throw err
         .seq ->
             console.log 'Done!'
         
+
+task \bundle 'Build application and vendor bundles' ->
+    invoke \build
+    invoke \bundle_app
+    invoke \bundle_vendor
+
+task \bundle_app 'Build application bundle' ->
+    
+
+task \bundle_vendor 'Build vendor bundle' ->
+    
+
 
 
 task \test 'Rebuild test files and run tests' ->
