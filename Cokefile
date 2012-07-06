@@ -23,17 +23,17 @@ task \install 'Install project dependencies.' ->
 task \setup 'Ensure project is set up for development.' ->
     invoke \install
     invoke \link
+    invoke \update_version
 
 
 task \server 'Start dev server' ->
     invoke \setup
-    invoke \update_version
     say ''
     run 'lib/server/server.co'
 
 
 task \build 'Build coco sources' ->
-    # invoke \setup
+    invoke \setup
     coco <[ -bjc package.co ]>
     
     {sources} = require 'kraken/server/view-helpers'
@@ -47,23 +47,22 @@ task \build 'Build coco sources' ->
     matchExt = /((?:\.min)?)\.mod((?:\.min)?)\.js$/i
     targetDir = 'var'
     
-    console.log 'Compiling Coco src/ -> JS lib/ ...'
+    console.log 'Building source...'
     Seq()
         .seq ->
             console.log '  Bundling Browserify bundle'
             bundle = browserify exports:<[ require process ]>
                 .require <[ seq d3 events ]>
                 .bundle()
-            mkdirp 'var/vendor'
-            write 'var/vendor/browserify.js', bundle
+            write 'static/vendor/browserify.js', bundle
             @ok()
         
         .set glob 'lib/template/**/*.jade', {+sync}
         .seqEach (infile) ->
-            template_fn = Jade.compile read(infile), { +pretty, +client, -compileDebug, filename:infile }
-            template    = String template_fn .replace /^function anonymous\(/, 'function \('
             outfile     = "#infile.js".replace /^lib/, "#targetDir/js/kraken"
             console.log "  Compiling Jade template to JS:\t #infile \t-->\t #outfile"
+            template_fn = Jade.compile read(infile), { +pretty, +client, -compileDebug, filename:infile }
+            template    = String template_fn .replace /^function anonymous\(/, 'function \('
             mkdirp dirname outfile
             write outfile, """
                 var template = #template;
@@ -131,15 +130,31 @@ task \build 'Build coco sources' ->
         
 
 task \bundle 'Build application and vendor bundles' ->
-    invoke \build
     invoke \bundle_app
     invoke \bundle_vendor
 
 task \bundle_app 'Build application bundle' ->
+    {sources} = require 'kraken/server/view-helpers'
     
+    app_bundle_path = 'var/js/kraken/app-bundle.js'
+    app_sources = sources("www/modules.yaml", 'development')
+        .filter -> not _.startsWith it, '/vendor'
+        .map -> "var#it"
+    bundle_js app_bundle_path, app_sources, {-minify}
+    
+    print 'Minifying app bundle...'
+    app_bundle_min = minify read app_bundle_path
+    write 'var/js/kraken/app-bundle.min.js', app_bundle_min
+    say 'done!'
 
 task \bundle_vendor 'Build vendor bundle' ->
+    {sources} = require 'kraken/server/view-helpers'
     
+    vendor_bundle_path = 'var/vendor/vendor-bundle.min.js'
+    vendor_sources = sources("www/modules.yaml", 'development')
+        .filter -> _.startsWith it, '/vendor'
+        .map -> "static#it"
+    bundle_js vendor_bundle_path, vendor_sources, {-minify}
 
 
 
