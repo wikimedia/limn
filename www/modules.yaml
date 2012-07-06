@@ -52,6 +52,7 @@ development:
                     - chart-scaffold.jade
                 - dashboard:
                     - dashboard.jade
+                    - dashboard-tab.jade
                 - data:
                     - dataset.jade
                     - dataset-metric.jade

@@ -2,7 +2,7 @@ Seq = require 'seq'
 
 { _, op,
 } = require 'kraken/util'
-{ BaseView,
+{ BaseModel, BaseView,
 } = require 'kraken/base'
 { Graph, GraphList, GraphDisplayView,
 } = require 'kraken/graph'
@@ -34,17 +34,15 @@ DashboardView = exports.DashboardView = BaseView.extend do # {{{
     
     
     constructor: function DashboardView(options={})
-        @model = options.model
-        # @subviews = []
-        @graphs   = new GraphList
+        @graphs = new GraphList
         BaseView ...
     
     initialize: ->
         @model or= new Dashboard
-        BaseView::initialize ...
+        DashboardView.__super__.initialize ...
         # @graphs.on 'add', @attachGraphs, this
         # @graphs.on 'add', @attachGraph, this
-        @model.on 'ready', @load, this
+        @model.once 'ready', @load, this .load()
     
     
     # FIXME:
@@ -54,28 +52,40 @@ DashboardView = exports.DashboardView = BaseView.extend do # {{{
     #   - only render graph when scrolling makes it visible
     load: ->
         console.log "#this.load! Model ready!", @model
-        _.map @model.tabs, @addTab
+        Seq @model.get('tabs')
+            .seqEach_ @addTab
+            .seq ~>
+                console.log "#{this}.load! Done adding tabs!"
+                @triggerReady()
     
-    addTab: (tab) ->
+    addTab: (nextTab, tab) ->
         # self = this
-        graphs = _(tab.graph_ids).map((graph_id) ~> @model.graphs[graph_id])
-        Seq(graphs)
+        # a(href="#core-graphs", data-toggle="tab") Core
+        tabModel = new BaseModel tab
+        tabView  = @addSubview new DashboardTabView {model:tabModel}
+        tabId    = tabView.getTabId()
+        @$ "nav > ul.nav" 
+            .append "<li class='#tabId-button'><a href='##tabId' data-toggle='tab'>#{tab.name}</a></li>"
+        
+        graphs = _(tab.graph_ids).map (graph_id) ~> @model.graphs.get graph_id
+        Seq graphs
             .parMap_ (next, graph) ~>
                 @graphs.add graph
                 next null, new GraphDisplayView {model:graph}
-            .parMap_ (next, view) ~>
-                return next.ok() if view.isAttached
-                @addSubview view
-                tabEl = @$ tab.name
-                if tabEl.length
-                    tabEl.append view.$el
-                    view.isAttached = true
-                else
-                    console.log "#this.addTab: Unable to find bind-point for #view!", view
+            .parMap_ (next, graphView) ~>
+                return next.ok() if graphView.isAttached
+                tabView.addSubview graphView
+                # tabEl = @$ tab.name
+                # if tabEl.length
+                #     tabEl.append view.$el
+                #     view.isAttached = true
+                # else
+                #     console.log "#this.addTab: Unable to find bind-point for #view!", view
                 next.ok()
             .seq ~>
-                console.log "#this.addTab: All graphs added!"
-                @render()
+                console.log "#{this}.addTab: All graphs added!"
+                # @render()
+                nextTab.ok()
         this
     
     ### Tabs {{{
@@ -126,5 +136,39 @@ DashboardView = exports.DashboardView = BaseView.extend do # {{{
         return views[0][1] if views.length
     
     ### }}}
+
+
+
+/**
+ * @class
+ * @extends BaseView
+ */
+DashboardTabView = exports.DashboardTabView = BaseView.extend do # {{{
+    __bind__       : <[  ]>
+    className      : 'tab-pane'
+    tag            : 'div'
+    template       : require 'kraken/template/dashboard/dashboard-tab'
+    
+    
+    constructor: function DashboardTabView
+        BaseView ...
+    
+    initialize: ->
+        BaseView::initialize ...
+    
+    getTabId: ->
+        _.underscored @model.get('name') .toLowerCase() + '-graphs-tab'
+    
+    toTemplateLocals: ->
+        json = DashboardTabView.__super__.toTemplateLocals ...
+        tab_name = _.underscored @model.get('name') .toLowerCase()
+        json import
+            tab_cls : "#tab_name-graphs-pane"
+            tab_id  : "#tab_name-graphs-tab"
+    
+# }}}
+
+
+
 
 

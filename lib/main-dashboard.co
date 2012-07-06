@@ -20,10 +20,17 @@ root = this
 
 # Create the Graph Scaffold
 main = ->
+    # Process URL
+    loc = String root.location
+    data = {}
+    if match = /\/dashboards\/([^\/?]+)/i.exec loc
+        id = match[1]
+        data.id = data.slug = id unless _ <[ edit new ]> .contains id
+    
     # Instantiate model & view
     root.app = new AppView ->
-        @model  = root.dashboard  = new Dashboard
-        @view  = root.view  = new DashboardView {@model}
+        @model  = root.dashboard = new Dashboard data, {+parse}
+        @view   = root.view      = new DashboardView {@model}
 
 
 jQuery main
