@@ -24,65 +24,15 @@ Dashboard = exports.Dashboard = BaseModel.extend do # {{{
     
     initialize: ->
         BaseModel::initialize ...
-        @getGraphs()
+        # @getGraphs()
     
     defaults: ->
         name : null
         tabs : [ { name:"Main", graph_ids:[] } ]
     
-    
-    graph_ids : <[
-        unique_visitors
-        reach
-        pageviews
-        pageviews_mobile
-        pageviews_mobile_target
-        commons
-        articles
-        articles_per_day
-        edits
-        new_editors
-        active_editors
-        active_editors_target
-        very_active_editors
-    ]>
-    
-    
-    tabs : {
-        core :
-            graph_ids : <[
-            unique_visitors
-            pageviews
-            pageviews_mobile
-            pageviews_mobile_target
-            new_editors
-            active_editors
-            active_editors_target
-        ]>
-            name: ".core-graphs-pane"
-    
-        other :
-            graph_ids : <[
-            reach
-            commons
-            articles
-            articles_per_day
-            edits
-            very_active_editors
-        ]>
-            name: ".other-graphs-pane"
-    
-        dev :
-            graph_ids : <[
-            mobile_devices
-            mobile_devices_browsers
-            mobile_devices_applications
-        ]>
-            name: ".dev-graphs-pane"
-    }
-    
-    addTab: (tabName) ->
-        ...
+    load: ->
+        @once 'fetch-success', (~> @getGraphs()) .loadModel()
+        this
     
     
     /**
@@ -127,7 +77,8 @@ Dashboard = exports.Dashboard = BaseModel.extend do # {{{
             graph.once 'ready', -> next.ok tuple
         .unflatten()
         .seq_ (next, graph_tuples) ~>
-            @graphs = _.generate graph_tuples
+            # @graphs = _.generate graph_tuples
+            @graphs.reset _.pluck graph_tuples, 1
             console.log('[setter]\tcalling ready')
             @triggerReady()
         this

@@ -25,6 +25,9 @@ BaseModel = exports.BaseModel = Backbone.Model.extend mixinBase do # {{{
     
     ### Accessors
     
+    url: ->
+        "#{@urlRoot}/#{@get('id')}.json"
+    
     has: (key) ->
         @get(key)?
     

@@ -6,18 +6,12 @@ section#dashboard.centered
     .row
         .graphs.tabbable
             nav
+                //- Dashboard Tab Buttons appended here
                 ul.nav.subnav.nav-pills
-                    li:         h3 Graphs
-                    li.active:  a(href="#core-graphs", data-toggle="tab") Core
-                    li:         a(href="#other-graphs", data-toggle="tab") Others
-                    if IS_DEV
-                        li:     a(href="#dev-graphs", data-toggle="tab") Dev
-                    
-            .tab-content
-                .core-graphs-pane.tab-pane.active(id="core-graphs")
-                .other-graphs-pane.tab-pane(id="other-graphs")
-                if IS_DEV
-                    .dev-graphs-pane.tab-pane(id="dev-graphs")
+                    li: h3 Graphs
+            
+            //- Dashboard Tabs (each with a collection of GraphDisplayViews) appended here
+            .tab-content(data-subview="DashboardTabView")
         
 
 

@@ -232,7 +232,7 @@ application = limn.application =
         
         # non-controller endpoints
         @get '/', (req, res) ->
-            res.render 'dashboard'
+            res.render 'dashboard/view'
         
         @get '/geo', (req, res) ->
             res.render 'geo'
