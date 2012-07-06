@@ -23,27 +23,28 @@ DashboardView = exports.DashboardView = BaseView.extend do # {{{
     events:
         # Select the whole permalink URI text when it receives focus.
         'click .graphs.tabbable .nav a' : 'onTabClick'
-        'shown .graphs.tabbable .nav a' : 'onTabShown'
+        'shown .graphs.tabbable .nav a' : 'render'
+        # 'shown .graphs.tabbable .nav a' : 'onTabShown'
         # 'click  a[data-target="#other-graphs"]' : 'onTabShown'
         # 'click    .load-button'         : 'load'
     
-    subviews : []
+    # subviews : []
     graphs   : null
     ready    : false
     
     
     constructor: function DashboardView(options={})
         @model = options.model
-        @subviews = []
+        # @subviews = []
         @graphs   = new GraphList
-        Backbone.View ...
+        BaseView ...
     
     initialize: ->
         @model or= new Dashboard
         BaseView::initialize ...
         # @graphs.on 'add', @attachGraphs, this
         # @graphs.on 'add', @attachGraph, this
-        @model.on('ready', @load, this)
+        @model.on 'ready', @load, this
     
     
     # FIXME:
@@ -52,29 +53,40 @@ DashboardView = exports.DashboardView = BaseView.extend do # {{{
     # TODO:
     #   - only render graph when scrolling makes it visible
     load: ->
-        _.map(@model.tabs, @addTab)
+        console.log "#this.load! Model ready!", @model
+        _.map @model.tabs, @addTab
     
     addTab: (tab) ->
-        self = this
+        # self = this
         graphs = _(tab.graph_ids).map((graph_id) ~> @model.graphs[graph_id])
         Seq(graphs)
-            .parMap (graph) ->
-                self.graphs.add graph
-                this null, new GraphDisplayView {model:graph}
-            .parMap (view) ->
-                return if view.isAttached
-                graphs_el = self.$el.find tab.name
-                graphs_el.append view.el
-                self.subviews.push view
-                view.isAttached = true
+            .parMap_ (next, graph) ~>
+                @graphs.add graph
+                next null, new GraphDisplayView {model:graph}
+            .parMap_ (next, view) ~>
+                return next.ok() if view.isAttached
+                @addSubview view
+                tabEl = @$ tab.name
+                if tabEl.length
+                    tabEl.append view.$el
+                    view.isAttached = true
+                else
+                    console.log "#this.addTab: Unable to find bind-point for #view!", view
+                next.ok()
+            .seq ~>
+                console.log "#this.addTab: All graphs added!"
+                @render()
+        this
     
     ### Tabs {{{
     
     onTabShown: (e) ->
-        Seq @subviews
-            .parMap (view) ->
-                # view.resizeViewport()
-                view.renderChart()
+        @render()
+        # @renderSubviews()
+        # Seq @subviews
+        #     .parMap (view) ->
+        #         # view.resizeViewport()
+        #         view.renderChart()
     
     onTabClick: (evt) ->
         evt.preventDefault()

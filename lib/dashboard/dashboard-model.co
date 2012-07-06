@@ -114,16 +114,17 @@ Dashboard = exports.Dashboard = BaseModel.extend do # {{{
         # consolidate graph_ids to one array
         graph_ids = _(@tabs).chain().values().map((tab_obj) -> tab_obj.graph_ids).flatten().value()
         
-        Seq [graph_ids]
-        .flatten()
+        Seq graph_ids
         .parMap_ (next, graph_id) ->
-            next null [graph_id]
+            next null, [graph_id]
         .parEach_ (next, graph_id_arr) ~>
             Graph.lookup graph_id_arr[0], @pushAsync next, graph_id_arr
             # Graph.lookup graph_id_arr[0], (err, el) ->
             #     graph_id_arr.push el
             #     next null
         # .parEach_ @show
+        .parMap_ (next, [id, graph]:tuple) ~>
+            graph.once 'ready', -> next.ok tuple
         .unflatten()
         .seq_ (next, graph_tuples) ~>
             @graphs = _.generate graph_tuples
