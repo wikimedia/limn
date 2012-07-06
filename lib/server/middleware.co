@@ -123,8 +123,8 @@ application = limn.application =
             # log all requests
             @use express.logger()
             
-            # set a one year max-age for static files
-            @set 'static max age', 31_557_600_000_ms
+            # set a one month max-age for static files
+            @set 'static max age', 108_000_000_ms
             
             # show simple errors
             @use express.errorHandler()

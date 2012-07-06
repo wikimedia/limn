@@ -33,9 +33,101 @@ task \server 'Start dev server' ->
     run 'lib/server/server.co'
 
 
+### Build Helpers
+
+
+
+
 task \build 'Build coco sources' ->
-    invoke \setup
+    # invoke \setup
     coco <[ -bjc package.co ]>
+    
+    {sources} = require 'kraken/server/view-helpers'
+    browserify = require 'browserify'
+    Coco       = require 'coco'
+    Jade       = require 'jade'
+    Stylus     = require 'stylus'
+    nib        = require 'nib'
+    yaml       = require 'js-yaml'
+    
+    matchExt = /((?:\.min)?)\.mod((?:\.min)?)\.js$/i
+    targetDir = 'var'
+    
+    Seq()
+        .seq ->
+            console.log '  Bundling Browserify bundle'
+            bundle = browserify exports:<[ require process ]>
+                .require <[ seq d3 events ]>
+                .bundle()
+            mkdirp 'var/vendor'
+            write 'var/vendor/browserify.js', bundle
+            @ok()
+        
+        .set glob 'lib/template/**/*.jade', {+sync}
+        .seqEach (infile) ->
+            template_fn = Jade.compile read(infile), { +pretty, +client, -compileDebug, filename:infile }
+            template    = String template_fn .replace /^function anonymous\(/, 'function \('
+            outfile     = "#infile.js".replace /^lib/, "#targetDir/js/kraken"
+            console.log "  Compiling Jade template to JS:\t #infile \t-->\t #outfile"
+            mkdirp dirname outfile
+            write outfile, """
+                var template = #template;
+                if (typeof module != 'undefined') {
+                    module.exports = exports = template;
+                }
+            """
+            @ok()
+        
+        .set glob('lib/main-*.co', {+sync}).concat sources("www/modules.yaml", 'development').map -> it.slice 1
+        .seqEach (src) ->
+            infile = src.replace /^js\/kraken/, 'lib' .replace matchExt, '.co'
+            return @ok() unless exists infile
+                # console.log "  Skipping Coco compile:\t (#src)\t #infile does not exist"
+                # return @ok src
+            
+            outfile = "#targetDir/" + src.replace /^lib/, 'js/kraken' .replace matchExt, '.js' .replace /\.co$/, '.js'
+            console.log "  Compiling Coco to JS:\t #infile \t-->\t #outfile"
+            mkdirp dirname outfile
+            write outfile, Coco.compile read(infile), {+bare}
+            @ok()
+        
+        .set sources("www/modules.yaml", 'development').map -> it.slice 1
+        .seqEach (src) ->
+            return @ok() unless matchExt.test src
+            infile = (if _.startsWith src, 'vendor' then 'static' else targetDir) + '/' + src.replace matchExt, '$1$2.js'
+            return @ok() unless exists infile
+            outfile = targetDir + '/' + src
+            parts = infile.replace matchExt, '' .split '/' .slice 2
+            parts.pop() if 'index' is _.last parts
+            ID = parts.join '/' 
+            console.log "  Wrapping JS in Module:\t #infile \t-->\t #outfile (#ID)"
+            mkdirp dirname outfile
+            write outfile, "require.define('/node_modules/#ID.js', function(require, module, exports, __dirname, __filename, undefined){\n\n" + read(infile) + "\n\n});\n"
+            @ok()
+        
+        .set glob 'www/css/*.styl', {+sync}
+        .seqEach (infile) ->
+            outfile = infile.replace /^www\//, "#targetDir/" .replace /\.styl$/, '.css'
+            console.log "  Compiling Stylus to CSS:\t #infile \t-->\t #outfile"
+            mkdirp dirname outfile
+            stylus = Stylus read infile
+            stylus.set 'filename', infile
+            stylus.use nib()
+            stylus.render (err, css) ~>
+                write outfile, css unless err
+                this err
+        
+        .set glob 'www/schema/**/*.yaml', {+sync}
+        .seqEach (infile) ->
+            outfile = infile.replace /^www\//, "#targetDir/" .replace /\.yaml$/, '.json'
+            console.log "  Compiling YAML to JSON:\t #infile \t-->\t #outfile"
+            mkdirp dirname outfile
+            write outfile, JSON.stringify yaml.load read infile
+            @ok()
+        
+        .seq ->
+            console.log 'Done!'
+        
 
 
 task \test 'Rebuild test files and run tests' ->
@@ -82,6 +174,7 @@ task \source_list 'Print a list of the source file paths.' ->
         sources("www/modules.yaml", 'development')
             .map -> it.slice 1
             .join '\n'
+
 
 # task \dist 'Assemble a distribution package for deploy' ->
 #     invoke \cleanup_tests
