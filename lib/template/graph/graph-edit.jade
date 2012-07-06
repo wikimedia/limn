@@ -2,7 +2,7 @@
 section.graph-edit.graph(id=graph_id)
     
     .graph-name-row.graph-details.row-fluid.control-group
-        input.span6.graph-name(type='text', id="#{graph_id}_name", name="name", placeholder='Graph Name', value=name)
+        input.span6.graph-name(type='text', id="#{graph_id}_name1", name="name", placeholder='Graph Name', value=name)
     
     .graph-viewport-row.row-fluid
         .viewport
@@ -43,6 +43,7 @@ section.graph-edit.graph(id=graph_id)
             .graph-tab-content.tab-content
                 .graph-info-pane.tab-pane.active(id="#{graph_id}-tab-info")
                     form.graph-details.form-horizontal
+                        input.graph-name(type="hidden", id="#{graph_id}_name", name="name", value=name)
                         .row-fluid
                             .half.control-group
                                 .control-group

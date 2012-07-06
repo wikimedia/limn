@@ -207,6 +207,7 @@ GraphEditView = exports.GraphEditView = GraphView.extend do # {{{
     
     onDetailsSubmit: ->
         console.log "#this.onDetailsSubmit!"
+        @$ 'form.graph-details .graph-name' .val @$('.graph-name-row .graph-name').val()
         details = @$ 'form.graph-details' .formData()
         @model.set details
         false
