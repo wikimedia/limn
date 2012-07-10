@@ -13,9 +13,11 @@ task \link 'Link package source to node_modules so the name resolves correctly' 
     # Browser-based require doens't support relative requires, but things
     # like `require 'kraken/utils'` rarely work in node without this hack.
     mkdirp 'node_modules'
-    if not exists MODULE_LINK
+    if exists MODULE_LINK
+        remove MODULE_LINK
+    else
         say "Creating #{basename MODULE_LINK} symlink..."
-        fs.symlinkSync "../lib", MODULE_LINK
+    fs.symlinkSync "../src", MODULE_LINK
 
 task \install 'Install project dependencies.' ->
     <- sh 'npm install', {-verbose, +errors, +die}
@@ -29,7 +31,7 @@ task \setup 'Ensure project is set up for development.' ->
 task \server 'Start dev server' ->
     invoke \setup
     say ''
-    run 'lib/server/server.co'
+    run 'src/server/server.co'
 
 
 task \build 'Build coco sources' ->
@@ -45,7 +47,7 @@ task \build 'Build coco sources' ->
     yaml       = require 'js-yaml'
     
     matchExt = /((?:\.min)?)\.mod((?:\.min)?)\.js$/i
-    targetDir = 'var'
+    targetDir = 'lib'
     
     console.log 'Building source...'
     Seq()
@@ -57,9 +59,9 @@ task \build 'Build coco sources' ->
             write 'static/vendor/browserify.js', bundle
             @ok()
         
-        .set glob 'lib/template/**/*.jade', {+sync}
+        .set glob 'src/template/**/*.jade', {+sync}
         .seqEach (infile) ->
-            outfile     = "#infile.js".replace /^lib/, "#targetDir/js/kraken"
+            outfile     = "#infile.js".replace /^src/, 'lib'
             console.log "  Compiling Jade template to JS:\t #infile \t-->\t #outfile"
             template_fn = Jade.compile read(infile), { +pretty, +client, -compileDebug, filename:infile }
             template    = String template_fn .replace /^function anonymous\(/, 'function \('
@@ -72,37 +74,38 @@ task \build 'Build coco sources' ->
             """
             @ok()
         
-        .set glob('lib/main-*.co', {+sync}).concat sources("www/modules.yaml", 'development').map -> it.slice 1
-        .seqEach (src) ->
-            infile = src.replace /^js\/kraken/, 'lib' .replace matchExt, '.co'
+        .set glob('src/main-*.co', {+sync}).concat sources("www/modules.yaml", 'development').map -> it.slice 1
+        .seqEach (srcfile) ->
+            infile = srcfile.replace /^js\/kraken/, 'src' .replace matchExt, '.co'
             return @ok() unless exists infile
-                # console.log "  Skipping Coco compile:\t (#src)\t #infile does not exist"
-                # return @ok src
+            # unless exists infile
+            #     console.log "  Skipping Coco compile:\t (#srcfile)\t #infile does not exist"
+            #     return @ok()
             
-            outfile = "#targetDir/" + src.replace /^lib/, 'js/kraken' .replace matchExt, '.js' .replace /\.co$/, '.js'
+            outfile = srcfile.replace /^(js\/kraken|src)/, 'lib' .replace matchExt, '.js' .replace /\.co$/, '.js'
             console.log "  Compiling Coco to JS:\t #infile \t-->\t #outfile"
             mkdirp dirname outfile
             write outfile, Coco.compile read(infile), {+bare}
             @ok()
         
         .set sources("www/modules.yaml", 'development').map -> it.slice 1
-        .seqEach (src) ->
-            return @ok() unless matchExt.test src
-            infile = (if _.startsWith src, 'vendor' then 'static' else targetDir) + '/' + src.replace matchExt, '$1$2.js'
+        .seqEach (srcfile) ->
+            return @ok() unless matchExt.test srcfile
+            outfile = (if _.startsWith srcfile, 'vendor' then 'static' else 'www') + '/' + srcfile
+            infile = outfile.replace matchExt, '$1$2.js'
             return @ok() unless exists infile
-            outfile = targetDir + '/' + src
-            return @ok() if exists outfile
+            return @ok() if _.startsWith(srcfile, 'vendor') and exists outfile
             parts = infile.replace matchExt, '' .split '/' .slice 2
             parts.pop() if 'index' is _.last parts
             ID = parts.join '/' 
-            console.log "  Wrapping JS in Module:\t #infile \t-->\t #outfile (#ID)"
+            console.log "  Wrapping JS in Module:\t #infile \t-->\t #outfile"
             mkdirp dirname outfile
             write outfile, "require.define('/node_modules/#ID.js', function(require, module, exports, __dirname, __filename, undefined){\n\n" + read(infile) + "\n\n});\n"
             @ok()
         
         .set glob 'www/css/*.styl', {+sync}
         .seqEach (infile) ->
-            outfile = infile.replace /^www\//, "#targetDir/" .replace /\.styl$/, '.css'
+            outfile = infile.replace /\.styl$/, '.css'
             console.log "  Compiling Stylus to CSS:\t #infile \t-->\t #outfile"
             mkdirp dirname outfile
             stylus = Stylus read infile

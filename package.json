@@ -4,12 +4,13 @@
   "description": "A charting toolkit and dashboard.",
   "homepage": "http://git.less.ly/?p=kraken-ui.git",
   "keywords": [
+    "visualization",
+    "graph",
+    "chart",
     "util",
     "server",
     "client",
-    "browser",
-    "visualization",
-    "graph"
+    "browser"
   ],
   "author": "David Schoonover <dsc@less.ly> (http://less.ly)",
   "contributors": [

@@ -21,11 +21,12 @@ Controller                      = require './controller'
  * Limn project-internals
  */
 BASE   = dirname dirname __dirname
-WWW    = "#BASE/www"
-VAR    = "#BASE/var"
-STATIC = "#BASE/static"
-DIST   = "#BASE/dist"
 DATA   = "#BASE/data"
+LIB    = "#BASE/llb"
+SRC    = "#BASE/src"
+STATIC = "#BASE/static"
+VAR    = "#BASE/var"
+WWW    = "#BASE/www"
 
 NODE_ENV = process.env.NODE_ENV or 'development'
 IS_DEV   = NODE_ENV is 'development'
@@ -142,8 +143,13 @@ application = limn.application =
             compiler = require 'connect-compiler-extras'
             
             # transparently recompile modules that have changed
+            @use '/js/kraken', compiler do
+                enabled : 'coco'
+                src     : SRC
+                dest    : "#VAR/js/kraken"
+                log_level : LOG_LEVEL
             @use compiler do
-                enabled : <[ coco jade-browser stylus yaml ]>
+                enabled : <[ jade-browser stylus yaml ]>
                 src     : WWW
                 dest    : VAR
                 options : stylus : { nib:true, include:"#WWW/css" }
@@ -175,9 +181,8 @@ application = limn.application =
         # serve static files
         @configure ->
             opts = @set('static file options') or {}
-            @use express.static DIST, ^opts if exists DIST
-            @use express.static WWW, ^opts
             @use express.static VAR, ^opts
+            @use express.static WWW, ^opts
             @use express.static STATIC, ^opts
         
         
