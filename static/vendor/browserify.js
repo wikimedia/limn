@@ -349,8 +349,6 @@ var EventEmitter = require('events').EventEmitter;
 var Hash = require('hashish');
 var Chainsaw = require('chainsaw');
 
-var slice = [].slice;
-
 module.exports = Seq;
 function Seq (xs) {
     if (xs && !Array.isArray(xs) || arguments.length > 1) {
@@ -373,7 +371,6 @@ Seq.ap = Seq; // for compatability with versions <0.3
 
 function builder (saw, xs) {
     var context = {
-        dead : false,
         vars : {},
         args : {},
         stack : xs,
@@ -381,34 +378,28 @@ function builder (saw, xs) {
     };
     context.stack_ = context.stack;
     
-    function die(){
-        context.dead = true;
-        saw.step = saw.actions.length+1;
-    }
-    context.die = die;
-    
-    function action (step, key, start, finish){
+    function action (step, key, f, g) {
         var cb = function (err) {
-            var args = slice.call(arguments, 1);
-            if (context.dead) {
-                saw.step = saw.actions.length+1;
-            } else if (err) {
+            var args = [].slice.call(arguments, 1);
+            if (err) {
                 context.error = { message : err, key : key };
                 saw.jump(lastPar);
                 saw.down('catch');
-                finish();
-            } else {
+                g();
+            }
+            else {
                 if (typeof key == 'number') {
                     context.stack_[key] = args[0];
                     context.args[key] = args;
-                } else {
+                }
+                else {
                     context.stack_.push.apply(context.stack_, args);
                     if (key !== undefined) {
                         context.vars[key] = args[0];
                         context.args[key] = args;
                     }
                 }
-                if (finish) finish(args, key);
+                if (g) g(args, key);
             }
         };
         Hash(context).forEach(function (v,k) { cb[k] = v });
@@ -429,19 +420,14 @@ function builder (saw, xs) {
         
         cb.ok = cb.bind(cb, null);
         
-        cb.die = function (){
-            die();
-            return cb;
-        };
-        
-        start.apply(cb, context.stack);
+        f.apply(cb, context.stack);
     }
     
     var running = 0;
     var errors = 0;
     
     this.seq = function (key, cb) {
-        var bound = slice.call(arguments, 2);
+        var bound = [].slice.call(arguments, 2);
         
         if (typeof key === 'function') {
             if (arguments.length > 1) bound.unshift(cb);
@@ -454,7 +440,7 @@ function builder (saw, xs) {
             action(saw.step, key,
                 function () {
                     context.stack_ = [];
-                    var args = slice.call(arguments);
+                    var args = [].slice.call(arguments);
                     args.unshift.apply(args, bound.map(function (arg) {
                         return arg === Seq ? this : arg
                     }, this));
@@ -477,7 +463,7 @@ function builder (saw, xs) {
             context.stack_ = [];
         }
         
-        var bound = slice.call(arguments, 2);
+        var bound = [].slice.call(arguments, 2);
         if (typeof key === 'function') {
             if (arguments.length > 1) bound.unshift(cb);
             cb = key;
@@ -485,7 +471,7 @@ function builder (saw, xs) {
             context.stack_.push(null);
         }
         var cb_ = function () {
-            var args = slice.call(arguments);
+            var args = [].slice.call(arguments);
             args.unshift.apply(args, bound.map(function (arg) {
                 return arg === Seq ? this : arg
             }, this));
@@ -515,13 +501,13 @@ function builder (saw, xs) {
     
     [ 'seq', 'par' ].forEach(function (name) {
         this[name + '_'] = function (key) {
-            var args = slice.call(arguments);
+            var args = [].slice.call(arguments);
             
             var cb = typeof key === 'function'
                 ? args[0] : args[1];
             
             var fn = function () {
-                var argv = slice.call(arguments);
+                var argv = [].slice.call(arguments);
                 argv.unshift(this);
                 cb.apply(this, argv);
             };
@@ -545,51 +531,18 @@ function builder (saw, xs) {
         saw.next();
     };
     
-    this.forEach = function (limit, cb) {
-        if (cb === undefined) { cb = limit; limit = null; }
-        
-        this.seq(function (){
-            if (context.stack.length === 0)
-                return this(null);
+    this.forEach = function (cb) {
+        this.seq(function () {
+            context.stack_ = context.stack.slice();
+            var end = context.stack.length;
             
-            var xs       = context.stack.slice()
-            ,   len      = xs.length
-            ,   active   = 0
-            ,   finished = 0
-            ,   queue    = []
-            ,   visitor
-            ;
-            
-            context.stack_ = xs.slice();
-            
-            if (!limit || limit <= 0)
-                visitor = function (x, i){
-                    action(saw.step, i, function (){
-                        cb.call(this, x, i);
-                        if (i === len - 1)
-                            saw.next();
-                    });
-                }
-            else
-                visitor = function eachCall(x, i){
-                    if (active >= limit)
-                        return queue.push(eachCall.bind(this, x, i));
-                    
-                    active++;
-                    action(saw.step, i,
-                        function (){ cb.call(this, x, i); },
-                        function (){
-                            active--;
-                            finished++;
-                            if (queue.length > 0)
-                                queue.shift()();
-                            else if (i === len - 1)
-                                saw.next();
-                        }
-                    );
-                };
-            
-            xs.forEach(visitor);
+            if (end === 0) this(null)
+            else context.stack.forEach(function (x, i) {
+                action(saw.step, i, function () {
+                    cb.call(this, x, i);
+                    if (i == end - 1) saw.next();
+                });
+            });
         });
     };
     
@@ -674,7 +627,7 @@ function builder (saw, xs) {
                 };
                 
                 next.ok = function () {
-                    var args = slice.call(arguments);
+                    var args = [].slice.call(arguments);
                     args.unshift(null);
                     return next.apply(next, args);
                 };
@@ -718,7 +671,7 @@ function builder (saw, xs) {
             };
             
             next.ok = function () {
-                var args = slice.call(arguments);
+                var args = [].slice.call(arguments);
                 args.unshift(null);
                 return next.apply(next, args);
             };
@@ -768,7 +721,7 @@ function builder (saw, xs) {
                 };
                 
                 next.ok = function () {
-                    var args = slice.call(arguments);
+                    var args = [].slice.call(arguments);
                     args.unshift(null);
                     return next.apply(next, args);
                 };
@@ -823,7 +776,7 @@ function builder (saw, xs) {
             };
             
             next.ok = function () {
-                var args = slice.call(arguments);
+                var args = [].slice.call(arguments);
                 args.unshift(null);
                 return next.apply(next, args);
             };
@@ -832,29 +785,11 @@ function builder (saw, xs) {
         });
     };
     
-    [ 'forEach', 'Each', 'Map', 'Filter' ]
-        .forEach(function (name){
-            var isForEach = !!(name === 'forEach')
-            ,   method ;
-            
-            // the seq functions are straight-forward, other than skipping forEach
-            if (!isForEach) {
-                method = 'seq'+name;
-                this[method+'_'] = function (cb) {
-                    this[method].call(this, function () {
-                        var args = slice.call(arguments);
-                        args.unshift(this);
-                        cb.apply(this, args);
-                    });
-                };
-            }
-            
-            // ...but par functions (anything that takes limit+callback) needs special care
-            method = (isForEach ? name : 'par'+name);
-            this[method+'_'] = function (limit, cb) {
-                if (!cb) { cb = limit; limit = undefined; }
-                this[method].call(this, limit, function (){
-                    var args = slice.call(arguments);
+    [ 'forEach', 'seqEach', 'parEach', 'seqMap', 'parMap', 'seqFilter', 'parFilter' ]
+        .forEach(function (name) {
+            this[name + '_'] = function (cb) {
+                this[name].call(this, function () {
+                    var args = [].slice.call(arguments);
                     args.unshift(this);
                     cb.apply(this, args);
                 });
@@ -867,7 +802,7 @@ function builder (saw, xs) {
             this[name] = function () {
                 context.stack[name].apply(
                     context.stack,
-                    slice.call(arguments)
+                    [].slice.call(arguments)
                 );
                 saw.next();
                 return this;
@@ -880,7 +815,7 @@ function builder (saw, xs) {
             this[name] = function () {
                 var res = context.stack[name].apply(
                     context.stack,
-                    slice.call(arguments)
+                    [].slice.call(arguments)
                 );
                 // stack must be an array, or bad things happen
                 context.stack = (Array.isArray(res) ? res : [res]);
@@ -929,7 +864,6 @@ function builder (saw, xs) {
     this['do'] = function (cb) {
         saw.nest(cb, context);
     };
-    
 }
 
 });
@@ -1109,11 +1043,11 @@ EventEmitter.prototype.listeners = function(type) {
 
 });
 
-require.define("/node_modules/seq/node_modules/hashish/package.json", function (require, module, exports, __dirname, __filename) {
+require.define("/node_modules/hashish/package.json", function (require, module, exports, __dirname, __filename) {
 module.exports = {"main":"./index.js"}
 });
 
-require.define("/node_modules/seq/node_modules/hashish/index.js", function (require, module, exports, __dirname, __filename) {
+require.define("/node_modules/hashish/index.js", function (require, module, exports, __dirname, __filename) {
 module.exports = Hash;
 var Traverse = require('traverse');
 
@@ -1370,14 +1304,16 @@ Hash.compact = function (ref) {
 
 });
 
-require.define("/node_modules/seq/node_modules/hashish/node_modules/traverse/package.json", function (require, module, exports, __dirname, __filename) {
-module.exports = {"main":"./index"}
+require.define("/node_modules/hashish/node_modules/traverse/package.json", function (require, module, exports, __dirname, __filename) {
+module.exports = {"main":"index.js"}
 });
 
-require.define("/node_modules/seq/node_modules/hashish/node_modules/traverse/index.js", function (require, module, exports, __dirname, __filename) {
-module.exports = Traverse;
+require.define("/node_modules/hashish/node_modules/traverse/index.js", function (require, module, exports, __dirname, __filename) {
+var traverse = module.exports = function (obj) {
+    return new Traverse(obj);
+};
+
 function Traverse (obj) {
-    if (!(this instanceof Traverse)) return new Traverse(obj);
     this.value = obj;
 }
 
@@ -1392,6 +1328,18 @@ Traverse.prototype.get = function (ps) {
         node = node[key];
     }
     return node;
+};
+
+Traverse.prototype.has = function (ps) {
+    var node = this.value;
+    for (var i = 0; i < ps.length; i ++) {
+        var key = ps[i];
+        if (!Object.hasOwnProperty.call(node, key)) {
+            return false;
+        }
+        node = node[key];
+    }
+    return true;
 };
 
 Traverse.prototype.set = function (ps, value) {
@@ -1457,7 +1405,7 @@ Traverse.prototype.clone = function () {
             parents.push(src);
             nodes.push(dst);
             
-            forEach(Object_keys(src), function (key) {
+            forEach(objectKeys(src), function (key) {
                 dst[key] = clone(src[key]);
             });
             
@@ -1504,7 +1452,7 @@ function walk (root, cb, immutable) {
                 if (stopHere) keepGoing = false;
             },
             remove : function (stopHere) {
-                if (Array_isArray(state.parent.node)) {
+                if (isArray(state.parent.node)) {
                     state.parent.node.splice(state.key, 1);
                 }
                 else {
@@ -1523,24 +1471,31 @@ function walk (root, cb, immutable) {
         
         if (!alive) return state;
         
-        if (typeof node === 'object' && node !== null) {
-            state.keys = Object_keys(node);
-            
-            state.isLeaf = state.keys.length == 0;
-            
-            for (var i = 0; i < parents.length; i++) {
-                if (parents[i].node_ === node_) {
-                    state.circular = parents[i];
-                    break;
+        function updateState() {
+            if (typeof state.node === 'object' && state.node !== null) {
+                if (!state.keys || state.node_ !== state.node) {
+                    state.keys = objectKeys(state.node)
+                }
+                
+                state.isLeaf = state.keys.length == 0;
+                
+                for (var i = 0; i < parents.length; i++) {
+                    if (parents[i].node_ === node_) {
+                        state.circular = parents[i];
+                        break;
+                    }
                 }
             }
-        }
-        else {
-            state.isLeaf = true;
+            else {
+                state.isLeaf = true;
+                state.keys = null;
+            }
+            
+            state.notLeaf = !state.isLeaf;
+            state.notRoot = !state.isRoot;
         }
         
-        state.notLeaf = !state.isLeaf;
-        state.notRoot = !state.isRoot;
+        updateState();
         
         // use return values to update if defined
         var ret = cb.call(state, state.node);
@@ -1553,6 +1508,8 @@ function walk (root, cb, immutable) {
         if (typeof state.node == 'object'
         && state.node !== null && !state.circular) {
             parents.push(state);
+            
+            updateState();
             
             forEach(state.keys, function (key, i) {
                 path.push(key);
@@ -1584,33 +1541,45 @@ function copy (src) {
     if (typeof src === 'object' && src !== null) {
         var dst;
         
-        if (Array_isArray(src)) {
+        if (isArray(src)) {
             dst = [];
         }
-        else if (src instanceof Date) {
+        else if (isDate(src)) {
             dst = new Date(src);
         }
-        else if (src instanceof Boolean) {
+        else if (isRegExp(src)) {
+            dst = new RegExp(src);
+        }
+        else if (isError(src)) {
+            dst = { message: src.message };
+        }
+        else if (isBoolean(src)) {
             dst = new Boolean(src);
         }
-        else if (src instanceof Number) {
+        else if (isNumber(src)) {
             dst = new Number(src);
         }
-        else if (src instanceof String) {
+        else if (isString(src)) {
             dst = new String(src);
         }
         else if (Object.create && Object.getPrototypeOf) {
             dst = Object.create(Object.getPrototypeOf(src));
         }
-        else if (src.__proto__ || src.constructor.prototype) {
-            var proto = src.__proto__ || src.constructor.prototype || {};
+        else if (src.constructor === Object) {
+            dst = {};
+        }
+        else {
+            var proto =
+                (src.constructor && src.constructor.prototype)
+                || src.__proto__
+                || {}
+            ;
             var T = function () {};
             T.prototype = proto;
             dst = new T;
-            if (!dst.__proto__) dst.__proto__ = proto;
         }
         
-        forEach(Object_keys(src), function (key) {
+        forEach(objectKeys(src), function (key) {
             dst[key] = src[key];
         });
         return dst;
@@ -1618,13 +1587,21 @@ function copy (src) {
     else return src;
 }
 
-var Object_keys = Object.keys || function keys (obj) {
+var objectKeys = Object.keys || function keys (obj) {
     var res = [];
     for (var key in obj) res.push(key)
     return res;
 };
 
-var Array_isArray = Array.isArray || function isArray (xs) {
+function toS (obj) { return Object.prototype.toString.call(obj) }
+function isDate (obj) { return toS(obj) === '[object Date]' }
+function isRegExp (obj) { return toS(obj) === '[object RegExp]' }
+function isError (obj) { return toS(obj) === '[object Error]' }
+function isBoolean (obj) { return toS(obj) === '[object Boolean]' }
+function isNumber (obj) { return toS(obj) === '[object Number]' }
+function isString (obj) { return toS(obj) === '[object String]' }
+
+var isArray = Array.isArray || function isArray (xs) {
     return Object.prototype.toString.call(xs) === '[object Array]';
 };
 
@@ -1635,10 +1612,10 @@ var forEach = function (xs, fn) {
     }
 };
 
-forEach(Object_keys(Traverse.prototype), function (key) {
-    Traverse[key] = function (obj) {
+forEach(objectKeys(Traverse.prototype), function (key) {
+    traverse[key] = function (obj) {
         var args = [].slice.call(arguments, 1);
-        var t = Traverse(obj);
+        var t = new Traverse(obj);
         return t[key].apply(t, args);
     };
 });
