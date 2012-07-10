@@ -74,18 +74,13 @@ task \build 'Build coco sources' ->
             """
             @ok()
         
-        .set glob('src/main-*.co', {+sync}).concat sources("www/modules.yaml", 'development').map -> it.slice 1
-        .seqEach (srcfile) ->
-            infile = srcfile.replace /^js\/kraken/, 'src' .replace matchExt, '.co'
+        .set glob 'src/**/*.co', {+sync}
+        .seqEach (infile) ->
             return @ok() unless exists infile
-            # unless exists infile
-            #     console.log "  Skipping Coco compile:\t (#srcfile)\t #infile does not exist"
-            #     return @ok()
-            
-            outfile = srcfile.replace /^(js\/kraken|src)/, 'lib' .replace matchExt, '.js' .replace /\.co$/, '.js'
+            outfile = infile.replace /^src/, 'lib' .replace /\.co$/, '.js'
             console.log "  Compiling Coco to JS:\t #infile \t-->\t #outfile"
             mkdirp dirname outfile
-            write outfile, Coco.compile read(infile), {+bare}
+            write outfile, Coco.compile read(infile), {+bare, filename:infile}
             @ok()
         
         .set sources("www/modules.yaml", 'development').map -> it.slice 1

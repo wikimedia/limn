@@ -10,7 +10,7 @@ class AliasDict
      * @type Object
      * @private
      */
-     _data : null
+    _data : null
     
     /**
      * Mapping from keys to an array of [potentially nested] alias-keys.
