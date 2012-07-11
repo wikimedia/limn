@@ -1,19 +1,20 @@
 #!/usr/bin/env coco
 
+fs                      = require 'fs'
+path    = {dirname}     = require 'path'
+subproc = {exec, spawn} = require 'child_process'
+exists  = fs.existsSync or path.existsSync
 
-fs      = {existsSync:exists}   = require 'fs'
-path    = {dirname}             = require 'path'
-subproc = {exec, spawn}         = require 'child_process'
+Seq                   = require 'seq'
+glob                  = require 'glob'
+yaml                  = require 'js-yaml'
 
-glob    = require 'glob'
-yaml    = require 'js-yaml'
-Seq     = require 'seq'
-express = require 'express'
+express               = require 'express'
 
-{_, op}                         = require '../util'
-{mkdirp, mkdirpAsync}           = require './mkdirp'
-{readFilesAsync}                = require './files'
-Controller                      = require './controller'
+{_, op}               = require '../util'
+{mkdirp, mkdirpAsync} = require './mkdirp'
+{readFilesAsync}      = require './files'
+Controller            = require './controller'
 
 
 

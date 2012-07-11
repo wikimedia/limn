@@ -1,17 +1,16 @@
 #!/usr/bin/env coco
 
-fs      = require 'fs'
-path    = require 'path'
+fs                      = require 'fs'
+path    = {dirname}     = require 'path'
+subproc = {exec, spawn} = require 'child_process'
+exists  = fs.existsSync or path.existsSync
 
-{exec, spawn,
-} = require 'child_process'
-exists = fs.existsSync or path.existsSync
-
-
-express = require 'express'
+express        = require 'express'
 LimnMiddleware = require './middleware'
 
-
+/**
+ * Create server
+ */
 app = exports = module.exports = express.createServer()
 
 /**
@@ -52,7 +51,7 @@ if require.main is module or 'Cokefile' is mainfile
     throw err if err
     REV = stdout.trim! unless REV
     
-    console.log s = "Kraken Server (port=#PORT, env=#NODE_ENV, rev=#REV, base_dir=#{limn.BASE})"
+    console.log s = "Limn Server (port=#PORT, env=#NODE_ENV, rev=#REV, base_dir=#{limn.BASE})"
     console.log '=' * s.length
     app.listen PORT
 
