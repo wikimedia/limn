@@ -5,8 +5,9 @@ path       = require 'path'
 _          = require 'underscore'
 Seq        = require 'seq'
 yaml       = require 'js-yaml'
-{mkdirp, mkdirpAsync} = require '../mkdirp'
 
+{ mkdirp, mkdirpAsync,
+} = require '../mkdirp'
 { readJSONFilesAsync,
 } = require '../files'
 
@@ -23,8 +24,7 @@ class DashboardController extends FileBackedController
     ]>
     PROTECT : true
     
-    name    : 'dashboards'
-    dataDir : 'data/dashboards'
+    name : 'dashboards'
     -> super ...
     
     
@@ -34,7 +34,7 @@ class DashboardController extends FileBackedController
         # if format is json, then return the dashboard JSON
         switch req.format
             case 'json'
-                pattern = @dataDir + "/*.json"
+                pattern = "#{@dataDir}/*.json"
                 Seq()
                     # find list of data/dashboard/*.json files, send back the objects
                     .seq -> readJSONFilesAsync pattern, this
@@ -66,7 +66,7 @@ class DashboardController extends FileBackedController
         return unless data = @processBody req, res
         file = @toFile data.id
         if exists file
-            return res.send { result:"error", message:"Dashboard '#{data.id}' already exists!" }
+            return res.send { result:"error", message:"Dashboard '#{data.id}' already exists!" }, 409 # 409: Resource Conflict
         else
             fs.writeFile file, JSON.stringify(data), "utf8", @errorHandler(res, "Error writing Dashboard!")
     
@@ -74,15 +74,15 @@ class DashboardController extends FileBackedController
     update: (req, res) ->
         return unless data = @processBody req, res
         if @PROTECT and _ @PROTECTED_IDS .contains data.id
-            return res.send {result:"error", message:"Dashboard '#{data.id}' is read-only."}, 403
+            return res.send {result:"error", message:"Dashboard '#{data.id}' is read-only."}, 403 # 403: Forbidden
         fs.writeFile @toFile(data.id), JSON.stringify(data), "utf8", @errorHandler(res, "Error writing Dashboard!")
     
     # DELETE /dashboards/:dashboard
     destroy: (req, res) ->
         id = req.param.dashboard
         if @PROTECT and _ @PROTECTED_IDS .contains id
-            return res.send {result:"error", message:"Dashboard '#{id}' is read-only."}, 403
-        fs.unlink @toFile(id), @errorHandler(res, "Dashboard '#{id}' does not exist!")
+            return res.send {result:"error", message:"Dashboard '#{id}' is read-only."}, 403 # 403: Forbidden
+        fs.unlink @toFile(id), @errorHandler(res, "Dashboard '#{id}' does not exist!", 410) # 410: Resource Gone
     
     
 

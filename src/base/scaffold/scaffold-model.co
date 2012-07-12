@@ -1,7 +1,7 @@
-_  = require 'kraken/util/underscore'
-op = require 'kraken/util/op'
+_  = require 'limn/util/underscore'
+op = require 'limn/util/op'
 { BaseModel, BaseList,
-}  = require 'kraken/base'
+}  = require 'limn/base'
 
 
 

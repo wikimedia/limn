@@ -1,14 +1,14 @@
 moment = require 'moment'
 
-_ = require 'kraken/util/underscore'
+_ = require 'limn/util/underscore'
 { Graph,
-} = require 'kraken/graph/graph-model'
+} = require 'limn/graph/graph-model'
 { GraphView,
-} = require 'kraken/graph/graph-view'
+} = require 'limn/graph/graph-view'
 { ChartOptionScaffold, DEBOUNCE_RENDER,
-} = require 'kraken/chart'
+} = require 'limn/chart'
 { DataView, DataSetView, DataSet,
-} = require 'kraken/data'
+} = require 'limn/data'
 
 root = do -> this
 
@@ -26,7 +26,7 @@ GraphEditView = exports.GraphEditView = GraphView.extend do # {{{
         onFirstClickRenderOptionsTab onFirstClickRenderDataTab
     ]>
     className : 'graph-edit graph'
-    template  : require 'kraken/template/graph/graph-edit'
+    template  : require 'limn/template/graph/graph-edit'
     
     events:
         'click    .redraw-button'                        : 'stopAndRender'

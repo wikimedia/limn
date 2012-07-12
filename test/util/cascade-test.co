@@ -1,7 +1,7 @@
 assert  = require 'assert'
 
-_       = require 'kraken/util/underscore'
-Cascade = require 'kraken/util/cascade'
+_       = require 'limn/util/underscore'
+Cascade = require 'limn/util/cascade'
 
 assertArraysEqual = (actual, expected, name) ->
     assert.deepEqual actual, expected

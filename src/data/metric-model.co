@@ -1,8 +1,8 @@
 { _, op,
-} = require 'kraken/util'
+} = require 'limn/util'
 { BaseModel, BaseList,
-} = require 'kraken/base'
-ProjectColors = require 'kraken/data/project-colors'
+} = require 'limn/base'
+ProjectColors = require 'limn/data/project-colors'
 DataSource = DataSourceList = null
 
 
@@ -170,6 +170,6 @@ MetricList = exports.MetricList = BaseList.extend do # {{{
 
 ### FIXME: LOLHACKS ###
 setTimeout do
-    -> { DataSource, DataSourceList, } := require 'kraken/data/datasource-model'
+    -> { DataSource, DataSourceList, } := require 'limn/data/datasource-model'
     10
 

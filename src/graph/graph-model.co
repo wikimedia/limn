@@ -1,13 +1,13 @@
 Seq = require 'seq'
 
 { _, Cascade,
-} = require 'kraken/util'
+} = require 'limn/util'
 { BaseModel, BaseList, ModelCache,
-} = require 'kraken/base'
+} = require 'limn/base'
 { ChartType,
-} = require 'kraken/chart'
+} = require 'limn/chart'
 { DataSet
-} = require 'kraken/data'
+} = require 'limn/data'
 
 root = do -> this
 

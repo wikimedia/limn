@@ -1,9 +1,9 @@
-_  = require 'kraken/util/underscore'
-op = require 'kraken/util/op'
+_  = require 'limn/util/underscore'
+op = require 'limn/util/op'
 { BaseView,
-}  = require 'kraken/base'
+}  = require 'limn/base'
 { Field, FieldList,
-}  = require 'kraken/base/scaffold/scaffold-model'
+}  = require 'limn/base/scaffold/scaffold-model'
 
 
 FieldView = exports.FieldView = BaseView.extend do # {{{

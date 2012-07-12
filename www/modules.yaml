@@ -4,7 +4,7 @@ production:
 -   suffix: .js
     paths:
     - vendor/vendor-bundle.min
-    - js/kraken/app-bundle
+    - js/limn/app-bundle
 
 development:
 -   suffix: .js
@@ -45,7 +45,7 @@ development:
 -   suffix: .mod.js
     paths:
     - js:
-        - kraken:
+        - limn:
             - template:
                 - chart:
                     - chart-option.jade
@@ -143,4 +143,4 @@ development:
 
 # -   suffix: .js
 #     paths:
-#     - js/kraken/main
+#     - js/limn/main

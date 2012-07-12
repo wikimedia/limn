@@ -1,6 +1,6 @@
-_ = require 'kraken/util/underscore'
+_ = require 'limn/util/underscore'
 { ChartType,
-} = require 'kraken/chart/chart-type'
+} = require 'limn/chart/chart-type'
 
 
 class exports.DygraphsChartType extends ChartType

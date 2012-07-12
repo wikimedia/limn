@@ -2,10 +2,10 @@ d3 = require 'd3'
 ColorBrewer = require 'colorbrewer'
 
 { _, op,
-} = require 'kraken/util'
+} = require 'limn/util'
 { ReadyEmitter,
-} = require 'kraken/util/event'
-# Base = require 'kraken/base/base'
+} = require 'limn/util/event'
+# Base = require 'limn/base/base'
 
 
 root = do -> this

@@ -1,8 +1,8 @@
 name                            : 'limn'
 version                         : '0.1.0'
-description                     : 'A charting toolkit and dashboard.'
+description                     : 'A GUI Visualization Toolkit'
 homepage                        : 'https://github.com/wikimedia/limn'
-keywords                        : <[ visualization graph d3 util server client browser ]>
+keywords                        : <[ visualization graph gui d3 ]>
 author                          : 'David Schoonover <dsc@wikimedia.org> (http://less.ly)'
 contributors                    : [
                                     'Andrew Otto <otto@wikimedia.org>'

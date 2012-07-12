@@ -92,8 +92,29 @@ class Controller extends Resource
                 @map verb, subroute, @[method]
         this
     
+    
+    /**
+     * Boilerplate for creating a error-handling callback that otherwise returns JSON {result:'ok'}.
+     * @param {Response} res Express response object.
+     * @param {String} msg Error message to send on failure.
+     * @param {Number} [code=500] HTTP error code to send on failure.
+     * @returns {Function} Error-handling callback.
+     */
+    errorHandler: (res, msg, code=500) ->
+        (err) ->
+            if err
+                msg or= err.message or String(err)
+                console.error msg
+                res.send { result:"error", message:msg }, code
+            else
+                res.send { result:"ok" }
+    
+    
+    getClassName: ->
+        "#{@..name or @..displayName}"
+    
     toString: ->
-        "#{@.constructor.name}('#{@name}', base='#{@base}', app=#{@app})"
+        "#{@getClassName()}(name='#{@name}')"
 
 
 express.HTTPServer::controller  = \

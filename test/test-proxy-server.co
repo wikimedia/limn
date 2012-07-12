@@ -13,7 +13,7 @@ PROXY_DOMAIN_WHITELIST = <[
 ]>
 
 
-proxy = require('kraken/server/proxy')({
+proxy = require('limn/server/proxy')({
     blacklist: PROXY_DOMAIN_BLACKLIST
     whitelist: PROXY_DOMAIN_WHITELIST
 })

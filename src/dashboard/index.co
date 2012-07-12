@@ -1,3 +1,3 @@
-models = require 'kraken/dashboard/dashboard-model'
-views  = require 'kraken/dashboard/dashboard-view'
+models = require 'limn/dashboard/dashboard-model'
+views  = require 'limn/dashboard/dashboard-view'
 exports import models import views

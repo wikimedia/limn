@@ -1,13 +1,13 @@
 Seq = require 'seq'
 
 { _, op,
-} = require 'kraken/util'
+} = require 'limn/util'
 { BaseModel, BaseView,
-} = require 'kraken/base'
+} = require 'limn/base'
 { Graph, GraphList, GraphDisplayView,
-} = require 'kraken/graph'
+} = require 'limn/graph'
 { Dashboard,
-} = require 'kraken/dashboard/dashboard-model'
+} = require 'limn/dashboard/dashboard-model'
 
 
 /**
@@ -17,7 +17,7 @@ DashboardView = exports.DashboardView = BaseView.extend do # {{{
     __bind__       : <[ addTab ]>
     tagName        : 'section'
     className      : 'dashboard'
-    template       : require 'kraken/template/dashboard/dashboard'
+    template       : require 'limn/template/dashboard/dashboard'
     
     
     events:
@@ -147,7 +147,7 @@ DashboardTabView = exports.DashboardTabView = BaseView.extend do # {{{
     __bind__       : <[  ]>
     className      : 'tab-pane'
     tag            : 'div'
-    template       : require 'kraken/template/dashboard/dashboard-tab'
+    template       : require 'limn/template/dashboard/dashboard-tab'
     
     
     constructor: function DashboardTabView

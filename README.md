@@ -1,6 +1,5 @@
-# Kraken UI: WMF Analytics Reportcard prototype
+# Limn &mdash; a GUI Visualization Toolkit
 
-Setup instructions to be cleaned up momentarily. (brb lunch)
 
 
 ### Setting Up

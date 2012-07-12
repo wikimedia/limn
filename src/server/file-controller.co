@@ -1,12 +1,13 @@
 fs         = require 'fs'
 path       = require 'path'
-{existsSync:exists} = path
+exists  = fs.existsSync or path.existsSync
 
 _          = require 'underscore'
 Seq        = require 'seq'
 yaml       = require 'js-yaml'
-{mkdirp, mkdirpAsync} = require './mkdirp'
 
+{ mkdirp, mkdirpAsync,
+} = require './mkdirp'
 { readJSONFilesAsync,
 } = require './files'
 
@@ -20,35 +21,56 @@ class FileBackedController extends Controller
     
     name    : null
     dataDir : null
+    noun    : null
     
     ->
-        @dataDir or= "data/#{@name}"
         super ...
+        limnOpts = @app.set 'limn options'
+        @dataDir = "#{limnOpts.dataDir}/#{@name}"
+        @noun ?= @name.charAt(0).toUpperCase() + @name.slice(1)
     
     
     
     /**
-     * Override to customize lookup of files by ID.
+     * Look up the resource in the dataDir.
      * 
      * @param {String} id ID of this resource.
      * @returns {String} Path to file for this resource.
+     * @see toFileRecursive
      */
-    toFile: (id) -> "#{@dataDir}/#id.json"
+    toFileFlat: (id) ->
+        return j if exists f = "#{@dataDir}/#id.json"
+        return y if exists y = "#{@dataDir}/#id.yaml"
+    
+    /**
+     * Look up the resource by recursively searching the dataDir.
+     * 
+     * @param {String} id ID of this resource.
+     * @returns {String} Path to file for this resource.
+     * @see toFileFlat
+     */
+    toFileRecursive: (id, cb) ->
+        files = glob "#{@dataDir}/**/#id.@(yaml|json)", {+nocase, +nosort, +sync}
+        files[0]
+    
+    /**
+     * Function for looking up the filepath to a resource. Defaults to a recursive lookup; 
+     * use `toFileFlat()` to only check the top-level directory.
+     */
+    toFile: @::toFileRecursive
     
     
     /**
-     * Auto-load :id for related requests.
+     * Auto-load :id for related requests by looking up the so-named file in the dataDir.
      * 
      * @param {String} id ID of the resource.
      * @param {Function} cb Callback to invoke with the loaded object.
      */
     autoload: (id, cb) ->
-        file = @toFile id
-        parser = JSON.parse
+        parser   = JSON.parse
+        file     = @toFile id
         
-        yamlFile = file.replace /\.json$/i, '.yaml'
-        if exists yamlFile
-            file = yamlFile
+        if _.endsWith file, "#id.yaml"
             parser = yaml.load
         
         err, data <- fs.readFile file, 'utf8'
@@ -56,40 +78,33 @@ class FileBackedController extends Controller
         if 'ENOENT' is err?.code
             return cb null, {}
         if err
-            console.error "#{this}.autoload(#id, #{typeof cb}) -->\nerr"
+            console.error "#{this}.autoload(#id, #{typeof cb}) --> Error reading data!\n", err
             return cb err
         try
             cb null, parser data
         catch err
-            console.error "#{this}.autoload(#id, #{typeof cb}) -->\nerr"
+            console.error "#{this}.autoload(#id, #{typeof cb}) --> Error parsing data!\n", err
             cb err
+    
+    
     
     ### Helpers
     
     processBody: (req, res) ->
-        if not req.body
-            res.send {result:"error", message:"Data required!"}, 501
+        unless req.body
+            res.send {result:"error", message:"Data required!"}, 400 # 400: Bad Request
             return false
         
         data = req.body
         data.slug or= data.id
-        data.id or= data.slug
+        data.id   or= data.slug
         
-        if not data.slug
-            res.send {result:"error", message:"Slug required!"}, 501
+        unless data.slug
+            res.send {result:"error", message:"Slug required!"}, 400 # 400: Bad Request
             return false
         
-        mkdirp @dataDir if not exists @dataDir
+        mkdirp @dataDir unless exists @dataDir
         return data
-    
-    errorHandler: (res, msg) ->
-        (err) ->
-            if err
-                msg or= err.message or String(err)
-                console.error msg
-                res.send { result:"error", message:msg }, 501
-            else
-                res.send { result:"ok" }
 
 
 module.exports = exports = FileBackedController

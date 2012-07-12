@@ -1,4 +1,4 @@
-model = require 'kraken/chart/option/chart-option-model'
-view  = require 'kraken/chart/option/chart-option-view'
+model = require 'limn/chart/option/chart-option-model'
+view  = require 'limn/chart/option/chart-option-view'
 
 exports import model import view

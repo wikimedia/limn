@@ -41,11 +41,11 @@ app.use limn = app.limn = LimnMiddleware()
 mainfile = path.basename require.main?.filename
 if require.main is module or 'Cokefile' is mainfile
     PORT = 8081
-    PORT = parseInt(that, 10) if process.env.KRAKEN_PORT
+    PORT = parseInt(that, 10) if process.env.LIMN_PORT
     
     NODE_ENV  = process.env.NODE_ENV or 'development'
     
-    REV = process.env.KRAKEN_REV or 'HEAD'
+    REV = process.env.LIMN_REV or 'HEAD'
     try REV = require '../version' catch e
     err, stdout, stderr <- exec 'git rev-parse --short HEAD', {cwd:process.cwd(), env:process.env}
     throw err if err

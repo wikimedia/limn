@@ -1,9 +1,9 @@
 { _, op,
-} = require 'kraken/util'
+} = require 'limn/util'
 { BaseView,
-} = require 'kraken/base'
+} = require 'limn/base'
 { Graph, GraphList
-} = require 'kraken/graph/graph-model'
+} = require 'limn/graph/graph-model'
 
 root = do -> this
 DEBOUNCE_RENDER = 100ms
@@ -19,7 +19,7 @@ GraphListView = exports.GraphListView = BaseView.extend do # {{{
     
     tagName   : 'section'
     className : 'graph-list-view'
-    template  : require 'kraken/template/graph/graph-list'
+    template  : require 'limn/template/graph/graph-list'
     
     data  : {}
     ready : false

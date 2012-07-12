@@ -28,7 +28,7 @@ IS_DEV   = exports.IS_DEV   = not (IS_PROD or IS_TEST)
 
 
 
-SOURCES_ENV = if process.env.KRAKEN_FORCE_BUNDLES then 'production' else NODE_ENV
+SOURCES_ENV = if process.env.LIMN_FORCE_BUNDLES then 'production' else NODE_ENV
 
 /**
  * Reify a modules.yaml file

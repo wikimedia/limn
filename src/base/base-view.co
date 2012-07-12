@@ -1,13 +1,13 @@
 Backbone = require 'backbone'
 
 { _, op,
-} = require 'kraken/util'
+} = require 'limn/util'
 { BaseBackboneMixin, mixinBase,
-} = require 'kraken/base/base-mixin'
+} = require 'limn/base/base-mixin'
 { BaseModel,
-} = require 'kraken/base/base-mixin'
+} = require 'limn/base/base-mixin'
 { DataBinding,
-} = require 'kraken/base/data-binding'
+} = require 'limn/base/data-binding'
 
 
 

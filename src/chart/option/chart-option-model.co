@@ -1,9 +1,9 @@
 { _, op,
-} = require 'kraken/util'
+} = require 'limn/util'
 { Parsers, ParserMixin, ParsingModel, ParsingView,
-} = require 'kraken/util/parser'
+} = require 'limn/util/parser'
 { BaseModel, BaseList,
-}  = require 'kraken/base'
+}  = require 'limn/base'
 
 
 /**

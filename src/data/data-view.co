@@ -1,14 +1,14 @@
 Seq = require 'seq'
 { _, op,
-} = require 'kraken/util'
+} = require 'limn/util'
 { BaseView, ViewList,
-} = require 'kraken/base'
+} = require 'limn/base'
 { DataSetView,
-} = require 'kraken/data/dataset-view'
+} = require 'limn/data/dataset-view'
 { MetricEditView,
-} = require 'kraken/data/metric-edit-view'
+} = require 'limn/data/metric-edit-view'
 { DataSource, 
-} = require 'kraken/data/datasource-model'
+} = require 'limn/data/datasource-model'
 
 /**
  * @class DataSet selection and customization UI (root of the `data` tab).
@@ -17,7 +17,7 @@ DataView = exports.DataView = BaseView.extend do # {{{
     __bind__       : <[ onMetricsChanged ]>
     tagName        : 'section'
     className      : 'data-ui'
-    template       : require 'kraken/template/data/data'
+    template       : require 'limn/template/data/data'
     
     datasources : null
     

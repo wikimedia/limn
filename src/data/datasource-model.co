@@ -1,11 +1,11 @@
 { _, op,
-} = require 'kraken/util'
+} = require 'limn/util'
 { TimeSeriesData, CSVData,
-} = require 'kraken/util/timeseries'
+} = require 'limn/util/timeseries'
 { BaseModel, BaseList, ModelCache,
-} = require 'kraken/base'
+} = require 'limn/base'
 { Metric, MetricList,
-} = require 'kraken/data/metric-model'
+} = require 'limn/data/metric-model'
 
 
 /**

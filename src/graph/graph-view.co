@@ -1,10 +1,10 @@
 moment = require 'moment'
 
-_ = require 'kraken/util/underscore'
+_ = require 'limn/util/underscore'
 { BaseView,
-} = require 'kraken/base'
+} = require 'limn/base'
 { Graph,
-} = require 'kraken/graph/graph-model'
+} = require 'limn/graph/graph-model'
 
 root = do -> this
 DEBOUNCE_RENDER = 100ms

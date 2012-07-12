@@ -1,4 +1,4 @@
-Base = require 'kraken/base/base'
+Base = require 'limn/base/base'
 
 
 /**

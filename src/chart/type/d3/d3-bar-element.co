@@ -1,11 +1,11 @@
 d3 = require 'd3'
 
 { _, op,
-} = require 'kraken/util'
+} = require 'limn/util'
 { D3ChartElement    
-} = require 'kraken/chart/type/d3/d3-chart-element'
+} = require 'limn/chart/type/d3/d3-chart-element'
 
-_fmt = require 'kraken/util/formatters'
+_fmt = require 'limn/util/formatters'
 
 root = do -> this
 

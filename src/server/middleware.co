@@ -22,33 +22,84 @@ Controller            = require './controller'
  * Limn project-internals
  */
 BASE   = dirname dirname __dirname
-DATA   = "#BASE/data"
-LIB    = "#BASE/llb"
+LIB    = "#BASE/lib"
 SRC    = "#BASE/src"
 STATIC = "#BASE/static"
-VAR    = "#BASE/var"
 WWW    = "#BASE/www"
 
 NODE_ENV = process.env.NODE_ENV or 'development'
 IS_DEV   = NODE_ENV is 'development'
 IS_PROD  = NODE_ENV is 'production'
 
-LOG_LEVEL = process.env.KRAKEN_LOG_LEVEL
+LOG_LEVEL = process.env.LIMN_LOG_LEVEL
 LOG_LEVEL or= if IS_DEV then 'INFO' else 'WARN'
 LOG_LEVEL .= toUpperCase()
 
-REV = process.env.KRAKEN_REV or 'HEAD'
+REV = process.env.LIMN_REV or 'HEAD'
 try REV = require '../version' catch e
 
 
 
+/**
+ * Limn option defaults.
+ */
 DEFAULT_OPTIONS =
-    dataDir         : './data' # Path to directory where data files should be written.
-    # datasetDir      : null     # Path to a directory to statically serve as `/data` if present.
+    /**
+     * @name dataDir
+     * @type String
+     * Path to directory where data and metadata files are stored.
+     */
+    dataDir : './data'
+    
+    /**
+     * @name varDir
+     * @type String
+     * Path to directory where derived files are written while in dev-mode.
+     */
+    varDir : './var'
+    
+    /**
+     * @name proxy
+     * @type Object
+     */
     proxy :
-        enabled     : false    # Enables remote dataset proxy. If omitted, the proxy will be enabled if either `proxy.whitelist` or `proxy.blacklist` are set.
-        whitelist   : null     # Array of domain patterns to whitelist for proxy. Strings are matched via glob-like syntax, but regular expressions may also be passed. If `proxy.enabled` is true but no whitelist is provided, it defaults to `['*']`.
-        blacklist   : null     # Array of domain patterns to blacklist from proxying. Strings are matched via glob-like syntax, but regular expressions may also be passed.
+        /**
+         * @name enabled
+         * @type Boolean
+         * Enables remote dataset proxy. If omitted, the proxy will be enabled
+         * if either `proxy.whitelist` or `proxy.blacklist` are set.
+         */
+        enabled : false
+        
+        /**
+         * @name whitelist
+         * @type Array<String|RegExp>
+         * Array of domain patterns to whitelist for proxy. Strings are matched
+         * via glob syntax, but regular expressions may also be passed. 
+         * If `proxy.enabled` is true but no whitelist is provided, it defaults to `['*']`.
+         */
+        whitelist : null
+        
+        /**
+         * @name blacklist
+         * @type Array<String|RegExp>
+         * Array of domain patterns to blacklist from proxying. Strings are matched
+         * via glob syntax, but regular expressions may also be passed.
+         */
+        blacklist : null
+    
+    /**
+     * @name staticMaxAge
+     * @type Object
+     * Max-Age of static files served by Limn. Object is a hash from NODE_ENV to
+     * expiry time in miliseconds, with a special key "default" that does what you
+     * expect.
+     */
+    staticMaxAge :
+        default     : 0
+        development : 0
+        production  : 108_000_000_ms # set a one month max-age for static files
+    
 
 
 
@@ -69,6 +120,9 @@ function limn(options)
 
 
 
+/**
+ * Application pseudo-prototype (as we don't actually inherit from the Express server).
+ */
 application = limn.application = 
     
     /**
@@ -99,7 +153,6 @@ application = limn.application =
                 version : REV
                 IS_DEV, IS_PROD
             } import require './view-helpers'
-            
             # @helpers require './view-helpers'
             
             # Parse URL, fiddle
@@ -113,20 +166,13 @@ application = limn.application =
             
             # Route to the web services
             @use @router
-            
-            # Browserify some deps
-            @use require('browserify') do
-                mount   : '/vendor/browserify.js'
-                require : <[ seq d3 events ]>
-                cache   : "#BASE/.cache/browserify/cache.json"
         
         # production config
         @configure 'production', ->
+            ### FIXME
+            
             # log all requests
             @use express.logger()
-            
-            # set a one month max-age for static files
-            @set 'static max age', 108_000_000_ms
             
             # show simple errors
             @use express.errorHandler()
@@ -134,46 +180,54 @@ application = limn.application =
         
         # development config
         @configure 'development', ->
-            # show exceptions, pretty stack traces
+            opts = {varDir, dataDir} = @set 'limn options'
+            
+            # show exceptions, pretty stack traces ### FIXME
             @use express.errorHandler { +dumpExceptions, +showStack }
             
             # turn on pretty-printing of views
             @set('view options').pretty = true
             
+            # Browserify some deps
+            @use require('browserify') do
+                mount   : '/vendor/browserify.js'
+                require : <[ seq d3 events ]>
+                cache   : "#varDir/.cache/browserify/cache.json"
+            
             # import dev-only deps here, so prod users don't need them
             compiler = require 'connect-compiler-extras'
             
             # transparently recompile modules that have changed
-            @use '/js/kraken', compiler do
+            @use '/js/limn', compiler do
                 enabled : 'coco'
                 src     : SRC
-                dest    : "#VAR/js/kraken"
+                dest    : "#varDir/js/limn"
                 log_level : LOG_LEVEL
             @use compiler do
                 enabled : <[ jade-browser stylus yaml ]>
                 src     : WWW
-                dest    : VAR
+                dest    : varDir
                 options : stylus : { nib:true, include:"#WWW/css" }
                 log_level : LOG_LEVEL
             @use compiler do
                 enabled : 'yaml'
-                src     : DATA
-                dest    : "#VAR/data"
+                src     : dataDir
+                dest    : "#varDir/data"
                 log_level : LOG_LEVEL
             
             # wrap modules in commonjs closure for browser
             @use compiler do
                 enabled : 'commonjs_define'
                 src     : [ STATIC ]
-                dest    : VAR
+                dest    : varDir
                 options :
                     commonjs        : { drop_path_parts:1, drop_full_ext:false }
                     commonjs_define : { drop_path_parts:1, drop_full_ext:false }
                 log_level : LOG_LEVEL
             @use compiler do
                 enabled : 'commonjs_define'
-                src     : [ VAR, WWW ]
-                dest    : VAR
+                src     : [ varDir, WWW ]
+                dest    : varDir
                 options :
                     commonjs        : { drop_path_parts:1, drop_full_ext:true }
                     commonjs_define : { drop_path_parts:1, drop_full_ext:true }
@@ -181,10 +235,12 @@ application = limn.application =
         
         # serve static files
         @configure ->
-            opts = @set('static file options') or {}
-            @use express.static VAR, ^opts
-            @use express.static WWW, ^opts
-            @use express.static STATIC, ^opts
+            {staticMaxAge} = @set 'limn options'
+            maxAge = staticMaxAge[NODE_ENV] ? staticMaxAge.default
+            
+            @use express.static varDir, {maxAge}
+            @use express.static WWW,    {maxAge}
+            @use express.static STATIC, {maxAge}
         
         
         
@@ -194,9 +250,11 @@ application = limn.application =
         
         YAML_EXT_PAT = /\.ya?ml$/i
         @get '/datasources/all', (req, res, next) ->
+            opts = {varDir, dataDir} = @set 'limn options'
+            
             data = {}
             Seq()
-                .seq glob, 'data/datasources/**/*.@(yaml|json)', {+nocase, +nosort}, Seq
+                .seq glob, "#dataDir/datasources/**/*.@(yaml|json)", {+nocase, +nosort}, Seq
                 .seq (paths) -> readFilesAsync paths, this
                 .seq (txts) -> @ok _.items txts
                 .flatten false
@@ -212,26 +270,23 @@ application = limn.application =
                         # console.log "#f ok!", data
                         @ok v
                     catch err
-                        console.error "[/data/all] catch! #err"
+                        console.error "[/datasources/all] Error parsing data!"
                         console.error err
                         console.error that if err.stack
-                        res.send { error:String(err), partial_data:data }
+                        res.send { error:String(err), partial_data:data }, 500
                 .seq -> res.send data
                 .catch (err) ->
-                    console.error '[/data/all] catch!'
+                    console.error '[/datasources/all] Error!'
                     console.error err
                     console.error that if err.stack
-                    res.send { error:String(err), partial_data:data }
+                    res.send { error:String(err), partial_data:data }, 500
         
         @controller require './controllers/datasource'
         
         
         # proxy endpoint
         if opts.proxy.enabled
-            proxy = require('./proxy')({
-                blacklist: opts.proxy.blacklist
-                whitelist: opts.proxy.whitelist
-            })
+            proxy = require('./proxy')(opts.proxy)
             @get '/x',   proxy
             @get '/x/*', proxy
         
@@ -240,16 +295,17 @@ application = limn.application =
         @get '/', (req, res) ->
             res.render 'dashboard/view'
         
+        ### FIXME
         @get '/geo', (req, res) ->
             res.render 'geo'
         
+        ### FIXME?
         @get '/:type/:action/?', (req, res, next) ->
             {type, action} = req.params
             if exists "#WWW/#type/#action.jade"
                 res.render "#type/#action"
             else
                 next()
-        
         @get '/:type/?', (req, res, next) ->
             {type} = req.params
             if exists "#WWW/#type.jade"

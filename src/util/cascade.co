@@ -1,4 +1,4 @@
-_ = require 'kraken/util/underscore'
+_ = require 'limn/util/underscore'
 
 hasOwn = ({}).hasOwnProperty
 

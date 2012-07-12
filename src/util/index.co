@@ -1,5 +1,5 @@
-_  = exports._  = require 'kraken/util/underscore'
-op = exports.op = require 'kraken/util/op'
+_  = exports._  = require 'limn/util/underscore'
+op = exports.op = require 'limn/util/op'
 
 # Root object -- `window` in the browser, `global` in Node.
 root = exports.root = do -> this
@@ -26,13 +26,13 @@ root.jQuery?.fn.invoke = (method, ...args) ->
         jQuery(el)[method] ...args
 
 
-exports import require 'kraken/util/event'
+exports import require 'limn/util/event'
 
-backbone = exports.backbone = require 'kraken/util/backbone'
-parser   = exports.parser   = require 'kraken/util/parser'
-Cascade  = exports.Cascade  = require 'kraken/util/cascade'
+backbone = exports.backbone = require 'limn/util/backbone'
+parser   = exports.parser   = require 'limn/util/parser'
+Cascade  = exports.Cascade  = require 'limn/util/cascade'
 
-# HashSet   = exports.HashSet   = require 'kraken/util/hashset'
-# BitString = exports.BitString = require 'kraken/util/bitstring'
-# {crc32}   = exports.{crc32}   = require 'kraken/util/crc'
+# HashSet   = exports.HashSet   = require 'limn/util/hashset'
+# BitString = exports.BitString = require 'limn/util/bitstring'
+# {crc32}   = exports.{crc32}   = require 'limn/util/crc'
 

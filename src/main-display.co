@@ -2,15 +2,15 @@ Seq      = require 'seq'
 Backbone = require 'backbone'
 
 { _, op,
-} = require 'kraken/util'
+} = require 'limn/util'
 { AppView, 
-} = require 'kraken/app'
+} = require 'limn/app'
 { BaseView, BaseModel, BaseList,
-} = require 'kraken/base'
+} = require 'limn/base'
 { ChartType, DygraphsChartType,
-} = require 'kraken/chart'
+} = require 'limn/chart'
 { Graph, GraphList, GraphDisplayView,
-} = require 'kraken/graph'
+} = require 'limn/graph'
 
 
 root = this
