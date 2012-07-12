@@ -4,6 +4,7 @@ exists  = fs.existsSync or path.existsSync
 
 _          = require 'underscore'
 Seq        = require 'seq'
+glob       = require 'glob'
 yaml       = require 'js-yaml'
 
 { mkdirp, mkdirpAsync,
@@ -30,34 +31,25 @@ class FileBackedController extends Controller
         @noun ?= @name.charAt(0).toUpperCase() + @name.slice(1)
     
     
+    /**
+     * @param {String} id ID of this resource.
+     * @returns {String} Glob path to file for this resource.
+     */
+    toFile: (id) ->
+        "#{@dataDir}/**/#id.@(yaml|json)"
     
     /**
-     * Look up the resource in the dataDir.
+     * Finds the reified filepath for the resource `id`.
      * 
      * @param {String} id ID of this resource.
-     * @returns {String} Path to file for this resource.
-     * @see toFileRecursive
+     * @param {Function} cb Callback `(err, filepath)`.
      */
-    toFileFlat: (id) ->
-        return j if exists f = "#{@dataDir}/#id.json"
-        return y if exists y = "#{@dataDir}/#id.yaml"
+    findFile: (id, cb) ->
+        glob @toFile(id), {+nocase, +nosort}, (err, files) ->
+            return cb err if err
+            return cb 'ENOENT' unless files.length
+            cb null, files[0]
     
-    /**
-     * Look up the resource by recursively searching the dataDir.
-     * 
-     * @param {String} id ID of this resource.
-     * @returns {String} Path to file for this resource.
-     * @see toFileFlat
-     */
-    toFileRecursive: (id, cb) ->
-        files = glob "#{@dataDir}/**/#id.@(yaml|json)", {+nocase, +nosort, +sync}
-        files[0]
-    
-    /**
-     * Function for looking up the filepath to a resource. Defaults to a recursive lookup; 
-     * use `toFileFlat()` to only check the top-level directory.
-     */
-    toFile: @::toFileRecursive
     
     
     /**
@@ -67,24 +59,10 @@ class FileBackedController extends Controller
      * @param {Function} cb Callback to invoke with the loaded object.
      */
     autoload: (id, cb) ->
-        parser   = JSON.parse
-        file     = @toFile id
-        
-        if _.endsWith file, "#id.yaml"
-            parser = yaml.load
-        
-        err, data <- fs.readFile file, 'utf8'
-        
-        if 'ENOENT' is err?.code
-            return cb null, {}
-        if err
-            console.error "#{this}.autoload(#id, #{typeof cb}) --> Error reading data!\n", err
-            return cb err
-        try
-            cb null, parser data
-        catch err
-            console.error "#{this}.autoload(#id, #{typeof cb}) --> Error parsing data!\n", err
-            cb err
+        Seq()
+            .seq readJSONFilesAsync, @toFile(id), {+yaml, -appendExt}, Seq
+            .seq   (data) -> cb null, _.values(data)[0]
+            .catch (err)  -> cb err
     
     
     

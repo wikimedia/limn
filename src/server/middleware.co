@@ -115,7 +115,7 @@ exports = module.exports = limn
 function limn(options)
     app = express.createServer()
     app = _.extend app, application
-    app.init()
+    app.init options
     app
 
 
@@ -129,6 +129,7 @@ application = limn.application =
      * @constructor
      */
     init : (opts={}) ->
+        app   = this
         @REV  = REV
         @BASE = BASE
         
@@ -138,8 +139,13 @@ application = limn.application =
         opx.enabled = true if opx.enabled is false and (opx.whitelist or opx.blacklist)
         if opx.enabled
             opx.whitelist or= [ /.*/ ]
+            opx.whitelist = [opx.whitelist] unless _.isArray opx.whitelist
             opx.blacklist or= []
+            opx.blacklist = [opx.blacklist] unless _.isArray opx.blacklist
         @set 'limn options', opts
+        
+        # create data directory
+        mkdirp opts.dataDir
         
         
         ### apply configuration
@@ -235,7 +241,7 @@ application = limn.application =
         
         # serve static files
         @configure ->
-            {staticMaxAge} = @set 'limn options'
+            {varDir, staticMaxAge} = @set 'limn options'
             maxAge = staticMaxAge[NODE_ENV] ? staticMaxAge.default
             
             @use express.static varDir, {maxAge}
@@ -250,7 +256,7 @@ application = limn.application =
         
         YAML_EXT_PAT = /\.ya?ml$/i
         @get '/datasources/all', (req, res, next) ->
-            opts = {varDir, dataDir} = @set 'limn options'
+            opts = {varDir, dataDir} = app.set 'limn options'
             
             data = {}
             Seq()

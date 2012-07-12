@@ -13,14 +13,26 @@ LimnMiddleware = require './middleware'
  */
 app = exports = module.exports = express.createServer()
 
+
+/**
+ * Load Limn middleware
+ */
+app.use limn = app.limn = LimnMiddleware do
+    varDir  : './var'
+    dataDir : './var/data'
+    proxy :
+        enabled   : true
+        whitelist : /.*/
+
+
 /**
  * Handle webhook notification to pull from origin.
  */
 app.all '/webhook/post-update', (req, res) ->
-
-    # exec the pull async...
     cmd = 'git pull origin master'
     console.log "[/webhook/post-update] $ #cmd"
+    
+    # exec the pull async
     child = exec cmd, (err, stdout, stderr) ->
         res.contentType '.txt'
         console.log '[/webhook/post-update]  ', stdout
@@ -30,11 +42,6 @@ app.all '/webhook/post-update', (req, res) ->
             res.send "$ #cmd\n\n#stdout\n\n#stderr\n\nERROR! #err", 503
         else
             res.send "$ #cmd\n\n#stdout\n\n#stderr", 200
-
-/**
- * Load Limn middleware
- */
-app.use limn = app.limn = LimnMiddleware()
 
 
 
@@ -51,7 +58,7 @@ if require.main is module or 'Cokefile' is mainfile
     throw err if err
     REV = stdout.trim! unless REV
     
-    console.log s = "Limn Server (port=#PORT, env=#NODE_ENV, rev=#REV, base_dir=#{limn.BASE})"
+    console.log s = "Limn Server (port=#PORT, env=#NODE_ENV, rev=#REV)"
     console.log '=' * s.length
     app.listen PORT
 

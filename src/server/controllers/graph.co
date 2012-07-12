@@ -1,22 +1,26 @@
 fs         = require 'fs'
 path       = require 'path'
-{existsSync:exists} = path
+exists     = fs.existsSync or path.existsSync
 
-_          = require 'underscore'
 Seq        = require 'seq'
+glob       = require 'glob'
 yaml       = require 'js-yaml'
-{mkdirp, mkdirpAsync} = require '../mkdirp'
 
-{ readJSONFilesAsync,
+{ _, op,
+} = require '../../util'
+{ mkdirp, mkdirpAsync,
+} = require '../mkdirp'
+{ readFilesAsync, readJSONFilesAsync,
 } = require '../files'
 
-Controller = require '../controller'
+Controller           = require '../controller'
+FileBackedController = require '../file-controller'
 
 
 /**
  * @class Resource controller for graph requests.
  */
-class GraphController extends Controller
+class GraphController extends FileBackedController
     PROTECTED_GRAPH_IDS : <[
         unique_visitors
         pageviews
@@ -33,42 +37,12 @@ class GraphController extends Controller
     ]>
     PROTECT_GRAPHS : true
     
-    name    : 'graphs'
-    dataDir : null
-    
-    ->
-        super ...
-        limnOpts = @app.set 'limn options'
-        @dataDir = "#{limnOpts.dataDir}/graphs"
+    name : 'graphs'
+    -> super ...
     
     
-    
-    toFile: (id) -> "#{@dataDir}/#id.json"
-    
-    /**
-     * Auto-load :id for related requests.
-     */
-    autoload: (id, cb) ->
-        file = @toFile id
-        parser = JSON.parse
-        
-        yamlFile = file.replace /\.json$/i, '.yaml'
-        if exists yamlFile 
-            file = yamlFile
-            parser = yaml.load
-        
-        err, data <- fs.readFile file, 'utf8'
-        
-        if 'ENOENT' is err?.code
-            return cb null, {}
-        if err
-            console.error "GraphController.autoload(#id, #{typeof cb}) -->\nerr"
-            return cb err
-        try
-            cb null, parser data
-        catch err
-            console.error "GraphController.autoload(#id, #{typeof cb}) -->\nerr"
-            cb err
+    toFileSimple: (id) ->
+        "#{@dataDir}/#id.json"
     
     # GET /graphs.:format?
     index: (req, res) ->
@@ -105,25 +79,33 @@ class GraphController extends Controller
     # POST /graphs
     create: (req, res) ->
         return unless data = @processBody req, res
-        file = @toFile data.id
-        if exists file
-            return res.send { result:"error", message:"Graph '#{data.id}' already exists!" }, 409 # 409: Resource Conflict
-        else
-            fs.writeFile file, JSON.stringify(data), "utf8", @errorHandler(res, "Error writing graph!")
+        Seq()
+            .seq @findFile, data.id, Seq
+            .seq (file) ->
+                res.send { result:"error", message:"Graph '#{data.id}' already exists!" }, 409 # 409: Resource Conflict
+            .catch (err) ->
+                fs.writeFile @toFileSimple(data.id), JSON.stringify(data), "utf8", @errorHandler(res, "Error writing graph!")
     
     # PUT /graphs/:graph
     update: (req, res) ->
         return unless data = @processBody req, res
         if @PROTECT_GRAPHS and _ @PROTECTED_GRAPH_IDS .contains data.id
             return res.send {result:"error", message:"Graph '#{data.id}' is read-only."}, 403 # 403: Forbidden
-        fs.writeFile @toFile(data.id), JSON.stringify(data), "utf8", @errorHandler(res, "Error writing graph!")
+        Seq()
+            .seq @findFile, data.id, (err, file) ->
+                @ok if err then @toFileSimple(data.id) else file
+            .seq (file) ->
+                fs.writeFile file, JSON.stringify(data), "utf8", @errorHandler(res, "Error writing graph!")
     
     # DELETE /graphs/:graph
     destroy: (req, res) ->
         id = req.param.graph
         if @PROTECT_GRAPHS and _ @PROTECTED_GRAPH_IDS .contains id
             return res.send {result:"error", message:"Graph '#{id}' is read-only."}, 403 # 403: Forbidden
-        fs.unlink @toFile(id), @errorHandler(res, "Graph '#{id}' does not exist!", 410) # 410: Resource Gone
+        Seq()
+            .seq @findFile, data.id, Seq
+            .seq   (file) -> fs.unlink file, @errorHandler(res, "Error destroying Graph '#id'!", 500)
+            .catch (err)  -> res.send {result:"error", message:"Graph '#id' does not exist!"}, 410 # 410: Resource Gone
     
     
     ### Helpers

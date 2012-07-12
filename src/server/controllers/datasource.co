@@ -22,13 +22,10 @@ YAML_OR_JSON_PAT = /\.(json|ya?ml)$/i
  */
 class DataSourceController extends FileBackedController
     name    : 'datasources'
-    dataDir : null
-    
     mapping :
         all : 'allData'
     
     -> super ...
-    toFile: @::toFileRecursive
     
     
     /**
