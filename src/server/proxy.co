@@ -1,4 +1,3 @@
-_         = require 'underscore'
 url       = require 'url'
 minimatch = require 'minimatch'
 request   = require 'request'
@@ -10,8 +9,10 @@ matchesList = (list, value) ->
     false
 
 ProxyMiddleware = (options={}) ->
-    {whitelist, blacklist} = options = {whitelist:[], blacklist:[], ...options}
+    options = {whitelist, blacklist} = {-verbose, whitelist:[], blacklist:[], ...options}
+    whitelist = [whitelist] unless Array.isArray whitelist
     whitelist .= map -> minimatch.filter it, {+nocase}
+    blacklist = [blacklist] unless Array.isArray blacklist
     blacklist .= map -> minimatch.filter it, {+nocase}
     
     return (req, res) ->
@@ -29,7 +30,7 @@ ProxyMiddleware = (options={}) ->
         # Set the no-buffering flag for nginx
         res.header 'X-Accel-Buffering', 'no'
         
-        console.log "[Proxy] #targetUrl"
+        console.log "[Proxy] #targetUrl" if options.verbose
         request.get targetUrl .pipe res
 
 

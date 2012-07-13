@@ -139,9 +139,7 @@ application = limn.application =
         opx.enabled = true if opx.enabled is false and (opx.whitelist or opx.blacklist)
         if opx.enabled
             opx.whitelist or= [ /.*/ ]
-            opx.whitelist = [opx.whitelist] unless _.isArray opx.whitelist
             opx.blacklist or= []
-            opx.blacklist = [opx.blacklist] unless _.isArray opx.blacklist
         @set 'limn options', opts
         
         # create data directory
@@ -223,19 +221,19 @@ application = limn.application =
             
             # wrap modules in commonjs closure for browser
             @use compiler do
-                enabled : 'commonjs_define'
+                enabled : <[ amd commonjs_define ]>
                 src     : [ STATIC ]
                 dest    : varDir
                 options :
-                    commonjs        : { drop_path_parts:1, drop_full_ext:false }
+                    amd             : { drop_path_parts:1, drop_full_ext:false }
                     commonjs_define : { drop_path_parts:1, drop_full_ext:false }
                 log_level : LOG_LEVEL
             @use compiler do
-                enabled : 'commonjs_define'
+                enabled : <[ amd commonjs_define ]>
                 src     : [ varDir, WWW ]
                 dest    : varDir
                 options :
-                    commonjs        : { drop_path_parts:1, drop_full_ext:true }
+                    amd             : { drop_path_parts:1, drop_full_ext:true }
                     commonjs_define : { drop_path_parts:1, drop_full_ext:true }
                 log_level : LOG_LEVEL
         
