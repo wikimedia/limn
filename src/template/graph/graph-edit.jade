@@ -49,20 +49,20 @@ section.graph-edit.graph(id=graph_id)
                                 .control-group
                                     label.slug.control-label(for="#{graph_id}_slug") Slug
                                     .controls
-                                        input.span3.slug(type='text', id="#{graph_id}_slug", name='slug', placeholder='graph_slug', value=slug)
+                                        input.span11.slug(type='text', id="#{graph_id}_slug", name='slug', placeholder='graph_slug', value=slug)
                                         p.help-block The slug uniquely identifies this graph and will be displayed in the URL once saved.
-                                .control-group
+                                .graph-size-row.control-group
                                     label.width.control-label(for="#{graph_id}_width") Size
                                     .controls
-                                        input.span1.width(type='text', id="#{graph_id}_width", name='width', value=width)
+                                        input.span3.width(type='text', id="#{graph_id}_width", name='width', value=width)
                                         |  &times; 
-                                        input.span1.height(type='text', id="#{graph_id}_height", name='height', value=height)
+                                        input.span3.height(type='text', id="#{graph_id}_height", name='height', value=height)
                                         p.help-block Choosing 'auto' will size the graph to the viewport bounds.
                             .half.control-group
                                 label.desc.control-label(for="#{graph_id}_desc") Description
                                 .controls
                                     //- textarea.span3.desc(id='desc', name='desc', placeholder='Graph description.') #{desc}
-                                    <textarea class="span3 desc" id="#{graph_id}_desc" name="desc" placeholder="Graph description.">#{desc}</textarea>
+                                    <textarea class="span11 desc" id="#{graph_id}_desc" rows="4" name="desc" placeholder="Graph description.">#{desc}</textarea>
                                     p.help-block A description of the graph.
                 
                 .graph-data-pane.tab-pane(id="#{graph_id}-tab-data", data-subview="DataView")
