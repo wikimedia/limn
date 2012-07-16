@@ -4,4 +4,4 @@ section#graph-list
     ul
         for graph in collection.models
             li
-                a(href="#{graph.toLink()}") #{graph.get('name')}
+                a(href="#{graph.toLink()}") #{graph.get('name') || graph.get('id') || graph.toLink()}
