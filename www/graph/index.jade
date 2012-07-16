@@ -1,7 +1,9 @@
 extends ../layout
 
 block title
-    title Graph | Limn
+    title Browse Graphs | Limn
 
 block main-scripts
-    script(src="/js/limn/main-graph-list.js?"+version)
+    script
+        var limn = require('limn/limn');
+    //- script(src="/js/limn/main-graph-list.js?"+version)

@@ -1,3 +1,5 @@
+Seq = require 'seq'
+
 { _, op,
 } = require 'limn/util'
 { BaseModel,

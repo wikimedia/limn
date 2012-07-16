@@ -1,3 +1,4 @@
+Seq = require 'seq'
 moment = require 'moment'
 
 _ = require 'limn/util/underscore'

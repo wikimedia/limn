@@ -7,4 +7,6 @@ append styles
     mixin css('graph-display.css')
 
 block main-scripts
-    script(src="/js/limn/main-display.js?"+version)
+    script
+        var limn = require('limn/limn');
+    //- script(src="/js/limn/main-display.js?"+version)

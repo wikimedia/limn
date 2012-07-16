@@ -28,7 +28,7 @@ GraphDisplayView = exports.GraphDisplayView = GraphView.extend do # {{{
     
     
     constructor: function GraphDisplayView
-        BaseView ...
+        GraphView ...
     
     initialize : (o={}) ->
         @data = {}

@@ -41,12 +41,20 @@ GraphEditView = exports.GraphEditView = GraphView.extend do # {{{
         'submit   form.chart-options'                    : 'onOptionsSubmit'
         'change   .chart-options input[type="checkbox"]' : 'onOptionsSubmit'
     
+    # TODO: actually apply this
+    routes:
+        'graphs/:graph/edit/info'                   : 'showInfoPane'
+        'graphs/:graph/edit/data/metric/:metric'    : 'showDataPane'
+        'graphs/:graph/edit/data'                   : 'showDataPane'
+        'graphs/:graph/edit/options/:optionsFilter' : 'showOptionsPane'
+        'graphs/:graph/edit/options'                : 'showOptionsPane'
+    
     
     
     
     
     constructor: function GraphEditView
-        BaseView ...
+        GraphView ...
     
     initialize : (o={}) ->
         GraphEditView.__super__.initialize ...

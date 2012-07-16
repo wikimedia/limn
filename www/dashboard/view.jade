@@ -14,4 +14,6 @@ append styles
     
 
 block main-scripts
-    script(src="/js/limn/main-dashboard.js?"+version)
+    script
+        var limn = require('limn/limn');
+    //- script(src="/js/limn/main-dashboard.js?"+version)

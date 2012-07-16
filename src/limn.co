@@ -1,0 +1,141 @@
+limn = exports
+
+Backbone = require 'backbone'
+
+{ _, op, root,
+} = limn.util       = require 'limn/util'
+{ BaseView, BaseModel, BaseList,
+} = limn.base       = require 'limn/base'
+{ ChartType, DygraphsChartType,
+} = limn.chart      = require 'limn/chart'
+{ Graph, GraphList, GraphDisplayView, GraphEditView, GraphListView,
+} = limn.graph      = require 'limn/graph'
+{ DashboardView, Dashboard,
+} = limn.dashboard  = require 'limn/dashboard'
+
+
+/**
+ * @class Sets up root application, automatically attaching to an existing element
+ *  found at `appSelector` and delegating to the appropriate view.
+ * @extends Backbone.Router
+ */
+LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
+    appSelector : '#content .inner'
+    
+    routes:
+        'graphs/(new|edit)'         : 'newGraph'
+        'graphs/:graphId/edit'      : 'editGraph'
+        'graphs/:graphId'           : 'showGraph'
+        'graphs'                    : 'listGraphs'
+        
+        'dashboards/(new|edit)'     : 'newDashboard'
+        'dashboards/:dashId/edit'   : 'editDashboard'
+        'dashboards/:dashId'        : 'showDashboard'
+        'dashboards'                : 'listDashboards'
+    
+    
+    
+    /**
+     * @constructor
+     */
+    constructor: function LimnApp (@config={})
+        @appSelector = that if config.appSelector
+        @el  = config.el or= jQuery @appSelector .0
+        @$el = jQuery @el
+        Backbone.Router.call this, config
+        this
+    
+    initialize: ->
+        jQuery ~> @setup()
+        this
+    
+    setup: ->
+        # Add / route for Homepage
+        @route /^(?:[\?].*)?$/, 'home'
+        # Start observing history changes
+        Backbone.history.start { +pushState, root:@config.mount }
+    
+    # Helper for setting up models
+    processData: (id, data={}) ->
+        unless id and _ <[ edit new ]> .contains id
+            data.id = data.slug = id
+        data
+    
+    
+    
+    /* * * *  Routes  * * * */
+    
+    
+    home: ->
+        console.log "#this.home!"
+        @showDashboard 'reportcard'
+    
+    
+    ### Graphs
+    
+    createGraphModel: (id) ->
+        data = @processData id
+        graph = new Graph data, {+parse}
+    
+    newGraph: ->
+        @editGraph()
+    
+    editGraph: (id) ->
+        @model = @createGraphModel id
+        @view = new GraphEditView {@model} .attach @el
+    
+    showGraph: (id) ->
+        @model = @createGraphModel id
+        @view  = new GraphDisplayView {@model} .attach @el
+    
+    listGraphs: ->
+        @collection = new GraphList()
+        @view = new GraphListView {@collection} .attach @el
+    
+    
+    ### Dashboards
+    
+    createDashboardModel: (id) ->
+        data = @processData id
+        dashboard = new Dashboard data, {+parse}
+    
+    newDashboard: ->
+        console.error 'newDashboard!?'
+    
+    editDashboard: (id) ->
+        console.error 'editDashboard!?'
+    
+    showDashboard: (id) ->
+        @model = @createDashboardModel id
+        @view  = new DashboardView {@model} .attach @el
+    
+    listDashboards: ->
+        console.error 'listDashboards!?'
+    
+    
+    ### Misc
+    
+    getClassName: ->
+        "#{@..name or @..displayName}"
+    
+    toString: ->
+        "#{@getClassName()}()"
+# }}}
+
+
+### Static Methods
+LimnApp import do
+    
+    findConfig : ->
+        # TODO: fill out inferred config
+        config = root.limn_config or {}
+        config.mount or= "/"
+        config
+    
+    main : function limnMain
+        config = limn.config or= LimnApp.findConfig()
+        limn.app or= new LimnApp config unless config.libOnly
+
+
+jQuery LimnApp.main
+

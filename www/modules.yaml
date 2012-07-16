@@ -139,7 +139,7 @@ development:
                 - dashboard-model
                 - dashboard-view
                 - index
-            - app
+            - limn
 
 # -   suffix: .js
 #     paths:

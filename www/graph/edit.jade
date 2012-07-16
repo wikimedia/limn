@@ -10,5 +10,8 @@ append styles
     mixin css('data.css')
     mixin css('isotope.css')
 
+
 block main-scripts
-    script(src="/js/limn/main-edit.js?"+version)
+    script
+        var limn = require('limn/limn');
+    //- script(src="/js/limn/main-edit.js?"+version)
