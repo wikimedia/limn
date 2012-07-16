@@ -49,12 +49,11 @@ class GraphController extends FileBackedController
         # if format is json, then return the graph JSON
         switch req.format
             case 'json' 
-                pattern = "#{@dataDir}/*.json"
                 Seq()
                     # find list of data/graph/*.json files, send back the objects
-                    .seq            -> readJSONFilesAsync pattern, this
-                    # remove filepath info
-                    .seq   (graphs) -> res.send _.values graphs
+                    .seq readJSONFilesAsync, "#{@dataDir}/**", Seq
+                    # remove filepath info from the hash of graphs
+                    .seq -> res.send _.values it
             default 
                 res.render 'graph/index'
     
