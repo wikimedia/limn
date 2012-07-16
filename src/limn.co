@@ -57,6 +57,14 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
     
     # Helper for setting up models
     processData: (id, data={}) ->
+        ### If we got querystring args, apply them as overrides to the data
+        # loc = String root.location
+        # if loc.split '?' .1
+        #     data = _.uncollapseObject _.fromKV that.replace('#', '%23')
+        #     data.parents = JSON.parse that if data.parents
+        #     data.options = _.synthesize do
+        #         data.options or {}
+        #         (v, k) -> [ k, dyglib.parseOption(k,v) ]
         unless id and _ <[ edit new ]> .contains id
             data.id = data.slug = id
         data
@@ -67,7 +75,7 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
     
     
     home: ->
-        console.log "#this.home!"
+        # console.log "#this.home!"
         @showDashboard 'reportcard'
     
     

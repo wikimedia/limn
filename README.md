@@ -21,7 +21,6 @@ You should now have a server running on 8081.
 - data/graphs/            - saved graph configurations.
 - lib/                    - [Coco][coco] files.  Application logic lives here.
 - lib/{chart,dashboard,dataset,graph}/ - Models and View Classes
-- lib/main-*.co           - These files get included from the main [Jade][jade] views in www/.  They act like client side controllers.  They are responsible for setting up data and rendering views.
 - lib/template/           - client side [Jade][jade] views.  These are included and rendered by View classes.
 - lib/server/             - Server side [Coco][coco] files.  
 - lib/server/server.co    - [Express][expressjs] server setup.   Routing is done here.
