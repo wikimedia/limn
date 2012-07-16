@@ -1,10 +1,10 @@
 all: []
 
 production:
--   suffix: .js
+-   suffix: .min.js
     paths:
-    - vendor/vendor-bundle.min
-    - js/limn/app-bundle
+    - vendor/vendor-bundle
+    - js/limn.no-deps
 
 development:
 -   suffix: .js

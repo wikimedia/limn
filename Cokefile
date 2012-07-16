@@ -4,8 +4,14 @@ require 'buildtools/tasks'
 {removeSync:remove} = require 'remove'
 
 
-MODULE_LINK = 'node_modules/limn'
+MODULE_LINK            = 'node_modules/limn'
 
+APP_BUNDLE_PATH        = 'var/js/limn.no-deps.js'
+APP_BUNDLE_MIN_PATH    = APP_BUNDLE_PATH.replace /\.js$/, '.min.js'
+VENDOR_BUNDLE_PATH     = 'var/vendor/vendor-bundle.js'
+VENDOR_BUNDLE_MIN_PATH = VENDOR_BUNDLE_PATH.replace /\.js$/, '.min.js'
+DIST_PATH              = 'dist/limn.js'
+DIST_MIN_PATH          = DIST_PATH.replace /\.js$/, '.min.js'
 
 
 
@@ -25,7 +31,7 @@ task \install 'Install project dependencies.' ->
 task \setup 'Ensure project is set up for development.' ->
     invoke \install
     invoke \link
-    invoke \update_version
+    err, version <- writeVersionFile 'src/version.js'
 
 
 task \server 'Start dev server' ->
@@ -38,7 +44,7 @@ task \build 'Build coco sources' ->
     invoke \setup
     coco <[ -bjc package.co ]>
     
-    {sources} = require 'limn/server/view-helpers'
+    {sources}  = require 'limn/server/view-helpers'
     browserify = require 'browserify'
     Coco       = require 'coco'
     Jade       = require 'jade'
@@ -47,6 +53,7 @@ task \build 'Build coco sources' ->
     yaml       = require 'js-yaml'
     
     matchExt = /((?:\.min)?)\.mod((?:\.min)?)\.js$/i
+    fullExt  = /(\.(min|mod|amd|jade))*\.js$/i
     
     console.log 'Building source...'
     Seq()
@@ -85,11 +92,13 @@ task \build 'Build coco sources' ->
         .set sources("www/modules.yaml", 'development').map -> it.slice 1
         .seqEach (srcfile) ->
             return @ok() unless matchExt.test srcfile
-            outfile = (if _.startsWith srcfile, 'vendor' then 'static' else 'www') + '/' + srcfile
+            outfile = (if _.startsWith srcfile, 'vendor' then 'static' else 'lib') + '/' + srcfile.replace /^js\/limn\//, ''
             infile = outfile.replace matchExt, '$1$2.js'
-            return @ok() unless exists infile
+            unless exists infile
+                console.log "  Wrapping JS in Module:\t Cannot find #infile!"
+                return @ok() 
             return @ok() if _.startsWith(srcfile, 'vendor') and exists outfile
-            parts = infile.replace matchExt, '' .split '/' .slice 2
+            parts = srcfile.replace fullExt, '' .split '/' .slice 1
             parts.pop() if 'index' is _.last parts
             ID = parts.join '/' 
             console.log "  Wrapping JS in Module:\t #infile \t-->\t #outfile"
@@ -128,36 +137,48 @@ task \build 'Build coco sources' ->
 task \bundle 'Build application and vendor bundles' ->
     invoke \bundle_app
     invoke \bundle_vendor
+    invoke \bundle_combine
 
 task \bundle_app 'Build application bundle' ->
     {sources} = require 'limn/server/view-helpers'
     
-    app_bundle_path = 'var/js/limn/app-bundle.js'
     app_sources = sources("www/modules.yaml", 'development')
         .filter -> not _.startsWith it, '/vendor'
         .map -> it.slice 1 .replace /js\/limn/, 'lib'
-    mkdirp dirname app_bundle_path
-    bundle_js app_bundle_path, app_sources, {-minify}
+    mkdirp dirname APP_BUNDLE_PATH
+    bundle_js APP_BUNDLE_PATH, app_sources, {-minify}
     
-    app_bundle_min_path = app_bundle_path.replace /\.js$/, '.min.js'
-    print 'Minifying into', app_bundle_min_path.magenta.bold, '... '
-    write app_bundle_min_path, minify read app_bundle_path
+    APP_BUNDLE_MIN_PATH = APP_BUNDLE_PATH.replace /\.js$/, '.min.js'
+    print 'Minifying into', APP_BUNDLE_MIN_PATH.magenta.bold, '... '
+    write APP_BUNDLE_MIN_PATH, minify read APP_BUNDLE_PATH
     say 'ok.\n'
 
 task \bundle_vendor 'Build vendor bundle' ->
     {sources} = require 'limn/server/view-helpers'
     
-    vendor_bundle_path = 'var/vendor/vendor-bundle.js'
+    VENDOR_BUNDLE_PATH = 'var/vendor/vendor-bundle.js'
     vendor_sources = sources("www/modules.yaml", 'development')
         .filter -> _.startsWith it, '/vendor'
         .map -> "static#it"
-    mkdirp dirname vendor_bundle_path
-    bundle_js vendor_bundle_path, vendor_sources, {-minify}
+    mkdirp dirname VENDOR_BUNDLE_PATH
+    bundle_js VENDOR_BUNDLE_PATH, vendor_sources, {-minify}
     
-    vendor_bundle_min_path = vendor_bundle_path.replace /\.js$/, '.min.js'
-    print 'Minifying into', vendor_bundle_min_path.magenta.bold, '... '
-    write vendor_bundle_min_path, minify read vendor_bundle_path
+    VENDOR_BUNDLE_MIN_PATH = VENDOR_BUNDLE_PATH.replace /\.js$/, '.min.js'
+    print 'Minifying into', VENDOR_BUNDLE_MIN_PATH.magenta.bold, '... '
+    write VENDOR_BUNDLE_MIN_PATH, minify read VENDOR_BUNDLE_PATH
     say 'ok.\n'
+
+task \bundle_combine 'Combine bundles into dist file' ->
+    print 'Writing dist file', DIST_PATH.magenta.bold , '... '
+    mkdirp dirname DIST_PATH
+    write DIST_PATH, "#{read VENDOR_BUNDLE_PATH}\n#{read APP_BUNDLE_PATH}\n"
+    say 'ok.\n'
+    
+    print 'Writing minified dist file', DIST_MIN_PATH.magenta.bold , '... '
+    mkdirp dirname DIST_MIN_PATH
+    write DIST_MIN_PATH, "#{read VENDOR_BUNDLE_MIN_PATH}\n#{read APP_BUNDLE_MIN_PATH}\n"
+    say 'ok.\n'
+    
 
 
 
@@ -194,7 +215,7 @@ task \cleanup_tests 'Removes compiled tests' ->
 
 task \clean 'Clean up environment and artifacts' ->
     invoke \cleanup_tests
-    remove [MODULE_LINK, 'var', 'tmp/dist'], {+ignoreMissing, +verbose}
+    remove [MODULE_LINK, 'lib', 'var', 'dist'], {+ignoreMissing, +verbose}
 
 
 
@@ -205,10 +226,5 @@ task \source_list 'Print a list of the source file paths.' ->
         sources("www/modules.yaml", 'development')
             .map -> it.slice 1
             .join '\n'
-
-
-# task \dist 'Assemble a distribution package for deploy' ->
-#     invoke \cleanup_tests
-#     ...
 
 
