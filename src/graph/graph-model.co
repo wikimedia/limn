@@ -426,7 +426,7 @@ GraphList = exports.GraphList = BaseList.extend do # {{{
     
     constructor : function GraphList then BaseList ...
     initialize  : -> BaseList::initialize ...
-    toString: -> @toStringWithIds()
+    toString    : -> @toStringWithIds()
 # }}}
 
 

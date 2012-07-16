@@ -227,6 +227,25 @@ BaseList = exports.BaseList = Backbone.Collection.extend mixinBase do # {{{
     getIds: ->
         @models.map -> it.id or it.get('id') or it.cid
     
+    url: ->
+        id = @get('id') or @get('slug')
+        if id
+            "#{@urlRoot}/#id.json"
+        else
+            "#{@urlRoot}.json"
+    
+    
+    load: ->
+        @loadCollection()
+    
+    loadCollection: ->
+        @wait()
+        @trigger 'load', this
+        @fetch do
+            success : ~> @unwait(); @trigger 'load-success', this
+            error   : ~> @unwait(); @trigger 'load-error',   this, ...arguments
+        this
+    
     
     ### Serialization
     
