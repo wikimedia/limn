@@ -17,12 +17,15 @@ app = exports = module.exports = express.createServer()
 /**
  * Load Limn middleware
  */
-app.use limn = app.limn = LimnMiddleware do
+limn = app.limn = LimnMiddleware do
     varDir  : './var'
     dataDir : './var/data'
     proxy :
         enabled   : true
         whitelist : /.*/
+
+app.use limn
+# app.use '/vis', limn
 
 # show exceptions, pretty stack traces ### FIXME
 app.use express.errorHandler { +dumpExceptions, +showStack }

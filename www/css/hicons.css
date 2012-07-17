@@ -3,7 +3,7 @@
   display: inline-block;
   vertical-align: text-top;
   background-repeat: no-repeat;
-  background-image: url("/img/hicons/hicons-sprite-black.png");
+  background-image: url("../img/hicons/hicons-sprite-black.png");
   width: 32px;
   height: 32px;
   line-height: 32px;
@@ -12,7 +12,7 @@
 }
 [class^="hicon-"][class~="icon-white"],
 [class*=" hicon-"][class~="icon-white"] {
-  background-image: url("/img/hicons/hicons-sprite-white.png");
+  background-image: url("../img/hicons/hicons-sprite-white.png");
 }
 [class^="hicon-"][class~="icon-sm"],
 [class*=" hicon-"][class~="icon-sm"] {

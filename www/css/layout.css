@@ -159,7 +159,7 @@ footer h4 a:active {
   height: 17px;
   line-height: 16px;
   background: transparent no-repeat 0 0;
-  background-image: url("/img/wmf_logo/wmf_logo-white-16x16.png") !important;
+  background-image: url("../img/wmf_logo/wmf_logo-white-16x16.png") !important;
 }
 .image {
   display: block;
@@ -172,7 +172,7 @@ footer h4 a:active {
   width: 45px;
   height: 45px;
   line-height: 45px;
-  background-image: url("/img/wmf_logo/wmf_logo-black-45x45-a100.png");
+  background-image: url("../img/wmf_logo/wmf_logo-black-45x45-a100.png");
   opacity: 0.1;
   filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=10);
 }
@@ -184,7 +184,7 @@ footer h4 a:active {
   width: 31px;
   height: 32px;
   line-height: 32px;
-  background-image: url("/img/public_domain/public_domain-31x32-a100.png");
+  background-image: url("../img/public_domain/public_domain-31x32-a100.png");
   opacity: 0.12;
   filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=12);
 }

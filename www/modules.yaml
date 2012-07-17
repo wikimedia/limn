@@ -99,6 +99,7 @@ development:
                 - data-binding
                 - model-cache
                 - cascading-model
+                - parser-mixin
                 - index
             - graph:
                 - graph-model
@@ -139,7 +140,7 @@ development:
                 - dashboard-model
                 - dashboard-view
                 - index
-            - limn
+            - client
 
 # -   suffix: .js
 #     paths:

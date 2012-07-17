@@ -35,9 +35,7 @@ task \setup 'Ensure project is set up for development.' ->
 
 
 task \server 'Start dev server' ->
-    invoke \setup
-    say ''
-    run 'src/server/server.co'
+    run './src/server/server.co'
 
 
 task \build 'Build coco sources' ->

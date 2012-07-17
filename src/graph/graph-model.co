@@ -1,5 +1,6 @@
 Seq = require 'seq'
 
+limn = require '../client'
 { _, Cascade,
 } = require '../util'
 { BaseModel, BaseList, ModelCache,
@@ -79,7 +80,7 @@ Graph = exports.Graph = BaseModel.extend do # {{{
         options : {}
     
     url: ->
-        "#{@urlRoot}/#{@get('slug')}.json"
+        "#{limn.mount @urlRoot}/#{@get('slug')}.json"
     
     
     
@@ -396,14 +397,14 @@ Graph = exports.Graph = BaseModel.extend do # {{{
      */
     toURL: (action) ->
         slug = @get 'slug'
-        path = _.compact [ @urlRoot, slug, action ] .join '/'
+        path = limn.mount _.compact [ @urlRoot, slug, action ] .join '/'
         "#path?#{@toKV { keepSlug: !!slug }}"
     
     /**
      * @returns {String} Path portion of slug URL, e.g.  /graphs/:slug
      */
     toLink: ->
-        "#{@urlRoot}/#{@get('slug')}"
+        "#{limn.mount @urlRoot}/#{@get('slug')}"
     
     /**
      * @returns {String} Permalinked URI, e.g. http://reportcard.wmflabs.org/:slug

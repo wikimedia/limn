@@ -25,7 +25,7 @@ class Base extends EventEmitter
         @__superclass__ = @..superclass
         @__apply_bind__()
         super()
-        @__class__.emit 'new', this
+        @__class__.emit? 'new', this
     
     
     ### Auto-Bound methods
@@ -44,6 +44,7 @@ class Base extends EventEmitter
         _.bindAll this, ...names if names.length
     
     
+    ### Misc
     
     getClassName: ->
         "#{@..name or @..displayName}"
@@ -57,8 +58,8 @@ class Base extends EventEmitter
     
     @extended = (Subclass) ->
         # copy over all class methods, including this
-        for own k, v in this
-            Subclass[k] = v if typeof v is 'function'
+        for k, v in this
+            Subclass[k] = v if typeof v is 'function' and not _.contains <[ apply call constructor toString ]>, k
         Subclass.__super__ = @::
         Subclass
     

@@ -31,108 +31,24 @@ html(lang="en", dir="ltr")
             
             footer
                 block footer
-                    .info-row.row-fluid
-                        .site-map.col.span4
-                            h3
-                                i.hicon-chart-curve.icon-white.icon-sm
-                                a(href="/") Limn
-                            ul.site-level
-                                li
-                                    i.icon-home.icon-white
-                                    a(href="/") Home
-                                //- FIXME: put link to /graphs only if dev env, for now.
-                                if IS_DEV
-                                    li
-                                        i.icon-th.icon-white
-                                        a(href='/graphs') Browse
-                                li
-                                    i.icon-glass.icon-white
-                                    a(href="/about") About
-                                    ul
-                                        li: a(href="/contact") Contact
-                                        li: a(href="http://mediawiki.org/wiki/Analytics", target="_blank") Other Projects
-                                li
-                                    i.icon-bookmark.icon-white
-                                    a(href="/project") Project
-                                    //- 
-                                        ul
-                                            li: a(href="mailto:dsc@wikimedia.org?subject=Reportcard/Limn Feedback") Feedback!
-                                            li: a(href="/blog") Blog
-                                            li: a(href="/docs/roadmap") Roadmap
-                                            li: a(href="https://github.com/wikimedia/limn", target="_blank") Source Repository
-                                            li: a(href="https://github.com/wikimedia/limn/issues", target="_blank") Issue Tracker
-                                            li: a(href="https://lists.wikimedia.org/mailman/listinfo/analytics", target="_blank") Mailing List
-                                //- 
-                                    li
-                                        i.icon-question-sign.icon-white
-                                        a(href="/help") Help
-                        
-                        .get-involved.col.span4
-                            h3
-                                i.icon-comment.icon-white
-                                a(href="/project") Get Involved!
-                            p
-                                a(href="/project") Limn
-                                |  is  
-                                a(href="https://github.com/wikimedia/limn", target="_blank") open-source software
-                                | , made with love by the 
-                                a(href="/about") Wikimedia Analytics Team
-                                | .
-                            p
-                                | Find a bug or have a suggestion? 
-                                a(href="mailto:dsc@wikimedia.org?subject=Limn Feedback") We'd love to hear from you!
-                            
-                        .about-wmf.col.span4
-                            h3
-                                i.icon-wmf.icon-white
-                                a(href="http://wikimedia.org", target="_blank") The Wikimedia Movement
-                            p
-                                a(href="http://wikimediafoundation.org/wiki/Wikimedia:About", target="_blank") The Wikimedia Foundation
-                                |  is the non-profit organization that operates 
-                                a(href="http://wikipedia.org", target="_blank") Wikipedia
-                                |  and  
-                                a(href="http://wikimedia.org", target="_blank") other free knowledge projects
-                                | .
-                            p
-                                | If you're excited about community analytics, check out some of the 
-                                a(href="http://stats.wikimedia.org", target="_blank") other stuff we're working on
-                                | .
-                    
-                    .copyright-row.row-fluid
-                        .copyright.inner(xmlns:dct="http://purl.org/dc/terms/")
-                            a.public-domain.image(href="http://creativecommons.org/publicdomain/zero/1.0/", rel="license", title="Public Domain", target="_blank")
-                            | To the extent possible under law, 
-                            a(href="http://www.wikimediafoundation.org", rel="dct:publisher", title="The Wikimedia Foundation", target="_blank")
-                                span(property="dct:title") The Wikimedia Foundation
-                            |  has waived all copyright and related or neighboring rights to the 
-                            span(property="dct:title") Monthly Report Card data and charts
-                            | .
-                    
-                    .tos-row.row-fluid
-                        a(href="http://wikimediafoundation.org/wiki/Terms_of_use", target="_blank") Terms of Use
-                        span.separator &bull;
-                        a(href="http://wikimediafoundation.org/wiki/Wikimedia:General_disclaimer", target="_blank") Disclaimers
-                        span.separator &bull;
-                        a(href="http://wikimediafoundation.org/wiki/Wikimedia:Privacy_policy", target="_blank") Privacy Policy
-                    
-                    a.wmf-logo.image(href="http://mediawiki.org/wiki/Analytics", target="_blank",
-                            title="A product of Team Analytics at the Wikimedia Foundation")
-                        | A product of Team Analytics at the Wikimedia Foundation
+                    include footer
             
             .scripts
                 block scripts
+                    - var limn_config = { 'mount':mount, 'rev':version, 'env':NODE_ENV };
                     script
                         var VERSION = !{ JSON.stringify(version)  };
                         var ENV     = !{ JSON.stringify(NODE_ENV) };
                         var IS_DEV = ENV === 'development', IS_PROD = ENV === 'production';
+                        var limn_config = !{ JSON.stringify(limn_config) };
                     
                     block lib-scripts
                         for src in sources(WWW+'/modules.yaml')
-                            script(src=src+"?"+version)
+                            script(src=path.join(mount, src)+"?"+version)
                     
                     block page-scripts
                         script
-                            var limn = require('limn/limn');
+                            var limn = require('limn/client');
                     block main-scripts
             
             block addenda

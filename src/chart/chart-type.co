@@ -1,12 +1,13 @@
 moment = require 'moment'
 Backbone = require 'backbone'
 
+limn = require '../client'
 { _, op,
 } = require '../util'
 { ReadyEmitter,
 } = require '../util/event'
 { Parsers, ParserMixin,
-} = require '../util/parser'
+} = require '../base'
 
 
 
@@ -159,11 +160,12 @@ class exports.ChartType extends ReadyEmitter
      */
     loadSpec: ->
         return this if @ready
-        proto = @constructor::        
+        proto = @constructor::
+        url = (if limn.config.mount is not '/' then limn.config.mount else '') + @SPEC_URL
         jQuery.ajax do
-            url     : @SPEC_URL
+            url      : url
             dataType : 'json'
-            success : (spec) ~>
+            success  : (spec) ~>
                 proto.spec = spec
                 proto.options_ordered = spec
                 proto.options = _.synthesize spec, -> [it.name, it]

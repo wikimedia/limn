@@ -153,12 +153,15 @@ application = limn.application =
         @configure ->
             @set 'views', WWW
             @set 'view engine', 'jade'
-            @set 'view options', {
+            
+            view_opts = {
                 layout  : false
+                config  : @set('limn options')
                 version : REV
-                IS_DEV, IS_PROD
+                IS_DEV, IS_PROD, REV
             } import require './view-helpers'
-            # @helpers require './view-helpers'
+            view_opts.__defineGetter__ 'mount', -> app.route or '/'
+            @set 'view options', view_opts
             
             # Parse URL, fiddle
             @use require('./reqinfo')({})

@@ -1,12 +1,11 @@
-- root = (function(){ return this; })();
-- if (typeof version == 'undefined') root.version = 'HEAD';
-- if (version == null || !version || version === 'HEAD') { version = String(new Date().getTime()); }
+- if (!locals.version) locals.version = 'HEAD';
+- if (version == null || !version || version === 'HEAD') { locals.version = String(new Date().getTime()); }
 
 mixin css(href, media, path_root)
     - media = media || 'screen'
-    - path_root = path_root || '/css'
-    - var ver = ((typeof version != 'undefined' && version) ? '?'+version : '')
-    - href = ((path_root && href.charAt(0) !== '/') ? path_root+'/' : '') + href + ver
+    - path_root = path_root || (href.charAt(0) === '/' ? locals.mount : locals.path.join(locals.mount, 'css'))
+    - var ver = (locals.version ? '?'+locals.version : '')
+    - href = locals.path.join(path_root, href) + ver
     link(type='text/css', rel='stylesheet', media=media, href=href)
 
 

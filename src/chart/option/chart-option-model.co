@@ -1,8 +1,8 @@
 { _, op,
 } = require '../../util'
-{ Parsers, ParserMixin, ParsingModel, ParsingView,
-} = require '../../util/parser'
-{ BaseModel, BaseList,
+{
+    BaseModel, BaseList,
+    Parsers, ParserMixin, ParsingModel, ParsingView,
 }  = require '../../base'
 
 

@@ -1,9 +1,21 @@
+{EventEmitter} = require 'events'
+
+{ _, op, event, root,
+} = require './util'
+
+# Decorate root limn namespace object with EventEmitter methods
 limn = exports
+emitter = limn.__emitter__ = new event.ReadyEmitter()
+for k of <[ on addListener off removeListener emit trigger once removeAllListeners ]>
+    limn[k] = emitter[k].bind emitter
+
+limn.mount = (path) ->
+    mnt = limn.config?.mount or '/'
+    (if mnt is not '/' then mnt else '') + path
+
 
 Backbone = require 'backbone'
 
-{ _, op, root,
-} = limn.util       = require './util'
 { BaseView, BaseModel, BaseList,
 } = limn.base       = require './base'
 { ChartType, DygraphsChartType,
@@ -143,7 +155,7 @@ LimnApp import do
     main : function limnMain
         config = limn.config or= LimnApp.findConfig()
         limn.app or= new LimnApp config unless config.libOnly
+        limn.emit 'main', limn.app
 
 
 jQuery LimnApp.main
-

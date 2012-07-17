@@ -1,5 +1,6 @@
 Backbone = require 'backbone'
 
+limn = require '../client'
 { _, op,
 } = require '../util'
 { BaseBackboneMixin, mixinBase,
@@ -26,7 +27,7 @@ BaseModel = exports.BaseModel = Backbone.Model.extend mixinBase do # {{{
     ### Accessors
     
     url: ->
-        "#{@urlRoot}/#{@get('id')}.json"
+        "#{limn.mount @urlRoot}/#{@get('id')}.json"
     
     has: (key) ->
         @get(key)?
@@ -228,11 +229,12 @@ BaseList = exports.BaseList = Backbone.Collection.extend mixinBase do # {{{
         @models.map -> it.id or it.get('id') or it.cid
     
     url: ->
+        root = limn.mount @urlRoot
         id = @get('id') or @get('slug')
         if id
-            "#{@urlRoot}/#id.json"
+            "#root/#id.json"
         else
-            "#{@urlRoot}.json"
+            "#root.json"
     
     
     load: ->

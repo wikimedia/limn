@@ -1,3 +1,4 @@
+limn = require '../client'
 { _, op,
 } = require '../util'
 { TimeSeriesData, CSVData,
@@ -180,9 +181,10 @@ ALL_SOURCES = new DataSourceList
 sourceCache = new ModelCache DataSource, {-ready, cache:ALL_SOURCES}
 
 # Fetch all DataSources
-$.getJSON '/datasources/all', (data) ->
-    ALL_SOURCES.reset _.map data, op.I
-    sourceCache.triggerReady()
+limn.on 'main', ->
+    $.getJSON limn.mount('/datasources/all'), (data) ->
+        ALL_SOURCES.reset _.map data, op.I
+        sourceCache.triggerReady()
 
 DataSource.getAllSources = ->
     ALL_SOURCES

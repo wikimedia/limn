@@ -26,7 +26,8 @@ root.jQuery?.fn.invoke = (method, ...args) ->
         jQuery(el)[method] ...args
 
 
-exports import require './event'
+event = exports.event = require './event'
+exports import event
 
 backbone = exports.backbone = require './backbone'
 parser   = exports.parser   = require './parser'
