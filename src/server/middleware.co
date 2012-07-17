@@ -136,6 +136,7 @@ application = limn.application =
         ### setup options with defaults
         opts = _.merge {}, DEFAULT_OPTIONS, opts
         opx = opts.proxy
+        opx = opts.proxy = { enabled:opx } if typeof opx is 'boolean'
         opx.enabled = true if opx.enabled is false and (opx.whitelist or opx.blacklist)
         if opx.enabled
             opx.whitelist or= [ /.*/ ]
@@ -171,23 +172,10 @@ application = limn.application =
             # Route to the web services
             @use @router
         
-        # production config
-        @configure 'production', ->
-            ### FIXME
-            
-            # log all requests
-            @use express.logger()
-            
-            # show simple errors
-            @use express.errorHandler()
-        
         
         # development config
         @configure 'development', ->
             opts = {varDir, dataDir} = @set 'limn options'
-            
-            # show exceptions, pretty stack traces ### FIXME
-            @use express.errorHandler { +dumpExceptions, +showStack }
             
             # turn on pretty-printing of views
             @set('view options').pretty = true
