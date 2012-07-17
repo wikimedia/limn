@@ -3,7 +3,7 @@ EventEmitter::off     = EventEmitter::removeListener
 EventEmitter::trigger = EventEmitter::emit
 
 { _, op
-} = require 'limn/util'
+} = require '../util'
 
 
 

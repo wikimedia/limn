@@ -1,9 +1,9 @@
 { _, op,
-} = require 'limn/util'
+} = require '../util'
 { BaseView,
-} = require 'limn/base'
+} = require '../base'
 { Graph, GraphList
-} = require 'limn/graph/graph-model'
+} = require './graph-model'
 
 root = do -> this
 DEBOUNCE_RENDER = 100ms
@@ -19,7 +19,7 @@ GraphListView = exports.GraphListView = BaseView.extend do # {{{
     
     tagName   : 'section'
     className : 'graph-list-view'
-    template  : require 'limn/template/graph/graph-list'
+    template  : require '../template/graph/graph-list'
     
     data  : {}
     ready : false

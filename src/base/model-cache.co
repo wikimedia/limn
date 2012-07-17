@@ -1,7 +1,7 @@
 _   = require 'underscore'
 Seq = require 'seq'
 
-{ReadyEmitter} = require 'limn/util/event'
+{ReadyEmitter} = require '../util/event'
 
 
 # TODO: Bubble events to decorated emitters

@@ -2,11 +2,11 @@ moment = require 'moment'
 Backbone = require 'backbone'
 
 { _, op,
-} = require 'limn/util'
+} = require '../util'
 { ReadyEmitter,
-} = require 'limn/util/event'
+} = require '../util/event'
 { Parsers, ParserMixin,
-} = require 'limn/util/parser'
+} = require '../util/parser'
 
 
 

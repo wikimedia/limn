@@ -1,9 +1,9 @@
 { _, op,
-} = require 'limn/util'
+} = require '../../util'
 { Parsers, ParserMixin, ParsingModel, ParsingView,
-} = require 'limn/util/parser'
+} = require '../../util/parser'
 { BaseModel, BaseList,
-}  = require 'limn/base'
+}  = require '../../base'
 
 
 /**

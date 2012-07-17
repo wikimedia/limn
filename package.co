@@ -4,15 +4,13 @@ description                     : 'A GUI Visualization Toolkit'
 homepage                        : 'https://github.com/wikimedia/limn'
 keywords                        : <[ visualization graph gui d3 ]>
 author                          : 'David Schoonover <dsc@wikimedia.org> (http://less.ly)'
-contributors                    : [
-                                    'Andrew Otto <otto@wikimedia.org>'
-                                    'Fabian Kaelin <fabian.kaelin@gmail.com>'
-                                    'Evan Rosen <erosen@wikimedia.org>'
-                                    'Diederik van Liere <dvanliere@wikimedia.org>'
-]
+contributors                    :
+                                'Andrew Otto <otto@wikimedia.org>'
+                                'Fabian Kaelin <fabian.kaelin@gmail.com>'
+                                'Evan Rosen <erosen@wikimedia.org>'
+                                'Diederik van Liere <dvanliere@wikimedia.org>'
 
-
-# main                            : './lib'
+main                            : './lib/server/middleware'
 # directories                   : lib: './lib', bin:'./bin', doc:'./doc', man:'./man'
 
 dependencies                    : 

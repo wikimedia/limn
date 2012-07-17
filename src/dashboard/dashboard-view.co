@@ -1,13 +1,13 @@
 Seq = require 'seq'
 
 { _, op,
-} = require 'limn/util'
+} = require '../util'
 { BaseModel, BaseView,
-} = require 'limn/base'
+} = require '../base'
 { Graph, GraphList, GraphDisplayView,
-} = require 'limn/graph'
+} = require '../graph'
 { Dashboard,
-} = require 'limn/dashboard/dashboard-model'
+} = require './dashboard-model'
 
 
 /**
@@ -17,7 +17,7 @@ DashboardView = exports.DashboardView = BaseView.extend do # {{{
     __bind__       : <[ addTab ]>
     tagName        : 'section'
     className      : 'dashboard'
-    template       : require 'limn/template/dashboard/dashboard'
+    template       : require '../template/dashboard/dashboard'
     
     
     events:
@@ -147,7 +147,7 @@ DashboardTabView = exports.DashboardTabView = BaseView.extend do # {{{
     __bind__       : <[  ]>
     className      : 'tab-pane'
     tag            : 'div'
-    template       : require 'limn/template/dashboard/dashboard-tab'
+    template       : require '../template/dashboard/dashboard-tab'
     
     
     constructor: function DashboardTabView

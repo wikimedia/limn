@@ -24,6 +24,8 @@ app.use limn = app.limn = LimnMiddleware do
         enabled   : true
         whitelist : /.*/
 
+# show exceptions, pretty stack traces ### FIXME
+app.use express.errorHandler { +dumpExceptions, +showStack }
 
 /**
  * Handle webhook notification to pull from origin.

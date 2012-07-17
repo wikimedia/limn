@@ -1,11 +1,11 @@
 moment = require 'moment'
 
 { _, op,
-} = require 'limn/util'
+} = require '../util'
 { Graph,
-} = require 'limn/graph/graph-model'
+} = require './graph-model'
 { GraphView,
-} = require 'limn/graph/graph-view'
+} = require './graph-view'
 
 root = do -> this
 
@@ -17,7 +17,7 @@ root = do -> this
 GraphDisplayView = exports.GraphDisplayView = GraphView.extend do # {{{
     tagName   : 'section'
     className : 'graph graph-display'
-    template  : require 'limn/template/graph/graph-display'
+    template  : require '../template/graph/graph-display'
     
     events:
         # Select the whole permalink URI text when it receives focus.

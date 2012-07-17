@@ -1,7 +1,7 @@
-_  = require 'limn/util/underscore'
-op = require 'limn/util/op'
+_  = require './underscore'
+op = require './op'
 { BaseModel, BaseList, BaseView, Mixin,
-}  = require 'limn/base'
+}  = require '../base'
 
 
 /**

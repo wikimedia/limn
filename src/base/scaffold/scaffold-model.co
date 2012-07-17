@@ -1,7 +1,7 @@
-_  = require 'limn/util/underscore'
-op = require 'limn/util/op'
+{ _, op,
+} = require '../util'
 { BaseModel, BaseList,
-}  = require 'limn/base'
+}  = require '../../base'
 
 
 

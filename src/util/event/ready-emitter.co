@@ -1,4 +1,4 @@
-Base = require 'limn/base/base'
+Base = require '../../base/base'
 
 
 /**

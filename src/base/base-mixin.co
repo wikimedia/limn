@@ -1,7 +1,7 @@
 Backbone = require 'backbone'
 
 { _, op,
-} = require 'limn/util'
+} = require '../util'
 
 
 

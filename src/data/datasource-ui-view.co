@@ -1,7 +1,7 @@
 { _, op,
-} = require 'limn/util'
+} = require '../util'
 { BaseModel, BaseList, BaseView,
-} = require 'limn/base'
+} = require '../base'
 
 
 /**
@@ -12,7 +12,7 @@ DataSourceUIView = exports.DataSourceUIView = BaseView.extend do # {{{
     __bind__       : <[  ]>
     tagName        : 'section'
     className      : 'datasource-ui'
-    template       : require 'limn/template/data/datasource-ui'
+    template       : require '../template/data/datasource-ui'
     
     events :
         'click .datasource-summary'       : 'onHeaderClick'

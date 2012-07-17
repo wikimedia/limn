@@ -2,12 +2,12 @@ _     = require 'underscore'
 _.str = require 'underscore.string'
 _.mixin _.str.exports()
 
-_.mixin require 'limn/util/underscore/function'
-_.mixin require 'limn/util/underscore/array'
-_.mixin require 'limn/util/underscore/object'
-_.mixin require 'limn/util/underscore/class'
-_.mixin require 'limn/util/underscore/kv'
-_.mixin require 'limn/util/underscore/string'
+_.mixin require './function'
+_.mixin require './array'
+_.mixin require './object'
+_.mixin require './class'
+_.mixin require './kv'
+_.mixin require './string'
 
 
 ## Debug

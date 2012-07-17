@@ -1,9 +1,9 @@
 Backbone = require 'backbone'
 
 { _, op,
-} = require 'limn/util'
+} = require '../util'
 { BaseBackboneMixin, mixinBase,
-} = require 'limn/base/base-mixin'
+} = require './base-mixin'
 
 
 

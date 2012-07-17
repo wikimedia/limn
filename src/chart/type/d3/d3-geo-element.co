@@ -1,9 +1,9 @@
 ColorBrewer = require 'colorbrewer'
 
 { _, op,
-} = require 'limn/util'
+} = require '../../../util'
 { ChartType,
-} = require 'limn/chart/chart-type'
+} = require '../../chart-type'
 
 
 

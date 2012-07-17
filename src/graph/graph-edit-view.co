@@ -1,14 +1,14 @@
 moment = require 'moment'
 
-_ = require 'limn/util/underscore'
+_ = require '../util/underscore'
 { Graph,
-} = require 'limn/graph/graph-model'
+} = require './graph-model'
 { GraphView,
-} = require 'limn/graph/graph-view'
+} = require './graph-view'
 { ChartOptionScaffold, DEBOUNCE_RENDER,
-} = require 'limn/chart'
+} = require '../chart'
 { DataView, DataSetView, DataSet,
-} = require 'limn/data'
+} = require '../data'
 
 root = do -> this
 
@@ -26,7 +26,7 @@ GraphEditView = exports.GraphEditView = GraphView.extend do # {{{
         onFirstClickRenderOptionsTab onFirstClickRenderDataTab
     ]>
     className : 'graph-edit graph'
-    template  : require 'limn/template/graph/graph-edit'
+    template  : require '../template/graph/graph-edit'
     
     events:
         'click    .redraw-button'                        : 'stopAndRender'

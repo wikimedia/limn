@@ -1,9 +1,9 @@
-exports.Base = require 'limn/base/base'
-mixins       = require 'limn/base/base-mixin'
-models       = require 'limn/base/base-model'
-views        = require 'limn/base/base-view'
-cache        = require 'limn/base/model-cache'
-cascading    = require 'limn/base/cascading-model'
-data_binding = require 'limn/base/data-binding'
+exports.Base = require './base'
+mixins       = require './base-mixin'
+models       = require './base-model'
+views        = require './base-view'
+cache        = require './model-cache'
+cascading    = require './cascading-model'
+data_binding = require './data-binding'
 exports import mixins   import models       import views \
         import cache    import cascading    import data_binding

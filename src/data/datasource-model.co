@@ -1,11 +1,11 @@
 { _, op,
-} = require 'limn/util'
+} = require '../util'
 { TimeSeriesData, CSVData,
-} = require 'limn/util/timeseries'
+} = require '../util/timeseries'
 { BaseModel, BaseList, ModelCache,
-} = require 'limn/base'
+} = require '../base'
 { Metric, MetricList,
-} = require 'limn/data/metric-model'
+} = require './metric-model'
 
 
 /**

@@ -17,8 +17,6 @@ pip-log.txt
 docs/_build/*
 .env/
 
-.cache
-.tmp
 npm-debug.log
 node_modules/
 node_modules/*
@@ -27,6 +25,8 @@ lib-cov/
 test/*.log
 test/fixtures/*.json
 test/fixtures/logs/*.log
+.cache/
+.tmp/
 
 build
 dist

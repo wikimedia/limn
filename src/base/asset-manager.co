@@ -1,7 +1,7 @@
 { _, op,
-} = require 'limn/util'
+} = require '../util'
 { ReadyEmitter,
-} = require 'limn/util/event'
+} = require '../util/event'
 
 
 

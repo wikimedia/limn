@@ -3,15 +3,15 @@ limn = exports
 Backbone = require 'backbone'
 
 { _, op, root,
-} = limn.util       = require 'limn/util'
+} = limn.util       = require './util'
 { BaseView, BaseModel, BaseList,
-} = limn.base       = require 'limn/base'
+} = limn.base       = require './base'
 { ChartType, DygraphsChartType,
-} = limn.chart      = require 'limn/chart'
+} = limn.chart      = require './chart'
 { Graph, GraphList, GraphDisplayView, GraphEditView, GraphListView,
-} = limn.graph      = require 'limn/graph'
+} = limn.graph      = require './graph'
 { DashboardView, Dashboard,
-} = limn.dashboard  = require 'limn/dashboard'
+} = limn.dashboard  = require './dashboard'
 
 
 /**

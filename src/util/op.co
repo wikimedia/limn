@@ -1,17 +1,12 @@
+
 DASH_PATTERN = /-/g
-
 STRIP_PAT = /(^\s*|\s*$)/g
-strip = (s) ->
-    if s then s.replace STRIP_PAT, '' else s
-
 FALSEY = /^\s*(?:no|off|false)\s*$/i
 parseBool = (s) ->
     i = parseInt(s or 0)
     !! if isNaN(i) then not FALSEY.test(s) else i
 
-
-
-module.exports = op =
+op =
     I       : (x) -> x
     K       : (k) -> -> k
     nop     : ->
@@ -80,7 +75,7 @@ module.exports = op =
     toRegExp    : (v) -> new RegExp v
     
     toObject : (v) ->
-        if typeof v is 'string' and strip(v)
+        if typeof v is 'string' and op.strip(v)
             JSON.parse v
         else
             v
@@ -150,5 +145,13 @@ module.exports = op =
     ord    : -> String(it).charCodeAt 0
     encode : -> it and $ "<div>#it</div>" .html().replace /"/g, '&quot;'
     decode : -> it and $ "<div>#it</div>" .text()
-    strip  : strip
+    strip  : (s) ->
+        if s then s.replace STRIP_PAT, '' else s
+    
+
+
+if module?
+    module?.exports = op
+else if window?
+    window.op = op
 

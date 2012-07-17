@@ -1,16 +1,17 @@
 # Utilities for use in templates
 
-CWD    = exports.CWD    = process.cwd()
-WWW    = exports.WWW    = "#CWD/www"
-VAR    = exports.VAR    = "#CWD/var"
-STATIC = exports.STATIC = "#CWD/static"
+fs    = exports.fs   = require 'fs'
+path  = exports.path = require 'path'
+
+{dirname} = path
+BASE   = exports.BASE   = dirname dirname __dirname
+WWW    = exports.WWW    = "#BASE/www"
+VAR    = exports.VAR    = "#BASE/var"
+STATIC = exports.STATIC = "#BASE/static"
 
 VERSION = 'HEAD'
 try VERSION = require '../version' catch e
 exports.VERSION = exports.version = VERSION
-
-fs    = exports.fs   = require 'fs'
-path  = exports.path = require 'path'
 
 _     = exports._ = require 'underscore'
 _.str = require 'underscore.string'

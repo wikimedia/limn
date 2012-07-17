@@ -1,9 +1,9 @@
 { _, op,
-} = require 'limn/util'
+} = require '../../util'
 { BaseView,
-}  = require 'limn/base'
+}  = require '../../base'
 { ChartOption, ChartOptionList,
-} = require 'limn/chart/option/chart-option-model'
+} = require './chart-option-model'
 
 DEBOUNCE_RENDER = exports.DEBOUNCE_RENDER = 100ms
 
@@ -14,7 +14,7 @@ DEBOUNCE_RENDER = exports.DEBOUNCE_RENDER = 100ms
 ChartOptionView = exports.ChartOptionView = BaseView.extend do # {{{
     tagName   : 'section'
     className : 'chart-option field'
-    template  : require 'limn/template/chart/chart-option'
+    template  : require '../../template/chart/chart-option'
     
     type : 'string'
     isCollapsed : true
@@ -129,7 +129,7 @@ ChartOptionScaffold = exports.ChartOptionScaffold = BaseView.extend do # {{{
     __bind__       : <[ addField ]>
     tagName        : 'form'
     className      : 'chart-options scaffold'
-    template       : require 'limn/template/chart/chart-scaffold'
+    template       : require '../../template/chart/chart-scaffold'
     
     collectionType : ChartOptionList
     subviewType    : ChartOptionView

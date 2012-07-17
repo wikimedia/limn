@@ -1,6 +1,6 @@
-d3chart = require 'limn/chart/type/d3/d3-chart-element'
-line = require 'limn/chart/type/d3/d3-line-element'
-bar  = require 'limn/chart/type/d3/d3-bar-element'
-# geo  = require 'limn/chart/type/d3/d3-geo-element'
+d3chart = require './d3-chart-element'
+line = require './d3-line-element'
+bar  = require './d3-bar-element'
+# geo  = require './d3-geo-element'
 
 exports import line import bar import d3chart # import geo 

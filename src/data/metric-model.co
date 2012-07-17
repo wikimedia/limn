@@ -1,8 +1,8 @@
 { _, op,
-} = require 'limn/util'
+} = require '../util'
 { BaseModel, BaseList,
-} = require 'limn/base'
-ProjectColors = require 'limn/data/project-colors'
+} = require '../base'
+ProjectColors = require './project-colors'
 DataSource = DataSourceList = null
 
 
@@ -170,6 +170,6 @@ MetricList = exports.MetricList = BaseList.extend do # {{{
 
 ### FIXME: LOLHACKS ###
 setTimeout do
-    -> { DataSource, DataSourceList, } := require 'limn/data/datasource-model'
+    -> { DataSource, DataSourceList, } := require './datasource-model'
     10
 

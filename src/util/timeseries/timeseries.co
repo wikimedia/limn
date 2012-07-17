@@ -1,4 +1,4 @@
-_  = require 'limn/util/underscore'
+_  = require '../underscore'
 
 
 

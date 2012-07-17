@@ -1,6 +1,6 @@
-_ = require 'limn/util/underscore'
+_ = require '../../../util/underscore'
 { ChartType,
-} = require 'limn/chart/chart-type'
+} = require '../../chart-type'
 
 
 class exports.DygraphsChartType extends ChartType

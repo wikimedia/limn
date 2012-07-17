@@ -1,11 +1,11 @@
 Seq = require 'seq'
 moment = require 'moment'
 
-_ = require 'limn/util/underscore'
+_ = require '../util/underscore'
 { BaseView,
-} = require 'limn/base'
+} = require '../base'
 { Graph,
-} = require 'limn/graph/graph-model'
+} = require './graph-model'
 
 root = do -> this
 DEBOUNCE_RENDER = 100ms

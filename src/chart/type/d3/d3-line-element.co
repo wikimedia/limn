@@ -2,11 +2,11 @@ d3 = require 'd3'
 ColorBrewer = require 'colorbrewer'
 
 { _, op,
-} = require 'limn/util'
+} = require '../../../util'
 { D3ChartElement    
-} = require 'limn/chart/type/d3/d3-chart-element'
+} = require './d3-chart-element'
 
-_fmt = require 'limn/util/formatters'
+_fmt = require '../../../util/formatters'
 
 root = do -> this
 

@@ -1,9 +1,9 @@
 d3 = require 'd3'
 
 { _, op,
-} = require 'limn/util'
+} = require '../../../util'
 { ChartType,
-} = require 'limn/chart/chart-type'
+} = require '../../chart-type'
 
 root = do -> this
 

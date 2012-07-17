@@ -1,13 +1,13 @@
 Seq = require 'seq'
 
 { _, Cascade,
-} = require 'limn/util'
+} = require '../util'
 { BaseModel, BaseList, ModelCache,
-} = require 'limn/base'
+} = require '../base'
 { ChartType,
-} = require 'limn/chart'
+} = require '../chart'
 { DataSet
-} = require 'limn/data'
+} = require '../data'
 
 root = do -> this
 

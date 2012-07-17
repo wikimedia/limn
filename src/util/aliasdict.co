@@ -1,4 +1,4 @@
-_ = require 'limn/util/underscore'
+_ = require './underscore'
 
 /**
  * @class A mapping of key-value pairs supporting key-aliases.

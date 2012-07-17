@@ -1,13 +1,13 @@
 Backbone = require 'backbone'
 
 { _, op,
-} = require 'limn/util'
-{ BaseBackboneMixin, mixinBase,
-} = require 'limn/base/base-mixin'
+} = require '../util'
+{ mixinBase,
+} = require './base-mixin'
 { BaseModel,
-} = require 'limn/base/base-mixin'
+} = require './base-model'
 { DataBinding,
-} = require 'limn/base/data-binding'
+} = require './data-binding'
 
 
 

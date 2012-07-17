@@ -1,7 +1,7 @@
 moment = require 'moment'
 
 { _, op,
-} = require 'limn/util'
+} = require '../util'
 
 
 _fmt = do

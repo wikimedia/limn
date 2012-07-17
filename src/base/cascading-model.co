@@ -1,9 +1,9 @@
 { _, op,
-} = require 'limn/util'
+} = require '../util'
 { BaseModel, BaseList,
-} = require 'limn/base/base-model'
+} = require './base-model'
 
-Cascade = require 'limn/util/cascade'
+Cascade = require '../util/cascade'
 
 
 

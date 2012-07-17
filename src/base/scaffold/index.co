@@ -1,3 +1,3 @@
-models = require 'limn/base/scaffold/scaffold-model'
-views  = require 'limn/base/scaffold/scaffold-view'
+models = require './scaffold-model'
+views  = require './scaffold-view'
 exports import models import views

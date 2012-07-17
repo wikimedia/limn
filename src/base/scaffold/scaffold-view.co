@@ -1,9 +1,9 @@
-_  = require 'limn/util/underscore'
-op = require 'limn/util/op'
+{ _, op,
+} = require '../../util'
 { BaseView,
-}  = require 'limn/base'
+}  = require '../../base'
 { Field, FieldList,
-}  = require 'limn/base/scaffold/scaffold-model'
+}  = require './scaffold-model'
 
 
 FieldView = exports.FieldView = BaseView.extend do # {{{

@@ -1,7 +1,7 @@
 { _, op,
-} = require 'limn/util'
+} = require '../util'
 { BaseModel, BaseList, BaseView,
-} = require 'limn/base'
+} = require '../base'
 
 
 /**
@@ -11,7 +11,7 @@ DataSourceView = exports.DataSourceView = BaseView.extend do # {{{
     __bind__       : <[  ]>
     tagName        : 'section'
     className      : 'datasource'
-    template       : require 'limn/template/data/datasource'
+    template       : require '../template/data/datasource'
     
     
     

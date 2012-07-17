@@ -1,5 +1,5 @@
-_  = require 'limn/util/underscore'
-TimeSeriesData = require 'limn/util/timeseries/timeseries'
+_  = require '../underscore'
+TimeSeriesData = require './timeseries'
 
 
 DASH_PATTERN       = /-/g

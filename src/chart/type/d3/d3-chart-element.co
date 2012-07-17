@@ -2,10 +2,9 @@ d3 = require 'd3'
 ColorBrewer = require 'colorbrewer'
 
 { _, op,
-} = require 'limn/util'
+} = require '../../../util'
 { ReadyEmitter,
-} = require 'limn/util/event'
-# Base = require 'limn/base/base'
+} = require '../../../util/event'
 
 
 root = do -> this

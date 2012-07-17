@@ -104,13 +104,13 @@ logErrorsAnd = exports.logErrorsAnd = (cb) ->
 ## Test Code
 if require.main is module
     files = exports
-    u = require 'limn/util/underscore'
+    u = require '../util/underscore'
     
     paths = <[ package.* deploy.sh ]>
     files.readFilesAsync paths, (err, data) ->
         if err then console.error err
         else console.log '\n\n', global.data = u.map data, (txt, f) -> "#f: #{txt.length}"
     
-    # u = require 'limn/util/underscore'; files = require 'limn/server/files'
+    # u = require '../util/underscore'; files = require 'limn/server/files'
     # files.readJSONFilesAsync 'data/**', {+yaml}, files.logErrorsAnd()
 

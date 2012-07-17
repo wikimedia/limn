@@ -1,7 +1,7 @@
 { _, op,
-} = require 'limn/util'
+} = require '../util'
 { BaseView,
-} = require 'limn/base'
+} = require '../base'
 
 
 /**
@@ -10,7 +10,7 @@
 DataSetView = exports.DataSetView = BaseView.extend do # {{{
     tagName   : 'section'
     className : 'dataset-ui dataset'
-    template  : require 'limn/template/data/dataset'
+    template  : require '../template/data/dataset'
     
     events:
         'click  .new-metric-button'                     : 'onNewMetric'
@@ -112,7 +112,7 @@ DataSetView = exports.DataSetView = BaseView.extend do # {{{
 DataSetMetricView = exports.DataSetMetricView = BaseView.extend do # {{{
     tagName   : 'tr'
     className : 'dataset-metric metric'
-    template  : require 'limn/template/data/dataset-metric'
+    template  : require '../template/data/dataset-metric'
     
     
     

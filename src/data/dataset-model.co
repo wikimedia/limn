@@ -2,13 +2,13 @@ Seq = require 'seq'
 ColorBrewer = require 'colorbrewer'
 
 { _, op,
-} = require 'limn/util'
+} = require '../util'
 { BaseModel, BaseList,
-} = require 'limn/base'
+} = require '../base'
 { Metric, MetricList,
-} = require 'limn/data/metric-model'
+} = require './metric-model'
 { DataSource, DataSourceList,
-} = require 'limn/data/datasource-model'
+} = require './datasource-model'
 
 
 
