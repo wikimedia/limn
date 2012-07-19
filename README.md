@@ -1,63 +1,80 @@
-# Kraken UI: WMF Analytics Reportcard prototype
+# Limn &mdash; a GUI Visualization Toolkit
 
-Setup instructions to be cleaned up momentarily. (brb lunch)
+Limn is a GUI for constructing beautiful visualizations without need of programming skills.
 
+<center>[![Limn Screenshot][limn_screenshot]][wmf_reportcard]</center>
 
-### Setting Up
-
-This is a [node.js][nodejs] project, so you need node > 0.6.x and the node package manager, [npm][npm].
-
-Once that's done, I recommend you install Coco globally so you don't have to futz with your path: `npm install -g coco` -- if you choose not to, you should probably add `./node_modules/.bin` to `PATH` in your bashrc or something.
-
-Next, install your source checkout in dev mode by running `npm link` from the project root. This will also download and install all the package dependencies.
-
-Finally, start the `server` task using Coke (it's like Rake for Coco) with `coke server`. While this does what it says on the tin, it also seems to have a habit of randomly losing parts of stderr. For now, you can work around this by manually starting the server: `coke link && lib/server/server.co`
-
-You should now have a server running on 8081.
-
-### Project Layout
-- assets/                 - static images
-- data/                   - json, yaml, csv, etc. files that contain graph configuration and graph content data
-- data/datasources/       - graph content data
-- data/graphs/            - saved graph configurations.
-- lib/                    - [Coco][coco] files.  Application logic lives here.
-- lib/{chart,dashboard,dataset,graph}/ - Models and View Classes
-- lib/main-*.co           - These files get included from the main [Jade][jade] views in www/.  They act like client side controllers.  They are responsible for setting up data and rendering views.
-- lib/template/           - client side [Jade][jade] views.  These are included and rendered by View classes.
-- lib/server/             - Server side [Coco][coco] files.  
-- lib/server/server.co    - [Express][expressjs] server setup.   Routing is done here.
-- lib/server/controllers/ - Server side controllers.  Routed to by [express-resource][].
-- www/                    - (Mostly) static [Jade][jade] HTML templates and [Stylus][stylus] CSS templates.  The [Jade][jade] templates are rendered by the server side controllers in lib/server/controllers/.
-- var/                    - Compiled JavaScript and CSS files.
-
-### Deployment
-Coco needs to be compiled down to JavaScript in order for it to be executed.  In development environments, this is done on the fly.  In production environments, all Coco is compiled down into JavaScript files and placed in a dist/ directory.  These JavaScript (and compiled Stylus CSS files) are served up directly to the browser upon request, rather than having to be compiled first.
-
-deploy.sh currently builds a distribution tmp/dist, and then rsyncs this over to reportcard.wmflabs.org.  You will need an account with sudo permissions on reportcard2.pmtpa.wmflabs in order to deploy.
+[Play with it!][limn_sample_graph] The [the Wikimedia Reportcard][wmf_reportcard] site is powered by Limn &mdash; check it out!
 
 
-### Notes
+## Features
 
-- This project is written in [Coco][coco], a dialect of [CoffeeScript][coffee] -- they both compile 
-  down to JavaScript. The pair are very, very similar, [except][coco-improvements] 
-  for [a few][coco-incompatibilities] [things][coco-vs-coffee]. If you can read JavaScript and Ruby, 
-  you can understand Coco and CoffeeScript. (I refer to the [CoffeeScript docs][coffee-docs] for 
-  the syntax, and I find the [comparison page][coco-vs-coffee] to be the best reference for Coco.)
-  
-- Coco require compilation before it'll run in the browser (though node can run it directly -- `#!/usr/bin/env coco` will work as a shebang as well). I've written [request middleware][connect-compiler] that recompiles stale files on demand, and it is pretty cool.
-  
+ * Graphical interface to create and customize visualizations
+ * Beautiful results, easy to use
+ * Easily added to any existing project as either a single script tag, or via [node][nodejs] middleware
+ * Works with a simple data format that is agnostic to the backing data-source
+
+Check out the [Feature Walkthrough][limn_features] for more info!
 
 
-[nodejs]: http://nodejs.org/
-[npm]: http://npmjs.org/
-[coco]: https://github.com/satyr/coco
-[coco-vs-coffee]: https://github.com/satyr/coco/wiki/side-by-side-comparison
-[coco-improvements]: https://github.com/satyr/coco/wiki/improvements
-[coco-incompatibilities]: https://github.com/satyr/coco/wiki/incompatibilities
-[coffee]: http://coffeescript.org/
-[coffee-docs]: http://coffeescript.org/#language
-[connect-compiler]: https://github.com/dsc/connect-compiler
-[jade]: https://github.com/visionmedia/jade
-[expressjs]: http://expressjs.com/guide.html
-[express-resource]: https://github.com/visionmedia/express-resource
-[stylus]: http://learnboost.github.com/stylus/
+## Why Limn?
+
+There are a great many JavaScript graphing libraries, and Limn isn't one: if you're a programmer looking to stick some graphs on your site, you already have a ton of options (ps. use [d3.js][d3]).
+
+But what about your non-programmers? They don't have many options: they email somebody, maybe try some shoddy web tools, and eventually reach for Excel. Ew. Worse, the time and energy expended in getting a single chart is so great that they're seriously discouraged from playing around. In the age of big data, this is a big problem. Exploration is a huge component of success. You need to iterate. You need to be open to inspiration. If you think you know what you're looking for, you're probably wrong.
+
+This is the niche Limn aims to fill: a drop-in component that enables self-service visualizations for your team.
+
+The "drop-in" part is important: we want it to be easy for programmers to enable these features in existing applications with minimal changes. If you already have a datasource that provides data in CSV or JSON format (be it files on disk or a REST API) you're mostly good to go. Limn can run entirely as a client-side application simply by including `limn.js`, or as [node.js][nodejs] middleware using either [Connect][connect] or [Express][express], in which case graphs can be persisted on disk. The only real work is to [configure Limn to know about your datasources][limn_datasource], though in the future we aim for the client to be able introspect this information from the data.
+
+
+## Work in Progress
+
+Limn is a work-in-progress. This means it some things are harder than they should be (though it's still pretty easy to use!); it means it's missing some otherwise sensible features and configuration options; it means there's some code that probably needs to be cleaned up. When you find these things, help us out by [opening a ticket][limn_issues] (or, if you're feeling ambitious, a pull request `;)`). It means you probably shouldn't use Limn in production unless you're ready to submit patches.
+
+
+## Learn More
+
+Excited? Here are some good places to go from here:
+
+ - Curious how Limn could help your team visualize data? Check out the [Feature Walkthrough][limn_features] for a better idea of what Limn can do, or the [Roadmap][limn_roadmap] for where we're going.
+ - Want to run Limn? Read over the docs available on [the Limn wiki][limn_wiki]. "[Getting Started][limn_getting_started]" seems like it might be a good place to start.
+ - Once you've done that, [the source][wmf_reportcard_github] to WMF's production instance of Limn, [the monthly Reportcard][wmf_reportcard], might serve as a useful guide.
+ - Finally, if you're interested in hacking on Limn (&hearts;!), check out the notes on [Contributing][limn_contributing] and on [Project Internals][limn_internals].
+
+
+## Feedback
+
+Limn is made with love by [the Wikimedia Foundation's Analytics team][wmf_analytics], and [we'd love to hear from you][dsc_email], whether it's because you found a bug, have suggestions, or want to contribute! For mundane things, open a ticket (or fork the project!) on [GitHub][limn]. You can also send Dave a charming email at [dsc@wikimedia.org][dsc_email].
+
+
+--
+
+Limn is open-source software, freely available under the MIT License.
+
+
+
+[limn]: https://github.com/wikimedia/limn "Limn on GitHub"
+[limn_sample_graph]: http://reportcard.wmflabs.org/graphs/sample_graph/edit "Limn Sample Graph"
+[limn_screenshot]: https://github.com/wikimedia/limn/master/blob/raw/static/img/limn-screenshot.png "Limn Screenshot"
+[limn_issues]: https://github.com/wikimedia/limn/issues
+[limn_wiki]: https://github.com/wikimedia/limn/wiki "Limn Wiki"
+[limn_getting_started]: https://github.com/wikimedia/limn/wiki/Getting-Started "Getting Started with Limn"
+[limn_features]: https://github.com/wikimedia/limn/wiki/Feature-Walkthrough "Limn Feature Walkthrough"
+[limn_roadmap]: https://github.com/wikimedia/limn/wiki/Roadmap "Limn Development Roadmap"
+[limn_contributing]: https://github.com/wikimedia/limn/wiki/Contributing "Contributing to Limn"
+[limn_internals]: https://github.com/wikimedia/limn/wiki/Internals "Limn Internals"
+[limn_middleware]: https://github.com/wikimedia/limn/wiki/Middleware "Using Limn Middleware"
+[limn_datasource]: https://github.com/wikimedia/limn/wiki/Datasource-Metadata "Describing DataSources"
+[dsc_email]: mailto:dsc@wikimedia.org "dsc@wikimedia.org"
+
+[wmf_analytics]: https://www.mediawiki.org/wiki/Analytics "Wikimedia Analytics team"
+[wmf_reportcard]: http://reportcard.wmflabs.org "The Wikimedia Foundation Monthly Reportcard"
+[wmf_reportcard_github]: https://github.com/wikimedia/reportcard "WMF Reportcard on GitHub"
+
+
+[nodejs]: http://nodejs.org/ "node.js"
+[npm]: http://npmjs.org/ "npm"
+[d3]: http://d3js.org "d3.js"
+[express]: http://expressjs.com "Express"
+[connect]: http://senchalabs.org/connect "Connect"

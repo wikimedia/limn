@@ -1,7 +1,7 @@
 _       = require 'underscore'
 assert  = require 'assert'
 
-_.mixin require 'kraken/util/underscore/object'
+_.mixin require 'limn/util/underscore/object'
 
 
 assertArraysEqual = (actual, expected, name) ->

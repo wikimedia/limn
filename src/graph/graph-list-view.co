@@ -1,0 +1,47 @@
+{ _, op,
+} = require '../util'
+{ BaseView,
+} = require '../base'
+{ Graph, GraphList
+} = require './graph-model'
+
+root = do -> this
+DEBOUNCE_RENDER = 100ms
+
+/**
+ * @class View for a showing a list of all saved graphs
+ */
+GraphListView = exports.GraphListView = BaseView.extend do # {{{
+    __bind__  : <[
+        render
+    ]>
+    __debounce__: <[ render ]>
+    
+    tagName   : 'section'
+    className : 'graph-list-view'
+    template  : require '../template/graph/graph-list'
+    
+    data  : {}
+    ready : false
+    
+    initialize : ->
+        @model = @collection or= new GraphList
+        BaseView::initialize ...
+        # console.log "#this.initialize!"
+        
+        @collection
+            .once 'load-success', @onLoad, this
+            .load()
+    
+    
+    onLoad: ->
+        console.log "#this.onLoad!"
+        @triggerReady()
+        @isBuilt = false
+        @render()
+    
+    toTemplateLocals: ->
+        locals = BaseView::toTemplateLocals ...
+        locals.collection = @collection
+        locals
+    

@@ -1,0 +1,270 @@
+{ _, op,
+} = require '../../util'
+{ BaseView,
+}  = require '../../base'
+{ ChartOption, ChartOptionList,
+} = require './chart-option-model'
+
+DEBOUNCE_RENDER = exports.DEBOUNCE_RENDER = 100ms
+
+
+/**
+ * @class View for a single configurable option in a chart type.
+ */
+ChartOptionView = exports.ChartOptionView = BaseView.extend do # {{{
+    tagName   : 'section'
+    className : 'chart-option field'
+    template  : require '../../template/chart/chart-option'
+    
+    type : 'string'
+    isCollapsed : true
+    
+    events :
+        'blur .value'                        : 'onChange'
+        'click input[type="checkbox"].value' : 'onChange'
+        'submit .value'                      : 'onChange'
+        'click .close'                       : 'toggleCollapsed'
+        'click h3'                           : 'toggleCollapsed'
+        'click .collapsed'                   : 'onClick'
+    
+    
+    
+    constructor: function ChartOptionView
+        BaseView ...
+    
+    initialize: ->
+        ChartOptionView.__super__.initialize ...
+        @type = @model.get 'type' .toLowerCase() or 'string'
+    
+    
+    /* * * *  Rendering  * * * */
+    
+    toTemplateLocals: ->
+        json = ChartOptionView.__super__.toTemplateLocals ...
+        json.id or= _.camelize json.name
+        json.value ?= ''
+        v = json.value
+        json.value = JSON.stringify(v) if v and ( _.isArray(v) or _.isPlainObject(v) )
+        json
+    
+    /**
+     * Override to annotate with collapsed state and to kill off ignored options
+     * so they do not contribute their values when looking at form updates.
+     */
+    render: ->
+        return @remove() if @model.get 'ignore'
+        ChartOptionView.__super__.render ...
+        @$el.addClass 'collapsed' if @isCollapsed
+        this
+    
+    
+    
+    /* * * *  Option Collapsing  * * * */
+    
+    /**
+     * Sets the state of `isCollapsed` and updates the UI. If the state changed,
+     * a `'change:collapse`` event will be fired.`
+     * 
+     * @param {Boolean} [makeCollapsed=true] If true, set state to collapsed.
+     * @returns {Boolean} Whether the state changed.
+     */
+    collapse: (state=true) ->
+        state        = !! state
+        @isCollapsed = @$el.hasClass 'collapsed'
+        
+        return this if state is @isCollapsed
+        if state
+            @$el.addClass 'collapsed'
+        else
+            @$el.removeClass 'collapsed'
+        @isCollapsed = state
+        @trigger 'change:collapse', this, @isCollapsed
+        true
+    
+    /**
+     * Toggles the collapsed state, updating the UI and firing a `'change:collapse'` event.
+     * @returns {this}
+     */
+    toggleCollapsed: ->
+        @collapse not @$el.hasClass 'collapsed'
+        this
+    
+    
+    
+    /* * * *  Events  * * * */
+    
+    /**
+     * To prevent `toggleCollapsed()` from being called multiple times due to
+     * overlapping listeners, we're only looking for clicks on the collapsed header.
+     */
+    onClick: (evt) ->
+        target = $ evt.target
+        @toggleCollapsed() if @$el.hasClass('collapsed') and not target.hasClass('close')
+    
+    /**
+     * Propagate user input changes to the model, and upward to the parent view.
+     */
+    onChange: ->
+        if @type is 'boolean'
+            val = !! @$('.value').attr('checked')
+        else
+            val = @model.getParser() @$('.value').val()
+        
+        current = @model.getValue()
+        return if _.isEqual val, current
+        console.log "#this.onChange( #current -> #val )"
+        @model.setValue val, {+silent}
+        @trigger 'change', @model, this
+        # false
+    
+    
+# }}}
+
+
+
+/**
+ * @class View for configuring a chart type.
+ */
+ChartOptionScaffold = exports.ChartOptionScaffold = BaseView.extend do # {{{
+    __bind__       : <[ addField ]>
+    tagName        : 'form'
+    className      : 'chart-options scaffold'
+    template       : require '../../template/chart/chart-scaffold'
+    
+    collectionType : ChartOptionList
+    subviewType    : ChartOptionView
+    
+    events:
+        'click .options-filter-button'       : 'onFilterOptions'
+        'click .collapse-all-options-button' : 'collapseAll'
+        'click .expand-all-options-button'   : 'expandAll'
+    
+    
+    
+    
+    constructor: function ChartOptionScaffold
+        BaseView ...
+    
+    initialize : ->
+        @render = _.debounce @render.bind(this), DEBOUNCE_RENDER
+        CollectionType = @collectionType
+        @model = (@collection or= new CollectionType)
+        ChartOptionScaffold.__super__.initialize ...
+        
+        @collection.on 'add',   @addField,      this
+        @collection.on 'reset', @onReset,       this
+        @on 'render',           @onRender,      this
+    
+    
+    /**
+     * Bookkeeping for new ChartOptions, creating it a new subview and subscribing
+     * to its activity, and then rendering it.
+     * @returns {ChartOptionView} The Option's new view.
+     */
+    addField: (field) ->
+        @removeSubview field.view if field.view
+        
+        # avoid duplicating event propagation
+        field.off 'change:value',   @onChange,  this
+        
+        # propagate value-change events as key-value change events
+        field.on 'change:value',    @onChange,  this
+        
+        SubviewType = @subviewType
+        @addSubview view = new SubviewType model:field
+            .on 'change',           @onChange.bind(this, field)
+            .on 'change:collapse',  @render,    this
+        
+        @render() # WTF: hmm.
+        view
+    
+    
+    /* * * *  UI  * * * */
+    
+    /**
+     * Collapse all expanded subviews.
+     * @returns {false} Returns false so event-dispatchers don't propagate
+     *  the triggering event (usually a click or submit).
+     */
+    collapseAll: ->
+        _.invoke @subviews, 'collapse', true
+        false
+    
+    /**
+     * Expand all collapsed subviews.
+     * @returns {false} Returns false so event-dispatchers don't propagate
+     *  the triggering event (usually a click or submit).
+     */
+    expandAll: ->
+        _.invoke @subviews, 'collapse', false
+        false
+    
+    /**
+     * Reflow Isotope post-`render()`.
+     */
+    onRender: ->
+        # console.log "#this.onRender(ready=#{@ready}) -> .isotope()"
+        
+        # The DOM doesn't calculate dimensions of elements that are not visible,
+        # which makes it impossible for Isotope to do its job.
+        return unless @$el.is ':visible'
+        
+        # Invoke Isotope to re-layout the option elements
+        @$ '.isotope' .isotope do
+            # itemPositionDataEnabled : true
+            itemSelector : '.chart-option.field'
+            layoutMode   : 'masonry'
+            masonry      : { columnWidth:10 }
+            filter       : @getOptionsFilter()
+            sortBy       : 'category'
+            getSortData  : 
+                category: ($el) ->
+                    $el.data 'model' .getCategory()
+    
+    /**
+     * @returns {String} Selector representing the selected set of Option filters.
+     */
+    getOptionsFilter: ->
+        data = @$ '.options-filter-button.active' .toArray().map -> $ it .data()
+        sel = data.reduce do
+            (sel, d) -> sel += if d.filter then that else ''
+            ':not(.ignore)'
+        sel
+    
+    
+    
+    /* * * *  Events  * * * */
+    
+    /**
+     * Propagate change events from fields as if they were attribute changes.
+     * Note: `field` is bound to the handler 
+     */
+    onChange: (field) ->
+        key   = field.get 'name'
+        value = field.getValue()
+        @trigger "change:#key", this, value, key, field
+        @trigger "change",      this, value, key, field
+        this
+    
+    onReset: ->
+        # The collection has been reset, assume all subviews are
+        # invalid and rebuild them.
+        @removeAllSubviews()
+        @collection.each @addField
+        _.defer @render
+    
+    onFilterOptions: (evt) ->
+        evt.preventDefault()
+        # Defer re-rendering until after we yield for the DOM to do its thang
+        _.defer @render
+    
+
+# Proxy collection methods
+<[ get at pluck invoke values toJSON toKVPairs toKV toURL ]>
+    .forEach (methodname) ->
+        ChartOptionScaffold::[methodname] = -> @collection[methodname].apply @collection, arguments
+
+
+# }}}
+
+

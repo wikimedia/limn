@@ -1,0 +1,24 @@
+{ _, op,
+} = require '../util'
+{ BaseModel, BaseList, BaseView,
+} = require '../base'
+
+
+/**
+ * @class
+ */
+DataSourceView = exports.DataSourceView = BaseView.extend do # {{{
+    __bind__       : <[  ]>
+    tagName        : 'section'
+    className      : 'datasource'
+    template       : require '../template/data/datasource'
+    
+    
+    
+    constructor: function DataSourceView
+        BaseView ...
+    
+    initialize: ->
+        BaseView::initialize ...
+    
+# }}}

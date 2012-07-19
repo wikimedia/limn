@@ -1,0 +1,52 @@
+Backbone = require 'backbone'
+
+{ _, op,
+} = require '../util'
+{ BaseBackboneMixin, mixinBase,
+} = require './base-mixin'
+
+
+
+
+
+ResourceRouter = exports.ResourceRouter = Backbone.Router.extend mixinBase do
+    __bind__ : []
+    
+    /**
+     * Singular, lowercase resource-noun.
+     * @optional
+     * @type String
+     * @example "user"
+     */
+    id : null
+    
+    /**
+     * Plural, lowercase resource-noun.
+     * @required
+     * @type String
+     * @example "users"
+     */
+    name : null
+    
+    
+    
+    constructor : function ResourceRouter (opts={})
+        @__class__      = @constructor
+        @__superclass__ = @..__super__.constructor
+        @waitingOn      = 0
+        opts.routes or= @makeRoutes()
+        Backbone.Router.apply this, opts
+    
+    
+    makeRoutes: ->
+        {name, id} = this
+        routes = {}
+        # XXX: reverse these mappings?
+        routes["#name/(new|edit)"] = @create   if typeof @create   is 'function'
+        routes["#name/:#id/edit"]  = @edit     if typeof @edit     is 'function'
+        routes["#name/:#id"]       = @show     if typeof @show     is 'function'
+        routes["#name"]            = @index    if typeof @index    is 'function'
+    
+    
+    
+

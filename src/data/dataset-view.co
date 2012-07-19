@@ -1,0 +1,155 @@
+{ _, op,
+} = require '../util'
+{ BaseView,
+} = require '../base'
+
+
+/**
+ * @class
+ */
+DataSetView = exports.DataSetView = BaseView.extend do # {{{
+    tagName   : 'section'
+    className : 'dataset-ui dataset'
+    template  : require '../template/data/dataset'
+    
+    events:
+        'click  .new-metric-button'                     : 'onNewMetric'
+        'click  .delete-metric-button'                  : 'onDeleteMetric'
+        'click  .metrics .dataset-metric' : 'selectMetric'
+    
+    views_by_cid : {}
+    active_view : null
+    
+    
+    constructor: function DataSetView
+        BaseView ...
+    
+    initialize: ->
+        {@graph_id, @datasources, @dataset} = @options
+        BaseView::initialize ...
+        @views_by_cid = {}
+        @model
+            .on 'ready',  @addAllMetrics,     this
+        @model.metrics
+            .on 'add',    @addMetric,         this
+            .on 'remove', @removeMetric,      this
+            .on 'change', @onMetricChange,    this
+            .on 'reset',  @addAllMetrics,     this
+    
+    
+    addMetric: (metric) ->
+        # console.log "#this.addMetric!", metric
+        if @views_by_cid[metric.cid]
+            @removeSubview that
+            delete @views_by_cid[metric.cid]
+        
+        view = @addSubview new DataSetMetricView {model:metric, @graph_id}
+        @views_by_cid[metric.cid] = view
+        @trigger 'add-metric', metric, view, this
+        @render()
+        view
+    
+    removeMetric: (metric) ->
+        if metric instanceof [jQuery.Event, Event]
+            metric = @getMetricForElement metric.target
+        # console.log "#this.removeMetric!", metric
+        return unless metric
+        if view = @views_by_cid[metric.cid]
+            @removeSubview view
+            delete @views_by_cid[metric.cid]
+            @trigger 'remove-metric', metric, view, this
+        view
+    
+    addAllMetrics: ->
+        # console.log "#this.addAllMetrics! --> #{@model.metrics}"
+        @removeAllSubviews()
+        @model.metrics.each @addMetric, this
+        this
+    
+    
+    selectMetric: (metric) ->
+        if metric instanceof [jQuery.Event, Event]
+            metric = @getMetricForElement metric.target
+        # console.log "#this.selectMetric!", metric
+        return unless metric
+        view = @active_view = @views_by_cid[metric.cid]
+        
+        @$ '.metrics .dataset-metric' .removeClass 'metric-active'
+        view.$el.addClass 'metric-active'
+        view.$ '.activity-arrow' .css 'font-size', 2+view.$el.height()
+        
+        @trigger 'select-metric', metric, view, this
+        this
+    
+    onMetricChange: (metric) ->
+        return unless view = @views_by_cid[metric?.cid]
+        view.$ '.activity-arrow:visible' .css 'font-size', 2+view.$el.height()
+    
+    onNewMetric: ->
+        # console.log "#this.newMetric!"
+        # triggers 'add' on @model.metrics
+        @model.newMetric()
+        false
+    
+    onDeleteMetric: (evt) ->
+        metric = @getMetricForElement evt.target
+        # console.log "#this.onDeleteMetric!", metric
+        # Triggers a 'remove' event, which in turn calls `removeMetric()`
+        @model.metrics.remove metric
+        false
+    
+    
+    getMetricForElement: (el) ->
+        $ el .parents '.dataset-metric' .eq(0).data 'model'
+    
+# }}}
+
+
+
+/**
+ * @class
+ */
+DataSetMetricView = exports.DataSetMetricView = BaseView.extend do # {{{
+    tagName   : 'tr'
+    className : 'dataset-metric metric'
+    template  : require '../template/data/dataset-metric'
+    
+    
+    
+    constructor: function DataSetMetricView
+        BaseView ...
+    
+    initialize: ->
+        @graph_id = @options.graph_id
+        BaseView::initialize ...
+        @on 'update', @onUpdate, this
+    
+    
+    toTemplateLocals: ->
+        m = DataSetMetricView.__super__.toTemplateLocals ...
+        
+        # XXX: Icons/classes for visible/disabled?
+        m import
+            graph_id : @graph_id
+            label    : @model.getLabel()
+            viewClasses : _.compact([
+                if @model.isOk() then 'valid'   else 'invalid',
+                if m.visible     then 'visible' else 'hidden',
+                'disabled' if m.disabled,
+            ]).map( -> "metric-#it" ).join ' '
+            source :
+                if m.source_id and m.source_col
+                    "#{m.source_id}[#{m.source_col}]"
+                else
+                    'No source'
+            timespan :
+                if _.every ts = m.timespan, op.ok
+                    "#{ts.start} to #{ts.end} by #{ts.step}"
+                else
+                    '&mdash;'
+    
+    onUpdate: ->
+        @$ '.col-color' .css 'color', @model.get 'color'
+    
+# }}}
+

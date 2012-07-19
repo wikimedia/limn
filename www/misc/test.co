@@ -2,17 +2,17 @@ Seq      = require 'seq'
 Backbone = require 'backbone'
 
 { _, op, Cascade,
-} = require 'kraken/util'
+} = require 'limn/util'
 { BaseView, BaseModel, BaseList,
-} = require 'kraken/base'
+} = require 'limn/base'
 { Field, FieldList, FieldView, Scaffold,
-} = require 'kraken/base/scaffold'
+} = require 'limn/base/scaffold'
 { ChartType, DygraphsChartType,
   ChartOption, ChartOptionList, TagSet,
   ChartOptionView, ChartOptionScaffold,
-} = require 'kraken/chart'
+} = require 'limn/chart'
 { GraphEditView, Graph, GraphList,
-} = require 'kraken/graph'
+} = require 'limn/graph'
 
 
 root = this

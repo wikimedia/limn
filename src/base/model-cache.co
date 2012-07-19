@@ -1,0 +1,196 @@
+_   = require 'underscore'
+Seq = require 'seq'
+
+{ReadyEmitter} = require '../util/event'
+
+
+# TODO: Bubble events to decorated emitters
+# TODO: Automatically create a cache for any class that extends BaseModel
+/**
+ * @class Caches models and provides static lookups by ID.
+ */
+class exports.ModelCache extends ReadyEmitter
+    /**
+     * @see ReadyEmitter#readyEventName
+     * @private
+     * @constant
+     * @type String
+     */
+    readyEventName : 'cache-ready'
+    
+    /**
+     * Default options.
+     * @private
+     * @constant
+     * @type Object
+     */
+    DEFAULT_OPTIONS:
+        ready     : true
+        cache     : null
+        create    : null
+        ModelType : null
+    
+    /**
+     * @private
+     * @type Object
+     */
+    options : null
+    
+    /**
+     * Type we're caching (presumably extending `Backbone.Model`), used to create new
+     * instances unless a `create` function was provided in options.
+     * @private
+     * @type Class<Backbone.Model>
+     */
+    ModelType : null
+    
+    /**
+     * Collection holding the cached Models.
+     * @private
+     * @type Backbone.Collection
+     */
+    cache : null
+    
+    
+    
+    /**
+     * @constructor
+     * @param {Class<Backbone.Model>} [ModelType] Type of cached object (presumably extending
+     *  `Backbone.Model`), used to create new instances unless `options.create`
+     *  is provided.
+     * @param {Object} [options] Options:
+     * @param {Boolean} [options.ready=true] Starting `ready` state. If false,
+     *  the cache will queue lookup calls until `triggerReady()` is called.
+     * @param {Class<Backbone.Collection>} [options.cache=new Backbone.Collection]
+     *  The backing data-structure for the cache. If omitted, we'll use a new
+     *  `Backbone.Collection`, but really, anything with a `get(id)` method for
+     *  model lookup will work here.
+     * @param {Function} [options.create] A function called when a new Model
+     *  object is needed, being passed the new model ID.
+     * @param {Class<Backbone.Model>} [options.ModelType] Type of cached object
+     *  (presumably extending `Backbone.Model`), used to create new instances
+     *  unless `options.create` is provided.
+     */
+    (ModelType, options) ->
+        unless _.isFunction ModelType
+            [options, ModelType] = [ModelType or {}, null]
+        @options = {...@DEFAULT_OPTIONS, ...options}
+        
+        @cache = @options.cache or new Backbone.Collection
+        
+        @ModelType = ModelType or @options.ModelType
+        @createModel = that if @options.create
+        
+        @ready = !!@options.ready
+        @decorate @ModelType if @ModelType
+    
+    
+    /**
+     * Called when a new Model object is needed, being passed the new model ID.
+     * Uses the supplied `ModelType`; overriden by `options.create` if provided.
+     * 
+     * @param {String} id The model ID to create.
+     * @returns {Model} Created model.
+     */
+    createModel: (id) ->
+        new @ModelType {id}
+    
+    /**
+     * Registers a model with the cache. If a model by this ID already exists
+     * in the cache, it will be removed and this one will take its place.
+     *
+     * Fires an `add` event.
+     * 
+     * @param {Model} model The model.
+     * @returns {Model} The model.
+     */
+    register: (model) ->
+        # console.log "ModelCache(#{@CACHE}).register(#{model.id or model.get('id')})", model
+        if @cache.contains model
+            @cache.remove model, {+silent}
+        @cache.add model
+        @trigger 'add', this, model
+        model
+    
+    /**
+     * Synchronously check if a model is in the cache, returning it if so.
+     * 
+     * @param {String} id The model ID to get.
+     * @returns {Model}
+     */
+    get: (id) ->
+        @cache.get id
+    
+    /**
+     * Asynchronously look up any number of models, requesting them from the
+     * server if not already known to the cache.
+     *
+     * @param {String|Array<String>} ids List of model IDs to lookup.
+     * @param {Function} cb Callback of the form `(err, models)`,
+     *  where `err` will be null on success and `models` will be an Array
+     *  of model objects.
+     * @param {Object} [cxt=this] Callback context.
+     * @returns {this}
+     */
+    lookupAll: (ids, cb, cxt=this) ->
+        ids = [ids] unless _.isArray ids
+        # console.log "ModelCache(#{@cache}).lookup([#ids], #{typeof cb})"
+        
+        unless @ready
+            @on 'cache-ready', ~>
+                @off 'cache-ready', arguments.callee
+                @lookupAll ids, cb, cxt
+            return this
+        
+        Seq ids
+            .parMap_ (next, id) ~>
+                return next.ok(that) if @cache.get id
+                @register @createModel id
+                    .on 'ready', -> next.ok it
+                    .load()
+            .unflatten()
+            .seq (models) ->
+                cb.call cxt, null, models
+            .catch (err) ->
+                cb.call cxt, err
+        this
+    
+    /**
+     * Looks up a model, requesting it from the server if it is not already
+     * known to the cache.
+     *
+     * @param {String|Array<String>} id Model ID to lookup.
+     * @param {Function} cb Callback of the form `(err, model)`,
+     *  where `err` will be null on success and `model` will be the
+     *  model object.
+     * @param {Object} [cxt=this] Callback context.
+     * @returns {this}
+     */
+    lookup: (id, cb, cxt=this) ->
+        @lookupAll [id], (err, models) ->
+            if err then cb.call cxt, err
+            else        cb.call cxt, null, models[0]
+    
+    /**
+     * Decorate an object with the cache methods:
+     *  - register
+     *  - get
+     *  - lookup
+     *  - lookupAll
+     * 
+     * This is automatically called on `ModelType` if supplied.
+     * 
+     * @param {Object} obj Object to decorate.
+     * @returns {obj} The supplied object.
+     */
+    decorate: (obj) ->
+        obj.__cache__ = this
+        # Bind the ModelCache methods to the class
+        for m of <[ register get lookup lookupAll ]>
+            obj[m] = @[m].bind this
+        obj
+    
+    toString: ->
+        "#{@..displayName or @..name}(cache=#{@cache})"
+
+

@@ -4,38 +4,180 @@ require 'buildtools/tasks'
 {removeSync:remove} = require 'remove'
 
 
-MODULE_LINK = 'node_modules/kraken'
+MODULE_LINK            = 'node_modules/limn'
 
+APP_BUNDLE_PATH        = 'var/js/limn.no-deps.js'
+APP_BUNDLE_MIN_PATH    = APP_BUNDLE_PATH.replace /\.js$/, '.min.js'
+VENDOR_BUNDLE_PATH     = 'var/vendor/vendor-bundle.js'
+VENDOR_BUNDLE_MIN_PATH = VENDOR_BUNDLE_PATH.replace /\.js$/, '.min.js'
+DIST_PATH              = 'dist/limn.js'
+DIST_MIN_PATH          = DIST_PATH.replace /\.js$/, '.min.js'
 
 
 
 task \link 'Link package source to node_modules so the name resolves correctly' ->
     # Browser-based require doens't support relative requires, but things
-    # like `require 'kraken/utils'` rarely work in node without this hack.
+    # like `require 'limn/utils'` rarely work in node without this hack.
     mkdirp 'node_modules'
-    if not exists MODULE_LINK
+    if exists MODULE_LINK
+        remove MODULE_LINK
+    else
         say "Creating #{basename MODULE_LINK} symlink..."
-        fs.symlinkSync "../lib", MODULE_LINK
+    fs.symlinkSync "../src", MODULE_LINK
 
 task \install 'Install project dependencies.' ->
     <- sh 'npm install', {-verbose, +errors, +die}
 
 task \setup 'Ensure project is set up for development.' ->
     invoke \install
-    invoke \link
-
+    # invoke \link
+    err, version <- writeVersionFile 'src/version.js'
 
 
 task \server 'Start dev server' ->
-    invoke \setup
-    invoke \update_version
-    say ''
-    run 'lib/server/server.co'
+    run './src/server/server.co'
 
 
 task \build 'Build coco sources' ->
     invoke \setup
     coco <[ -bjc package.co ]>
+    
+    {sources}  = require './src/server/view-helpers'
+    browserify = require 'browserify'
+    Coco       = require 'coco'
+    Jade       = require 'jade'
+    Stylus     = require 'stylus'
+    nib        = require 'nib'
+    yaml       = require 'js-yaml'
+    
+    matchExt = /((?:\.min)?)\.mod((?:\.min)?)\.js$/i
+    fullExt  = /(\.(min|mod|amd|jade))*\.js$/i
+    
+    console.log 'Building source...'
+    Seq()
+        .seq ->
+            console.log '  Bundling Browserify bundle'
+            bundle = browserify exports:<[ require process ]>
+                .require <[ seq d3 events ]>
+                .bundle()
+            write 'static/vendor/browserify.js', bundle
+            @ok()
+        
+        .set glob 'src/template/**/*.jade', {+sync}
+        .seqEach (infile) ->
+            outfile     = "#infile.js".replace /^src/, 'lib'
+            console.log "  Compiling Jade template to JS:\t #infile \t-->\t #outfile"
+            template_fn = Jade.compile read(infile), { +pretty, +client, -compileDebug, filename:infile }
+            template    = String template_fn .replace /^function anonymous\(/, 'function \('
+            mkdirp dirname outfile
+            write outfile, """
+                var template = #template;
+                if (typeof module != 'undefined') {
+                    module.exports = exports = template;
+                }
+            """
+            @ok()
+        
+        .set glob 'src/**/*.co', {+sync}
+        .seqEach (infile) ->
+            return @ok() unless exists infile
+            outfile = infile.replace /^src/, 'lib' .replace /\.co$/, '.js'
+            console.log "  Compiling Coco to JS:\t #infile \t-->\t #outfile"
+            mkdirp dirname outfile
+            write outfile, Coco.compile read(infile), {+bare, filename:infile}
+            @ok()
+        
+        .set sources("www/modules.yaml", 'development').map -> it.slice 1
+        .seqEach (srcfile) ->
+            return @ok() unless matchExt.test srcfile
+            outfile = (if _.startsWith srcfile, 'vendor' then 'static' else 'lib') + '/' + srcfile.replace /^js\/limn\//, ''
+            infile = outfile.replace matchExt, '$1$2.js'
+            unless exists infile
+                console.log "  Wrapping JS in Module:\t Cannot find #infile!"
+                return @ok() 
+            return @ok() if _.startsWith(srcfile, 'vendor') and exists outfile
+            parts = srcfile.replace fullExt, '' .split '/' .slice 1
+            # parts.pop() if 'index' is _.last parts
+            ID = parts.join '/' 
+            console.log "  Wrapping JS in Module:\t #infile \t-->\t #outfile"
+            mkdirp dirname outfile
+            write outfile, "require.define('/node_modules/#ID.js', function(require, module, exports, __dirname, __filename, undefined){\n\n" + read(infile) + "\n\n});\n"
+            @ok()
+        
+        .set glob 'www/css/*.styl', {+sync}
+        .seqEach (infile) ->
+            outfile = infile.replace /\.styl$/, '.css'
+            console.log "  Compiling Stylus to CSS:\t #infile \t-->\t #outfile"
+            mkdirp dirname outfile
+            stylus = Stylus read infile
+            stylus.set 'filename', infile
+            stylus.use nib()
+            stylus.render (err, css) ~>
+                write outfile, css unless err
+                this err
+        
+        .set glob 'www/schema/**/*.yaml', {+sync}
+        .seqEach (infile) ->
+            outfile = infile.replace /\.yaml$/, '.json'
+            console.log "  Compiling YAML to JSON:\t #infile \t-->\t #outfile"
+            mkdirp dirname outfile
+            write outfile, JSON.stringify yaml.load read infile
+            @ok()
+        
+        .catch (err) ->
+            console.error "Error! #err", err
+            err = new Error err if typeof err is 'string'
+            throw err
+        .seq ->
+            console.log 'Done!'
+        
+
+task \bundle 'Build application and vendor bundles' ->
+    invoke \bundle_app
+    invoke \bundle_vendor
+    invoke \bundle_combine
+
+task \bundle_app 'Build application bundle' ->
+    {sources} = require './src/server/view-helpers'
+    
+    app_sources = sources("www/modules.yaml", 'development')
+        .filter -> not _.startsWith it, '/vendor'
+        .map -> it.slice 1 .replace /js\/limn/, 'lib'
+    mkdirp dirname APP_BUNDLE_PATH
+    bundle_js APP_BUNDLE_PATH, app_sources, {-minify}
+    
+    APP_BUNDLE_MIN_PATH = APP_BUNDLE_PATH.replace /\.js$/, '.min.js'
+    print 'Minifying into', APP_BUNDLE_MIN_PATH.magenta.bold, '... '
+    write APP_BUNDLE_MIN_PATH, minify read APP_BUNDLE_PATH
+    say 'ok.\n'
+
+task \bundle_vendor 'Build vendor bundle' ->
+    {sources} = require './src/server/view-helpers'
+    
+    VENDOR_BUNDLE_PATH = 'var/vendor/vendor-bundle.js'
+    vendor_sources = sources("www/modules.yaml", 'development')
+        .filter -> _.startsWith it, '/vendor'
+        .map -> "static#it"
+    mkdirp dirname VENDOR_BUNDLE_PATH
+    bundle_js VENDOR_BUNDLE_PATH, vendor_sources, {-minify}
+    
+    VENDOR_BUNDLE_MIN_PATH = VENDOR_BUNDLE_PATH.replace /\.js$/, '.min.js'
+    print 'Minifying into', VENDOR_BUNDLE_MIN_PATH.magenta.bold, '... '
+    write VENDOR_BUNDLE_MIN_PATH, minify read VENDOR_BUNDLE_PATH
+    say 'ok.\n'
+
+task \bundle_combine 'Combine bundles into dist file' ->
+    print 'Writing dist file', DIST_PATH.magenta.bold , '... '
+    mkdirp dirname DIST_PATH
+    write DIST_PATH, "#{read VENDOR_BUNDLE_PATH}\n#{read APP_BUNDLE_PATH}\n"
+    say 'ok.\n'
+    
+    print 'Writing minified dist file', DIST_MIN_PATH.magenta.bold , '... '
+    mkdirp dirname DIST_MIN_PATH
+    write DIST_MIN_PATH, "#{read VENDOR_BUNDLE_MIN_PATH}\n#{read APP_BUNDLE_MIN_PATH}\n"
+    say 'ok.\n'
+    
+
 
 
 task \test 'Rebuild test files and run tests' ->
@@ -71,20 +213,15 @@ task \cleanup_tests 'Removes compiled tests' ->
 
 task \clean 'Clean up environment and artifacts' ->
     invoke \cleanup_tests
-    remove [MODULE_LINK, 'var', 'tmp/dist'], {+ignoreMissing, +verbose}
+    remove [MODULE_LINK, 'lib', 'var', 'dist'], {+ignoreMissing, +verbose}
 
 
 
 task \source_list 'Print a list of the source file paths.' ->
-    invoke \setup
-    {sources} = require 'kraken/server/view-helpers'
+    {sources} = require './src/server/view-helpers'
     say do
         sources("www/modules.yaml", 'development')
             .map -> it.slice 1
             .join '\n'
-
-# task \dist 'Assemble a distribution package for deploy' ->
-#     invoke \cleanup_tests
-#     ...
 
 

@@ -1,0 +1,39 @@
+_  = exports._  = require './underscore'
+op = exports.op = require './op'
+
+# Root object -- `window` in the browser, `global` in Node.
+root = exports.root = do -> this
+
+# Stub out console with empty methods
+root.console or= _ <[ log info warn error dir table group groupCollapsed groupEnd ]> .synthesize -> [it, op.nop]
+
+### Extend jQuery with useful functions
+
+/**
+ * @returns {Object} Object of the data from the form, via `.serializeArray()`.
+ */
+root.jQuery?.fn.formData = ->
+    _.synthesize do
+        this.serializeArray()
+        -> [it.name, it.value]
+
+/**
+ * Invokes a jQuery method on each element, returning the array of the result.
+ * @returns {Array} Results.
+ */
+root.jQuery?.fn.invoke = (method, ...args) ->
+    for el, idx of this
+        jQuery(el)[method] ...args
+
+
+event = exports.event = require './event'
+exports import event
+
+backbone = exports.backbone = require './backbone'
+parser   = exports.parser   = require './parser'
+Cascade  = exports.Cascade  = require './cascade'
+
+# HashSet   = exports.HashSet   = require './hashset'
+# BitString = exports.BitString = require './bitstring'
+# {crc32}   = exports.{crc32}   = require './crc'
+

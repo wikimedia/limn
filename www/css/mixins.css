@@ -1,0 +1,48 @@
+html,
+body {
+  font-family: helvetica, arial, sans-serif;
+  line-height: 1.5;
+  color: #333;
+  background-color: #3b3b3b;
+}
+h1,
+h2,
+h3 {
+  font-family: "gotham rounded", "helvetica neue", helvetica, arial, sans-serif;
+  color: #333;
+  font-weight: 300;
+}
+h1 a:not(.btn),
+h2 a:not(.btn),
+h3 a:not(.btn) {
+  color: #333;
+  text-decoration: none;
+}
+h1 a:not(.btn):hover,
+h2 a:not(.btn):hover,
+h3 a:not(.btn):hover {
+  color: #333;
+}
+footer {
+  color: #666;
+}
+footer a:not(.btn) {
+  color: #888;
+  border-bottom: 1px solid rgba(255,255,255,0.15);
+}
+footer a:not(.btn):hover {
+  border: none;
+}
+footer h3,
+footer h4 {
+  font-size: 16px;
+  color: #888 !important;
+}
+footer h3 a:link,
+footer h4 a:link,
+footer h3 a:visited,
+footer h4 a:visited,
+footer h3 a:active,
+footer h4 a:active {
+  color: #888 !important;
+}

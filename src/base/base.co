@@ -1,0 +1,75 @@
+{EventEmitter} = require 'events'
+EventEmitter::off     = EventEmitter::removeListener
+EventEmitter::trigger = EventEmitter::emit
+
+{ _, op
+} = require '../util'
+
+
+
+/**
+ * @class Eventful base class.
+ * @extends EventEmitter
+ */
+class Base extends EventEmitter
+    
+    /**
+     * After the super chain has exhausted (but not necessarily at the end
+     * of init -- it depends on when you super()), Base will publish a 'new'
+     * event on the instance's class, allowing anyone to subscribe to
+     * notifications about new objects.
+     * @constructor
+     */
+    ->
+        @__class__      = @..
+        @__superclass__ = @..superclass
+        @__apply_bind__()
+        super()
+        @__class__.emit? 'new', this
+    
+    
+    ### Auto-Bound methods
+    
+    /**
+     * A list of method-names to bind on `initialize`; set this on a subclass to override.
+     * @type Array<String>
+     */
+    __bind__ : []
+    
+    /**
+     * Applies the contents of `__bind__`.
+     */
+    __apply_bind__: ->
+        names = _ @pluckSuperAndSelf '__bind__' .chain().flatten().compact().unique().value()
+        _.bindAll this, ...names if names.length
+    
+    
+    ### Misc
+    
+    getClassName: ->
+        "#{@..name or @..displayName}"
+    
+    toString: ->
+        "#{@getClassName()}()"
+    
+    
+    
+    ### Class Methods
+    
+    @extended = (Subclass) ->
+        # copy over all class methods, including this
+        for k, v in this
+            Subclass[k] = v if typeof v is 'function' and not _.contains <[ apply call constructor toString ]>, k
+        Subclass.__super__ = @::
+        Subclass
+    
+    
+
+
+for k of <[ getSuperClasses pluckSuper pluckSuperAndSelf ]>
+    Base[k] = Base::[k] = _.methodize _[k]
+
+Base import EventEmitter::
+
+
+module.exports = Base

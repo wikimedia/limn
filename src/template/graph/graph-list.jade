@@ -1,0 +1,7 @@
+section#graph-list
+    .page-header
+        h1 Saved Graphs
+    ul
+        for graph in collection.models
+            li
+                a(href="#{graph.toLink()}") #{graph.get('name') || graph.get('id') || graph.toLink()}

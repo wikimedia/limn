@@ -1,0 +1,15 @@
+extends ../layout
+
+block title
+    title Wikimedia Report Card - May 2012
+
+append styles
+    mixin css('graph-display.css')
+    mixin css('graph-display.css', media='print')
+    //- graph-display-print contains overrides
+    //- needed to make printed pages look better
+    mixin css('graph-display-print.css', media='print')
+    mixin css('dashboard.css')
+    mixin css('dashboard.css', media='print')
+    
+

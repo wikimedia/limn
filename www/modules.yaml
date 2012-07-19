@@ -1,10 +1,10 @@
 all: []
 
 production:
--   suffix: .js
+-   suffix: .min.js
     paths:
-    - vendor/vendor-bundle.min
-    - js/kraken/app-bundle
+    - vendor/vendor-bundle
+    - js/limn.no-deps
 
 development:
 -   suffix: .js
@@ -45,13 +45,14 @@ development:
 -   suffix: .mod.js
     paths:
     - js:
-        - kraken:
+        - limn:
             - template:
                 - chart:
                     - chart-option.jade
                     - chart-scaffold.jade
                 - dashboard:
                     - dashboard.jade
+                    - dashboard-tab.jade
                 - data:
                     - dataset.jade
                     - dataset-metric.jade
@@ -98,6 +99,7 @@ development:
                 - data-binding
                 - model-cache
                 - cascading-model
+                - parser-mixin
                 - index
             - graph:
                 - graph-model
@@ -138,8 +140,8 @@ development:
                 - dashboard-model
                 - dashboard-view
                 - index
-            - app
+            - client
 
 # -   suffix: .js
 #     paths:
-#     - js/kraken/main
+#     - js/limn/main

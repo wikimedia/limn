@@ -1,0 +1,4 @@
+model = require './chart-option-model'
+view  = require './chart-option-view'
+
+exports import model import view

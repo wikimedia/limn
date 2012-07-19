@@ -1,0 +1,122 @@
+Seq = require 'seq'
+{ _, op,
+} = require '../util'
+{ BaseView, ViewList,
+} = require '../base'
+{ DataSetView,
+} = require './dataset-view'
+{ MetricEditView,
+} = require './metric-edit-view'
+{ DataSource, 
+} = require './datasource-model'
+
+/**
+ * @class DataSet selection and customization UI (root of the `data` tab).
+ */
+DataView = exports.DataView = BaseView.extend do # {{{
+    __bind__       : <[ onMetricsChanged ]>
+    tagName        : 'section'
+    className      : 'data-ui'
+    template       : require '../template/data/data'
+    
+    datasources : null
+    
+    
+    /**
+     * @constructor
+     */
+    constructor: function DataView
+        BaseView ...
+    
+    initialize: ->
+        @graph_id = @options.graph_id
+        BaseView::initialize ...
+        @metric_views = new ViewList
+        @datasources = DataSource.getAllSources()
+        # @on 'update',           @onUpdate,      this
+        @model.metrics
+            .on 'add',          @addMetric,     this
+            .on 'remove',       @removeMetric,  this
+        @model.once 'ready',    @onReady,       this
+    
+    onReady: ->
+        # console.log "#this.onReady! #{@model.metrics}"
+        dataset = @model
+        @model.metrics.each @addMetric, this
+        @dataset_view = new DataSetView {@model, @graph_id, dataset, @datasources}
+        @addSubview @dataset_view
+            .on 'add-metric',       @onMetricsChanged,  this
+            .on 'remove-metric',    @onMetricsChanged,  this
+            .on 'select-metric',    @selectMetric,      this
+        
+        @render()
+        @triggerReady()
+        this
+    
+    
+    /**
+     * Transform the `columns` field to ensure an Array of {label, type} objects.
+     */
+    canonicalizeDataSource: (ds) ->
+        ds.shortName    or= ds.name
+        ds.title        or= ds.name
+        ds.subtitle     or= ''
+        
+        cols = ds.columns
+        if _.isArray cols
+            ds.metrics = _.map cols, (col, idx) ->
+                if _.isArray col
+                    [label, type] = col
+                    {idx, label, type or 'int'}
+                else
+                    col
+        else
+            ds.metrics = _.map cols.labels, (label, idx) ->
+                {idx, label, type:cols.types[idx] or 'int'}
+        ds
+    
+    
+    toTemplateLocals: ->
+        attrs = _.clone @model.attributes
+        { @graph_id, @datasources } import attrs
+    
+    addMetric: (metric) ->
+        # console.log "#this.addMetric!", metric
+        return metric if @metric_views.findByModel metric
+        view = new MetricEditView {model:metric, @graph_id, dataset:@model, @datasources}
+            .on 'metric-update', @onUpdateMetric, this
+            .on 'metric-change', @onUpdateMetric, this
+        @metric_views.push @addSubview view
+        @renderSubviews()
+        metric
+    
+    removeMetric: (metric) ->
+        # console.log "#this.removeMetric!", metric
+        return unless view = @metric_views.findByModel metric
+        @metric_views.remove view
+        @removeSubview view
+        metric
+    
+    selectMetric: (metric) ->
+        # console.log "#this.selectMetric!", metric
+        @metric_views.invoke 'hide'
+        @metric_edit_view = @metric_views.findByModel metric
+        @metric_edit_view?.show()
+        _.delay @onMetricsChanged, 10
+    
+    onMetricsChanged: ->
+        return unless @dataset_view
+        oldMinHeight = parseInt @$el.css 'min-height'
+        newMinHeight = Math.max do
+            @dataset_view.$el.height()
+            @metric_edit_view?.$el.height()
+        # console.log 'onMetricsChanged!', oldMinHeight, '-->', newMinHeight
+        @$el.css 'min-height', newMinHeight
+    
+    onUpdateMetric: ->
+        # console.log "#this.onUpdateMetric!"
+        @trigger 'metric-change', @model, this
+        @render()
+    
+    
+# }}}

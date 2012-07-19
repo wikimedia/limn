@@ -1,0 +1,67 @@
+Backbone = require 'backbone'
+
+{ _, op,
+} = require '../util'
+
+
+class exports.DataBinding
+    
+    data    : null
+    context : null
+    el      : null
+    $el     : null
+    bindPoints: null
+    
+    
+    
+    (el, @context=el) ->
+        if el instanceof Backbone.View
+            el = el.$el
+        @$el = $ el
+        @el = @$el.get 0
+        
+        # Find all bind-points under this element, but not under a subview
+        @bindPoints = @$ '[data-bind], [name]' .not @$('[data-subview]').find('[data-bind], [name]')
+    
+    $: (sel) ->
+        @$el.find sel
+    
+    serialize: ->
+        it
+    
+    update: (@data) ->
+        for key, val in _.collapseObject(@data)
+            @updateBinding key, val
+        this
+    
+    updateBinding: (key, val) ->
+        # if val and _.isPlainObject val
+        #     for k, v in val
+        #         @updateBinding "#key.#k", v
+        #     return this
+        
+        if bp = @findDataBindPoint key
+            if _.isFunction val
+                val.call @context, val, key, bp, @data
+            else if bp.is 'input:checkbox'
+                bp.attr 'checked', !!val
+            else if bp.is 'input, textarea'
+                bp.val @serialize val
+            else
+                if op.toBool bp.data 'data-bind-escape'
+                    bp.text @serialize val
+                else
+                    bp.html @serialize val
+        else
+            false and console.warn "#this.updateBinding(): Unable to find data bind-point for #key=#val!"
+        this
+    
+    findDataBindPoint: (key) ->
+        bp = @bindPoints.filter "[name='#key'], [data-bind='#key']"
+        return bp.eq(0) if bp.length
+    
+
+
+
+
+

@@ -1,0 +1,130 @@
+fs         = require 'fs'
+path       = require 'path'
+exists     = fs.existsSync or path.existsSync
+
+Seq        = require 'seq'
+glob       = require 'glob'
+yaml       = require 'js-yaml'
+
+{ _, op,
+} = require '../../util'
+{ mkdirp, mkdirpAsync,
+} = require '../mkdirp'
+{ readFilesAsync, readJSONFilesAsync,
+} = require '../files'
+
+Controller           = require '../controller'
+FileBackedController = require '../file-controller'
+
+
+/**
+ * @class Resource controller for graph requests.
+ */
+class GraphController extends FileBackedController
+    PROTECTED_GRAPH_IDS : <[
+        unique_visitors
+        pageviews
+        pageviews_mobile
+        reach
+        commons
+        articles
+        articles_per_day
+        edits
+        new_editors
+        active_editors
+        active_editors_target
+        very_active_editors
+    ]>
+    PROTECT_GRAPHS : true
+    
+    name : 'graphs'
+    -> super ...
+    
+    
+    toFileSimple: (id) ->
+        "#{@dataDir}/#id.json"
+    
+    # GET /graphs.:format?
+    index: (req, res) ->
+        # if format is json, then return the graph JSON
+        switch req.format
+            case 'json' 
+                Seq()
+                    # find list of data/graph/*.json files, send back the objects
+                    .seq readJSONFilesAsync, "#{@dataDir}/**", Seq
+                    # remove filepath info from the hash of graphs
+                    .seq -> res.send _.values it
+            default 
+                res.render 'graph/index'
+    
+    # GET /graphs/:graph
+    show: (req, res) ->
+        if req.format is 'json'
+            res.send req.graph
+        else
+            res.render 'graph/view'
+    
+    # GET /graphs/:graph/edit
+    edit: (req, res) ->
+        if req.format is 'json'
+            res.send req.graph
+        else
+            res.render 'graph/edit'
+    
+    # GET /graphs/new
+    new: (req, res) ->
+        res.render 'graph/edit'
+    
+    # POST /graphs
+    create: (req, res) ->
+        return unless data = @processBody req, res
+        Seq()
+            .seq @findFile, data.id, Seq
+            .seq (file) ->
+                res.send { result:"error", message:"Graph '#{data.id}' already exists!" }, 409 # 409: Resource Conflict
+            .catch (err) ->
+                fs.writeFile @toFileSimple(data.id), JSON.stringify(data), "utf8", @errorHandler(res, "Error writing graph!")
+    
+    # PUT /graphs/:graph
+    update: (req, res) ->
+        return unless data = @processBody req, res
+        if @PROTECT_GRAPHS and _ @PROTECTED_GRAPH_IDS .contains data.id
+            return res.send {result:"error", message:"Graph '#{data.id}' is read-only."}, 403 # 403: Forbidden
+        Seq()
+            .seq @findFile, data.id, (err, file) ->
+                @ok if err then @toFileSimple(data.id) else file
+            .seq (file) ->
+                fs.writeFile file, JSON.stringify(data), "utf8", @errorHandler(res, "Error writing graph!")
+    
+    # DELETE /graphs/:graph
+    destroy: (req, res) ->
+        id = req.param.graph
+        if @PROTECT_GRAPHS and _ @PROTECTED_GRAPH_IDS .contains id
+            return res.send {result:"error", message:"Graph '#{id}' is read-only."}, 403 # 403: Forbidden
+        Seq()
+            .seq @findFile, data.id, Seq
+            .seq   (file) -> fs.unlink file, @errorHandler(res, "Error destroying Graph '#id'!", 500)
+            .catch (err)  -> res.send {result:"error", message:"Graph '#id' does not exist!"}, 410 # 410: Resource Gone
+    
+    
+    ### Helpers
+    
+    processBody: (req, res) ->
+        unless req.body
+            res.send {result:"error", message:"Data required!"}, 400 # 400: Bad Request
+            return false
+        
+        data = req.body
+        data.slug or= data.id
+        data.id   or= data.slug
+        
+        unless data.slug
+            res.send {result:"error", message:"Slug required!"}, 400 # 400: Bad Request
+            return false
+        
+        mkdirp @dataDir unless exists @dataDir
+        return data
+    
+
+
+module.exports = exports = GraphController

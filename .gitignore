@@ -25,6 +25,8 @@ lib-cov/
 test/*.log
 test/fixtures/*.json
 test/fixtures/logs/*.log
+.cache/
+.tmp/
 
 build
 dist
@@ -32,9 +34,7 @@ var
 log
 tmp
 
-lib/version.js
+version.js
 www/presets/*.json
 
-.cache
-.tmp
 

@@ -46,10 +46,10 @@
     - linear
     - log
     default: log
-    desc: Scale color differences in the map using a scale-transform (log-scale by 
+    desc: "Scale color differences in the map using a scale-transform (log-scale by 
         default). Options include:
         - Linear scaling
-        - Logarithmic scaling
+        - Logarithmic scaling"
 
 -   name: colors.scaleDomain
     tags:
@@ -82,12 +82,12 @@
     - azimuthalOrtho
     - azimuthalStereo
     default: mercator
-    desc: Projection for map-data (mercator by default). Options include:
+    desc: "Projection for map-data (mercator by default). Options include:
         - Spherical mercator projection
         - Albers equal-area conic projection
         - Composite Albers projection for the United States
         - Orthographic Azimuthal projection
-        - Stereographic Azimuthal projection
+        - Stereographic Azimuthal projection"
 
 -   name: map.definition
     tags:

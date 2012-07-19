@@ -1,0 +1,88 @@
+fs         = require 'fs'
+path       = require 'path'
+exists  = fs.existsSync or path.existsSync
+
+_          = require 'underscore'
+Seq        = require 'seq'
+glob       = require 'glob'
+yaml       = require 'js-yaml'
+
+{ mkdirp, mkdirpAsync,
+} = require './mkdirp'
+{ readJSONFilesAsync,
+} = require './files'
+
+Controller = require './controller'
+
+
+/**
+ * @class Resource controller backed by flat json or yaml files.
+ */
+class FileBackedController extends Controller
+    
+    name    : null
+    dataDir : null
+    noun    : null
+    
+    ->
+        super ...
+        limnOpts = @app.set 'limn options'
+        @dataDir = "#{limnOpts.dataDir}/#{@name}"
+        @noun ?= @name.charAt(0).toUpperCase() + @name.slice(1)
+    
+    
+    /**
+     * @param {String} id ID of this resource.
+     * @returns {String} Glob path to file for this resource.
+     */
+    toFile: (id) ->
+        "#{@dataDir}/**/#id.@(yaml|json)"
+    
+    /**
+     * Finds the reified filepath for the resource `id`.
+     * 
+     * @param {String} id ID of this resource.
+     * @param {Function} cb Callback `(err, filepath)`.
+     */
+    findFile: (id, cb) ->
+        glob @toFile(id), {+nocase, +nosort}, (err, files) ->
+            return cb err if err
+            return cb 'ENOENT' unless files.length
+            cb null, files[0]
+    
+    
+    
+    /**
+     * Auto-load :id for related requests by looking up the so-named file in the dataDir.
+     * 
+     * @param {String} id ID of the resource.
+     * @param {Function} cb Callback to invoke with the loaded object.
+     */
+    autoload: (id, cb) ->
+        Seq()
+            .seq readJSONFilesAsync, @toFile(id), {+yaml, -appendExt}, Seq
+            .seq   (data) -> cb null, _.values(data)[0]
+            .catch (err)  -> cb err
+    
+    
+    
+    ### Helpers
+    
+    processBody: (req, res) ->
+        unless req.body
+            res.send {result:"error", message:"Data required!"}, 400 # 400: Bad Request
+            return false
+        
+        data = req.body
+        data.slug or= data.id
+        data.id   or= data.slug
+        
+        unless data.slug
+            res.send {result:"error", message:"Slug required!"}, 400 # 400: Bad Request
+            return false
+        
+        mkdirp @dataDir unless exists @dataDir
+        return data
+
+
+module.exports = exports = FileBackedController

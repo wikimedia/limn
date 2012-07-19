@@ -1,0 +1,29 @@
+_     = require 'underscore'
+_.str = require 'underscore.string'
+_.mixin _.str.exports()
+
+_.mixin require './function'
+_.mixin require './array'
+_.mixin require './object'
+_.mixin require './class'
+_.mixin require './kv'
+_.mixin require './string'
+
+
+## Debug
+_.dump = (o, label='dump', expanded=true) ->
+    if not _.isArray(o) and _.isObject(o)
+        if expanded
+            console.group label
+        else
+            console.groupCollapsed label
+        for k, v in o
+            console.log "#k:", v
+        console.groupEnd()
+    else
+        console.log label, o
+    o
+
+
+module.exports = exports = _
+

@@ -1,0 +1,105 @@
+{ _, op,
+} = require '../util'
+{ BaseModel, BaseList,
+}  = require '../../base'
+
+
+
+### Scaffold Models
+
+Field = exports.Field = BaseModel.extend do # {{{
+    valueAttribute : 'value'
+    
+    defaults: ->
+        name     : ''
+        type     : 'String'
+        default  : null
+        desc     : ''
+        include  : 'diff'
+        tags     : []
+        examples : []
+    
+    
+    
+    constructor: function Field
+        BaseModel ...
+    
+    initialize: ->
+        _.bindAll this, ...(_.functions this .filter -> _.startsWith(it, 'parse'))
+        @set 'id', @id = _.camelize @get 'name'
+        @set 'value', @get('default'), {+silent} if not @has 'value'
+        Field.__super__.initialize ...
+    
+    
+    
+    
+    
+    
+    /* * * Value Accessors * * */
+    
+    getValue: (def) ->
+        @getParser() @get @valueAttribute, def
+    
+    setValue: (v, options) ->
+        def = @get 'default'
+        if not v and def == null
+            val = null
+        else
+            val = @getParser()(v)
+        @set @valueAttribute, val, options
+    
+    clearValue: ->
+        @set @valueAttribute, @get 'default'
+    
+    isDefault: ->
+        @get(@valueAttribute) is @get 'default'
+    
+    
+    /* * * Serializers * * */
+    
+    serializeValue: ->
+        @serialize @getValue()
+    
+    toJSON: ->
+        {id:@id} import do
+            _.clone(@attributes) import { value:@getValue(), def:@get 'default' }
+    
+    toKVPairs: ->
+        { "#{@id}":@serializeValue() }
+    
+    toString: -> "(#{@id}: #{@serializeValue()})"
+    
+# }}}
+
+
+FieldList = exports.FieldList = BaseList.extend do # {{{
+    model : Field
+    
+    constructor: function FieldList
+        BaseList ...
+    
+    
+    /**
+     * Collects a map of fields to their values, excluding those set to `null` or their default.
+     * @returns {Object}
+     */
+    values: (opts={}) ->
+        opts = {+keepDefaults, -serialize} import opts
+        _.synthesize do
+            if opts.keepDefaults then @models else @models.filter -> not it.isDefault()
+            -> [ it.get('name'), if opts.serialize then it.serializeValue() else it.getValue() ]
+    
+    toJSON: ->
+        @values {+keepDefaults, -serialize}
+    
+    toKVPairs: ->
+        _.collapseObject @values {+keepDefaults, +serialize}
+    
+    toKV: (item_delim='&', kv_delim='=') ->
+        _.toKV @toKVPairs(), item_delim, kv_delim
+    
+    toURL: (item_delim='&', kv_delim='=') ->
+        "?#{@toKV ...}"
+    
+# }}}
+
