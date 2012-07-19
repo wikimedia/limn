@@ -31,7 +31,6 @@ html(lang="en", dir="ltr")
             
             footer
                 block footer
-                    include footer
             
             .scripts
                 block scripts
@@ -43,7 +42,7 @@ html(lang="en", dir="ltr")
                         var limn_config = !{ JSON.stringify(limn_config) };
                     
                     block lib-scripts
-                        for src in sources(WWW+'/modules.yaml')
+                        for src in sources()
                             script(src=path.join(mount, src)+"?"+version)
                     
                     block page-scripts

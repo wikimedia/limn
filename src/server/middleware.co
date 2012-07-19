@@ -15,7 +15,7 @@ express               = require 'express'
 {mkdirp, mkdirpAsync} = require './mkdirp'
 {readFilesAsync}      = require './files'
 Controller            = require './controller'
-
+view_helpers          = require './view-helpers'
 
 
 /**
@@ -159,7 +159,7 @@ application = limn.application =
                 config  : @set('limn options')
                 version : REV
                 IS_DEV, IS_PROD, REV
-            } import require './view-helpers'
+            } import view_helpers
             view_opts.__defineGetter__ 'mount', -> app.route or '/'
             @set 'view options', view_opts
             
@@ -311,4 +311,5 @@ application = limn.application =
         this
     
 
+limn.view_helpers = view_helpers
 

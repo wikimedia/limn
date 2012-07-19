@@ -34,7 +34,7 @@ SOURCES_ENV = if process.env.LIMN_FORCE_BUNDLES then 'production' else NODE_ENV
 /**
  * Reify a modules.yaml file
  */
-sources = exports.sources = (modulesFile, node_env=SOURCES_ENV) ->
+sources = exports.sources = (node_env=SOURCES_ENV, modulesFile="#WWW/modules.yaml") ->
     mods = yaml.load fs.readFileSync modulesFile, 'utf8'
     modlist = (mods.all or []).concat (mods[node_env] or [])
     _.flatten modlist.map ({suffix or '', paths}) -> joinTree('', paths).map -> it+suffix
