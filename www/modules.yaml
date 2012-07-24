@@ -142,6 +142,3 @@ development:
                 - index
             - client
 
-# -   suffix: .js
-#     paths:
-#     - js/limn/main
