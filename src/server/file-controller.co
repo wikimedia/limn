@@ -61,8 +61,8 @@ class FileBackedController extends Controller
     autoload: (id, cb) ->
         Seq()
             .seq readJSONFilesAsync, @toFile(id), {+yaml, -appendExt}, Seq
-            .seq   (data) -> cb null, _.values(data)[0]
-            .catch (err)  -> cb err
+            .seq   (data) -> cb null, (_.values(data)[0] or {})
+            .catch (err)  -> cb null, {}
     
     
     

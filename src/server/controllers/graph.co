@@ -82,7 +82,7 @@ class GraphController extends FileBackedController
             .seq @findFile, data.id, Seq
             .seq (file) ->
                 res.send { result:"error", message:"Graph '#{data.id}' already exists!" }, 409 # 409: Resource Conflict
-            .catch (err) ->
+            .catch (err) ~>
                 fs.writeFile @toFileSimple(data.id), JSON.stringify(data), "utf8", @errorHandler(res, "Error writing graph!")
     
     # PUT /graphs/:graph
@@ -90,10 +90,12 @@ class GraphController extends FileBackedController
         return unless data = @processBody req, res
         if @PROTECT_GRAPHS and _ @PROTECTED_GRAPH_IDS .contains data.id
             return res.send {result:"error", message:"Graph '#{data.id}' is read-only."}, 403 # 403: Forbidden
+        console.log "#this.update(#{data.id})"
         Seq()
-            .seq @findFile, data.id, (err, file) ->
-                @ok if err then @toFileSimple(data.id) else file
-            .seq (file) ->
+            .seq_ (next) ~>
+                @findFile data.id, (err, file) ~>
+                    next.ok if err then @toFileSimple(data.id) else file
+            .seq (file) ~>
                 fs.writeFile file, JSON.stringify(data), "utf8", @errorHandler(res, "Error writing graph!")
     
     # DELETE /graphs/:graph
@@ -103,7 +105,7 @@ class GraphController extends FileBackedController
             return res.send {result:"error", message:"Graph '#{id}' is read-only."}, 403 # 403: Forbidden
         Seq()
             .seq @findFile, data.id, Seq
-            .seq   (file) -> fs.unlink file, @errorHandler(res, "Error destroying Graph '#id'!", 500)
+            .seq   (file) ~> fs.unlink file, @errorHandler(res, "Error destroying Graph '#id'!", 500)
             .catch (err)  -> res.send {result:"error", message:"Graph '#id' does not exist!"}, 410 # 410: Resource Gone
     
     

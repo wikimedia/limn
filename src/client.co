@@ -105,6 +105,7 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
         @view = new GraphEditView {@model} .attach @el
     
     showGraph: (id) ->
+        return @editGraph id if _ <[ new edit ]> .contains id
         @model = @createGraphModel id
         @view  = new GraphDisplayView {@model} .attach @el
     
@@ -126,6 +127,7 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
         console.error 'editDashboard!?'
     
     showDashboard: (id) ->
+        return @editDashboard id if _ <[ new edit ]> .contains id
         @model = @createDashboardModel id
         @view  = new DashboardView {@model} .attach @el
     
