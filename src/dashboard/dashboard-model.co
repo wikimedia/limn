@@ -29,12 +29,17 @@ Dashboard = exports.Dashboard = BaseModel.extend do # {{{
         # @getGraphs()
     
     defaults: ->
-        name : null
-        tabs : [ { name:"Main", graph_ids:[] } ]
+        name     : null
+        headline : ''
+        subhead  : ''
+        tabs     : [ { name:"Main", graph_ids:[] } ]
     
     load: ->
         @once 'fetch-success', (~> @lookupGraphs()) .loadModel()
         this
+    
+    getName: ->
+        @get('name') or _.compact [ @get('headline'), @get('subhead') ] .join ', '
     
     
     /**

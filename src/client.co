@@ -130,12 +130,23 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
         return @editDashboard id if _ <[ new edit ]> .contains id
         @model = @createDashboardModel id
         @view  = new DashboardView {@model} .attach @el
+        @model.once 'ready', @updateDashboardTitle, this
     
     listDashboards: ->
         console.error 'listDashboards!?'
     
+    updateDashboardTitle: ->
+        return this unless dashName = @model.getName()
+        root.document?.title = dashName
+        if sub = @model.get 'subhead'
+            head = @model.get 'headline'
+            @$ '.page-header h1' .html "#head <small>#sub</small>"
+        this
+    
     
     ### Misc
+    
+    $: -> @$el.find.apply @$el, arguments
     
     getClassName: ->
         "#{@..name or @..displayName}"
