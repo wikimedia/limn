@@ -24,6 +24,9 @@ Backbone = require 'backbone'
 } = limn.graph      = require './graph'
 { DashboardView, Dashboard,
 } = limn.dashboard  = require './dashboard'
+limn.data           = require './data'
+limn.chart          = require './chart'
+limn.util           = require './util'
 
 
 /**
