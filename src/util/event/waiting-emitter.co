@@ -51,5 +51,14 @@ class WaitingEmitter extends Base
             # console.trace()
             self.unwait(); fn ...
     
+    /**
+     * Copy WaitingEmitter instance methods (and EventEmitter) methods to target.
+     * @returns {Object} The target object.
+     */
+    @decorate = (target) ->
+        for k of <[ waitingOn wait unwait unwaitAnd     emit trigger on off addListener removeListener removeAllListeners once listeners ]>
+            target[k] = WaitingEmitter.prototype[k]
+        target
+    
 
 module.exports = exports = WaitingEmitter
