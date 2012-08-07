@@ -68,7 +68,6 @@ development:
                     - function
                     - array
                     - class
-                    - kv
                     - string
                     - index
                 - event:

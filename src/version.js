@@ -1,1 +1,1 @@
-module.exports = exports = 'c80602d';
+module.exports = exports = '70279f3';
