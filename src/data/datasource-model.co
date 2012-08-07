@@ -1,10 +1,11 @@
+{ TimeSeriesData, CSVData,
+} = require 'timeseries'
+
 limn = require '../client'
 { _, op,
 } = require '../util'
 { ReadyEmitter,
 } = require '../util/event'
-{ TimeSeriesData, CSVData,
-} = require '../util/timeseries'
 { BaseModel, BaseList, ModelCache,
 } = require '../base'
 { Metric, MetricList,
