@@ -186,7 +186,7 @@ application = limn.application =
             # Browserify some deps
             @use require('browserify') do
                 mount   : '/vendor/browserify.js'
-                require : <[ operator seq d3 events ]>
+                require : <[ operator underscore underscore.nested seq d3 events ]>
                 cache   : "#varDir/.cache/browserify/cache.json"
             
             # import dev-only deps here, so prod users don't need them

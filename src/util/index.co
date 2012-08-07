@@ -33,7 +33,3 @@ backbone = exports.backbone = require './backbone'
 parser   = exports.parser   = require './parser'
 Cascade  = exports.Cascade  = require './cascade'
 
-# HashSet   = exports.HashSet   = require './hashset'
-# BitString = exports.BitString = require './bitstring'
-# {crc32}   = exports.{crc32}   = require './crc'
-
