@@ -1,8 +1,11 @@
+{ TimeSeriesData, CSVData,
+} = require 'timeseries'
+
 limn = require '../client'
 { _, op,
 } = require '../util'
-{ TimeSeriesData, CSVData,
-} = require '../util/timeseries'
+{ ReadyEmitter,
+} = require '../util/event'
 { BaseModel, BaseList, ModelCache,
 } = require '../base'
 { Metric, MetricList,
@@ -133,7 +136,7 @@ DataSource = exports.DataSource = BaseModel.extend do # {{{
         @triggerReady()
     
     onLoadDataError: (jqXHR, txtStatus, err) ->
-        console.error "#this Error loading data! -- #msg: #{err or ''}"
+        console.error "#this Error loading data! -- #txtStatus: #{err or ''}"
         @unwait()
         @_errorLoading = true
         @trigger 'load-data-error', this, txtStatus, err
@@ -177,14 +180,22 @@ DataSourceList = exports.DataSourceList = BaseList.extend do # {{{
 
 ### DataSource Cache
 
+ReadyEmitter.decorate DataSource
+
 ALL_SOURCES = new DataSourceList
-sourceCache = new ModelCache DataSource, {-ready, cache:ALL_SOURCES}
+sourceCache = exports.sourceCache = new ModelCache DataSource, {-ready, cache:ALL_SOURCES}
+# DataSource.allDataReady = false
 
 # Fetch all DataSources
 limn.on 'main', ->
     $.getJSON limn.mount('/datasources/all'), (data) ->
         ALL_SOURCES.reset _.map data, op.I
+        # DataSource.allDataReady = true
+        
+        # Trigger event when the DataSource TOC is ready
         sourceCache.triggerReady()
+        DataSource.triggerReady()
+        # DataSource.trigger 'all-data-ready', ALL_SOURCES
 
 DataSource.getAllSources = ->
     ALL_SOURCES

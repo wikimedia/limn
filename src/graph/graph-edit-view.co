@@ -1,3 +1,4 @@
+Seq = require 'seq'
 moment = require 'moment'
 
 _ = require '../util/underscore'
@@ -7,7 +8,7 @@ _ = require '../util/underscore'
 } = require './graph-view'
 { ChartOptionScaffold, DEBOUNCE_RENDER,
 } = require '../chart'
-{ DataView, DataSetView, DataSet,
+{ DataView, DataSetView, DataSet, DataSource,
 } = require '../data'
 
 root = do -> this
@@ -86,6 +87,22 @@ GraphEditView = exports.GraphEditView = GraphView.extend do # {{{
         @scaffold.collection.reset @model.chartType.options_ordered
         @scaffold.on 'change', @onScaffoldChange
         @chartOptions @model.getOptions(), {+silent}
+    
+    loadData: ->
+        @resizeViewport()
+        @wait()
+        Seq()
+            .seq_ (next) ~>
+                DataSource.once 'ready', next.ok
+                # unless DataSource.allDataReady
+                #     DataSource.once 'all-data-ready', next.ok
+                # else
+                #     next.ok()
+            .seq_ (next) ~>
+                GraphEditView.__super__.loadData ...
+            .seq ~>
+                @unwait()
+                @onReady()
     
     onReady: ->
         return if @ready

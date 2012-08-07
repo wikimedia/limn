@@ -6,8 +6,6 @@ _          = require 'underscore'
 Seq        = require 'seq'
 yaml       = require 'js-yaml'
 
-{ mkdirp, mkdirpAsync,
-} = require '../mkdirp'
 { readJSONFilesAsync,
 } = require '../files'
 

@@ -1,5 +1,5 @@
 _  = exports._  = require './underscore'
-op = exports.op = require './op'
+op = exports.op = require 'operator'
 
 # Root object -- `window` in the browser, `global` in Node.
 root = exports.root = do -> this
@@ -32,8 +32,4 @@ exports import event
 backbone = exports.backbone = require './backbone'
 parser   = exports.parser   = require './parser'
 Cascade  = exports.Cascade  = require './cascade'
-
-# HashSet   = exports.HashSet   = require './hashset'
-# BitString = exports.BitString = require './bitstring'
-# {crc32}   = exports.{crc32}   = require './crc'
 

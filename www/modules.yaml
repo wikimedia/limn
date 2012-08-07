@@ -28,7 +28,6 @@ development:
         ### (this means Browserify must come before any .mod files)
         - browserify
         
-        - underscore.mod
         - underscore.string.mod
         
         - backbone.mod
@@ -68,20 +67,13 @@ development:
                 - underscore:
                     - function
                     - array
-                    - object
                     - class
-                    - kv
                     - string
                     - index
                 - event:
                     - ready-emitter
                     - waiting-emitter
                     - index
-                - timeseries:
-                    - timeseries
-                    - csv
-                    - index
-                - op
                 - backbone
                 - parser
                 - cascade
@@ -142,6 +134,3 @@ development:
                 - index
             - client
 
-# -   suffix: .js
-#     paths:
-#     - js/limn/main

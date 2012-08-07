@@ -29,12 +29,17 @@ Dashboard = exports.Dashboard = BaseModel.extend do # {{{
         # @getGraphs()
     
     defaults: ->
-        name : null
-        tabs : [ { name:"Main", graph_ids:[] } ]
+        name     : null
+        headline : ''
+        subhead  : ''
+        tabs     : [ { name:"Main", graph_ids:[] } ]
     
     load: ->
-        @once 'fetch-success', (~> @getGraphs()) .loadModel()
+        @once 'fetch-success', (~> @lookupGraphs()) .loadModel()
         this
+    
+    getName: ->
+        @get('name') or _.compact [ @get('headline'), @get('subhead') ] .join ', '
     
     
     /**
@@ -48,23 +53,36 @@ Dashboard = exports.Dashboard = BaseModel.extend do # {{{
         return tabs[tab] if typeof tab is 'number'
         _.find tabs, -> it.name is tab
     
-#    addGraph: (graph, tabName) ->
-#        ...
-
-    show : (cb, obj) ->
-        console.log('[show]')
-        console.log(obj)
-        cb null, obj
+    /**
+     * Get references to all the graphs from all the dashboards.
+     * @returns {this}
+     */
+    lookupGraphs: ->
+        graph_ids = _ @get 'tabs'
+            .chain()
+            .values()
+            .pluck 'graph_ids'
+            .flatten()
+            .value()
+        
+        Seq graph_ids
+            .parMap (id) -> Graph.lookup id, this
+            .unflatten()
+            .seq_ (next, graphs) ~>
+                @graphs.reset graphs
+                @triggerReady()
+        this
     
-    pushAsync : (cb, arr) ->
-        (err, elem) ->
-            arr.push elem
-            cb null
     
     getGraphs : ->
         console.log('[getGraphs]\tentering')
         # consolidate graph_ids to one array
-        graph_ids = _(@tabs).chain().values().map((tab_obj) -> tab_obj.graph_ids).flatten().value()
+        graph_ids = _ @get 'tabs'
+            .chain()
+            .values()
+            .pluck 'graph_ids'
+            .flatten()
+            .value()
         
         Seq graph_ids
         .parMap_ (next, graph_id) ->
@@ -84,6 +102,16 @@ Dashboard = exports.Dashboard = BaseModel.extend do # {{{
             console.log('[setter]\tcalling ready')
             @triggerReady()
         this
-        
+    
+    show : (cb, obj) ->
+        console.log('[show]')
+        console.log(obj)
+        cb null, obj
+    
+    pushAsync : (cb, arr) ->
+        (err, elem) ->
+            arr.push elem
+            cb null
+    
     
 # }}}
