@@ -1,5 +1,5 @@
 _  = exports._  = require './underscore'
-op = exports.op = require './op'
+op = exports.op = require 'operator'
 
 # Root object -- `window` in the browser, `global` in Node.
 root = exports.root = do -> this

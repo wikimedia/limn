@@ -81,7 +81,6 @@ development:
                     - timeseries
                     - csv
                     - index
-                - op
                 - backbone
                 - parser
                 - cascade

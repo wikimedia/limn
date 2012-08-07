@@ -8,11 +8,11 @@ exists  = fs.existsSync or path.existsSync
 Seq                   = require 'seq'
 glob                  = require 'glob'
 yaml                  = require 'js-yaml'
+mkdirp                = require 'mkdirp'
 
 express               = require 'express'
 
 {_, op}               = require '../util'
-{mkdirp, mkdirpAsync} = require './mkdirp'
 {readFilesAsync}      = require './files'
 Controller            = require './controller'
 view_helpers          = require './view-helpers'
@@ -144,7 +144,7 @@ application = limn.application =
         @set 'limn options', opts
         
         # create data directory
-        mkdirp opts.dataDir
+        mkdirp.sync opts.dataDir
         
         
         ### apply configuration
@@ -186,7 +186,7 @@ application = limn.application =
             # Browserify some deps
             @use require('browserify') do
                 mount   : '/vendor/browserify.js'
-                require : <[ seq d3 events ]>
+                require : <[ operator seq d3 events ]>
                 cache   : "#varDir/.cache/browserify/cache.json"
             
             # import dev-only deps here, so prod users don't need them

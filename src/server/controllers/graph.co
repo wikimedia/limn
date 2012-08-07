@@ -4,12 +4,11 @@ exists     = fs.existsSync or path.existsSync
 
 Seq        = require 'seq'
 glob       = require 'glob'
+mkdirp     = require 'mkdirp'
 yaml       = require 'js-yaml'
 
 { _, op,
 } = require '../../util'
-{ mkdirp, mkdirpAsync,
-} = require '../mkdirp'
 { readFilesAsync, readJSONFilesAsync,
 } = require '../files'
 
@@ -124,7 +123,7 @@ class GraphController extends FileBackedController
             res.send {result:"error", message:"Slug required!"}, 400 # 400: Bad Request
             return false
         
-        mkdirp @dataDir unless exists @dataDir
+        mkdirp.sync @dataDir unless exists @dataDir
         return data
     
 

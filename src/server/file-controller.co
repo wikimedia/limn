@@ -5,10 +5,9 @@ exists  = fs.existsSync or path.existsSync
 _          = require 'underscore'
 Seq        = require 'seq'
 glob       = require 'glob'
+mkdirp     = require 'mkdirp'
 yaml       = require 'js-yaml'
 
-{ mkdirp, mkdirpAsync,
-} = require './mkdirp'
 { readJSONFilesAsync,
 } = require './files'
 
@@ -81,7 +80,7 @@ class FileBackedController extends Controller
             res.send {result:"error", message:"Slug required!"}, 400 # 400: Bad Request
             return false
         
-        mkdirp @dataDir unless exists @dataDir
+        mkdirp.sync @dataDir unless exists @dataDir
         return data
 
 
