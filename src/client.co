@@ -24,6 +24,9 @@ Backbone = require 'backbone'
 } = limn.graph      = require './graph'
 { DashboardView, Dashboard,
 } = limn.dashboard  = require './dashboard'
+limn.data           = require './data'
+limn.chart          = require './chart'
+limn.util           = require './util'
 
 
 /**
@@ -105,6 +108,7 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
         @view = new GraphEditView {@model} .attach @el
     
     showGraph: (id) ->
+        return @editGraph id if _ <[ new edit ]> .contains id
         @model = @createGraphModel id
         @view  = new GraphDisplayView {@model} .attach @el
     
@@ -126,14 +130,26 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
         console.error 'editDashboard!?'
     
     showDashboard: (id) ->
+        return @editDashboard id if _ <[ new edit ]> .contains id
         @model = @createDashboardModel id
         @view  = new DashboardView {@model} .attach @el
+        @model.once 'ready', @updateDashboardTitle, this
     
     listDashboards: ->
         console.error 'listDashboards!?'
     
+    updateDashboardTitle: ->
+        return this unless dashName = @model.getName()
+        root.document?.title = dashName
+        if sub = @model.get 'subhead'
+            head = @model.get 'headline'
+            @$ '.page-header h1' .html "#head <small>#sub</small>"
+        this
+    
     
     ### Misc
+    
+    $: -> @$el.find.apply @$el, arguments
     
     getClassName: ->
         "#{@..name or @..displayName}"

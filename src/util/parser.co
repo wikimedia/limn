@@ -1,5 +1,5 @@
 _  = require './underscore'
-op = require './op'
+op = require 'operator'
 
 
 /**

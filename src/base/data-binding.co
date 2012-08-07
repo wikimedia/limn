@@ -20,8 +20,13 @@ class exports.DataBinding
         @$el = $ el
         @el = @$el.get 0
         
-        # Find all bind-points under this element, but not under a subview
-        @bindPoints = @$ '[data-bind], [name]' .not @$('[data-subview]').find('[data-bind], [name]')
+        ### Find all bind-points under this element, but not under a subview
+        @bindPoints = @$ '[data-bind], [name]'          # find all data bind-points
+            .add @$el.filter   '[data-bind], [name]'    # add $el if it has a data bind-point itself
+            .not do                                     # remove bind-points that belong to other subviews
+                @$ '[data-subview]'
+                .add @$el.filter '[data-subview]'
+                .find '[data-bind], [name]'
     
     $: (sel) ->
         @$el.find sel

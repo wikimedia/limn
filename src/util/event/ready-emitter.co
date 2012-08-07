@@ -49,6 +49,16 @@ class ReadyEmitter extends Base
         if @ready and -1 is not events.split(/\s+/).indexOf @readyEventName
             setTimeout ~> callback.call context, this
         this
+    
+    /**
+     * Copy ReadyEmitter instance methods (and EventEmitter) methods to target.
+     * @returns {Object} The target object.
+     */
+    @decorate = (target) ->
+        for k of <[ readyEventName ready triggerReady resetReady on     emit trigger on off addListener removeListener removeAllListeners once listeners ]>
+            target[k] = ReadyEmitter.prototype[k]
+        target
+    
 
 
 module.exports = exports = ReadyEmitter

@@ -22,11 +22,8 @@ DashboardView = exports.DashboardView = BaseView.extend do # {{{
     
     events:
         # Select the whole permalink URI text when it receives focus.
-        'click .graphs.tabbable .nav a' : 'onTabClick'
+        # 'click .graphs.tabbable .nav a' : 'onTabClick'
         'shown .graphs.tabbable .nav a' : 'render'
-        # 'shown .graphs.tabbable .nav a' : 'onTabShown'
-        # 'click  a[data-target="#other-graphs"]' : 'onTabShown'
-        # 'click    .load-button'         : 'load'
     
     # subviews : []
     graphs   : null
@@ -56,18 +53,19 @@ DashboardView = exports.DashboardView = BaseView.extend do # {{{
             .seqEach_ @addTab
             .seq ~>
                 console.log "#{this}.load! Done adding tabs!"
+                @render()
                 @triggerReady()
     
     addTab: (nextTab, tab) ->
-        # self = this
-        # a(href="#core-graphs", data-toggle="tab") Core
+        isActive = not @subviews.length
         tabModel = new BaseModel tab
         tabView  = @addSubview new DashboardTabView {model:tabModel}
         tabId    = tabView.getTabId()
-        @$ "nav > ul.nav" 
-            .append "<li class='#tabId-button'><a href='##tabId' data-toggle='tab'>#{tab.name}</a></li>"
+        navEl    = $ "<li class='tab-button #tabId-button'><a href='##tabId' data-toggle='tab'>#{tab.name}</a></li>"
+            .appendTo @$ "nav > ul.nav"
+        navEl.add tabView.$el .addClass 'active' if isActive
         
-        graphs = _(tab.graph_ids).map (graph_id) ~> @model.graphs.get graph_id
+        graphs = _ tab.graph_ids .map ~> @model.graphs.get it
         Seq graphs
             .parMap_ (next, graph) ~>
                 @graphs.add graph
@@ -75,12 +73,6 @@ DashboardView = exports.DashboardView = BaseView.extend do # {{{
             .parMap_ (next, graphView) ~>
                 return next.ok() if graphView.isAttached
                 tabView.addSubview graphView
-                # tabEl = @$ tab.name
-                # if tabEl.length
-                #     tabEl.append view.$el
-                #     view.isAttached = true
-                # else
-                #     console.log "#this.addTab: Unable to find bind-point for #view!", view
                 next.ok()
             .seq ~>
                 console.log "#{this}.addTab: All graphs added!"

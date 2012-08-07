@@ -174,7 +174,9 @@ BaseView = exports.BaseView = Backbone.View.extend mixinBase do # {{{
      * @returns {jQuery|undefined}
      */
     getOwnSubviewBindPoints: ->
-        @$ '[data-subview]' .not @$ '[data-subview] [data-subview]'
+        @$ '[data-subview]'
+        .add @$el.filter '[data-subview]'       # add $el if it has a subview bind-point directly
+        .not @$ '[data-subview] [data-subview]' # remove all bind-points that belong to other subviews
     
     /**
      * Find the matching subview bind-point for the given view.
@@ -204,10 +206,13 @@ BaseView = exports.BaseView = Backbone.View.extend mixinBase do # {{{
     build: ->
         return this unless @template
         outer = @$template()
+        attrs =
+            id    : outer.attr 'id'
+            class : outer.attr 'class'
+        for attr, idx of outer[0].attributes
+            attrs[attr.name] = attr.value
         @$el.html outer.html()
-            .attr do
-                id    : outer.attr 'id'
-                class : outer.attr 'class'
+            .attr attrs
         @attachSubviews()
         @isBuilt = true
         this
