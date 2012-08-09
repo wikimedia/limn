@@ -5,6 +5,19 @@ defined = (o) -> o?
 
 _array = do
     /**
+     * Create an array of size `n` filled with the values derived from n invocations
+     * of the iterator function.
+     * 
+     * @param {Number} n Target length for the new array.
+     * @param {Function} fn Iterator function called to generate values: `fn.call(cxt, i) -> value`
+     * @param {Object} [cxt] Context
+     * @returns {Array}
+     */
+    fill : (n, fn, cxt) ->
+        for i til n
+            fn.call(cxt, i)
+    
+    /**
      * Transforms an Array of tuples (two-element Arrays) into an Object, such that for each
      * tuple [k, v]:
      *      result[k] = v if filter(v)
