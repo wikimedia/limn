@@ -1,7 +1,7 @@
 require: 2.0.4
 modernizr: 2.0.6
 
-jquery: 1.7.2
+jquery: 1.8.0
 jquery.history: 1.7.1rc2
 jquery.isotope: 1.5.11
 bootstrap: 2.0.4
