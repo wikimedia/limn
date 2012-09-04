@@ -4,7 +4,7 @@ Limn is a GUI for constructing beautiful visualizations without need of programm
 
 <center>[![Limn Screenshot][limn_screenshot]][wmf_reportcard]</center>
 
-[Play with it!][limn_sample_graph] The [the Wikimedia Reportcard][wmf_reportcard] site is powered by Limn &mdash; check it out!
+[Play with it!][limn_sample_graph] The [Wikimedia Reportcard][wmf_reportcard] site is powered by Limn &mdash; check it out!
 
 
 ## Features
