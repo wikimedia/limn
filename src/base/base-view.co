@@ -265,8 +265,8 @@ BaseView = exports.BaseView = Backbone.View.extend mixinBase do # {{{
         "#{@getClassName()}(model=#{@model})"
 
 
-# Proxy model methods
-<[ get set unset toJSON toKV toURL ]>
+# Proxy model serialization methods
+<[ toJSON toKV toURL ]>
     .forEach (methodname) ->
         BaseView::[methodname] = -> @model[methodname].apply @model, arguments
 

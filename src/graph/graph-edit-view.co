@@ -164,6 +164,9 @@ GraphEditView = exports.GraphEditView = GraphView.extend do # {{{
                     delete options[k]
             options
     
+    getTitle: ->
+        "#{@model.get('name') or 'New Graph'} | Edit Graph | Limn"
+    
     attachSubviews: ->
         GraphEditView.__super__.attachSubviews ...
         @checkWaiting()
@@ -172,7 +175,7 @@ GraphEditView = exports.GraphEditView = GraphView.extend do # {{{
         return this unless @ready and not @isRendering
         @wait()
         @checkWaiting()
-        root.title = "#{@get 'name'} | Limn"
+        root.title = @getTitle()
         GraphEditView.__super__.render ...
         # @updateURL()
         @unwait()
@@ -184,9 +187,9 @@ GraphEditView = exports.GraphEditView = GraphView.extend do # {{{
      * Update the page URL using HTML5 History API
      */
     updateURL: ->
-        json  = @toJSON()
-        title = "#{@model.get('name') or 'New Graph'} | Edit Graph | Limn"
-        url   = @toURL('edit')
+        json  = @model.toJSON()
+        root.title = title = @getTitle()
+        url   = @model.toURL('edit')
         # console.log 'History.pushState', JSON.stringify(json), title, url
         History.pushState json, title, url
     
