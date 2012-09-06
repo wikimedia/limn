@@ -27,6 +27,7 @@ development:
         ### CommonJS Support Starts Here
         ### (this means Browserify must come before any .mod files)
         - browserify
+        - require
         
         - underscore.string.mod
         
@@ -76,7 +77,9 @@ development:
                     - index
                 - backbone
                 - parser
+                - aliasdict
                 - cascade
+                - hashset
                 - formatters
                 - index
             - base:
