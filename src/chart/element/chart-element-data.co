@@ -1,0 +1,281 @@
+Seq = require 'seq'
+
+limn = require '../../client'
+{ _, Cascade,
+} = require '../../util'
+{ BaseModel, BaseList, ModelCache,
+} = require '../../base'
+DataSource = DataSourceList = null
+
+
+
+/**
+ * @class Model for a ChartElement. See graph/graph-model.co and chart/element/chart-element.co for details.
+ * @extends BaseModel
+ */
+ChartElementData = exports.ChartElementData = BaseModel.extend do # {{{
+    IGNORE_OPTIONS : <[  ]>
+    
+    /**
+     * Data source for this element.
+     * @type DataSource
+     */
+    source : null
+    
+    /**
+     * Class of the chart element view.
+     * @type Class<ChartElement>
+     */
+    viewType : null
+    
+    /**
+     * View instance rendering this element.
+     * @type ChartElement
+     */
+    view : null
+    
+    /**
+     * Reference to parent element, primarily for option cascading.
+     * @type ChartElementData
+     */
+    parent : null
+    
+    /**
+     * Cascade of objects for options lookup (includes own options).
+     * @type Cascade
+     * @private
+     */
+    optionCascade : null
+    
+    /**
+     * Children of this ChartElementData, if any.
+     * @type ChartElementDataList
+     */
+    elements : null
+    
+    
+    
+    /**
+     * Model attribute defaults.
+     */
+    defaults: ->
+        elementType    : null # Typename of the ChartElement which renders this element.
+        
+        index          : 0
+        label          : ''
+        disabled       : false
+        
+        data : 
+            source_id  : null
+            source_col : null
+            type       : 'int'
+            timespan   : { start:null, end:null, step:null }
+        
+        options        : {}
+        elements       : []
+    
+    
+    
+    
+    /**
+     * @constructor
+     */
+    constructor: function ChartElementData (attributes={}, opts)
+        @elements = new ChartElementDataList
+        @optionCascade = new Cascade attributes.options
+        BaseModel.call this, attributes, opts
+    
+    
+    initialize: ->
+        BaseModel::initialize ...
+        @optionCascade.setData @attributes
+        @on 'change:source_id',     @load,          this
+        # @on 'change:source_col',    @updateId,      this
+        @load()
+    
+    
+    
+    ### Accessors {{{
+    
+    setParent: (parent, opts={}) ->
+        [old_parent, @parent] = [@parent, parent]
+        @unsetParent opts
+        @optionCascade.addLookup parent
+        @trigger 'parent', this, parent, old_parent unless opts.silent
+        this
+    
+    unsetParent: (opts={}) ->
+        [old_parent, @parent] = [@parent, null]
+        @optionCascade.removeLookup old_parent
+        @trigger 'unparent', this, old_parent unless opts.silent
+        this
+    
+    
+    get: (key) ->
+        if _.startsWith key, 'options.'
+            @getOption key.slice(8)
+        else
+            ChartElementData.__super__.get.call this, key
+    
+    set: (key, value, opts) ->
+        # Handle @set(values, opts)
+        if _.isObject(key) and key?
+            [values, opts] = [key, value]
+        else
+            values = { "#key": value }
+        values = @parse values
+        
+        setter = ChartElementData.__super__.set
+        
+        # Merge options in, firing granulated change events
+        if values.options
+            # Remove from values to prevent the super call to `set()` from
+            # replacing the object wholesale.
+            options = delete values.options
+            
+            # ...Unless we don't have one yet.
+            if not @attributes.options
+                setter.call this, {options}, {+silent}
+            
+            # Now delegate `setOption()` to do the nested merging.
+            @setOption options, opts
+        
+        # Deal with everything else
+        setter.call this, values, opts
+    
+    
+    
+    
+    # }}}
+    ### Chart Option Accessors {{{
+    
+    hasOption: (key) ->
+        @getOption(key) is void
+    
+    getOption: (key, def) ->
+        @optionCascade.get key, def
+    
+    setOption: (key, value, opts={}) ->
+        if _.isObject(key) and key?
+            [values, opts] = [key, value or {}]
+        else
+            values = { "#key": value }
+        
+        # _.dump values, "#this.setOption"
+        options = @get('options')
+        changed = false
+        for key, value in values
+            continue if _.contains @IGNORE_OPTIONS, key
+            changed = true
+            _.setNested options, key, value, {+ensure}
+            @trigger "change:options.#key", this, value, key, opts unless opts.silent
+        
+        if changed and not opts.silent
+            @trigger "change:options",  this, options, 'options', opts
+            @trigger "change",          this, options, 'options', opts
+        this
+    
+    unsetOption: (key, opts={}) ->
+        unless @optionCascade.unset(key) is void or opts.silent
+            options = @get 'options'
+            @trigger "change:options.#key", this, void, key, opts
+            @trigger "change:options",      this, options, 'options', opts
+            @trigger "change",              this, options, 'options', opts
+        this
+    
+    inheritOption: (key, opts={}) ->
+        old = @getOption(key)
+        @optionCascade.inherit(key)
+        unless @getOption(key) is old or opts.silent
+            options = @get 'options'
+            @trigger "change:options.#key", this, void, key, opts
+            @trigger "change:options",      this, options, 'options', opts
+            @trigger "change:options",      this, options, 'options', opts
+        this
+    
+    getOptions: (opts={}) ->
+        opts = {+keepDefaults, +keepUnchanged} import opts
+        options = @optionCascade.collapse()
+        for k, v in options
+            delete options[k] if v is void or
+                (not opts.keepDefaults  and @isDefaultOption k) or
+                (not opts.keepUnchanged and not @isChangedOption k)
+        options
+    
+    /**
+     * @returns {Boolean} Whether the value for option `k` is inherited or not.
+     */
+    isOwnOption: (k) ->
+        @optionCascade.isOwnValue k
+    
+    /**
+     * @returns {Boolean} Whether the value for option `k` is the graph default or not.
+     */
+    isDefaultOption: (k) ->
+        # @chartType.isDefault k, @getOption k
+        false
+    
+    /**
+     * Whether the value for option `k` differs from that of its parent graphs.
+     * @returns {Boolean}
+     */
+    isChangedOption: (k) ->
+        @optionCascade.isModifiedValue k
+        and not @isDefaultOption k
+    
+    
+    
+    # }}}
+    ### Loading {{{
+    
+    load: (opts={}) ->
+        source_id  = @get 'data.source_id'
+        @resetReady() if opts.force or @source?.id is not source_id
+        return this if @loading or @ready
+        
+        unless source_id and @get('data.source_col') >= 0
+            return @triggerReady()
+        
+        # console.log "#this.load()..."
+        @updateId()
+        @loading = true
+        @wait()
+        @trigger 'load', this
+        
+        unless DataSource
+            { DataSource, DataSourceList, } := require './datasource-model'
+        
+        DataSource.lookup source_id, (err, source) ~>
+            # console.log "#this.onSourceReady", arguments
+            @loading = false
+            @unwait() # terminates the `load` wait
+            if err
+                console.error "#{this} Error loading DataSource! #err"
+            else
+                # console.log "#{this}.load() complete!"
+                @source = source
+                @triggerReady()
+        this
+    
+    
+    # }}}
+    
+    toJSON: (opts={}) ->
+        opts = {+keepDefaults, +keepUnchanged} import opts
+        json = _.merge {}, @attributes, { options:@getOptions(opts) }
+        # { data: ...json }
+    
+    
+# }}}
+
+
+/**
+ * @class
+ * @extends BaseList
+ */
+ChartElementDataList = exports.ChartElementDataList = BaseList.extend do # {{{
+    model : ChartElementData
+    
+    constructor: function ChartElementDataList then BaseList ...
+    initialize : -> BaseList::initialize ...
+# }}}

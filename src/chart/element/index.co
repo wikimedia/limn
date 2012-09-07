@@ -1,0 +1,4 @@
+models = require './chart-element-data'
+views  = require './chart-element'
+
+exports import models import views

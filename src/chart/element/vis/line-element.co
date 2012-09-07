@@ -1,0 +1,32 @@
+d3 = require 'd3'
+
+limn = require '../../../client'
+{ _, op,
+} = require '../../../util'
+{ ChartElement, ChartElementData,
+} = require '..'
+# { ChartElement,
+# } = require '../chart-element'
+# { ChartElementData,
+# } = require '../chart-element-data'
+
+
+/**
+ * @class
+ * @extends ChartElement
+ */
+LineChartElement = exports.LineChartElement = ChartElement.extend do # {{{
+    __bind__  : <[  ]>
+    typeName  : 'LineChartElement'
+    tagName   : 'g'
+    className : 'line-chart-element chart-element'
+    
+    
+    constructor: function LineChartElement
+        ChartElement ...
+    
+    initialize: ->
+        ChartElement::initialize ...
+    
+# }}}
+

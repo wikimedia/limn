@@ -1,0 +1,117 @@
+d3 = require 'd3'
+Backbone = require 'backbone'
+
+limn = require '../../client'
+{ _, op,
+} = require '../../util'
+{ BaseView,
+} = require '../../base'
+
+
+/**
+ * @class
+ * @extends BaseView
+ */
+ChartElement = exports.ChartElement = BaseView.extend do # {{{
+    __bind__       : <[  ]>
+    typeName       : 'ChartElement'
+    tagName        : 'g'
+    className      : 'chart-element'
+    
+    
+    
+    constructor: function ChartElement
+        BaseView ...
+    
+    initialize: ->
+        BaseView::initialize ...
+    
+    
+    ### Rendering {{{
+    
+    build: ->
+        @attachSubviews()
+        @isBuilt = true
+        this
+    
+    render: ->
+        if @isBuilt
+            @update()
+        else
+            @build()
+        @renderSubviews()
+        @trigger 'render', this
+        this
+    
+    update: ->
+        new DataBinding this .update locals = @toTemplateLocals()
+        @trigger 'update', this, locals
+        this
+    
+    # }}}
+    
+# }}}
+
+
+/**
+ * Map of known libraries by name.
+ * @type Object
+ */
+KNOWN_CHART_TYPES = exports.KNOWN_CHART_TYPES = {}
+_extendChartElement = ChartElement.extend
+
+### Class Methods
+ChartElement import do
+    
+    /**
+     * Register a new chart type.
+     */
+    register : (Subclass) ->
+        # console.log "ChartElement.register(#Subclass)"
+        KNOWN_CHART_TYPES[ Subclass::typeName ] = Subclass
+    
+    /**
+     * Look up a `ChartElement` by `typeName`.
+     */
+    lookup : (name) ->
+        name = name.get('elementType') if name instanceof Backbone.Model
+        KNOWN_CHART_TYPES[name]
+    
+    /**
+     * Look up a chart type by name, returning a new instance
+     * with the given model (and, optionally, view).
+     * @returns {ChartElement}
+     */
+    create : (model, view) ->
+        # console.log "ChartElement.create(#model) ->", model
+        return null unless Type = @lookup model
+        new Type model, view
+    
+    
+    extend : (proto, statics) ->
+        unless proto?.hasOwnProperty('typeName') and proto.typeName
+            throw new Error "Chart Element types must declare a new, unique typeName on the prototype! (got #{proto.typeName})"
+        if KNOWN_CHART_TYPES[proto.typeName]
+            throw new Error "Duplicate Chart Element typeName! (got #{proto.typeName})"
+        
+        Subclass = KNOWN_CHART_TYPES[proto.typeName] = _extendChartElement.apply this, arguments
+    
+
+
+
+/**
+ * @class
+ * @extends ChartElement
+ */
+ChartViewport = exports.ChartViewport = ChartElement.extend do # {{{
+    __bind__       : <[  ]>
+    typeName       : 'ChartViewport'
+    tagName        : 'svg'
+    className      : 'chart viewport'
+    
+    constructor : function ChartViewport then ChartElement ...
+    initialize  : -> ChartElement::initialize ...
+    
+# }}}
+
+
