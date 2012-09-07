@@ -1,13 +1,13 @@
 Seq = require 'seq'
 
 limn = require 'limn'
-{ _, op, Cascade,
+{ _, Cascade,
 } = require '../util'
 { BaseGraph, BaseGraphList,
 } = require './base-graph'
-{ ChartElement, ChartElementData, ChartElementDataList,
+{ ChartType,
 } = require '../chart'
-{ DataSet,
+{ DataSet
 } = require '../data'
 
 root = do -> this
@@ -18,8 +18,9 @@ root = do -> this
  * Represents a Graph, including its charting options, dataset, annotations, and all
  * other settings for both its content and presentation.
  */
-Graph = exports.Graph = BaseGraph.extend do # {{{
-    urlRoot : '/graphs'
+LegacyGraph = exports.LegacyGraph = BaseGraph.extend do # {{{
+    IGNORE_OPTIONS : <[ width height timingName ]>
+    urlRoot        : '/graphs'
     
     /**
      * Whether this Graph has loaded all assets, parent-graphs, and related
@@ -35,16 +36,23 @@ Graph = exports.Graph = BaseGraph.extend do # {{{
     dataReady : false
     
     /**
-     * List of graph parents. XXX: Obsolete?
-     * @type GraphList
+     * The chart type backing this graph.
+     * @type ChartType
+     */
+    chartType : null
+    
+    /**
+     * List of graph parents.
+     * @type LegacyGraphList
      */
     parents : null
     
     /**
-     * List of chart element definitions.
-     * @type ChartElementDataList
+     * Cascade of objects for options lookup (includes own options).
+     * @type Cascade
+     * @private
      */
-    elements : null
+    optionCascade : null
     
     
     
@@ -53,36 +61,57 @@ Graph = exports.Graph = BaseGraph.extend do # {{{
      * Attribute defaults.
      */
     defaults: ->
-        slug      : ''
+        slug    : ''
+        name    : ''
+        desc    : ''
+        notes   : ''
+        width   : 'auto'
+        height  : 320
+        parents : <[ root ]>
         
-        name      : ''
-        shortName : ''
-        desc      : ''
-        notes     : ''
-        
-        width     : 'auto'
-        height    : 320
-        parents   : <[ root ]>
-        
-        
-        ### New Structure -- list of ChartElementData objects
+        ### New Structure
         elements : []
+        
+        ### Old Structure
+        data    :
+            palette : null
+            metrics : []
+            lines   : []
+        callout :
+            enabled     : true
+            metric_idx  : 0
+            label       : ''
+        chartType : 'dygraphs'
+        options : {}
     
     url: ->
         "#{limn.mount @urlRoot}/#{@get('slug')}.json"
     
     
     
-    constructor: function Graph (attributes={}, opts)
-        # @on 'ready', ~> console.log "(#this via Graph).ready!"
+    constructor: function LegacyGraph (attributes={}, opts)
+        # @on 'ready', ~> console.log "(#this via LegacyGraph).ready!"
         attributes.options or= {}
         attributes.slug    or= attributes.id if attributes.id?
+        @optionCascade = new Cascade attributes.options
         BaseGraph.call this, attributes, opts
     
     
     initialize: (attributes) ->
         BaseGraph::initialize ...
-        @parents = new GraphList
+        
+        @parents = new LegacyGraphList
+        @chartType = ChartType.create this
+        @on 'change:chartType', ~> @chartType = ChartType.create this
+        
+        # Insert submodels in place of JSON
+        @dataset = new DataSet {id:@id, ...@get 'data'}
+            .on 'change',               @onDataSetChange, this
+            .on 'metric-data-loaded',   (dataset, metric) ~>
+                @trigger 'metric-data-loaded', this, metric
+        @set 'data', @dataset, {+silent}
+        
+        @trigger 'init', this
     
     
     
@@ -112,21 +141,21 @@ Graph = exports.Graph = BaseGraph.extend do # {{{
                         next.ok res
             
             # Load Parents...
-            # .seq_ (next) ~>
-            #     next.ok @get 'parents'
-            # .flatten()
-            # .seqMap_ (next, parent_id) ~>
-            #     @wait()
-            #     Graph.lookup parent_id, next
-            # .seqEach_ (next, parent) ~>
-            #     @parents.add parent
-            #     @optionCascade.addLookup parent.get('options')
-            #     @unwait()
-            #     next.ok()
+            .seq_ (next) ~>
+                next.ok @get 'parents'
+            .flatten()
+            .seqMap_ (next, parent_id) ~>
+                @wait()
+                LegacyGraph.lookup parent_id, next
+            .seqEach_ (next, parent) ~>
+                @parents.add parent
+                @optionCascade.addLookup parent.get('options')
+                @unwait()
+                next.ok()
             
             # Load DataSet...
-            # .seq_ (next) ~>
-            #     @dataset.once 'ready', next.ok .load()
+            .seq_ (next) ~>
+                @dataset.once 'ready', next.ok .load()
             
             # Done!
             .seq ~>
@@ -180,7 +209,7 @@ Graph = exports.Graph = BaseGraph.extend do # {{{
         if _.startsWith key, 'options.'
             @getOption key.slice(8)
         else
-            Graph.__super__.get.call this, key
+            LegacyGraph.__super__.get.call this, key
     
     
     set: (key, value, opts) ->
@@ -191,7 +220,7 @@ Graph = exports.Graph = BaseGraph.extend do # {{{
             values = { "#key": value }
         values = @parse values
         
-        setter = Graph.__super__.set
+        setter = LegacyGraph.__super__.set
         
         # Merge options in, firing granulated change events
         if values.options
@@ -208,7 +237,6 @@ Graph = exports.Graph = BaseGraph.extend do # {{{
         
         # Deal with everything else
         setter.call this, values, opts
-    
     
     getCalloutData: ->
         # For now, always operate on the first Metric
@@ -394,11 +422,10 @@ Graph = exports.Graph = BaseGraph.extend do # {{{
 # }}}
 
 
-GraphList = exports.GraphList = BaseGraphList.extend do # {{{
-    model : Graph
-    constructor : function GraphList then BaseGraphList ...
+LegacyGraphList = exports.LegacyGraphList = BaseGraphList.extend do # {{{
+    model : LegacyGraph
+    constructor : function LegacyGraphList then BaseGraphList ...
     initialize  : -> BaseGraphList::initialize ...
 # }}}
-
 
 

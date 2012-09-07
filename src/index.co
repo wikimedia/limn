@@ -1,2 +1,11 @@
-module.exports = require './server/middleware'
+limn = exports
 
+function loadClient
+    limn.client = limn import require './client'
+
+if process?.title is 'node' and process.version
+    limn.middleware = limn = module.exports = require './server/middleware'
+if window? and navigator and document
+    loadClient()
+
+limn.loadClient = loadClient

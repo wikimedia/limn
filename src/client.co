@@ -18,14 +18,13 @@ Backbone = require 'backbone'
 
 { BaseView, BaseModel, BaseList,
 } = limn.base       = require './base'
-{ ChartType, DygraphsChartType,
+{ ChartType, DygraphsChartType, ChartElement, ChartElementData,
 } = limn.chart      = require './chart'
 { Graph, GraphList, GraphDisplayView, GraphEditView, GraphListView,
 } = limn.graph      = require './graph'
 { DashboardView, Dashboard,
 } = limn.dashboard  = require './dashboard'
 limn.data           = require './data'
-limn.chart          = require './chart'
 limn.util           = require './util'
 
 

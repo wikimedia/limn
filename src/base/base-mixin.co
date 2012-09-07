@@ -177,7 +177,8 @@ class exports.Mixin
         if typeof target is 'function'
             target:: import MixinClass::
         else
-            target = _.clone(MixinClass::) import target
+            target = new MixinClass() import target
+            # target = _.clone(MixinClass::) import target
         
         (target.__mixins__ or= []).push MixinClass
         target
@@ -215,7 +216,8 @@ class exports.Mixin
  * @returns {Object} The merged prototype object.
  */
 mixinBase = exports.mixinBase = (...bodies) ->
-    _.extend _.clone(BaseBackboneMixin), ...bodies
+    # _.extend _.clone(BaseBackboneMixin), ...bodies
+    _.extend ^BaseBackboneMixin, ...bodies
 
 
 
