@@ -3,7 +3,7 @@ d3 = require 'd3'
 { _, op,
 } = require '../../../util'
 { ChartType,
-} = require '../../chart-type'
+} = require '../chart-type'
 
 root = do -> this
 

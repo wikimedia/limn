@@ -3,7 +3,7 @@ ColorBrewer = require 'colorbrewer'
 { _, op,
 } = require '../../../util'
 { ChartType,
-} = require '../../chart-type'
+} = require '../chart-type'
 
 
 
