@@ -1,21 +1,19 @@
 d3 = require 'd3'
+Seq = require 'seq'
 
-limn = require '../../../client'
 { _, op,
-} = require '../../../util'
-{ ChartElement, ChartElementData,
+} = limn = require 'limn/client'
+{ ChartElementData,
 } = require '..'
-# { ChartElement,
-# } = require '../chart-element'
-# { ChartElementData,
-# } = require '../chart-element-data'
+{ TimeseriesChartElement,
+} = require './timeseries-element'
 
 
 /**
  * @class
  * @extends ChartElement
  */
-LineChartElement = exports.LineChartElement = ChartElement.extend do # {{{
+LineChartElement = exports.LineChartElement = TimeseriesChartElement.extend do # {{{
     __bind__  : <[  ]>
     typeName  : 'LineChartElement'
     tagName   : 'g'
@@ -23,10 +21,10 @@ LineChartElement = exports.LineChartElement = ChartElement.extend do # {{{
     
     
     constructor: function LineChartElement
-        ChartElement ...
+        TimeseriesChartElement ...
     
     initialize: ->
-        ChartElement::initialize ...
+        TimeseriesChartElement::initialize ...
     
 # }}}
 

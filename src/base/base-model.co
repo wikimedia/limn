@@ -21,6 +21,9 @@ BaseModel = exports.BaseModel = Backbone.Model.extend mixinBase do # {{{
         Backbone.Model ...
         # @..trigger 'create', this
     
+    initialize : (attributes, options) ->
+        @__apply_bind__()
+        @__apply_opt2attr__ options
     
     
     

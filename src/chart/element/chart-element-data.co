@@ -1,7 +1,8 @@
 Seq = require 'seq'
 
-limn = require '../../client'
-{ _, Cascade,
+{ _, op,
+} = limn = require 'limn/client'
+{ Cascade,
 } = require '../../util'
 { BaseModel, BaseList, ModelCache,
 } = require '../../base'
@@ -14,7 +15,7 @@ DataSource = DataSourceList = null
  * @extends BaseModel
  */
 ChartElementData = exports.ChartElementData = BaseModel.extend do # {{{
-    IGNORE_OPTIONS : <[  ]>
+    __opt2attr__ : <[ graph chart ]>
     
     /**
      * Data source for this element.
@@ -26,7 +27,7 @@ ChartElementData = exports.ChartElementData = BaseModel.extend do # {{{
      * Class of the chart element view.
      * @type Class<ChartElement>
      */
-    viewType : null
+    elementType : null
     
     /**
      * View instance rendering this element.
@@ -86,12 +87,14 @@ ChartElementData = exports.ChartElementData = BaseModel.extend do # {{{
         BaseModel.call this, attributes, opts
     
     
-    initialize: ->
+    initialize : (attributes, opts) ->
         BaseModel::initialize ...
         @optionCascade.setData @attributes
-        @on 'change:source_id',     @load,          this
+        @elements.reset @get 'elements'
+        @setParent that if opts?.parent
+        # @on 'change:source_id',     @load,          this
         # @on 'change:source_col',    @updateId,      this
-        @load()
+        # @load()
     
     
     
@@ -243,7 +246,7 @@ ChartElementData = exports.ChartElementData = BaseModel.extend do # {{{
         @trigger 'load', this
         
         unless DataSource
-            { DataSource, DataSourceList, } := require './datasource-model'
+            { DataSource, DataSourceList, } := require '../../data/datasource-model'
         
         DataSource.lookup source_id, (err, source) ~>
             # console.log "#this.onSourceReady", arguments

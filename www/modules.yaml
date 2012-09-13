@@ -50,6 +50,7 @@ development:
                 - chart:
                     - chart-option.jade
                     - chart-scaffold.jade
+                    - chart-view.jade
                 - dashboard:
                     - dashboard.jade
                     - dashboard-tab.jade
@@ -122,6 +123,8 @@ development:
                         - index
                     - chart-element-data
                     - chart-element
+                    - chart-view
+                    - chart-viewport
                     - index
                 - option:
                     - chart-option-model

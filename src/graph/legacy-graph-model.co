@@ -1,6 +1,6 @@
 Seq = require 'seq'
 
-limn = require 'limn'
+limn = require 'limn/client'
 { _, Cascade,
 } = require '../util'
 { BaseGraph, BaseGraphList,

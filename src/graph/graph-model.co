@@ -1,11 +1,12 @@
 Seq = require 'seq'
 
-limn = require 'limn'
-{ _, op, Cascade,
-} = require '../util'
+{ _, op,
+} = limn = require 'limn/client'
+{ Cascade,
+} = limn.util
 { BaseGraph, BaseGraphList,
 } = require './base-graph'
-{ ChartElement, ChartElementData, ChartElementDataList,
+{ ChartElementData, ChartElementDataList, ChartElement, ChartViewport,
 } = require '../chart'
 { DataSet,
 } = require '../data'
@@ -64,8 +65,9 @@ Graph = exports.Graph = BaseGraph.extend do # {{{
         height    : 320
         parents   : <[ root ]>
         
-        
-        ### New Structure -- list of ChartElementData objects
+        viewport :
+            width  : 'auto'
+            height : 320
         elements : []
     
     url: ->
@@ -75,7 +77,7 @@ Graph = exports.Graph = BaseGraph.extend do # {{{
     
     constructor: function Graph (attributes={}, opts)
         # @on 'ready', ~> console.log "(#this via Graph).ready!"
-        attributes.options or= {}
+        # attributes.options or= {}
         attributes.slug    or= attributes.id if attributes.id?
         BaseGraph.call this, attributes, opts
     
@@ -83,6 +85,8 @@ Graph = exports.Graph = BaseGraph.extend do # {{{
     initialize: (attributes) ->
         BaseGraph::initialize ...
         @parents = new GraphList
+        @elements = new ChartElementDataList @get 'elements'
+        @set 'elements', @elements, {+silent}
     
     
     
@@ -107,8 +111,8 @@ Graph = exports.Graph = BaseGraph.extend do # {{{
                     success : @unwaitAnd (model, res) ~>
                         # console.log "#{this}.fetch() --> success!", res
                         # Update the DataSet model with the new values
-                        @dataset.set @get 'data'
-                        @set 'data', @dataset, {+silent}
+                        # @dataset.set @get 'data'
+                        # @set 'data', @dataset, {+silent}
                         next.ok res
             
             # Load Parents...
@@ -163,24 +167,15 @@ Graph = exports.Graph = BaseGraph.extend do # {{{
                 @triggerReady 'dataReady', 'data-ready'
         this
     
-    getData: ->
-        @dataset.getData()
-    
-    onDataSetChange: ->
-        # console.log "#this.onDataSetChange!"
-        # @set 'data', @dataset, {+silent}
-        # @trigger 'change:data', this, @dataset, 'data'
-        @trigger 'change',      this, @dataset, 'data'
-    
     
     ### }}}
     ### Accessors {{{
     
-    get: (key) ->
-        if _.startsWith key, 'options.'
-            @getOption key.slice(8)
-        else
-            Graph.__super__.get.call this, key
+    # get: (key) ->
+    #     if _.startsWith key, 'options.'
+    #         @getOption key.slice(8)
+    #     else
+    #         Graph.__super__.get.call this, key
     
     
     set: (key, value, opts) ->
@@ -210,46 +205,6 @@ Graph = exports.Graph = BaseGraph.extend do # {{{
         setter.call this, values, opts
     
     
-    getCalloutData: ->
-        # For now, always operate on the first Metric
-        return unless (m = @dataset.metrics.at 0) and
-            (data  = m.getData()) and
-            (dates = m.getDateColumn())
-        
-        # trim cols to match the right timespan
-        len = Math.min data.length, dates.length
-        data  .= slice(data.length  - len) if data.length  < len
-        dates .= slice(dates.length - len) if dates.length < len
-        
-        for i til len
-            v = data[i]
-            break if v? and not isNaN(v)
-        if i > 0
-            data  .= slice i
-            dates .= slice i
-        
-        # Compare against latest non-null value
-        last = len - 1
-        for i til len
-            v = data[last - i]
-            break if v? and not isNaN(v)
-        if i > 0
-            data  .= slice 0, last - (i-1)
-            dates .= slice 0, last - (i-1)
-        
-        # Calc index offsets
-        latest     = data.length - 1
-        last_month = latest - 1
-        last_year  = latest - 12
-        
-        callout =
-            latest    : data[latest]
-            month : 
-                dates : [ dates[last_month], dates[latest] ]
-                value : [ data[last_month],  data[latest], data[latest] - data[last_month] ]
-            year : 
-                dates : [ dates[last_year], dates[latest]  ]
-                value : [ data[last_year],  data[latest],  data[latest] - data[last_year]  ]
     
     ### }}}
     ### Chart Option Accessors {{{
@@ -307,17 +262,6 @@ Graph = exports.Graph = BaseGraph.extend do # {{{
                 (not opts.keepUnchanged and not @isChangedOption k)
         options
     
-    
-    # }}}
-    ### Serialization {{{
-    
-    parse: (data) ->
-        data = JSON.parse data if typeof data is 'string'
-        for k, v in data
-            data[k] = Number v if v is not 'auto' and _.contains <[ width height ]>, k
-            # data[k] = JSON.stringify v if k is 'parents'
-        data
-    
     /**
      * @returns {Boolean} Whether the value for option `k` is inherited or not.
      */
@@ -339,11 +283,22 @@ Graph = exports.Graph = BaseGraph.extend do # {{{
         and not @isDefaultOption k
     
     
-    toJSON: (opts={}) ->
-        opts = {+keepDefaults, +keepUnchanged} import opts
-        # use jQuery's deep-copy implementation -- XXX: Deep-copy no longer necessary thanks to @getOptions()
-        json = _.clone(@attributes) import { options:@getOptions(opts) }
-        # { data: ...json }
+    
+    # }}}
+    ### Serialization {{{
+    
+    parse: (data) ->
+        data = JSON.parse data if typeof data is 'string'
+        for k, v in data
+            data[k] = Number v if v is not 'auto' and _.contains <[ width height ]>, k
+            # data[k] = JSON.stringify v if k is 'parents'
+        data
+    
+    # toJSON: (opts={}) ->
+    #     opts = {+keepDefaults, +keepUnchanged} import opts
+    #     # use jQuery's deep-copy implementation -- XXX: Deep-copy no longer necessary thanks to @getOptions()
+    #     json = _.clone(@attributes) import { options:@getOptions(opts) }
+    #     # { data: ...json }
     
     
     toKVPairs: (opts={}) ->

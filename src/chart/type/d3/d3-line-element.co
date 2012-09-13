@@ -30,7 +30,7 @@ class exports.LineChartElement extends D3ChartElement
         metricLine = root.metricLine = svgEl.append "g"
             .attr "class", "g metric line "+metric.get 'label'
                 
-        data = d3.zip metric.getDateColumn(),metric.getData()                
+        data = d3.zip metric.getDateColumn(), metric.getData()                
 
         metricLine.selectAll "path.line"
             .data d3.zip data.slice(0,-1), data.slice(1)

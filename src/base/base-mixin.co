@@ -27,6 +27,25 @@ BaseBackboneMixin = exports.BaseBackboneMixin =
         _.bindAll this, ...names if names.length
     
     
+    ### Auto-Extract Options to Top-level Attributes
+    
+    /**
+     * List of option-keys to be attached to the Model or View itself.
+     * That is, `__opt2attr__ : <[ graph chart ]>` will set `this.graph`
+     * and `this.chart` in `initialize()`.
+     * @type Array<String>
+     */
+    __opt2attr__ : []
+    
+    /**
+     * Applies the contents of `__opt2attr__`.
+     */
+    __apply_opt2attr__ : (options) ->
+        return unless options
+        names = _ @pluckSuperAndSelf '__opt2attr__' .chain().flatten().compact().unique().value()
+        for name of names
+            value = options[name]
+            @[name] = value unless value is void
     
     
     ### Events
@@ -135,7 +154,7 @@ BaseBackboneMixin = exports.BaseBackboneMixin =
     ###
     
     getClassName: ->
-        "#{@..name or @..displayName}"
+        "#{@..displayName or @..name}"
     
     toString: ->
         "#{@getClassName()}()"
