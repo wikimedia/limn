@@ -24,6 +24,8 @@ Backbone = require 'backbone'
 } = limn.graph      = require './graph'
 { DashboardView, Dashboard,
 } = limn.dashboard  = require './dashboard'
+{ RandomView, Random,
+} = limn.random  = require './random'
 limn.data           = require './data'
 limn.chart          = require './chart'
 limn.util           = require './util'
@@ -47,7 +49,12 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
         'dashboards/:dashId/edit'   : 'editDashboard'
         'dashboards/:dashId'        : 'showDashboard'
         'dashboards'                : 'listDashboards'
-    
+
+        'random'                    : 'playRandom'
+
+    playRandom: ->
+        @model = new RandomModel
+        @view = new RandomView {@model} .attach @el
     
     
     /**

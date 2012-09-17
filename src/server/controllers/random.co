@@ -1,0 +1,68 @@
+fs         = require 'fs'
+path       = require 'path'
+exists     = fs.existsSync or path.existsSync
+
+_          = require 'underscore'
+Seq        = require 'seq'
+yaml       = require 'js-yaml'
+
+{ readJSONFilesAsync,
+} = require '../files'
+
+# Controller = require '../controller'
+FileBackedController = require '../file-controller'
+
+
+/**
+ * @class Resource controller for random requests.
+ */
+class RandomController extends FileBackedController
+    name : 'random'
+    -> super ...
+    
+    toFileSimple: (id) ->
+        "#{@dataDir}/#id.json"
+    
+    # GET /randoms.:format?
+    index: (req, res) ->
+        # if format is json, then return the randoms JSON
+        switch req.format
+            case 'json' 
+                Seq()
+                    # find list of data/random/*.json files, send back the objects
+                    .seq readJSONFilesAsync, "#{@dataDir}/**", Seq
+                    # remove filepath info from the hash of random
+                    .seq -> res.send _.values it
+            default 
+                res.render 'random/index'
+
+    # POST /randoms
+    create: (req, res) ->
+        return unless data = @processBody req, res
+        Seq()
+            .seq @findFile, data.id, Seq
+            .seq (file) ->
+                res.send { result:"error", message:"Random '#{data.id}' already exists!" }, 409 # 409: Resource Conflict
+            .catch (err) ~>
+                fs.writeFile @toFileSimple(data.id), JSON.stringify(data), "utf8", @errorHandler(res, "Error writing random!")
+    
+    # PUT /randoms/:random
+    update: (req, res) ->
+        return unless data = @processBody req, res
+        console.log "#this.update(#{data.id})"
+        Seq()
+            .seq_ (next) ~>
+                @findFile data.id, (err, file) ~>
+                    next.ok if err then @toFileSimple(data.id) else file
+            .seq (file) ~>
+                fs.writeFile file, JSON.stringify(data), "utf8", @errorHandler(res, "Error writing graph!")
+    
+    # DELETE /randoms/:random
+    destroy: (req, res) ->
+        id = req.param.random
+        Seq()
+            .seq @findFile, data.id, Seq
+            .seq   (file) ~> fs.unlink file, @errorHandler(res, "Error destroying Random '#id'!", 500)
+            .catch (err)  -> res.send {result:"error", message:"Random '#id' does not exist!"}, 410 # 410: Resource Gone
+
+module.exports = exports = RandomController

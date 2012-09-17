@@ -1,0 +1,14 @@
+{ BaseModel,
+} = require '../base'
+
+/**
+ * @class
+ */
+Random = exports.Random = BaseModel.extend do
+    urlRoot : '/random'    
+    
+    constructor: function Random
+        BaseModel ...
+    
+    initialize: ->
+        BaseModel::initialize ...

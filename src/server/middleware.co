@@ -277,6 +277,7 @@ application = limn.application =
                     res.send { error:String(err), partial_data:data }, 500
         
         @controller require './controllers/datasource'
+        @controller require './controllers/random'
         
         
         # proxy endpoint
