@@ -53,7 +53,7 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
         'random'                    : 'playRandom'
 
     playRandom: ->
-        @model = new RandomModel
+        @model = new Random
         @view = new RandomView {@model} .attach @el
     
     

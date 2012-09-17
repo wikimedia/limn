@@ -63,6 +63,9 @@ development:
                     - graph-display.jade
                     - graph-edit.jade
                     - graph-list.jade
+                - random:
+                    - random.jade
+                    - random-tab.jade
             - util:
                 - underscore:
                     - function
@@ -131,6 +134,10 @@ development:
             - dashboard:
                 - dashboard-model
                 - dashboard-view
+                - index
+            - random:
+                - random-model
+                - random-view
                 - index
             - client
 
