@@ -3,7 +3,7 @@ ColorBrewer = require 'colorbrewer'
 
 { _, op,
 } = require '../../../util'
-{ D3ChartElement    
+{ D3ChartElement
 } = require './d3-chart-element'
 
 _fmt = require '../../../util/formatters'
@@ -16,29 +16,28 @@ class exports.LineChartElement extends D3ChartElement
     
     # NOTE: D3ChartElement.register() must come AFTER `typeName` declaration.
     chartElement : 'd3-line'
-    D3ChartElement.register this            
-    
+    D3ChartElement.register this
     -> super ...
-
-    renderChartElement: (metric, svgEl ,xScale, yScale) ->        
-        
+    
+    
+    renderChartElement: (metric, svgEl ,xScale, yScale) ->
         X = (d, i) -> xScale d[0]
         Y = (d, i) -> yScale d[1]
         line = d3.svg.line().x(X).y(Y)
-
+        
         ### Render the line path
         metricLine = root.metricLine = svgEl.append "g"
             .attr "class", "g metric line "+metric.get 'label'
                 
-        data = d3.zip metric.getDateColumn(), metric.getData()                
-
+        data = d3.zip metric.getDateColumn(), metric.getData()
+        
         metricLine.selectAll "path.line"
             .data d3.zip data.slice(0,-1), data.slice(1)
             .enter().append "path"
                 .attr "d", line
                 .attr "class", (d, i) -> "metric line segment #i"
                 .style "stroke", metric.getColor 'color'
-
+        
         
         ### Mouse Lens
         lens = root.lens = svgEl.selectAll "g.lens"
@@ -61,23 +60,21 @@ class exports.LineChartElement extends D3ChartElement
             .style "fill", "black"
             .style "font", "12px Helvetica"
             .style "font-weight", "bold"
-
-        # event listeners        
+        
+        # event listeners
         metricLine.selectAll ".line.segment"
             .on "mouseover", (d, i) ->
-                
-                {r,g,b} = color = d3.rgb metric.getColor 'color'                
+                {r,g,b} = color = d3.rgb metric.getColor 'color'
                 lineX = (X(d[0])+X(d[1]))/2
                 lineY = (Y(d[0])+Y(d[1]))/2
-                                
-
-                lens = svgEl.select "g.lens"                
+                
+                lens = svgEl.select "g.lens"
                     .attr "transform", "translate(#lineX, #lineY)"
                 lens.select "circle" .style "fill", "rgba(#r, #g, #b, 0.4)"
                 lens.select "text" .text -> _fmt.numberFormatter(d[0][1]).toString()
-
-        svgEl        
-
+        
+        svgEl
+    
     
 # If instead of a line segment for each month we want to use one line segment per metric, we have to have a way of accessing the data associated with a given time step.
 

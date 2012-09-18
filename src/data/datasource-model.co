@@ -8,8 +8,6 @@ limn = require '../client'
 } = require '../util/event'
 { BaseModel, BaseList, ModelCache,
 } = require '../base'
-{ Metric, MetricList,
-} = require './metric-model'
 
 
 
@@ -45,10 +43,6 @@ DataSource = exports.DataSource = BaseModel.extend do # {{{
             step      : '1mo'
         
         columns       : []
-        
-        chart : 
-            chartType : 'dygraphs'
-            options   : {}
     
     url: ->
         "/datasources/#{@id}.json"
@@ -64,6 +58,9 @@ DataSource = exports.DataSource = BaseModel.extend do # {{{
         @attributes = @canonicalize @attributes
         BaseModel::initialize ...
         @constructor.register this
+        
+        { Metric, MetricList,
+        } = require './metric-model'
         @metrics = new MetricList @attributes.metrics
         @on 'change:metrics', @onMetricChange, this
     
@@ -141,6 +138,7 @@ DataSource = exports.DataSource = BaseModel.extend do # {{{
         @unwait()
         @_errorLoading = true
         @trigger 'load-data-error', this, txtStatus, err
+    
     
     
     getDateColumn: ->

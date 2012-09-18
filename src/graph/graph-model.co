@@ -113,6 +113,8 @@ Graph = exports.Graph = BaseGraph.extend do # {{{
                         # Update the DataSet model with the new values
                         # @dataset.set @get 'data'
                         # @set 'data', @dataset, {+silent}
+                        @elements = new ChartElementDataList @get 'elements'
+                        @set 'elements', @elements, {+silent}
                         next.ok res
             
             # Load Parents...

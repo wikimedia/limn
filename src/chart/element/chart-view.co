@@ -9,8 +9,6 @@ Seq = require 'seq'
 } = require './chart-element-data'
 { ChartElement,
 } = require './chart-element'
-{ ChartViewport,
-} = require './chart-viewport'
 
 
 /**
@@ -28,6 +26,9 @@ ChartView = exports.ChartView = BaseView.extend do # {{{
     
     viewEvents :
         'render' : 'onRender'
+    
+    xScaleViewport : null
+    yScaleViewport : null
     
     
     
@@ -55,11 +56,13 @@ ChartView = exports.ChartView = BaseView.extend do # {{{
         modelH = height = @model.get 'height'
         
         if width is 'auto'
-            width = refEl.innerWidth() or 300
+            width = '100%'
+            # width = refEl.innerWidth() or 300
         width ?= modelW
         
         if height is 'auto'
-            height = refEl.innerHeight() or 320
+            height = '100%'
+            # height = refEl.innerHeight() or 320
         height ?= modelH
         
         { width, height }

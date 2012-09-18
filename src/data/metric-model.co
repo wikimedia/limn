@@ -25,26 +25,11 @@ Metric = exports.Metric = BaseModel.extend do # {{{
     is_def_label : true
     
     defaults : ->
-        index            : 0
-        label            : ''
-        type             : 'int'
-        timespan         : { start:null, end:null, step:null }
-        disabled         : false
-        
-        # DataSource
         source_id        : null
         source_col       : -1
+        type             : 'int'
+        timespan         : { start:null, end:null, step:null }
         
-        # Chart Options
-        color            : null
-        visible          : true
-        format_value     : null
-        format_axis      : null
-        
-        transforms       : []
-        scale            : 1.0
-        
-        chartType        : null
     
     
     

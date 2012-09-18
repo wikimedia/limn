@@ -232,7 +232,7 @@ ChartElementData = exports.ChartElementData = BaseModel.extend do # {{{
     ### Loading {{{
     
     load: (opts={}) ->
-        source_id  = @get 'data.source_id'
+        source_id = @get 'data.source_id'
         @resetReady() if opts.force or @source?.id is not source_id
         return this if @loading or @ready
         
@@ -240,7 +240,6 @@ ChartElementData = exports.ChartElementData = BaseModel.extend do # {{{
             return @triggerReady()
         
         # console.log "#this.load()..."
-        @updateId()
         @loading = true
         @wait()
         @trigger 'load', this

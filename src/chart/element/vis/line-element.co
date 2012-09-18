@@ -4,7 +4,7 @@ Seq = require 'seq'
 { _, op,
 } = limn = require 'limn/client'
 { ChartElementData,
-} = require '..'
+} = require '../chart-element-data'
 { TimeseriesChartElement,
 } = require './timeseries-element'
 
@@ -24,7 +24,9 @@ LineChartElement = exports.LineChartElement = TimeseriesChartElement.extend do #
         TimeseriesChartElement ...
     
     initialize: ->
-        TimeseriesChartElement::initialize ...
+        LineChartElement.__super__.initialize ...
+    
+    
     
 # }}}
 

@@ -2,7 +2,7 @@ _  = exports._  = require './underscore'
 op = exports.op = require 'operator'
 
 # Root object -- `window` in the browser, `global` in Node.
-root = exports.root = do -> this
+root = exports.root = do -> this or eval('this')
 
 # Stub out console with empty methods
 root.console or= _ <[ log info warn error dir table group groupCollapsed groupEnd ]> .synthesize -> [it, op.nop]

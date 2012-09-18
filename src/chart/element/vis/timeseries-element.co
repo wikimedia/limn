@@ -3,8 +3,10 @@ Seq = require 'seq'
 
 { _, op,
 } = limn = require 'limn/client'
-{ ChartElement, ChartElementData,
-} = require '..'
+{ ChartElement,
+} = require '../chart-element'
+{ ChartElementData,
+} = require '../chart-element-data'
 
 
 /**

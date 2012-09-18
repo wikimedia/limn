@@ -1,6 +1,6 @@
-models   = require './chart-element-data'
-element  = require './chart-element'
-view     = require './chart-view'
-viewport = require './chart-viewport'
+models  = require './chart-element-data'
+element = require './chart-element'
+view    = require './chart-view'
+group   = require './group-element'
 
-exports import models import element import view import viewport
+exports import models import element import view import group

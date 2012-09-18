@@ -109,6 +109,7 @@ development:
             - chart:
                 - element:
                     - vis:
+                        - timeseries-element
                         - points-element
                         - line-element
                         - bar-element
@@ -124,7 +125,7 @@ development:
                     - chart-element-data
                     - chart-element
                     - chart-view
-                    - chart-viewport
+                    - group-element
                     - index
                 - option:
                     - chart-option-model
