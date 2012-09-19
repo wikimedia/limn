@@ -49,6 +49,18 @@ class RandomController extends FileBackedController
             res.send req.random
         else
             res.render 'random/edit'
+
+
+    # PUT /random/:random.json
+    update: (req, res) ->
+        return unless data = @processBody req, res
+        Seq()
+            .seq_ (next) ~>
+                @findFile data.id, (err, file) ~>
+                    next.ok if err then @toFileSimple(data.id) else file
+            .seq (file) ~>
+                fs.writeFile file, JSON.stringify(data), "utf8", @errorHandler(res, "Error writing random!")
+
 /* 
     # GET /graphs/new
     new: (req, res) ->
@@ -63,20 +75,7 @@ class RandomController extends FileBackedController
                 res.send { result:"error", message:"Graph '#{data.id}' already exists!" }, 409 # 409: Resource Conflict
             .catch (err) ~>
                 fs.writeFile @toFileSimple(data.id), JSON.stringify(data), "utf8", @errorHandler(res, "Error writing graph!")
-    
-    # PUT /graphs/:graph
-    update: (req, res) ->
-        return unless data = @processBody req, res
-        if @PROTECT_GRAPHS and _ @PROTECTED_GRAPH_IDS .contains data.id
-            return res.send {result:"error", message:"Graph '#{data.id}' is read-only."}, 403 # 403: Forbidden
-        console.log "#this.update(#{data.id})"
-        Seq()
-            .seq_ (next) ~>
-                @findFile data.id, (err, file) ~>
-                    next.ok if err then @toFileSimple(data.id) else file
-            .seq (file) ~>
-                fs.writeFile file, JSON.stringify(data), "utf8", @errorHandler(res, "Error writing graph!")
 */
-
+    
     
 module.exports = exports = RandomController

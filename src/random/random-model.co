@@ -19,3 +19,56 @@ Random = exports.Random = BaseModel.extend do
         "#{limn.mount @urlRoot}/#{@get('slug')}"
     toEditLink: ->
         "#{limn.mount @urlRoot}/#{@get('slug')}/edit"
+
+    set: (key, value, opts) ->
+        # Handle @set(values, opts)
+        if _.isObject(key) and key?
+            [values, opts] = [key, value]
+        else
+            values = { "#key": value }
+        values = @parse values
+        
+        setter = Random.__super__.set
+        
+        # Merge options in, firing granulated change events
+        if values.options
+            # Remove from values to prevent the super call to `set()` from
+            # replacing the object wholesale.
+            options = delete values.options
+            
+            # ...Unless we don't have one yet.
+            if not @attributes.options
+                setter.call this, {options}, {+silent}
+            
+            # Now delegate `setOption()` to do the nested merging.
+            @setOption options, opts
+        
+        # Deal with everything else
+        setter.call this, values, opts
+
+    hasOption: (key) ->
+        @getOption(key) is void
+    
+    getOption: (key, def) ->
+        @optionCascade.get key, def
+    
+    setOption: (key, value, opts={}) ->
+        if _.isObject(key) and key?
+            [values, opts] = [key, value or {}]
+        else
+            values = { "#key": value }
+        
+        # _.dump values, "#this.setOption"
+        options = @get('options')
+        changed = false
+        for key, value in values
+            continue if _.contains @IGNORE_OPTIONS, key
+            changed = true
+            _.setNested options, key, value, {+ensure}
+            @trigger "change:options.#key", this, value, key, opts unless opts.silent
+        
+        if changed and not opts.silent
+            @trigger "change:options",  this, options, 'options', opts
+            @trigger "change",          this, options, 'options', opts
+        this
+    
