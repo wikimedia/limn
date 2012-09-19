@@ -1,0 +1,16 @@
+section#random.centered
+    
+    .row
+        nav
+            h3 Edit Pieces of Random
+            form#randomEdit(action=model.url(), method='POST')
+                ul
+                    //- TODO: why isn't name rendering with the other attributes
+                    li: label
+                        strong name: 
+                        input(name='name', data-bind='name') #{name}
+                    each v, a in model.attributes
+                        li: label
+                            strong #{a}: 
+                            input(name=a, data-bind=a) #{v}
+                input(type='submit', value='Save')

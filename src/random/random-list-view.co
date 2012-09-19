@@ -1,0 +1,43 @@
+{ _, op,
+} = require '../util'
+{ BaseView,
+} = require '../base'
+{ Random, RandomList
+} = require './random-model'
+
+root = do -> this
+DEBOUNCE_RENDER = 100ms
+
+/**
+ * @class View for a showing a list of all saved randoms
+ */
+RandomListView = exports.RandomListView = BaseView.extend do # {{{
+    __bind__: <[ render ]>
+    __debounce__: <[ render ]>
+    
+    tagName   : 'section'
+    className : 'random-list-view'
+    template  : require '../template/random/random-list'
+    
+    data  : {}
+    ready : false
+    
+    initialize : ->
+        @model = @collection or= new RandomList
+        BaseView::initialize ...
+        
+        @collection
+            .once 'load-success', @onLoad, this
+            .load()
+    
+    onLoad: ->
+        console.log "#this.onLoad!"
+        @triggerReady()
+        @isBuilt = false
+        @render()
+    
+    toTemplateLocals: ->
+        locals = BaseView::toTemplateLocals ...
+        locals.collection = @collection
+        locals
+    

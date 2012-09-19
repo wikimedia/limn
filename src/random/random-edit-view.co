@@ -1,0 +1,30 @@
+{ RandomView,
+} = require './random-view'
+
+
+/**
+ * @class
+ */
+RandomEditView = exports.RandomEditView = RandomView.extend do
+    template       : require '../template/random/random-edit'
+    
+    events:
+        'submit #randomEdit'    : 'onDetailsSubmit'
+
+    constructor: function RandomEditView(options={})
+        RandomView ...
+    
+    initialize: ->
+        RandomEditView.__super__.initialize ...
+
+    onDetailsSubmit: ->
+        details = @$ '#randomEdit' .formData()
+        @model.set details
+        @save()
+        false
+
+    save: ->
+        @wait()
+        id = @model.get('slug') or @model.id
+        @model.save {id}, { +wait, success:@unwait, error:@unwait }
+        false

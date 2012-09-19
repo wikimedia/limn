@@ -1,0 +1,15 @@
+{ BaseList,
+} = require '../base'
+{ Random,
+} = require './random-model'
+
+/**
+ * @class
+ */
+RandomList = exports.RandomList = BaseList.extend do
+    urlRoot  : '/random'
+    model    : Random
+    
+    constructor : function RandomList then BaseList ...
+    initialize  : -> BaseList::initialize ...
+    toString    : -> @toStringWithIds()

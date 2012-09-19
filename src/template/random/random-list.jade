@@ -1,0 +1,7 @@
+section#random-list
+    .page-header
+        h1 Saved Randoms
+    ul
+        for random in collection.models
+            li
+                a(href="#{random.toLink()}") #{random.get('name') || random.get('id') || random.toLink()}
