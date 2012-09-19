@@ -1,13 +1,15 @@
 section#random.centered
-    .page-header
-        h1
     
     .row
-        .graphs.tabbable
-            nav
-                //- Random Tab Buttons appended here
-                ul.nav.subnav.nav-pills
-                    li: h3 Graphs
-            
-            //- Random Tabs (each with a collection of GraphDisplayViews) appended here
-            .tab-content(data-subview="RandomTabView")
+        nav
+            h3 Pieces of Random
+                ul
+                    //- TODO: why isn't name rendering with the other attributes
+                    li: label
+                        strong name: 
+                        span(data-bind='name') #{name}
+                    each v, a in model.attributes
+                        li: label
+                            strong #{a}: 
+                            span(data-bind=a) #{v}
+            a(href=model.toEditLink()) edit

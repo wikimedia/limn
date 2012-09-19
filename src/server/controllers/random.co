@@ -9,7 +9,7 @@ yaml       = require 'js-yaml'
 { readJSONFilesAsync,
 } = require '../files'
 
-# Controller = require '../controller'
+Controller = require '../controller'
 FileBackedController = require '../file-controller'
 
 
@@ -23,9 +23,9 @@ class RandomController extends FileBackedController
     toFileSimple: (id) ->
         "#{@dataDir}/#id.json"
     
-    # GET /randoms.:format?
+    # GET /random.:format?
     index: (req, res) ->
-        # if format is json, then return the randoms JSON
+        # if format is json, then return the random JSON
         switch req.format
             case 'json' 
                 Seq()
@@ -36,19 +36,39 @@ class RandomController extends FileBackedController
             default 
                 res.render 'random/index'
 
-    # POST /randoms
+    # GET /random/:random
+    show: (req, res) ->
+        if req.format is 'json'
+            res.send req.random
+        else
+            res.render 'random/view'
+
+    # GET /random/:random/edit
+    edit: (req, res) ->
+        if req.format is 'json'
+            res.send req.random
+        else
+            res.render 'random/edit'
+/* 
+    # GET /graphs/new
+    new: (req, res) ->
+        res.render 'graph/edit'
+    
+    # POST /graphs
     create: (req, res) ->
         return unless data = @processBody req, res
         Seq()
             .seq @findFile, data.id, Seq
             .seq (file) ->
-                res.send { result:"error", message:"Random '#{data.id}' already exists!" }, 409 # 409: Resource Conflict
+                res.send { result:"error", message:"Graph '#{data.id}' already exists!" }, 409 # 409: Resource Conflict
             .catch (err) ~>
-                fs.writeFile @toFileSimple(data.id), JSON.stringify(data), "utf8", @errorHandler(res, "Error writing random!")
+                fs.writeFile @toFileSimple(data.id), JSON.stringify(data), "utf8", @errorHandler(res, "Error writing graph!")
     
-    # PUT /randoms/:random
+    # PUT /graphs/:graph
     update: (req, res) ->
         return unless data = @processBody req, res
+        if @PROTECT_GRAPHS and _ @PROTECTED_GRAPH_IDS .contains data.id
+            return res.send {result:"error", message:"Graph '#{data.id}' is read-only."}, 403 # 403: Forbidden
         console.log "#this.update(#{data.id})"
         Seq()
             .seq_ (next) ~>
@@ -56,13 +76,7 @@ class RandomController extends FileBackedController
                     next.ok if err then @toFileSimple(data.id) else file
             .seq (file) ~>
                 fs.writeFile file, JSON.stringify(data), "utf8", @errorHandler(res, "Error writing graph!")
-    
-    # DELETE /randoms/:random
-    destroy: (req, res) ->
-        id = req.param.random
-        Seq()
-            .seq @findFile, data.id, Seq
-            .seq   (file) ~> fs.unlink file, @errorHandler(res, "Error destroying Random '#id'!", 500)
-            .catch (err)  -> res.send {result:"error", message:"Random '#id' does not exist!"}, 410 # 410: Resource Gone
+*/
 
+    
 module.exports = exports = RandomController

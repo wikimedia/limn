@@ -1,3 +1,7 @@
-models = require './random-model'
-views  = require './random-view'
-exports import models import views
+m1 = require './random-model'
+m2 = require './random-list-model'
+v1 = require './random-view'
+v2 = require './random-edit-view'
+v3 = require './random-list-view'
+
+exports import m1 import m2 import v1 import v2 import v3

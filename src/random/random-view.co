@@ -1,11 +1,5 @@
-Seq = require 'seq'
-
-{ _, op,
-} = require '../util'
-{ BaseModel, BaseView,
+{ BaseView,
 } = require '../base'
-{ Graph, GraphList, GraphDisplayView,
-} = require '../graph'
 { Random,
 } = require './random-model'
 
@@ -14,153 +8,24 @@ Seq = require 'seq'
  * @class
  */
 RandomView = exports.RandomView = BaseView.extend do # {{{
-    __bind__       : <[ addTab ]>
     tagName        : 'section'
     className      : 'random'
     template       : require '../template/random/random'
     
-    
     events:
-        # Select the whole permalink URI text when it receives focus.
-        # 'click .graphs.tabbable .nav a' : 'onTabClick'
-        'shown .graphs.tabbable .nav a' : 'render'
+        'shown .random.tabbable .nav a' : 'render'
     
-    # subviews : []
-    graphs   : null
     ready    : false
     
-    
     constructor: function RandomView(options={})
-        @graphs = new GraphList
         BaseView ...
     
     initialize: ->
         @model or= new Random
         RandomView.__super__.initialize ...
-        # @graphs.on 'add', @attachGraphs, this
-        # @graphs.on 'add', @attachGraph, this
         @model.once 'ready', @load, this .load()
     
-    
-    # FIXME:
-    #   - combine all loads into one seq so...
-    #   - trigger ready when finished
-    # TODO:
-    #   - only render graph when scrolling makes it visible
     load: ->
         console.log "#this.load! Model ready!", @model
-        Seq @model.get('tabs')
-            .seqEach_ @addTab
-            .seq ~>
-                console.log "#{this}.load! Done adding tabs!"
-                @render()
-                @triggerReady()
-    
-    addTab: (nextTab, tab) ->
-        isActive = not @subviews.length
-        tabModel = new BaseModel tab
-        tabView  = @addSubview new RandomTabView {model:tabModel}
-        tabId    = tabView.getTabId()
-        navEl    = $ "<li class='tab-button #tabId-button'><a href='##tabId' data-toggle='tab'>#{tab.name}</a></li>"
-            .appendTo @$ "nav > ul.nav"
-        navEl.add tabView.$el .addClass 'active' if isActive
-        
-        graphs = _ tab.graph_ids .map ~> @model.graphs.get it
-        Seq graphs
-            .parMap_ (next, graph) ~>
-                @graphs.add graph
-                next null, new GraphDisplayView {model:graph}
-            .parMap_ (next, graphView) ~>
-                return next.ok() if graphView.isAttached
-                tabView.addSubview graphView
-                next.ok()
-            .seq ~>
-                console.log "#{this}.addTab: All graphs added!"
-                # @render()
-                nextTab.ok()
-        this
-    
-    ### Tabs {{{
-    
-    onTabShown: (e) ->
         @render()
-        # @renderSubviews()
-        # Seq @subviews
-        #     .parMap (view) ->
-        #         # view.resizeViewport()
-        #         view.renderChart()
-    
-    onTabClick: (evt) ->
-        evt.preventDefault()
-    
-    
-    ### }}}
-    ### Navigation Between Graphs {{{
-    
-    /**
-     * Scroll to the specified graph.
-     * 
-     * @param {String|Number|Graph} graph The Graph to scroll to; can be specified as a
-     *  Graph id, an index into the Graphs list, or a Graph object.
-     * @returns {this} 
-     */
-    scrollToGraph: (graph) ->
-        if typeof graph is 'string'
-            graph = @graphs.get graph
-        else if typeof graph is 'number'
-            graph = @graphs.at graph
-        unless graph instanceof Graph
-            console.error "#this.scrollToGraph() Unknown graph #graph!"
-            return this
-        
-        return this unless view = _.find @subviews, -> it.model is graph
-        $ 'body' .scrollTop view.$el.offset().top if view.$el.is ':visible'
-        
-        this
-    
-    findClosestGraph: (scroll) ->
-        scroll or= $ 'body' .scrollTop()
-        views = @subviews
-            .filter -> it.$el.is ':visible'
-            .map -> [ it.$el.offset().top, it ]
-            .filter -> it[0] >= scroll
-            .sort (a,b) -> op.cmp a[0], b[0]
-        return views[0][1] if views.length
-    
-    ### }}}
-
-
-
-/**
- * @class
- * @extends BaseView
- */
-RandomTabView = exports.RandomTabView = BaseView.extend do # {{{
-    __bind__       : <[  ]>
-    className      : 'tab-pane'
-    tag            : 'div'
-    template       : require '../template/random/random-tab'
-    
-    
-    constructor: function RandomTabView
-        BaseView ...
-    
-    initialize: ->
-        BaseView::initialize ...
-    
-    getTabId: ->
-        _.underscored @model.get('name') .toLowerCase() + '-graphs-tab'
-    
-    toTemplateLocals: ->
-        json = RandomTabView.__super__.toTemplateLocals ...
-        tab_name = _.underscored @model.get('name') .toLowerCase()
-        json import
-            tab_cls : "#tab_name-graphs-pane"
-            tab_id  : "#tab_name-graphs-tab"
-    
-# }}}
-
-
-
-
-
+        @triggerReady()

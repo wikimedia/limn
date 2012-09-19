@@ -24,7 +24,7 @@ Backbone = require 'backbone'
 } = limn.graph      = require './graph'
 { DashboardView, Dashboard,
 } = limn.dashboard  = require './dashboard'
-{ RandomView, Random,
+{ Random, RandomList, RandomListView, RandomView, RandomEditView,
 } = limn.random  = require './random'
 limn.data           = require './data'
 limn.chart          = require './chart'
@@ -50,13 +50,11 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
         'dashboards/:dashId'        : 'showDashboard'
         'dashboards'                : 'listDashboards'
 
-        'random'                    : 'playRandom'
+        'random/new'                : 'newRandom'
+        'random/:randomId/edit'     : 'editRandom'
+        'random/:randomId'          : 'showRandom'
+        'random'                    : 'listRandoms'
 
-    playRandom: ->
-        @model = new Random
-        @view = new RandomView {@model} .attach @el
-    
-    
     /**
      * @constructor
      */
@@ -99,6 +97,26 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
     home: ->
         # console.log "#this.home!"
         @showDashboard 'reportcard'
+
+
+    ### Randoms
+
+    createRandomModel: (id) ->
+        data = @processData id
+        random = new Random data, {+parse}
+
+    listRandoms: ->
+        @collection = new RandomList()
+        @view = new RandomListView {@collection} .attach @el
+
+    showRandom: (id) ->
+        return @editRandom id if _ <[ new edit ]> .contains id
+        @model = @createRandomModel id
+        @view  = new RandomView {@model} .attach @el
+
+    editRandom: (id) ->
+        @model = @createRandomModel id
+        @view = new RandomEditView {@model} .attach @el
     
     
     ### Graphs

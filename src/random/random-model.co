@@ -5,10 +5,17 @@
  * @class
  */
 Random = exports.Random = BaseModel.extend do
-    urlRoot : '/random'    
-    
-    constructor: function Random
-        BaseModel ...
-    
+
+    constructor: function Random (attributes={}, opts)
+        attributes.options or= {}
+        attributes.slug    or= attributes.id
+        BaseModel.call this, attributes, opts
+
     initialize: ->
         BaseModel::initialize ...
+
+    urlRoot: '/random'
+    toLink: ->
+        "#{limn.mount @urlRoot}/#{@get('slug')}"
+    toEditLink: ->
+        "#{limn.mount @urlRoot}/#{@get('slug')}/edit"

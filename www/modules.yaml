@@ -64,8 +64,9 @@ development:
                     - graph-edit.jade
                     - graph-list.jade
                 - random:
+                    - random-edit.jade
+                    - random-list.jade
                     - random.jade
-                    - random-tab.jade
             - util:
                 - underscore:
                     - function
@@ -138,6 +139,9 @@ development:
             - random:
                 - random-model
                 - random-view
+                - random-edit-view
+                - random-list-model
+                - random-list-view
                 - index
             - client
 
