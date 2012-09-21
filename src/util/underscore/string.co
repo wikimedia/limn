@@ -15,7 +15,7 @@ _string = do
         out  = []
         return [s] if step <= 0
         while i > 0
-            out.unshift s.slice Math.max(0, i-step), i
+            out.unshift s.slice Math.max(0, i - step), i
             i -= step
         out
     

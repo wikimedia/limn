@@ -1,10 +1,13 @@
 {EventEmitter} = require 'events'
+Backbone = require 'backbone'
 
-{ _, op, event, root,
-} = require './util'
+limn = exports
+
+limn.{ _, op, event,
+} =  { _, op, event, root,
+} = limn.util = require './util'
 
 # Decorate root limn namespace object with EventEmitter methods
-limn = exports
 emitter = limn.__emitter__ = new event.ReadyEmitter()
 for k of <[ on addListener off removeListener emit trigger once removeAllListeners ]>
     limn[k] = emitter[k].bind emitter
@@ -14,20 +17,15 @@ limn.mount = (path) ->
     (if mnt is not '/' then mnt else '') + path
 
 
-Backbone = require 'backbone'
-
 { BaseView, BaseModel, BaseList,
 } = limn.base       = require './base'
-{ ChartType, DygraphsChartType,
+{ ChartType, DygraphsChartType, ChartElement, ChartElementData,
 } = limn.chart      = require './chart'
 { Graph, GraphList, GraphDisplayView, GraphEditView, GraphListView,
 } = limn.graph      = require './graph'
 { DashboardView, Dashboard,
 } = limn.dashboard  = require './dashboard'
 limn.data           = require './data'
-limn.chart          = require './chart'
-limn.util           = require './util'
-
 
 /**
  * @class Sets up root application, automatically attaching to an existing element
@@ -38,6 +36,7 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
     appSelector : '#content .inner'
     
     routes:
+        # 'graph-element'             : 'editElementGraph'
         'graphs/(new|edit)'         : 'newGraph'
         'graphs/:graphId/edit'      : 'editGraph'
         'graphs/:graphId'           : 'showGraph'

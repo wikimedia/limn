@@ -1,0 +1,94 @@
+d3 = require 'd3'
+Seq = require 'seq'
+
+{ _, op,
+} = limn = require 'limn/client'
+{ BaseView,
+} = require '../../base'
+{ ChartElementData,
+} = require './chart-element-data'
+{ ChartElement,
+} = require './chart-element'
+
+
+/**
+ * @class
+ * @extends BaseView
+ */
+ChartView = exports.ChartView = BaseView.extend do # {{{
+    __bind__  : <[  ]>
+    typeName  : 'ChartView'
+    tagName   : 'section'
+    className : 'chart'
+    template : require '../../template/chart/chart-view'
+    
+    events : {}
+    
+    viewEvents :
+        'render' : 'onRender'
+    
+    xScaleViewport : null
+    yScaleViewport : null
+    
+    
+    
+    constructor: function ChartView (opts)
+        BaseView ...
+        @chart = this
+    
+    initialize: (opts) ->
+        ChartView.__super__.initialize ...
+        @elements = ChartElement.createChildren this, { graph:@model, chart:this }
+    
+    
+    
+    
+    
+    ### Rendering {{{
+    
+    processElements: ->
+        @model.get 'elements' .forEach (data) ~>
+            elView = @addSubview ChartElement.create data, this, @model
+    
+    determineSize: (refEl=@$el) ->
+        refEl = $ refEl
+        modelW = width  = @model.get 'width'
+        modelH = height = @model.get 'height'
+        
+        if width is 'auto'
+            width = '100%'
+            # width = refEl.innerWidth() or 300
+        width ?= modelW
+        
+        if height is 'auto'
+            height = '100%'
+            # height = refEl.innerHeight() or 320
+        height ?= modelH
+        
+        { width, height }
+    
+    
+    build: ->
+        ChartView.__super__.build ...
+        size = @determineSize()
+        @$ 'svg' .attr size
+        # model = @model
+        # svg = @sel.selectAll 'svg'
+        #     .data [model], -> "svg-"+it.cid
+        #     .enter().append 'svg'
+        #         .attr 'width',  width .attr 'height', height
+        # axes     = svg.append 'g' .attr 'class', 'axes' .attr 'data-subview', 'AxesElement'
+        # viewport = svg.append 'g' .attr 'class', 'viewport'
+        # viewport.append 'g' .attr 'class', 'note-elements' .attr 'data-subview', 'AnnotationsElement'
+        # viewport.append 'g' .attr 'class', 'fg-elements'   .attr 'data-subview', ''
+        # viewport.append 'g' .attr 'class', 'bg-elements'   .attr 'data-subview', 'GridElement'
+        # minimap  = svg.append 'g' .attr 'class', 'minimap' .attr 'data-subview', 'MinimapElement'
+        this
+    
+    onRender: ->
+        size = @determineSize()
+        @$ 'svg' .attr size
+    
+    # }}}
+
+# }}}

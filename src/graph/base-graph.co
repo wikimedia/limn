@@ -1,0 +1,48 @@
+{ BaseModel, BaseList, ModelCache,
+} = require '../base'
+
+
+
+/**
+ * @class Base graph model, which serves as the common root for all versions of
+ * the Graph class.
+ * @extends BaseModel
+ */
+BaseGraph = exports.BaseGraph = BaseModel.extend do # {{{
+    urlRoot  : '/graphs'
+    
+    
+    constructor: function BaseGraph
+        BaseModel ...
+    
+    initialize: ->
+        BaseModel::initialize ...
+        @constructor.register this
+# }}}
+
+
+
+### Graph Cache for parent-lookup
+#   Note: the same cache will be inherited by all BaseGraph subclasses;
+#   This means any derived Graph.lookup() can be used to find graphs by ID.
+new ModelCache BaseGraph
+
+
+
+/**
+ * @class Base graph collection, which serves as the common root for all versions of
+ * the GraphList class (not that I can imagine why you'd ever want to run a type test
+ * on it.)
+ * @extends BaseList
+ */
+BaseGraphList = exports.BaseGraphList = BaseList.extend do # {{{
+    urlRoot  : '/graphs'
+    model    : BaseGraph
+    
+    constructor : function BaseGraphList then BaseList ...
+    initialize  : -> BaseList::initialize ...
+    toString    : -> @toStringWithIds()
+# }}}
+
+
+

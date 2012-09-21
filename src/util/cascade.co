@@ -104,12 +104,6 @@ class Cascade
         @_lookups
     
     /**
-     * @returns {Array<Object>} The array of lookup dictionaries.
-     */
-    getLookups: ->
-        @_lookups
-    
-    /**
      * Adds a new lookup dictionary to the chain.
      * @returns {this}
      */

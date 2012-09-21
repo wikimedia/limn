@@ -70,16 +70,13 @@ class AliasDict
                 prop.value if prop?
             undefined
         
-        if val is not undefined
-            val
-        else
-            def
+        val ? def
     
     set : (key, val) ->
         _.setNested @_data, key, val, {+ensure}
         val
     
-    del : (key) ->
+    unset : (key) ->
         prop = _.getNestedMeta key
         if prop
             delete prop.obj[prop.key]
@@ -103,7 +100,7 @@ class AliasDict
         @_aliases[key] = _.flatten @getAlias(key, [key]).concat(aliases)
         this
     
-    delAlias : (key) ->
+    unsetAlias : (key) ->
         delete @_aliases[key]
     
     
@@ -152,7 +149,5 @@ class AliasDict
         "#{Cls.displayName or Cls.name}()"
 
 
+
 module.exports = exports = AliasDict
-
-
-

@@ -1,0 +1,30 @@
+d3 = require 'd3'
+Seq = require 'seq'
+
+{ _, op,
+} = limn = require 'limn/client'
+{ ChartElement,
+} = require '../chart-element'
+{ ChartElementData,
+} = require '../chart-element-data'
+
+
+/**
+ * @class
+ * @extends ChartElement
+ */
+TimeseriesChartElement = exports.TimeseriesChartElement = ChartElement.extend do # {{{
+    __bind__  : <[  ]>
+    typeName  : 'TimeseriesChartElement'
+    tagName   : 'g'
+    className : 'timeseries-chart-element chart-element'
+    
+    
+    constructor: function TimeseriesChartElement
+        ChartElement ...
+    
+    initialize: ->
+        ChartElement::initialize ...
+    
+# }}}
+

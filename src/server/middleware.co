@@ -1,6 +1,7 @@
 #!/usr/bin/env coco
 
 fs                      = require 'fs'
+url                     = require 'url'
 path    = {dirname}     = require 'path'
 subproc = {exec, spawn} = require 'child_process'
 exists  = fs.existsSync or path.existsSync
@@ -164,7 +165,9 @@ application = limn.application =
             @set 'view options', view_opts
             
             # Parse URL, fiddle
-            @use require('./reqinfo')({})
+            @use (req, res, next) ->
+                req.info = url.parse req.url
+                next()
             
             # Parse form submits into req.params
             @use express.bodyParser()

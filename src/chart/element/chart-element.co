@@ -1,0 +1,177 @@
+d3 = require 'd3'
+Seq = require 'seq'
+Backbone = require 'backbone'
+
+{ _, op,
+} = limn = require 'limn/client'
+{ BaseView,
+} = require '../../base'
+
+
+/**
+ * @class
+ * @extends BaseView
+ */
+ChartElement = exports.ChartElement = BaseView.extend do # {{{
+    __bind__     : <[  ]>
+    __opt2attr__ : <[ graph chart ]>
+    typeName     : 'ChartElement'
+    tagName      : 'g'
+    className    : 'chart-element'
+    
+    /**
+     * The graph for this element tree.
+     * @type Graph
+     */
+    graph : null
+    
+    /**
+     * The root chart of this element tree.
+     * @type ChartView
+     */
+    chart : null
+    
+    /**
+     * Selection of the element for this view, used by @select() and @selectAll().
+     * Defaults to `d3.select(this.el)`.
+     * @type d3.selection
+     */
+    sel : null
+    
+    elements : null
+    
+    
+    
+    
+    /**
+     * @constructor
+     * - Model should be an instance of ChartElementData.
+     */
+    constructor: function ChartElement (opts)
+        BaseView ...
+    
+    initialize: (opts) ->
+        @sel = d3.select @el
+        ChartElement.__super__.initialize ...
+        # @elements = ChartElement.create @model, @chart, @graph
+        @elements = ChartElement.createChildren this
+    
+    
+    
+    ### d3 integration {{{
+    
+    select: (selector) ->
+        @sel?.select selector
+    
+    selectAll: (selector) ->
+        @sel?.selectAll selector
+    
+    
+    
+    
+    # }}}
+    ### Rendering {{{
+    
+    processElements: ->
+        {chart, graph} = this
+        @model.get 'elements' .forEach (data) ~>
+            elView = @addSubview ChartElement.create data, chart, graph
+    
+    build: ->
+        @attachSubviews()
+        @isBuilt = true
+        this
+    
+    render: ->
+        if @isBuilt
+            @update()
+        else
+            @build()
+        @renderSubviews()
+        @trigger 'render', this
+        this
+    
+    update: ->
+        locals = @toTemplateLocals()
+        @trigger 'update', this, locals
+        this
+    
+    # }}}
+    
+    getClassName: ->
+        "#{@typeName or @..displayName or @..name}"
+    
+    toString: ->
+        "#{@getClassName()}(model=#{@model})"
+    
+# }}}
+
+
+
+/**
+ * Map of known libraries by name.
+ * @type Object
+ */
+KNOWN_CHART_TYPES = exports.KNOWN_CHART_TYPES = {}
+_extendChartElement = ChartElement.extend
+
+### Class Methods
+ChartElement import do
+    
+    /**
+     * Register a new chart type.
+     */
+    register : (Subclass) ->
+        # console.log "ChartElement.register(#Subclass)"
+        unless Subclass?::?.hasOwnProperty('typeName') and typeName = Subclass?::?typeName
+            throw new Error "Chart Element types must declare a new, unique typeName on the prototype! (got #{Subclass?::?typeName})"
+        if KNOWN_CHART_TYPES[typeName]
+            throw new Error "Duplicate Chart Element typeName! (got #typeName)"
+        KNOWN_CHART_TYPES[ typeName ] = Subclass
+    
+    
+    /**
+     * Look up a `ChartElement` by `typeName`.
+     */
+    lookup : (name) ->
+        name = _.get name, 'elementType' unless _.isString name
+        KNOWN_CHART_TYPES[name]
+    
+    
+    /**
+     * Look up a chart type by name, returning a new instance
+     * with the given model (and, optionally, view).
+     * @returns {ChartElement}
+     */
+    create : (model, chart, graph, opts) ->
+        opts = {+addSubviews, ...opts or {}}
+        # opts = {+recursive, +addSubviews, ...opts or {}}
+        # console.log "ChartElement.create(#model) ->", model
+        return null unless Type = @lookup model
+        view = new Type {model, chart, graph}
+        # @createChildren view, {chart, graph, ...opts} if opts.recursive
+        # view
+    
+    createChildren: (rootView, opts) ->
+        opts = {+recursive, +addSubviews, chart:rootView.chart, graph:rootView.graph, ...opts or {}}
+        rootView.model.get 'elements' .map (elModel) ~>
+            elView = @create elModel, opts.chart, opts.graph, opts
+            rootView.addSubview elView      if opts.addSubviews
+            @createChildren elView, opts    if opts.recursive
+            elView
+    
+    
+    extend : (proto, statics) ->
+        unless proto?.hasOwnProperty('typeName') and typeName = proto.typeName
+            throw new Error "Chart Element types must declare a new, unique typeName on the prototype! (got #{proto?.typeName})"
+        if KNOWN_CHART_TYPES[typeName]
+            throw new Error "Duplicate Chart Element typeName! (got #typeName)"
+        
+        Subclass = _extendChartElement.call this, proto, statics
+        @register Subclass
+    
+
+
+require './vis'
+require './meta'
+

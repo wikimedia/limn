@@ -61,7 +61,7 @@ DataSourceUIView = exports.DataSourceUIView = BaseView.extend do # {{{
         source_col = parseInt source_col
         return if not source_id or isNaN source_col
         
-        @$ '.source-metrics .datasource-source-metric' .removeClass 'active'
+        @$ '.source-metrics .datasource-source-metric .active' .removeClass 'active'
         el.addClass 'active'
         @model.set {source_col, source_id}
         @trigger 'metric-change', @model, this

@@ -47,7 +47,7 @@ class Base extends EventEmitter
     ### Misc
     
     getClassName: ->
-        "#{@..name or @..displayName}"
+        "#{@..displayName or @..name}"
     
     toString: ->
         "#{@getClassName()}()"

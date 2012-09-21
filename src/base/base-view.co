@@ -44,20 +44,31 @@ BaseView = exports.BaseView = Backbone.View.extend mixinBase do # {{{
      */
     isAttached: false
     
+    /**
+     * Map of event names to method names to be registered as
+     * listeners on the view itself (as opposed to `events`, which
+     * registers on the view's DOM element).
+     * @type Object<String, String>
+     */
+    viewEvents : {}
     
     
-    constructor : function BaseView
+    
+    constructor : function BaseView (opts)
         @__class__      = @constructor
         @__superclass__ = @..__super__.constructor
         @waitingOn      = 0
         @subviews       = new ViewList
         @onReturnKeypress = _.debounce @onReturnKeypress.bind(this), 50
         Backbone.View ...
+        # register events on the view itself
+        for evt, handler in @viewEvents
+            @on evt, that, this if @[handler]
         @trigger 'create', this
     
-    initialize: ->
+    initialize: (opts) ->
         @__apply_bind__()
-        
+        @__apply_opt2attr__ opts
         @setModel @model
         @build()
         @$el.on 'form submit', -> it.preventDefault()
@@ -190,7 +201,7 @@ BaseView = exports.BaseView = Backbone.View.extend mixinBase do # {{{
             return bp.eq 0 if bp.length
         
         # Find all elements that specify this type as the subview type
-        bp = bind_points.filter "[data-subview='#{view.getClassName()}']"
+        bp = bind_points.filter "[data-subview~='#{view.getClassName()}'], [data-subview='']"
         return bp.eq 0 if bp.length
     
     
@@ -265,8 +276,8 @@ BaseView = exports.BaseView = Backbone.View.extend mixinBase do # {{{
         "#{@getClassName()}(model=#{@model})"
 
 
-# Proxy model methods
-<[ get set unset toJSON toKV toURL ]>
+# Proxy model serialization methods
+<[ toJSON toKV toURL ]>
     .forEach (methodname) ->
         BaseView::[methodname] = -> @model[methodname].apply @model, arguments
 

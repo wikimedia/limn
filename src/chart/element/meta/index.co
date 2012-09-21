@@ -1,0 +1,5 @@
+axes    = require './axes-element'
+legend  = require './legend-element'
+minimap = require './minimap-element'
+
+exports import axes import legend import minimap

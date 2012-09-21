@@ -1,0 +1,17 @@
+extends ./layout
+
+block title
+    title Edit Element Graph | Limn
+
+append styles
+    mixin css('/vendor/bootstrap-colorpicker/css/colorpicker.css')
+    mixin css('/vendor/bootstrap-datepicker/css/datepicker.css')
+    mixin css('graph.css')
+    mixin css('data.css')
+    mixin css('isotope.css')
+
+
+block main-scripts
+    script
+        jQuery(function(){ limn.app.editGraph('kbye'); });
+

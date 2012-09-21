@@ -4,8 +4,6 @@ require 'buildtools/tasks'
 {removeSync:remove} = require 'remove'
 
 
-MODULE_LINK            = 'node_modules/limn'
-
 APP_BUNDLE_PATH        = 'var/js/limn.no-deps.js'
 APP_BUNDLE_MIN_PATH    = APP_BUNDLE_PATH.replace /\.js$/, '.min.js'
 VENDOR_BUNDLE_PATH     = 'var/vendor/vendor-bundle.js'
@@ -15,23 +13,14 @@ DIST_MIN_PATH          = DIST_PATH.replace /\.js$/, '.min.js'
 
 
 
-task \link 'Link package source to node_modules so the name resolves correctly' ->
-    # Browser-based require doens't support relative requires, but things
-    # like `require 'limn/utils'` rarely work in node without this hack.
-    mkdirp 'node_modules'
-    if exists MODULE_LINK
-        remove MODULE_LINK
-    else
-        say "Creating #{basename MODULE_LINK} symlink..."
-    fs.symlinkSync "../src", MODULE_LINK
-
 task \install 'Install project dependencies.' ->
     <- sh 'npm install', {-verbose, +errors, +die}
 
 task \setup 'Ensure project is set up for development.' ->
-    invoke \install
-    # invoke \link
+    err <- sh 'npm install', {-verbose, +errors, +die}
+    throw err if err
     err, version <- writeVersionFile 'src/version.js'
+    throw err if err
 
 
 task \server 'Start dev server' ->
@@ -212,7 +201,7 @@ task \cleanup_tests 'Removes compiled tests' ->
 
 task \clean 'Clean up environment and artifacts' ->
     invoke \cleanup_tests
-    remove [MODULE_LINK, 'lib', 'var', 'dist'], {+ignoreMissing, +verbose}
+    remove ['lib', 'var', 'dist'], {+ignoreMissing, +verbose}
 
 
 

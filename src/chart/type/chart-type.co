@@ -1,13 +1,13 @@
 moment = require 'moment'
 Backbone = require 'backbone'
 
-limn = require '../client'
+limn = require '../../client'
 { _, op,
-} = require '../util'
+} = require '../../util'
 { ReadyEmitter,
-} = require '../util/event'
+} = require '../../util/event'
 { Parsers, ParserMixin,
-} = require '../base'
+} = require '../../base'
 
 
 

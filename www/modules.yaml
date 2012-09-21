@@ -27,6 +27,7 @@ development:
         ### CommonJS Support Starts Here
         ### (this means Browserify must come before any .mod files)
         - browserify
+        - require
         
         - underscore.string.mod
         
@@ -49,6 +50,7 @@ development:
                 - chart:
                     - chart-option.jade
                     - chart-scaffold.jade
+                    - chart-view.jade
                 - dashboard:
                     - dashboard.jade
                     - dashboard-tab.jade
@@ -76,7 +78,9 @@ development:
                     - index
                 - backbone
                 - parser
+                - aliasdict
                 - cascade
+                - hashset
                 - formatters
                 - index
             - base:
@@ -94,13 +98,35 @@ development:
                 - parser-mixin
                 - index
             - graph:
+                - base-graph
                 - graph-model
+                - legacy-graph-model
                 - graph-view
                 - graph-display-view
                 - graph-edit-view
                 - graph-list-view
                 - index
             - chart:
+                - element:
+                    - vis:
+                        - timeseries-element
+                        - points-element
+                        - line-element
+                        - bar-element
+                        - annotations-element
+                        - geo-element
+                        - index
+                    - meta:
+                        - axes-element
+                        - callout-element
+                        - legend-element
+                        - minimap-element
+                        - index
+                    - chart-element-data
+                    - chart-element
+                    - chart-view
+                    - group-element
+                    - index
                 - option:
                     - chart-option-model
                     - chart-option-view
@@ -112,10 +138,10 @@ development:
                         - d3-bar-element
                         # - d3-geo-chart-type
                         - index
+                    - chart-type
                     - d3-chart
                     - dygraphs
                     - index
-                - chart-type
                 - index
             - data:
                 - project-colors
@@ -133,4 +159,5 @@ development:
                 - dashboard-view
                 - index
             - client
+            - index
 

@@ -1,14 +1,13 @@
 Seq = require 'seq'
 
-{ _, op,
-} = limn = require 'limn/client'
-{ Cascade,
-} = limn.util
+limn = require 'limn/client'
+{ _, Cascade,
+} = require '../util'
 { BaseGraph, BaseGraphList,
 } = require './base-graph'
-{ ChartElementData, ChartElementDataList, ChartElement, ChartViewport,
+{ ChartType,
 } = require '../chart'
-{ DataSet,
+{ DataSet
 } = require '../data'
 
 root = do -> this
@@ -19,8 +18,9 @@ root = do -> this
  * Represents a Graph, including its charting options, dataset, annotations, and all
  * other settings for both its content and presentation.
  */
-Graph = exports.Graph = BaseGraph.extend do # {{{
-    urlRoot : '/graphs'
+LegacyGraph = exports.LegacyGraph = BaseGraph.extend do # {{{
+    IGNORE_OPTIONS : <[ width height timingName ]>
+    urlRoot        : '/graphs'
     
     /**
      * Whether this Graph has loaded all assets, parent-graphs, and related
@@ -36,16 +36,23 @@ Graph = exports.Graph = BaseGraph.extend do # {{{
     dataReady : false
     
     /**
-     * List of graph parents. XXX: Obsolete?
-     * @type GraphList
+     * The chart type backing this graph.
+     * @type ChartType
+     */
+    chartType : null
+    
+    /**
+     * List of graph parents.
+     * @type LegacyGraphList
      */
     parents : null
     
     /**
-     * List of chart element definitions.
-     * @type ChartElementDataList
+     * Cascade of objects for options lookup (includes own options).
+     * @type Cascade
+     * @private
      */
-    elements : null
+    optionCascade : null
     
     
     
@@ -54,39 +61,57 @@ Graph = exports.Graph = BaseGraph.extend do # {{{
      * Attribute defaults.
      */
     defaults: ->
-        slug      : ''
+        slug    : ''
+        name    : ''
+        desc    : ''
+        notes   : ''
+        width   : 'auto'
+        height  : 320
+        parents : <[ root ]>
         
-        name      : ''
-        shortName : ''
-        desc      : ''
-        notes     : ''
-        
-        width     : 'auto'
-        height    : 320
-        parents   : <[ root ]>
-        
-        viewport :
-            width  : 'auto'
-            height : 320
+        ### New Structure
         elements : []
+        
+        ### Old Structure
+        data    :
+            palette : null
+            metrics : []
+            lines   : []
+        callout :
+            enabled     : true
+            metric_idx  : 0
+            label       : ''
+        chartType : 'dygraphs'
+        options : {}
     
     url: ->
         "#{limn.mount @urlRoot}/#{@get('slug')}.json"
     
     
     
-    constructor: function Graph (attributes={}, opts)
-        # @on 'ready', ~> console.log "(#this via Graph).ready!"
-        # attributes.options or= {}
+    constructor: function LegacyGraph (attributes={}, opts)
+        # @on 'ready', ~> console.log "(#this via LegacyGraph).ready!"
+        attributes.options or= {}
         attributes.slug    or= attributes.id if attributes.id?
+        @optionCascade = new Cascade attributes.options
         BaseGraph.call this, attributes, opts
     
     
     initialize: (attributes) ->
         BaseGraph::initialize ...
-        @parents = new GraphList
-        @elements = new ChartElementDataList @get 'elements'
-        @set 'elements', @elements, {+silent}
+        
+        @parents = new LegacyGraphList
+        @chartType = ChartType.create this
+        @on 'change:chartType', ~> @chartType = ChartType.create this
+        
+        # Insert submodels in place of JSON
+        @dataset = new DataSet {id:@id, ...@get 'data'}
+            .on 'change',               @onDataSetChange, this
+            .on 'metric-data-loaded',   (dataset, metric) ~>
+                @trigger 'metric-data-loaded', this, metric
+        @set 'data', @dataset, {+silent}
+        
+        @trigger 'init', this
     
     
     
@@ -111,28 +136,26 @@ Graph = exports.Graph = BaseGraph.extend do # {{{
                     success : @unwaitAnd (model, res) ~>
                         # console.log "#{this}.fetch() --> success!", res
                         # Update the DataSet model with the new values
-                        # @dataset.set @get 'data'
-                        # @set 'data', @dataset, {+silent}
-                        @elements = new ChartElementDataList @get 'elements'
-                        @set 'elements', @elements, {+silent}
+                        @dataset.set @get 'data'
+                        @set 'data', @dataset, {+silent}
                         next.ok res
             
             # Load Parents...
-            # .seq_ (next) ~>
-            #     next.ok @get 'parents'
-            # .flatten()
-            # .seqMap_ (next, parent_id) ~>
-            #     @wait()
-            #     Graph.lookup parent_id, next
-            # .seqEach_ (next, parent) ~>
-            #     @parents.add parent
-            #     @optionCascade.addLookup parent.get('options')
-            #     @unwait()
-            #     next.ok()
+            .seq_ (next) ~>
+                next.ok @get 'parents'
+            .flatten()
+            .seqMap_ (next, parent_id) ~>
+                @wait()
+                LegacyGraph.lookup parent_id, next
+            .seqEach_ (next, parent) ~>
+                @parents.add parent
+                @optionCascade.addLookup parent.get('options')
+                @unwait()
+                next.ok()
             
             # Load DataSet...
-            # .seq_ (next) ~>
-            #     @dataset.once 'ready', next.ok .load()
+            .seq_ (next) ~>
+                @dataset.once 'ready', next.ok .load()
             
             # Done!
             .seq ~>
@@ -169,15 +192,24 @@ Graph = exports.Graph = BaseGraph.extend do # {{{
                 @triggerReady 'dataReady', 'data-ready'
         this
     
+    getData: ->
+        @dataset.getData()
+    
+    onDataSetChange: ->
+        # console.log "#this.onDataSetChange!"
+        # @set 'data', @dataset, {+silent}
+        # @trigger 'change:data', this, @dataset, 'data'
+        @trigger 'change',      this, @dataset, 'data'
+    
     
     ### }}}
     ### Accessors {{{
     
-    # get: (key) ->
-    #     if _.startsWith key, 'options.'
-    #         @getOption key.slice(8)
-    #     else
-    #         Graph.__super__.get.call this, key
+    get: (key) ->
+        if _.startsWith key, 'options.'
+            @getOption key.slice(8)
+        else
+            LegacyGraph.__super__.get.call this, key
     
     
     set: (key, value, opts) ->
@@ -188,7 +220,7 @@ Graph = exports.Graph = BaseGraph.extend do # {{{
             values = { "#key": value }
         values = @parse values
         
-        setter = Graph.__super__.set
+        setter = LegacyGraph.__super__.set
         
         # Merge options in, firing granulated change events
         if values.options
@@ -206,7 +238,46 @@ Graph = exports.Graph = BaseGraph.extend do # {{{
         # Deal with everything else
         setter.call this, values, opts
     
-    
+    getCalloutData: ->
+        # For now, always operate on the first Metric
+        return unless (m = @dataset.metrics.at 0) and
+            (data  = m.getData()) and
+            (dates = m.getDateColumn())
+        
+        # trim cols to match the right timespan
+        len = Math.min data.length, dates.length
+        data  .= slice(data.length  - len) if data.length  < len
+        dates .= slice(dates.length - len) if dates.length < len
+        
+        for i til len
+            v = data[i]
+            break if v? and not isNaN(v)
+        if i > 0
+            data  .= slice i
+            dates .= slice i
+        
+        # Compare against latest non-null value
+        last = len - 1
+        for i til len
+            v = data[last - i]
+            break if v? and not isNaN(v)
+        if i > 0
+            data  .= slice 0, last - (i-1)
+            dates .= slice 0, last - (i-1)
+        
+        # Calc index offsets
+        latest     = data.length - 1
+        last_month = latest - 1
+        last_year  = latest - 12
+        
+        callout =
+            latest    : data[latest]
+            month : 
+                dates : [ dates[last_month], dates[latest] ]
+                value : [ data[last_month],  data[latest], data[latest] - data[last_month] ]
+            year : 
+                dates : [ dates[last_year], dates[latest]  ]
+                value : [ data[last_year],  data[latest],  data[latest] - data[last_year]  ]
     
     ### }}}
     ### Chart Option Accessors {{{
@@ -264,6 +335,17 @@ Graph = exports.Graph = BaseGraph.extend do # {{{
                 (not opts.keepUnchanged and not @isChangedOption k)
         options
     
+    
+    # }}}
+    ### Serialization {{{
+    
+    parse: (data) ->
+        data = JSON.parse data if typeof data is 'string'
+        for k, v in data
+            data[k] = Number v if v is not 'auto' and _.contains <[ width height ]>, k
+            # data[k] = JSON.stringify v if k is 'parents'
+        data
+    
     /**
      * @returns {Boolean} Whether the value for option `k` is inherited or not.
      */
@@ -285,22 +367,11 @@ Graph = exports.Graph = BaseGraph.extend do # {{{
         and not @isDefaultOption k
     
     
-    
-    # }}}
-    ### Serialization {{{
-    
-    parse: (data) ->
-        data = JSON.parse data if typeof data is 'string'
-        for k, v in data
-            data[k] = Number v if v is not 'auto' and _.contains <[ width height ]>, k
-            # data[k] = JSON.stringify v if k is 'parents'
-        data
-    
-    # toJSON: (opts={}) ->
-    #     opts = {+keepDefaults, +keepUnchanged} import opts
-    #     # use jQuery's deep-copy implementation -- XXX: Deep-copy no longer necessary thanks to @getOptions()
-    #     json = _.clone(@attributes) import { options:@getOptions(opts) }
-    #     # { data: ...json }
+    toJSON: (opts={}) ->
+        opts = {+keepDefaults, +keepUnchanged} import opts
+        # use jQuery's deep-copy implementation -- XXX: Deep-copy no longer necessary thanks to @getOptions()
+        json = _.clone(@attributes) import { options:@getOptions(opts) }
+        # { data: ...json }
     
     
     toKVPairs: (opts={}) ->
@@ -351,11 +422,10 @@ Graph = exports.Graph = BaseGraph.extend do # {{{
 # }}}
 
 
-GraphList = exports.GraphList = BaseGraphList.extend do # {{{
-    model : Graph
-    constructor : function GraphList then BaseGraphList ...
+LegacyGraphList = exports.LegacyGraphList = BaseGraphList.extend do # {{{
+    model : LegacyGraph
+    constructor : function LegacyGraphList then BaseGraphList ...
     initialize  : -> BaseGraphList::initialize ...
 # }}}
-
 
 
