@@ -10,6 +10,8 @@ Seq = require 'seq'
  * @class Caches models and provides static lookups by ID.
  */
 class exports.ModelCache extends ReadyEmitter
+    __bind__ : <[ onModelReady ]>
+    
     /**
      * @see ReadyEmitter#readyEventName
      * @private
@@ -51,6 +53,13 @@ class exports.ModelCache extends ReadyEmitter
      */
     cache : null
     
+    /**
+     * Holds state of in-flight requests: Map from id to array of callbacks.
+     * @private
+     * @type Object
+     */
+    loading : null
+    
     
     
     /**
@@ -76,6 +85,7 @@ class exports.ModelCache extends ReadyEmitter
             [options, ModelType] = [ModelType or {}, null]
         @options = {...@DEFAULT_OPTIONS, ...options}
         
+        @loading = {}
         @cache = @options.cache or new Backbone.Collection
         
         @ModelType = ModelType or @options.ModelType
@@ -122,40 +132,6 @@ class exports.ModelCache extends ReadyEmitter
         @cache.get id
     
     /**
-     * Asynchronously look up any number of models, requesting them from the
-     * server if not already known to the cache.
-     *
-     * @param {String|Array<String>} ids List of model IDs to lookup.
-     * @param {Function} cb Callback of the form `(err, models)`,
-     *  where `err` will be null on success and `models` will be an Array
-     *  of model objects.
-     * @param {Object} [cxt=this] Callback context.
-     * @returns {this}
-     */
-    lookupAll: (ids, cb, cxt=this) ->
-        ids = [ids] unless _.isArray ids
-        # console.log "ModelCache(#{@cache}).lookup([#ids], #{typeof cb})"
-        
-        unless @ready
-            @on 'cache-ready', ~>
-                @off 'cache-ready', arguments.callee
-                @lookupAll ids, cb, cxt
-            return this
-        
-        Seq ids
-            .parMap_ (next, id) ~>
-                return next.ok(that) if @cache.get id
-                @register @createModel id
-                    .on 'ready', -> next.ok it
-                    .load()
-            .unflatten()
-            .seq (models) ->
-                cb.call cxt, null, models
-            .catch (err) ->
-                cb.call cxt, err
-        this
-    
-    /**
      * Looks up a model, requesting it from the server if it is not already
      * known to the cache.
      *
@@ -167,9 +143,27 @@ class exports.ModelCache extends ReadyEmitter
      * @returns {this}
      */
     lookup: (id, cb, cxt=this) ->
-        @lookupAll [id], (err, models) ->
-            if err then cb.call cxt, err
-            else        cb.call cxt, null, models[0]
+        if @cache.get id
+            _.defer ~> cb.call cxt, null, that
+            return this
+        
+        if callbacks = @loading[id]
+            callbacks.push cb.bind(cxt)
+            return this
+        
+        callbacks = @loading[id] = [ cb.bind(cxt) ]
+        @createModel id
+            .once 'ready', @onModelReady
+            .load()
+        
+        this
+    
+    onModelReady : (model) ->
+        @register model
+        callbacks = delete @loading[ model.id ]
+        for cb of callbacks
+            cb.call this, null, model
+        void
     
     /**
      * Decorate an object with the cache methods:
@@ -186,7 +180,7 @@ class exports.ModelCache extends ReadyEmitter
     decorate: (obj) ->
         obj.__cache__ = this
         # Bind the ModelCache methods to the class
-        for m of <[ register get lookup lookupAll ]>
+        for m of <[ register get lookup ]>
             obj[m] = @[m].bind this
         obj
     

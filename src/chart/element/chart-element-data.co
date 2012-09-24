@@ -6,7 +6,8 @@ Seq = require 'seq'
 } = require '../../util'
 { BaseModel, BaseList, ModelCache,
 } = require '../../base'
-DataSource = DataSourceList = null
+{ DataSource, DataSourceList,
+} = require '../../data/datasource-model'
 
 
 
@@ -16,12 +17,19 @@ DataSource = DataSourceList = null
  */
 ChartElementData = exports.ChartElementData = BaseModel.extend do # {{{
     __opt2attr__ : <[ graph chart ]>
+    NEW_METRIC_LABEL : 'New Metric'
     
     /**
      * Data source for this element.
      * @type DataSource
      */
     source : null
+    
+    /**
+     * Whether this element has loaded the actual data needed to draw the chart.
+     * @type Boolean
+     */
+    dataReady : false
     
     /**
      * Class of the chart element view.
@@ -53,6 +61,7 @@ ChartElementData = exports.ChartElementData = BaseModel.extend do # {{{
      * @type ChartElementDataList
      */
     elements : null
+    
     
     
     
@@ -148,7 +157,6 @@ ChartElementData = exports.ChartElementData = BaseModel.extend do # {{{
     
     
     
-    
     # }}}
     ### Chart Option Accessors {{{
     
@@ -236,7 +244,7 @@ ChartElementData = exports.ChartElementData = BaseModel.extend do # {{{
         @resetReady() if opts.force or @source?.id is not source_id
         return this if @loading or @ready
         
-        unless source_id and @get('data.source_col') >= 0
+        unless source_id or @elements.length
             return @triggerReady()
         
         # console.log "#this.load()..."
@@ -244,29 +252,97 @@ ChartElementData = exports.ChartElementData = BaseModel.extend do # {{{
         @wait()
         @trigger 'load', this
         
-        unless DataSource
-            { DataSource, DataSourceList, } := require '../../data/datasource-model'
-        
-        DataSource.lookup source_id, (err, source) ~>
-            # console.log "#this.onSourceReady", arguments
-            @loading = false
-            @unwait() # terminates the `load` wait
-            if err
-                console.error "#{this} Error loading DataSource! #err"
-            else
+        # perform lookup
+        Seq()
+            .seq_ (next) ~>
+                if source_id and @get('data.source_col') >= 0
+                    DataSource.lookup source_id, next
+                else
+                    next.ok()
+            .seq_ (next, @source) ~>
+                next.ok @elements.models
+            .flatten()
+            .parEach_ (next, child) ~>
+                child.once 'ready', next.ok .load()
+            .seq ~>
                 # console.log "#{this}.load() complete!"
-                @source = source
+                @loading = false
+                @unwait() # terminates the `load` wait
                 @triggerReady()
         this
     
     
+    loadData: (opts={}) ->
+        @resetReady 'dataReady', 'data-ready' if opts.force
+        return this if @loading or @dataReady
+        
+        unless @source or @elements.length
+            return @triggerReady 'dataReady', 'data-ready'
+        
+        # console.log "#this.loadData()..."
+        @wait()
+        @loading = true
+        @trigger 'load-data', this
+        Seq()
+            .seq_ (next) ~>
+                if @source
+                    @source.once 'load-data-success', next.ok .loadData()
+                else
+                    next.ok()
+            .seq_ (next) ~>
+                next.ok @elements.models
+            .flatten()
+            .parEach_ (next, child) ~>
+                unless child.source
+                    console.warn "#{this}.loadData() -- Skipping ChartElementData #child with invalid source!", child
+                    return next.ok()
+                child.source.once 'load-data-success', next.ok .loadData()
+            .seq ~>
+                # console.log "#{this}.loadData() complete!"
+                @loading = false
+                @unwait() # terminates the `load` wait
+                @triggerReady 'dataReady', 'data-ready'
+        this
+    
+    
     # }}}
+    ### Data {{{
+    
+    getDateColumn: ->
+        @source?.getDateColumn()
+    
+    getData: ->
+        @source?.getColumn @get 'data.source_col'
+    
+    getLabel: ->
+        @get('label') or @getPlaceholderLabel()
+    
+    getPlaceholderLabel: ->
+        col  = @get 'data.source_col'
+        name = "#{@source.get 'shortName'}, #{@source.getColumnName col}" if @source and col >= 0
+        name or @NEW_METRIC_LABEL
+    
+    getSourceColumnName: ->
+        col = @get 'data.source_col'
+        @source.getColumnName col if @source and col > 0
+    
+    getColor: ->
+        @get('color') or ProjectColors.lookup(@get('label')) or 'black'
+    
+    
+    # }}}
+    
     
     toJSON: (opts={}) ->
         opts = {+keepDefaults, +keepUnchanged} import opts
         json = _.merge {}, @attributes, { options:@getOptions(opts) }
         # { data: ...json }
     
+    
+    toString: ->
+        {elementType, data} = @attributes
+        dataset = if data then "#{data.source_id}[#{data.source_col}]" else null
+        "#elementType(cid=#{@cid}, data=#dataset)"
     
 # }}}
 

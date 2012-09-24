@@ -40,7 +40,7 @@ development:
         - moment.mod.min
         - dygraph
         - dygraph-extra
-        # - d3
+        - d3.v2
 
 -   suffix: .mod.js
     paths:
