@@ -25,7 +25,7 @@ root = do -> this
  * - Chart options, using ChartOptionScaffold
  */
 GraphEditView = exports.GraphEditView = BaseView.extend do # {{{
-    __bind__  : <[ wait unwait onGraphReady ]>
+    __bind__  : <[ wait unwait onGraphReady onDataReady ]>
     className : 'graph-edit graph'
     template  : require '../template/graph/graph-edit'
     
@@ -55,11 +55,16 @@ GraphEditView = exports.GraphEditView = BaseView.extend do # {{{
     initialize : (o={}) ->
         @model or= new Graph
         GraphEditView.__super__.initialize ...
-        @model.on 'ready', @onGraphReady .load()
+        @model.once 'ready', @onGraphReady .load()
     
     onGraphReady: ->
+        # console.log "#this.onGraphReady()!", @model
         @addSubview @chart = new ChartView { @model }
+        @model.once 'data-ready', @onDataReady .loadData()
     
+    onDataReady: ->
+        # console.log "#this.onDataReady()!", @model
+        @render()
     
     
     ### Persistence {{{

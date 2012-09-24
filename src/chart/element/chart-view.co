@@ -27,8 +27,10 @@ ChartView = exports.ChartView = BaseView.extend do # {{{
     viewEvents :
         'render' : 'onRender'
     
-    xScaleViewport : null
-    yScaleViewport : null
+    xScale : null
+    yScale : null
+    xScaleUnset : true
+    yScaleUnset : true
     
     
     
@@ -39,16 +41,23 @@ ChartView = exports.ChartView = BaseView.extend do # {{{
     initialize: (opts) ->
         ChartView.__super__.initialize ...
         @elements = ChartElement.createChildren this, { graph:@model, chart:this }
+        @xScale = d3.time.scale()
+        @yScale = d3.scale.linear()
     
+    updateScale: (dateCol, dataCol) ->
+        dateCol = @xScale.domain().concat dateCol unless @xScaleUnset
+        @xScale.domain d3.extent dateCol
+        dataCol = @yScale.domain().concat dataCol unless @yScaleUnset
+        @yScale.domain d3.extent dataCol
+        @xScaleUnset = @yScaleUnset = false
+        this
     
     
     
     
     ### Rendering {{{
     
-    processElements: ->
-        @model.get 'elements' .forEach (data) ~>
-            elView = @addSubview ChartElement.create data, this, @model
+    
     
     determineSize: (refEl=@$el) ->
         refEl = $ refEl
@@ -70,24 +79,14 @@ ChartView = exports.ChartView = BaseView.extend do # {{{
     
     build: ->
         ChartView.__super__.build ...
-        size = @determineSize()
-        @$ 'svg' .attr size
-        # model = @model
-        # svg = @sel.selectAll 'svg'
-        #     .data [model], -> "svg-"+it.cid
-        #     .enter().append 'svg'
-        #         .attr 'width',  width .attr 'height', height
-        # axes     = svg.append 'g' .attr 'class', 'axes' .attr 'data-subview', 'AxesElement'
-        # viewport = svg.append 'g' .attr 'class', 'viewport'
-        # viewport.append 'g' .attr 'class', 'note-elements' .attr 'data-subview', 'AnnotationsElement'
-        # viewport.append 'g' .attr 'class', 'fg-elements'   .attr 'data-subview', ''
-        # viewport.append 'g' .attr 'class', 'bg-elements'   .attr 'data-subview', 'GridElement'
-        # minimap  = svg.append 'g' .attr 'class', 'minimap' .attr 'data-subview', 'MinimapElement'
+        @$ 'svg' .attr @determineSize()
         this
     
     onRender: ->
-        size = @determineSize()
+        { width, height } = size = @determineSize()
         @$ 'svg' .attr size
+        @xScale.range [ 0, width ]
+        @yScale.range [ height, 0 ]
     
     # }}}
 

@@ -147,23 +147,20 @@ Graph = exports.Graph = BaseGraph.extend do # {{{
         @resetReady 'dataReady', 'data-ready' if opts.force
         return this if @loading or @dataReady
         
-        unless @dataset.metrics.length
+        unless @elements.length
             return @triggerReady 'dataReady', 'data-ready'
         
         # console.log "#this.loadData()..."
         @wait()
         @loading = true
         @trigger 'load-data', this
-        Seq @dataset.metrics.models
-            .parEach_ (next, metric) ->
-                metric.once 'ready', next.ok .load()
-            .parEach_ (next, metric) ~>
-                unless metric.source
-                    console.warn "#{this}.loadData() -- Skipping metric #metric with invalid source!", metric
-                    return next.ok()
-                metric.source.once 'load-data-success', next.ok .loadData()
+        Seq @elements.models
+            .parEach_ (next, child) ->
+                child.once 'ready', next.ok .load()
+            .parEach_ (next, child) ~>
+                child.once 'data-ready', next.ok .loadData()
             .seq ~>
-                # console.log "#{this}.loadData() complete!"
+                console.log "#{this}.loadData() complete!"
                 @loading = false
                 @unwait() # terminates the `load` wait
                 @triggerReady 'dataReady', 'data-ready'

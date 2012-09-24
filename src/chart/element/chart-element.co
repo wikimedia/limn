@@ -6,6 +6,8 @@ Backbone = require 'backbone'
 } = limn = require 'limn/client'
 { BaseView,
 } = require '../../base'
+{ ChartElementData,
+} = require './chart-element-data'
 
 
 /**
@@ -54,7 +56,7 @@ ChartElement = exports.ChartElement = BaseView.extend do # {{{
         @sel = d3.select @el
         ChartElement.__super__.initialize ...
         # @elements = ChartElement.create @model, @chart, @graph
-        @elements = ChartElement.createChildren this
+        # @elements = ChartElement.createChildren this
     
     
     
@@ -71,11 +73,6 @@ ChartElement = exports.ChartElement = BaseView.extend do # {{{
     
     # }}}
     ### Rendering {{{
-    
-    processElements: ->
-        {chart, graph} = this
-        @model.get 'elements' .forEach (data) ~>
-            elView = @addSubview ChartElement.create data, chart, graph
     
     build: ->
         @attachSubviews()
@@ -147,6 +144,7 @@ ChartElement import do
         opts = {+addSubviews, ...opts or {}}
         # opts = {+recursive, +addSubviews, ...opts or {}}
         # console.log "ChartElement.create(#model) ->", model
+        model = new ChartElementData model unless model instanceof Backbone.Model
         return null unless Type = @lookup model
         view = new Type {model, chart, graph}
         # @createChildren view, {chart, graph, ...opts} if opts.recursive

@@ -189,7 +189,7 @@ application = limn.application =
             # Browserify some deps
             @use require('browserify') do
                 mount   : '/vendor/browserify.js'
-                require : <[ operator underscore underscore.nested underscore.kv seq timeseries d3 events ]>
+                require : <[ operator underscore underscore.nested underscore.kv async-cache seq timeseries emitters events ]>
                 cache   : "#varDir/.cache/browserify/cache.json"
             
             # import dev-only deps here, so prod users don't need them
