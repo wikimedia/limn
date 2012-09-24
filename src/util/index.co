@@ -7,6 +7,11 @@ root = exports.root = do -> this or eval('this')
 # Stub out console with empty methods
 root.console or= _ <[ log info warn error dir table group groupCollapsed groupEnd ]> .synthesize -> [it, op.nop]
 
+try
+    require 'd3'
+catch ex
+    require.define 'd3', (require, module, exports) -> module.exports = d3
+
 ### Extend jQuery with useful functions
 
 /**
