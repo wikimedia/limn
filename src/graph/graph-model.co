@@ -47,6 +47,13 @@ Graph = exports.Graph = BaseGraph.extend do # {{{
      */
     elements : null
     
+    /**
+     * Cascade of objects for options lookup (includes own options).
+     * @type Cascade
+     * @private
+     */
+    optionCascade : null
+    
     
     
     
@@ -76,9 +83,9 @@ Graph = exports.Graph = BaseGraph.extend do # {{{
     
     
     constructor: function Graph (attributes={}, opts)
-        # @on 'ready', ~> console.log "(#this via Graph).ready!"
-        # attributes.options or= {}
+        attributes.options or= {}
         attributes.slug    or= attributes.id if attributes.id?
+        @optionCascade = new Cascade attributes.options
         BaseGraph.call this, attributes, opts
     
     
@@ -271,7 +278,8 @@ Graph = exports.Graph = BaseGraph.extend do # {{{
      * @returns {Boolean} Whether the value for option `k` is the graph default or not.
      */
     isDefaultOption: (k) ->
-        @chartType.isDefault k, @getOption k
+        # TODO: replace old code to find whether this is the default option: @chartType.isDefault k, @getOption k
+        false
     
     /**
      * Whether the value for option `k` differs from that of its parent graphs.

@@ -223,7 +223,7 @@ ChartElementData = exports.ChartElementData = BaseModel.extend do # {{{
      * @returns {Boolean} Whether the value for option `k` is the graph default or not.
      */
     isDefaultOption: (k) ->
-        # @chartType.isDefault k, @getOption k
+        # TODO: replace old code to find whether this is the default option: @chartType.isDefault k, @getOption k
         false
     
     /**
