@@ -6,18 +6,24 @@ moment = require 'moment'
 } = require './graph-model'
 { GraphView,
 } = require './graph-view'
+{ ChartView, #ChartElementData, ChartElementDataList, ChartElement, ChartView, ChartViewport,
+} = require '../chart'
 
 root = do -> this
-
-
 
 /**
  * @class View for a graph visualization encapsulating.
  */
-GraphDisplayView = exports.GraphDisplayView = GraphView.extend do # {{{
-    tagName   : 'section'
-    className : 'graph graph-display'
-    template  : require '../template/graph/graph-display'
+GraphDisplayView = exports.GraphDisplayView = GraphView.extend do
+    __bind__    : <[ onGraphReady ]>
+    tagName     : 'section'
+    className   : 'graph graph-display'
+    template    : require '../template/graph/graph-display'
+    /**
+     * The chart viewport element.
+     * @type ChartView
+     */
+    chart       : null
     
     events:
         # Select the whole permalink URI text when it receives focus.
@@ -26,22 +32,20 @@ GraphDisplayView = exports.GraphDisplayView = GraphView.extend do # {{{
         # 'click      .load-button'           : 'load'
     
     
-    
     constructor: function GraphDisplayView
         GraphView ...
     
     initialize : (o={}) ->
         @data = {}
         GraphDisplayView.__super__.initialize ...
-        # console.log "#this.initialize!"
         
         @chartOptions @model.getOptions(), {+silent}
         @loadData()
+        @model.once 'ready', @onGraphReady .load()
     
+    onGraphReady: ->
+        @addSubview @chart = new ChartView { @model }
     
-    
-    
-    ### Rendering {{{
     
     render: ->
         return this unless @ready and not @isRendering
@@ -54,24 +58,17 @@ GraphDisplayView = exports.GraphDisplayView = GraphView.extend do # {{{
         @isRendering = false
         this
     
+    
     /**
      * Exports graph as png
      */
     exportChart: (evt) ->
-        # The following code is dygraph specific, thus should not 
-        # be implemented in this class. Rather in the Dygraphs Chart-subclass. 
-        # The same is true for the 'renderChart' method above.
-        # 
-        # The Dygraph.Export module is from http://cavorite.com/labs/js/dygraphs-export/
         # TODO: We don't use the title of the chart, which is thus missing from the png.
         console.log "#this.export!"
         img = @$el.find '.export-image'
-        Dygraph.Export.asPNG @chart, img
+        # TODO: export d3 chart to img
         window.open img.src, "toDataURL() image"
     
-    
-    ### }}}
-    ### Event Handlers {{{
     
     /**
      * Selects the graph permalink input field.
@@ -82,7 +79,4 @@ GraphDisplayView = exports.GraphDisplayView = GraphView.extend do # {{{
         # defer, the focusing click will 
         # unselect the text.
         _.defer( ~> @$ '.graph-permalink input' .select() )
-    
-    # }}}
-# }}}
 
