@@ -37,6 +37,7 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
     
     routes:
         # 'graph-element'             : 'editElementGraph'
+        'graphs/play-:graphId'      : 'playing'
         'graphs/(new|edit)'         : 'newGraph'
         'graphs/:graphId/edit'      : 'editGraph'
         'graphs/:graphId'           : 'showGraph'
@@ -46,6 +47,86 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
         'dashboards/:dashId/edit'   : 'editDashboard'
         'dashboards/:dashId'        : 'showDashboard'
         'dashboards'                : 'listDashboards'
+    
+    playing: (id) ->
+        
+        section = $ '<section></section>'
+            .addClass 'play'
+            .css 'max-width', '900px'
+            .css 'margin', '3em'
+            .css 'position', 'relative'
+        legend = $ '<ul></ul>'
+            .addClass 'legend'
+            .css 'width', '150px'
+            .css 'margin', '0.5em'
+            .css 'font-size', '1.2em'
+            .css 'display', 'inline-block'
+            .css 'vertical-align', 'top'
+        section.append legend
+        $ '#content div.inner' .append section
+        els = '#content div.inner section.play'
+        columnHeaders = ['Date','Total','English','French','Russian','German']
+        columns = JSON.parse('[["2009-07-01T04:00:00.000Z","2009-08-01T04:00:00.000Z","2009-09-01T04:00:00.000Z","2009-10-01T04:00:00.000Z","2009-11-01T04:00:00.000Z","2009-12-01T05:00:00.000Z","2010-01-01T05:00:00.000Z","2010-02-01T05:00:00.000Z","2010-03-01T05:00:00.000Z","2010-04-01T04:00:00.000Z","2010-05-01T04:00:00.000Z","2010-06-01T04:00:00.000Z","2010-07-01T04:00:00.000Z","2010-08-01T04:00:00.000Z","2010-09-01T04:00:00.000Z","2010-10-01T04:00:00.000Z","2010-11-01T04:00:00.000Z","2010-12-01T05:00:00.000Z","2011-01-01T05:00:00.000Z","2011-02-01T05:00:00.000Z","2011-03-01T05:00:00.000Z","2011-04-01T04:00:00.000Z","2011-05-01T04:00:00.000Z","2011-06-01T04:00:00.000Z","2011-07-01T04:00:00.000Z","2011-08-01T04:00:00.000Z","2011-09-01T04:00:00.000Z","2011-10-01T04:00:00.000Z","2011-11-01T04:00:00.000Z","2011-12-01T05:00:00.000Z","2012-01-01T05:00:00.000Z","2012-02-01T05:00:00.000Z","2012-03-01T05:00:00.000Z","2012-04-01T04:00:00.000Z","2012-05-01T04:00:00.000Z","2012-06-01T04:00:00.000Z","2012-07-01T04:00:00.000Z"],[11219360,11181110,10887977,11043178,10639294,11128502,11733120,11305278,12047706,12026623,12183692,11805581,10629492,12248468,11818738,11480504,11098681,11508468,12723937,10974290,11763491,11550536,11457803,11633611,11832817,11229585,10895852,11331927,11114355,11647986,12383770,11460642,12033994,11612264,12674912,11286269,12568704],[3800326,3886201,3975209,3966889,3902243,4374903,3940400,3872091,4112800,4022522,4068360,3936495,3639586,3852380,3944768,4117648,3891872,3676690,4056182,3507974,3571127,3556524,3498850,3552013,3605263,3457975,3449623,3391328,3323552,3340036,3659243,3419351,3521599,3365389,3628181,3254213,3412014],[619129,678669,630692,668335,657055,658312,725472,680994,698237,690621,700854,657884,622563,654267,668774,664573,719598,750671,755076,666332,711916,688650,753054,738247,718636,730300,771663,743294,737252,788032,934061,877840,731409,716676,790461,749070,763027],[697713,738383,690338,722399,725696,724561,853931,757114,833921,751942,776209,724274,707918,783228,745009,744851,740709,740725,882368,759967,793626,723813,724012,732280,738646,713872,704692,737608,725358,740845,803885,739764,747559,728111,741101,707398,766656],[468191,476154,466919,518945,522467,503009,569919,550579,601440,569724,577053,570221,543494,566559,542575,567411,555158,597623,655625,613055,640432,562389,618313,573694,598377,585304,546246,554624,545079,552046,658113,636153,655107,597132,653075,588282,644717]]')
+        
+        lineData = columns.slice(1,columns.length)
+        mergedLineData = d3.merge(lineData)
+        dateDomain = columns[0].map (d) ->
+            new Date(d)
+        w = $ els .width() - 250
+        h = 320
+        margin = 10
+        y = d3.scale.log().domain([d3.max(mergedLineData), d3.min(mergedLineData)]).range([0 + margin, h - margin])
+        x = d3.time.scale().domain([d3.min(dateDomain), d3.max(dateDomain)]).range([0 + margin, w - margin])
+        colorScale = d3.scale.category20().domain(columnHeaders)
+        
+        g = d3.select(els)
+            .append 'svg'
+            .attr 'width', w
+            .attr 'height', h
+            .style 'display', 'inline-block'
+            .append 'g'
+        
+        # common functions
+        plotX = (d, i) -> x(dateDomain[i])
+        plotY = (d, i) -> y(d)
+        color = (d, i) -> colorScale(columnHeaders[i])
+        lineGenerator = d3.svg.line()
+            .x plotX
+            .y plotY
+            .interpolate 'linear'
+        
+        # lines
+        paths = g.selectAll('path')
+            .data(lineData)
+            .enter().append('path')
+            .attr 'd', lineGenerator
+            .style 'fill', 'none'
+            .style 'stroke', color
+            .style 'stroke-width', 5
+        
+        # circles at data points on lines
+        circleGroups = g.selectAll('g.circleGroup')
+            .data(lineData)
+            .enter().append('g')
+            .attr 'class', 'circleGroup'
+            .style 'fill', color
+        
+        circleGroups.selectAll('circle')
+            .data((d) -> d)
+            .enter().append('circle')
+            .attr 'cx', plotX
+            .attr 'cy', plotY
+            .attr 'r', 6
+        
+        # legend
+        legend = d3.select(els + ' ul.legend')
+        legendItem = legend.selectAll('li')
+            .data(lineData)
+            .enter().append('li')
+            .text((d, i) -> columnHeaders[i+1])
+            .style 'color', color
+        
+        
     
     
     

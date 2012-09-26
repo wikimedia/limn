@@ -14,7 +14,7 @@ Seq = require 'seq'
  * @extends ChartElement
  */
 LineChartElement = exports.LineChartElement = TimeseriesChartElement.extend do # {{{
-    __bind__  : <[  ]>
+    __bind__  : <[ build ]>
     typeName  : 'LineChartElement'
     tagName   : 'g'
     className : 'line-chart-element chart-element'
