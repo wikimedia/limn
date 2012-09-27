@@ -52,16 +52,21 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
         
         section = $ '<section></section>'
             .addClass 'play'
-            .css 'max-width', '900px'
-            .css 'margin', '3em'
+            .css 'max-width', '1000px'
+            .css 'margin', '2em'
             .css 'position', 'relative'
-        legend = $ '<ul></ul>'
+        legend = $ '<fieldset></fieldset>'
             .addClass 'legend'
             .css 'width', '150px'
             .css 'margin', '0.5em'
             .css 'font-size', '1.2em'
             .css 'display', 'inline-block'
             .css 'vertical-align', 'top'
+        legend.append $ '<legend>Legend</legend>'
+        legend.append ($ '<ul></ul>'
+            .css 'list-style-type', 'none'
+            .css 'margin', '0'
+        )
         section.append legend
         $ '#content div.inner' .append section
         els = '#content div.inner section.play'
@@ -72,19 +77,75 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
         mergedLineData = d3.merge(lineData)
         dateDomain = columns[0].map (d) ->
             new Date(d)
-        w = $ els .width() - 250
-        h = 320
-        margin = 10
-        y = d3.scale.log().domain([d3.max(mergedLineData), d3.min(mergedLineData)]).range([0 + margin, h - margin])
-        x = d3.time.scale().domain([d3.min(dateDomain), d3.max(dateDomain)]).range([0 + margin, w - margin])
-        colorScale = d3.scale.category20().domain(columnHeaders)
+        findDateIndex = (d) ->
+            for dateInDomain, i of dateDomain
+                if d.getMonth() == dateInDomain.getMonth() && d.getFullYear() == dateInDomain.getFullYear()
+                    return i
+            return undefined
         
-        g = d3.select(els)
+        w = $ els .width() - 250
+        h = 365
+        margin = { top: 10, right: 10, bottom: 35, left: 60 }
+        circleRadius = 6
+        startX = d3.min(dateDomain)
+        startY = d3.max(mergedLineData)
+        stopX = d3.max(dateDomain)
+        stopY = d3.min(mergedLineData)
+        x = d3.time.scale().domain([d3.min(dateDomain), d3.max(dateDomain)]).range([0 + margin.left, w - margin.right]).clamp(true)
+        y = d3.scale.log().domain([d3.max(mergedLineData), d3.min(mergedLineData)]).range([0 + margin.top, h - margin.bottom])
+        colorScale = d3.scale.category20().domain(columnHeaders)
+        numberFormats = [
+            { ge: 1000000000000,    f: 'T' },
+            { ge: 1000000000,       f: 'B' },
+            { ge: 1000000,          f: 'M' },
+            { ge: 1000,             f: 'K' },
+        ]
+        numberFormatter = (n) ->
+            for format of numberFormats
+                if n >= format.ge
+                    trimmed = n/format.ge
+                    trimmed = trimmed.toFixed(1) unless trimmed == Math.round(trimmed)
+                    return trimmed + format.f
+            return n
+        dateFormatter = d3.time.format("%b, %Y")
+        
+        
+        vis = d3.select(els)
             .append 'svg'
             .attr 'width', w
             .attr 'height', h
             .style 'display', 'inline-block'
-            .append 'g'
+        
+        g = vis.append 'g'
+        
+        vis.on 'mouseout', (d, i) ->
+            d3.select('line.verticalGuide')
+                .attr 'x1', -1
+                .attr 'x2', -1
+        vis.on 'mousemove', (d, i) ->
+            xOffset = d3.event.x - 195 # this is the trickiest magic number in the whole script TODO: replace with dynamic computation which will need to figure out the x offset of vis from its parent (which is where the d3.event.x is in reference to).  Needs to take into account a little slack on either side of each data point
+            interpolatedDate = x.invert(xOffset)
+            $ 'fieldset.legend legend', els .text(dateFormatter(interpolatedDate))
+            d3.selectAll('span.legendItemValue')
+                .text((d, i) ->
+                    numberFormatter(
+                        lineData[i][findDateIndex(interpolatedDate)]
+                    )
+                )
+            guideLineOffset = if margin.left + circleRadius < xOffset && xOffset < w + margin.right then xOffset - 11 else -1
+            d3.select('line.verticalGuide')
+                .attr 'x1', guideLineOffset
+                .attr 'x2', guideLineOffset
+        
+        guideLine = vis.append('line')
+            .attr 'class', 'verticalGuide'
+            .attr 'x1', -1
+            .attr 'x2', -1
+            .attr 'y1', 0
+            .attr 'y2', h
+            .style 'stroke', 'red'
+            .style 'stroke-width', 1
+        
         
         # common functions
         plotX = (d, i) -> x(dateDomain[i])
@@ -95,8 +156,70 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
             .y plotY
             .interpolate 'linear'
         
-        # lines
-        paths = g.selectAll('path')
+        # TODO: the order things are appended matters.  Think on a generic solution here - grouping by g, d3.insert, and d3.sort might be the only choices
+        # TODO: the number of ticks is ignored in log scales but required in linear scales - make sure this can be generic
+        
+        # horizontal grid lines
+        yTicks = y.ticks(Math.floor((h - (margin.top + margin.bottom))/30)) # ignored in log scales, required in linear
+        hGridLines = g.selectAll('line.horizontalGrid')
+            .data(yTicks)
+            .enter().append('line')
+            .attr 'class', 'horizontalGrid'
+            .attr 'x1', margin.left - circleRadius
+            .attr 'y1', y
+            .attr 'x2', w - margin.right + circleRadius
+            .attr 'y2', y
+            .style 'stroke', '#cacaca'
+            .style 'stroke-width', 1
+        
+        # horizontal grid line labels
+        # TODO: make this dependent on height and watch border cases
+        yTicksLabels = d3.range(yTicks.length / 2).map((i) -> return yTicks[i * 2])
+        hGridLineLabels = g.selectAll('text.horizontalGridLabel')
+            .data(yTicksLabels)
+            .enter().append('text')
+            .attr 'class', 'horizontalGridLabel'
+            .attr 'x', margin.left
+            .attr 'dx', circleRadius * -2
+            .attr 'y', y
+            .attr 'dy', '.55em'
+            .text numberFormatter
+            .style 'text-anchor', 'end'
+            .style 'font-size', '1.1em'
+        
+        # vertical grid line Labels
+        xTicksLabels = x.ticks(d3.time.months, Math.floor(w / 187)) # TODO: the concept of months is hardcoded in this whole approach
+        vGridLineLabels = g.selectAll('line.verticalGridLabel')
+            .data(xTicksLabels)
+            .enter().append('text')
+            .attr 'class', 'verticalGridLabel'
+            .attr 'x', x
+            .attr 'y', h + circleRadius
+            .attr 'dy', circleRadius * -1
+            .text dateFormatter
+            .style 'text-anchor', 'middle'
+            .style 'font-size', '1.1em'
+        
+        # axes
+        g.append('line')
+            .attr 'class', 'xAxis'
+            .attr 'x1', 0 + margin.left - circleRadius
+            .attr 'x2', w
+            .attr 'y1', y(stopY) + margin.top
+            .attr 'y2', y(stopY) + margin.top
+            .style 'stroke', '#cacaca'
+            .style 'stroke-width', 3
+        g.append('line')
+            .attr 'class', 'yAxis'
+            .attr 'x1', 0 + margin.left - circleRadius
+            .attr 'x2', 0 + margin.left - circleRadius
+            .attr 'y1', y(startY)
+            .attr 'y2', y(stopY) + margin.top
+            .style 'stroke', '#cacaca'
+            .style 'stroke-width', 3
+        
+        # a polyline for each metric
+        metricLines = g.selectAll('path')
             .data(lineData)
             .enter().append('path')
             .attr 'd', lineGenerator
@@ -116,17 +239,24 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
             .enter().append('circle')
             .attr 'cx', plotX
             .attr 'cy', plotY
-            .attr 'r', 6
+            .attr 'r', circleRadius
         
         # legend
-        legend = d3.select(els + ' ul.legend')
-        legendItem = legend.selectAll('li')
+        legendItem = d3.select(els + ' fieldset.legend ul').selectAll('li')
             .data(lineData)
             .enter().append('li')
+            .style 'display', 'table-row'
+        
+        legendItem.append('span')
             .text((d, i) -> columnHeaders[i+1])
             .style 'color', color
+            .style 'display', 'table-cell'
+            .style 'width', '120px'
         
-        
+        legendItem.append('span')
+            .attr 'class', 'legendItemValue'
+            .style 'display', 'table-cell'
+            .style 'text-align', 'right'
     
     
     
