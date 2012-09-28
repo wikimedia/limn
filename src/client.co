@@ -73,27 +73,13 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
         columnHeaders = ['Date','Total','English','French','Russian','German']
         columns = JSON.parse('[["2009-07-01T04:00:00.000Z","2009-08-01T04:00:00.000Z","2009-09-01T04:00:00.000Z","2009-10-01T04:00:00.000Z","2009-11-01T04:00:00.000Z","2009-12-01T05:00:00.000Z","2010-01-01T05:00:00.000Z","2010-02-01T05:00:00.000Z","2010-03-01T05:00:00.000Z","2010-04-01T04:00:00.000Z","2010-05-01T04:00:00.000Z","2010-06-01T04:00:00.000Z","2010-07-01T04:00:00.000Z","2010-08-01T04:00:00.000Z","2010-09-01T04:00:00.000Z","2010-10-01T04:00:00.000Z","2010-11-01T04:00:00.000Z","2010-12-01T05:00:00.000Z","2011-01-01T05:00:00.000Z","2011-02-01T05:00:00.000Z","2011-03-01T05:00:00.000Z","2011-04-01T04:00:00.000Z","2011-05-01T04:00:00.000Z","2011-06-01T04:00:00.000Z","2011-07-01T04:00:00.000Z","2011-08-01T04:00:00.000Z","2011-09-01T04:00:00.000Z","2011-10-01T04:00:00.000Z","2011-11-01T04:00:00.000Z","2011-12-01T05:00:00.000Z","2012-01-01T05:00:00.000Z","2012-02-01T05:00:00.000Z","2012-03-01T05:00:00.000Z","2012-04-01T04:00:00.000Z","2012-05-01T04:00:00.000Z","2012-06-01T04:00:00.000Z","2012-07-01T04:00:00.000Z"],[11219360,11181110,10887977,11043178,10639294,11128502,11733120,11305278,12047706,12026623,12183692,11805581,10629492,12248468,11818738,11480504,11098681,11508468,12723937,10974290,11763491,11550536,11457803,11633611,11832817,11229585,10895852,11331927,11114355,11647986,12383770,11460642,12033994,11612264,12674912,11286269,12568704],[3800326,3886201,3975209,3966889,3902243,4374903,3940400,3872091,4112800,4022522,4068360,3936495,3639586,3852380,3944768,4117648,3891872,3676690,4056182,3507974,3571127,3556524,3498850,3552013,3605263,3457975,3449623,3391328,3323552,3340036,3659243,3419351,3521599,3365389,3628181,3254213,3412014],[619129,678669,630692,668335,657055,658312,725472,680994,698237,690621,700854,657884,622563,654267,668774,664573,719598,750671,755076,666332,711916,688650,753054,738247,718636,730300,771663,743294,737252,788032,934061,877840,731409,716676,790461,749070,763027],[697713,738383,690338,722399,725696,724561,853931,757114,833921,751942,776209,724274,707918,783228,745009,744851,740709,740725,882368,759967,793626,723813,724012,732280,738646,713872,704692,737608,725358,740845,803885,739764,747559,728111,741101,707398,766656],[468191,476154,466919,518945,522467,503009,569919,550579,601440,569724,577053,570221,543494,566559,542575,567411,555158,597623,655625,613055,640432,562389,618313,573694,598377,585304,546246,554624,545079,552046,658113,636153,655107,597132,653075,588282,644717]]')
         
-        lineData = columns.slice(1,columns.length)
-        mergedLineData = d3.merge(lineData)
-        dateDomain = columns[0].map (d) ->
-            new Date(d)
-        findDateIndex = (d) ->
-            for dateInDomain, i of dateDomain
-                if d.getMonth() == dateInDomain.getMonth() && d.getFullYear() == dateInDomain.getFullYear()
-                    return i
-            return undefined
+        # style to be factored out into css
+        $('<style>
+            .brush { stroke: #fff; fill-opacity: .125; shape-rendering: crispEdges; }
+        </style>').appendTo('head')
         
-        w = $ els .width() - 250
-        h = 365
-        margin = { top: 10, right: 10, bottom: 35, left: 60 }
-        circleRadius = 6
-        startX = d3.min(dateDomain)
-        startY = d3.max(mergedLineData)
-        stopX = d3.max(dateDomain)
-        stopY = d3.min(mergedLineData)
-        x = d3.time.scale().domain([d3.min(dateDomain), d3.max(dateDomain)]).range([0 + margin.left, w - margin.right]).clamp(true)
-        y = d3.scale.log().domain([d3.max(mergedLineData), d3.min(mergedLineData)]).range([0 + margin.top, h - margin.bottom])
-        colorScale = d3.scale.category20().domain(columnHeaders)
+        
+        # general setup - independent of data
         numberFormats = [
             { ge: 1000000000000,    f: 'T' },
             { ge: 1000000000,       f: 'B' },
@@ -108,157 +94,215 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
                     return trimmed + format.f
             return n
         dateFormatter = d3.time.format("%b, %Y")
+        monthAndYearEqual = (d1, d2) ->
+            return d1.getMonth() == d2.getMonth() && d1.getFullYear() == d2.getFullYear()
+        findDateIndex = (d) ->
+            for date, i of graphData.dateDomain
+                return i unless !monthAndYearEqual(d, date)
+            return undefined
         
+        w = $ els .width() - 250
+        h = 365
+        margin = { top: 10, right: 10, bottom: 35, left: 60 }
+        circleRadius = 6
+        colorScale = d3.scale.category20().domain(columnHeaders)
         
-        vis = d3.select(els)
-            .append 'svg'
-            .attr 'width', w
-            .attr 'height', h
-            .style 'display', 'inline-block'
+        # data setup
+        graphData = {}
+        graphData.lineData = columns.slice(1,columns.length)
+        graphData.dateDomain = columns[0].map (d) ->
+            new Date(d)
+        minDate = d3.min(graphData.dateDomain)
+        maxDate = d3.max(graphData.dateDomain)
         
-        g = vis.append 'g'
+        filterData = (startDate, endDate) ->
+            # find what to slice out of the old data
+            indices = []
+            for date, i of graphData.dateDomain
+                if startDate <= date && date <= endDate
+                    indices.push i
+            return false if indices.length == 0
+            # slice
+            startSlice = indices[0]
+            sliceEnd = indices[indices.length-1] + 1
+            for line, i of graphData.lineData
+                graphData.lineData[i] = line.slice(startSlice, sliceEnd)
+            graphData.dateDomain = graphData.dateDomain.slice(startSlice, sliceEnd)
+            
+            mergedLineData = d3.merge(graphData.lineData)
+            graphData.x = d3.time.scale().domain([startDate, endDate]).range([0 + margin.left, w - margin.right]).clamp(true)
+            graphData.y = d3.scale.log().domain([d3.max(mergedLineData), d3.min(mergedLineData)]).range([0 + margin.top, h - margin.bottom])
+            return true
+        filterData minDate, maxDate
         
-        vis.on 'mouseout', (d, i) ->
-            d3.select('line.verticalGuide')
-                .attr 'x1', -1
-                .attr 'x2', -1
-        vis.on 'mousemove', (d, i) ->
-            xOffset = d3.event.x - 195 # this is the trickiest magic number in the whole script TODO: replace with dynamic computation which will need to figure out the x offset of vis from its parent (which is where the d3.event.x is in reference to).  Needs to take into account a little slack on either side of each data point
-            interpolatedDate = x.invert(xOffset)
-            $ 'fieldset.legend legend', els .text(dateFormatter(interpolatedDate))
-            d3.selectAll('span.legendItemValue')
-                .text((d, i) ->
-                    numberFormatter(
-                        lineData[i][findDateIndex(interpolatedDate)]
-                    )
+        # start drawing
+        redraw = ->
+            $('svg.viewport', els).remove()
+            vis = d3.select(els)
+                .append 'svg'
+                .classed 'viewport', true
+                .attr 'width', w
+                .attr 'height', h
+                .style 'display', 'inline-block'
+            
+            g = vis.append 'g'
+            
+            vis.append 'g'
+                .classed 'brush', true
+                .call(d3.svg.brush().x(graphData.x)
+                    .on 'brushend', ->
+                        e = d3.event.target.extent()
+                        if !monthAndYearEqual(e[0], e[1]) # TODO: make tollerance dynamic
+                            redraw() unless !filterData e[0], e[1]
                 )
-            guideLineOffset = if margin.left + circleRadius < xOffset && xOffset < w + margin.right then xOffset - 11 else -1
-            d3.select('line.verticalGuide')
-                .attr 'x1', guideLineOffset
-                .attr 'x2', guideLineOffset
+                .selectAll('rect')
+                .attr 'height', h
+            
+            vis.on 'mouseout', (d, i) ->
+                moveLine(guideLine, -1)
+            vis.on 'mousemove', (d, i) ->
+                trackGuideLine.apply this, [d, i]
+            
+            guideLine = vis.append('line')
+                .attr 'class', 'verticalGuide'
+                .attr 'y1', 0
+                .attr 'y2', h
+                .style 'stroke', 'red'
+                .style 'stroke-width', 1
+            
+            moveLine = (l, toX) ->
+                l
+                    .attr 'x1', toX
+                    .attr 'x2', toX
+            moveLine(guideLine, -1)
+            
+            trackGuideLine = (d, i) ->
+                xOffset = d3.event.x - 195 # this is the trickiest magic number in the whole script TODO: replace with dynamic computation which will need to figure out the x offset of vis from its parent (which is where the d3.event.x is in reference to).  Needs to take into account a little slack on either side of each data point
+                interpolatedDate = graphData.x.invert(xOffset)
+                $ 'fieldset.legend legend', els .text(dateFormatter(interpolatedDate))
+                d3.selectAll('span.legendItemValue')
+                    .text((d, i) ->
+                        numberFormatter(
+                            graphData.lineData[i][findDateIndex(interpolatedDate)]
+                        )
+                    )
+                guideLineOffset = if margin.left + circleRadius < xOffset && xOffset < w + margin.right then xOffset - 11 else -1
+                moveLine(guideLine, guideLineOffset)
+            
+            
+            # common functions
+            plotX = (d, i) -> graphData.x(graphData.dateDomain[i])
+            plotY = (d, i) -> graphData.y(d)
+            color = (d, i) -> colorScale(columnHeaders[i])
+            lineGenerator = d3.svg.line()
+                .x plotX
+                .y plotY
+                .interpolate 'linear'
+            
+            # TODO: the order things are appended matters.  Think on a generic solution here - grouping by g, d3.insert, and d3.sort might be the only choices
+            # TODO: the number of ticks is ignored in log scales but required in linear scales - make sure this can be generic
+            
+            # horizontal grid lines
+            yTicks = graphData.y.ticks(Math.floor((h - (margin.top + margin.bottom))/30)) # ignored in log scales, required in linear
+            hGridLines = g.selectAll('line.horizontalGrid')
+                .data(yTicks)
+                .enter().append('line')
+                .attr 'class', 'horizontalGrid'
+                .attr 'x1', margin.left - circleRadius
+                .attr 'y1', graphData.y
+                .attr 'x2', w - margin.right + circleRadius
+                .attr 'y2', graphData.y
+                .style 'stroke', '#cacaca'
+                .style 'stroke-width', 1
+            
+            # horizontal grid line labels
+            # TODO: make this dependent on height and watch border cases
+            yTicksLabels = d3.range(yTicks.length / 2).map((i) -> return yTicks[i * 2])
+            hGridLineLabels = g.selectAll('text.horizontalGridLabel')
+                .data(yTicksLabels)
+                .enter().append('text')
+                .attr 'class', 'horizontalGridLabel'
+                .attr 'x', margin.left
+                .attr 'dx', circleRadius * -2
+                .attr 'y', graphData.y
+                .attr 'dy', '.55em'
+                .text numberFormatter
+                .style 'text-anchor', 'end'
+                .style 'font-size', '1.1em'
+            
+            # vertical grid line Labels
+            xTicksLabels = graphData.x.ticks(d3.time.months, Math.floor(w / 187)) # TODO: the concept of months is hardcoded in this whole approach
+            vGridLineLabels = g.selectAll('line.verticalGridLabel')
+                .data(xTicksLabels)
+                .enter().append('text')
+                .attr 'class', 'verticalGridLabel'
+                .attr 'x', graphData.x
+                .attr 'y', h + circleRadius
+                .attr 'dy', circleRadius * -2
+                .text dateFormatter
+                .style 'text-anchor', 'middle'
+                .style 'font-size', '1.1em'
+            
+            # axes
+            g.append('line')
+                .attr 'class', 'xAxis'
+                .attr 'x1', 0 + margin.left - circleRadius
+                .attr 'x2', w
+                .attr 'y1', graphData.y(graphData.y.domain()[1]) + margin.top
+                .attr 'y2', graphData.y(graphData.y.domain()[1]) + margin.top
+                .style 'stroke', '#cacaca'
+                .style 'stroke-width', 3
+            g.append('line')
+                .attr 'class', 'yAxis'
+                .attr 'x1', 0 + margin.left - circleRadius
+                .attr 'x2', 0 + margin.left - circleRadius
+                .attr 'y1', graphData.y(graphData.y.domain()[0])
+                .attr 'y2', graphData.y(graphData.y.domain()[1]) + margin.top
+                .style 'stroke', '#cacaca'
+                .style 'stroke-width', 3
+            
+            # a polyline for each metric
+            metricLines = g.selectAll('path')
+                .data(graphData.lineData)
+                .enter().append('path')
+                .attr 'd', lineGenerator
+                .style 'fill', 'none'
+                .style 'stroke', color
+                .style 'stroke-width', 5
+            
+            # circles at data points on lines
+            circleGroups = g.selectAll('g.circleGroup')
+                .data(graphData.lineData)
+                .enter().append('g')
+                .attr 'class', 'circleGroup'
+                .style 'fill', color
+            
+            circleGroups.selectAll('circle')
+                .data((d) -> d)
+                .enter().append('circle')
+                .attr 'cx', plotX
+                .attr 'cy', plotY
+                .attr 'r', circleRadius
+            
+            # legend
+            legendItem = d3.select(els + ' fieldset.legend ul').selectAll('li')
+                .data(graphData.lineData)
+                .enter().append('li')
+                .style 'display', 'table-row'
+            
+            legendItem.append('span')
+                .text((d, i) -> columnHeaders[i+1])
+                .style 'color', color
+                .style 'display', 'table-cell'
+                .style 'width', '120px'
+            
+            legendItem.append('span')
+                .attr 'class', 'legendItemValue'
+                .style 'display', 'table-cell'
+                .style 'text-align', 'right'
         
-        guideLine = vis.append('line')
-            .attr 'class', 'verticalGuide'
-            .attr 'x1', -1
-            .attr 'x2', -1
-            .attr 'y1', 0
-            .attr 'y2', h
-            .style 'stroke', 'red'
-            .style 'stroke-width', 1
+        redraw()
         
-        
-        # common functions
-        plotX = (d, i) -> x(dateDomain[i])
-        plotY = (d, i) -> y(d)
-        color = (d, i) -> colorScale(columnHeaders[i])
-        lineGenerator = d3.svg.line()
-            .x plotX
-            .y plotY
-            .interpolate 'linear'
-        
-        # TODO: the order things are appended matters.  Think on a generic solution here - grouping by g, d3.insert, and d3.sort might be the only choices
-        # TODO: the number of ticks is ignored in log scales but required in linear scales - make sure this can be generic
-        
-        # horizontal grid lines
-        yTicks = y.ticks(Math.floor((h - (margin.top + margin.bottom))/30)) # ignored in log scales, required in linear
-        hGridLines = g.selectAll('line.horizontalGrid')
-            .data(yTicks)
-            .enter().append('line')
-            .attr 'class', 'horizontalGrid'
-            .attr 'x1', margin.left - circleRadius
-            .attr 'y1', y
-            .attr 'x2', w - margin.right + circleRadius
-            .attr 'y2', y
-            .style 'stroke', '#cacaca'
-            .style 'stroke-width', 1
-        
-        # horizontal grid line labels
-        # TODO: make this dependent on height and watch border cases
-        yTicksLabels = d3.range(yTicks.length / 2).map((i) -> return yTicks[i * 2])
-        hGridLineLabels = g.selectAll('text.horizontalGridLabel')
-            .data(yTicksLabels)
-            .enter().append('text')
-            .attr 'class', 'horizontalGridLabel'
-            .attr 'x', margin.left
-            .attr 'dx', circleRadius * -2
-            .attr 'y', y
-            .attr 'dy', '.55em'
-            .text numberFormatter
-            .style 'text-anchor', 'end'
-            .style 'font-size', '1.1em'
-        
-        # vertical grid line Labels
-        xTicksLabels = x.ticks(d3.time.months, Math.floor(w / 187)) # TODO: the concept of months is hardcoded in this whole approach
-        vGridLineLabels = g.selectAll('line.verticalGridLabel')
-            .data(xTicksLabels)
-            .enter().append('text')
-            .attr 'class', 'verticalGridLabel'
-            .attr 'x', x
-            .attr 'y', h + circleRadius
-            .attr 'dy', circleRadius * -1
-            .text dateFormatter
-            .style 'text-anchor', 'middle'
-            .style 'font-size', '1.1em'
-        
-        # axes
-        g.append('line')
-            .attr 'class', 'xAxis'
-            .attr 'x1', 0 + margin.left - circleRadius
-            .attr 'x2', w
-            .attr 'y1', y(stopY) + margin.top
-            .attr 'y2', y(stopY) + margin.top
-            .style 'stroke', '#cacaca'
-            .style 'stroke-width', 3
-        g.append('line')
-            .attr 'class', 'yAxis'
-            .attr 'x1', 0 + margin.left - circleRadius
-            .attr 'x2', 0 + margin.left - circleRadius
-            .attr 'y1', y(startY)
-            .attr 'y2', y(stopY) + margin.top
-            .style 'stroke', '#cacaca'
-            .style 'stroke-width', 3
-        
-        # a polyline for each metric
-        metricLines = g.selectAll('path')
-            .data(lineData)
-            .enter().append('path')
-            .attr 'd', lineGenerator
-            .style 'fill', 'none'
-            .style 'stroke', color
-            .style 'stroke-width', 5
-        
-        # circles at data points on lines
-        circleGroups = g.selectAll('g.circleGroup')
-            .data(lineData)
-            .enter().append('g')
-            .attr 'class', 'circleGroup'
-            .style 'fill', color
-        
-        circleGroups.selectAll('circle')
-            .data((d) -> d)
-            .enter().append('circle')
-            .attr 'cx', plotX
-            .attr 'cy', plotY
-            .attr 'r', circleRadius
-        
-        # legend
-        legendItem = d3.select(els + ' fieldset.legend ul').selectAll('li')
-            .data(lineData)
-            .enter().append('li')
-            .style 'display', 'table-row'
-        
-        legendItem.append('span')
-            .text((d, i) -> columnHeaders[i+1])
-            .style 'color', color
-            .style 'display', 'table-cell'
-            .style 'width', '120px'
-        
-        legendItem.append('span')
-            .attr 'class', 'legendItemValue'
-            .style 'display', 'table-cell'
-            .style 'text-align', 'right'
-    
-    
     
     /**
      * @constructor
