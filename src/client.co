@@ -50,23 +50,10 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
     
     playing: (id) ->
         
-        section = $ '<section></section>'
-            .addClass 'play'
-            .css 'max-width', '1000px'
-            .css 'margin', '2em'
-            .css 'position', 'relative'
-        legend = $ '<fieldset></fieldset>'
-            .addClass 'legend'
-            .css 'width', '150px'
-            .css 'margin', '0.5em'
-            .css 'font-size', '1.2em'
-            .css 'display', 'inline-block'
-            .css 'vertical-align', 'top'
+        section = $ '<section class="play"></section>'
+        legend = $ '<fieldset class="legend"></fieldset>'
         legend.append $ '<legend>Legend</legend>'
-        legend.append ($ '<ul></ul>'
-            .css 'list-style-type', 'none'
-            .css 'margin', '0'
-        )
+        legend.append $ '<ul></ul>'
         section.append legend
         $ '#content div.inner' .append section
         els = '#content div.inner section.play'
@@ -75,9 +62,23 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
         
         # style to be factored out into css
         $('<style>
-            .brush { stroke: #fff; fill-opacity: .125; shape-rendering: crispEdges; }
+            section.play { max-width: 1000px; margin: 2em; position: relative; }
+            fieldset.legend { width: 150px; margin: 0.5em; font-size: 1.2em; display: inline-block; vertical-align: top; }
+            fieldset.legend ul { list-style-type: none; margin: 0 }
+            fieldset.legend li { display: table-row; }
+            fieldset.legend li span { display: table-cell; }
+            fieldset.legend li span.legendItemText { width: 120px; }
+            fieldset.legend li span.legendItemValue { text-align: right; }
+            
+            g.brush { stroke: #fff; fill-opacity: .125; shape-rendering: crispEdges; }
+            svg.viewport { display: inline-block }
+            line.verticalGuide { stroke: red; stroke-width: 1; }
+            line.horizontalGrid { stroke: #cacaca; stroke-width: 1; }
+            text.horizontalGridLabel { text-anchor: end; font-size: 1.1em; }
+            text.verticalGridLabel { text-anchor: middle; font-size: 1.1em; }
+            line.axis { stroke: #cacaca; stroke-width: 3; }
+            path.metricLine { fill: none; stroke-width: 5; }
         </style>').appendTo('head')
-        
         
         # general setup - independent of data
         numberFormats = [
@@ -143,7 +144,6 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
                 .classed 'viewport', true
                 .attr 'width', w
                 .attr 'height', h
-                .style 'display', 'inline-block'
             
             g = vis.append 'g'
             
@@ -164,11 +164,9 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
                 trackGuideLine.apply this, [d, i]
             
             guideLine = vis.append('line')
-                .attr 'class', 'verticalGuide'
+                .classed 'verticalGuide', true
                 .attr 'y1', 0
                 .attr 'y2', h
-                .style 'stroke', 'red'
-                .style 'stroke-width', 1
             
             moveLine = (l, toX) ->
                 l
@@ -207,13 +205,11 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
             hGridLines = g.selectAll('line.horizontalGrid')
                 .data(yTicks)
                 .enter().append('line')
-                .attr 'class', 'horizontalGrid'
+                .classed 'horizontalGrid', true
                 .attr 'x1', margin.left - circleRadius
                 .attr 'y1', graphData.y
                 .attr 'x2', w - margin.right + circleRadius
                 .attr 'y2', graphData.y
-                .style 'stroke', '#cacaca'
-                .style 'stroke-width', 1
             
             # horizontal grid line labels
             # TODO: make this dependent on height and watch border cases
@@ -221,61 +217,52 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
             hGridLineLabels = g.selectAll('text.horizontalGridLabel')
                 .data(yTicksLabels)
                 .enter().append('text')
-                .attr 'class', 'horizontalGridLabel'
+                .classed 'horizontalGridLabel', true
                 .attr 'x', margin.left
                 .attr 'dx', circleRadius * -2
                 .attr 'y', graphData.y
                 .attr 'dy', '.55em'
                 .text numberFormatter
-                .style 'text-anchor', 'end'
-                .style 'font-size', '1.1em'
             
             # vertical grid line Labels
             xTicksLabels = graphData.x.ticks(d3.time.months, Math.floor(w / 187)) # TODO: the concept of months is hardcoded in this whole approach
             vGridLineLabels = g.selectAll('line.verticalGridLabel')
                 .data(xTicksLabels)
                 .enter().append('text')
-                .attr 'class', 'verticalGridLabel'
+                .classed 'verticalGridLabel', true
                 .attr 'x', graphData.x
                 .attr 'y', h + circleRadius
                 .attr 'dy', circleRadius * -2
                 .text dateFormatter
-                .style 'text-anchor', 'middle'
-                .style 'font-size', '1.1em'
             
             # axes
             g.append('line')
-                .attr 'class', 'xAxis'
+                .classed 'axis xAxis', true
                 .attr 'x1', 0 + margin.left - circleRadius
                 .attr 'x2', w
                 .attr 'y1', graphData.y(graphData.y.domain()[1]) + margin.top
                 .attr 'y2', graphData.y(graphData.y.domain()[1]) + margin.top
-                .style 'stroke', '#cacaca'
-                .style 'stroke-width', 3
             g.append('line')
-                .attr 'class', 'yAxis'
+                .classed 'axis yAxis', true
                 .attr 'x1', 0 + margin.left - circleRadius
                 .attr 'x2', 0 + margin.left - circleRadius
                 .attr 'y1', graphData.y(graphData.y.domain()[0])
                 .attr 'y2', graphData.y(graphData.y.domain()[1]) + margin.top
-                .style 'stroke', '#cacaca'
-                .style 'stroke-width', 3
             
             # a polyline for each metric
             metricLines = g.selectAll('path')
                 .data(graphData.lineData)
                 .enter().append('path')
+                .classed 'metricLine', true
                 .attr 'd', lineGenerator
-                .style 'fill', 'none'
-                .style 'stroke', color
-                .style 'stroke-width', 5
+                .style 'stroke': color
             
             # circles at data points on lines
             circleGroups = g.selectAll('g.circleGroup')
                 .data(graphData.lineData)
                 .enter().append('g')
-                .attr 'class', 'circleGroup'
-                .style 'fill', color
+                .classed 'circleGroup', true
+                .style 'fill': color
             
             circleGroups.selectAll('circle')
                 .data((d) -> d)
@@ -288,18 +275,14 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
             legendItem = d3.select(els + ' fieldset.legend ul').selectAll('li')
                 .data(graphData.lineData)
                 .enter().append('li')
-                .style 'display', 'table-row'
             
             legendItem.append('span')
                 .text((d, i) -> columnHeaders[i+1])
+                .classed 'legendItemText', true
                 .style 'color', color
-                .style 'display', 'table-cell'
-                .style 'width', '120px'
             
             legendItem.append('span')
-                .attr 'class', 'legendItemValue'
-                .style 'display', 'table-cell'
-                .style 'text-align', 'right'
+                .classed 'legendItemValue', true
         
         redraw()
         
