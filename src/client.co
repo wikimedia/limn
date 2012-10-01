@@ -82,9 +82,9 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
             g.horizontalGrid line { stroke: #cacaca; stroke-width: 1; }
             g.verticalGrid line { stroke: #cacaca; stroke-width: 1; }
             
-            g.axis { stroke: #cacaca; stroke-width: 3; }
-            g.axis text { font-size: 1.1em; }
-            g.metricLines path { fill: none; stroke-width: 5; }
+            g.axis path { stroke: #cacaca; stroke-width: 3; }
+            g.axis text { font-size: 1.1em; stroke: #666; stroke-width: 1; }
+            g.metricVisualizations path { fill: none; stroke-width: 5; }
         </style>').appendTo('head')
         
         # general setup - independent of data
@@ -165,6 +165,7 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
             mergedLineData = d3.merge(graphData.lineData)
             graphData.x = d3.time.scale().domain([startDate, endDate]).range([0, layout.middle.w]).clamp(true)
             graphData.y = d3.scale.log().domain([d3.max(mergedLineData), d3.min(mergedLineData)]).range([0, layout.middle.h])
+            graphData.dx = (graphData.x(graphData.maxDate) - graphData.x(graphData.minDate)) / (graphData.dateDomain.length - 1)
             return true
         
         # svg specific methods
@@ -212,7 +213,6 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
                 )
                 .selectAll('rect')
                     .attr 'height', layout.middle.h
-                    .attr 'width', layout.middle.w
             
             vis.on 'mouseout', (d, i) ->
                 moveLine(guideLine, -1)
@@ -221,16 +221,10 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
             vis.on 'dblclick', (d, i) ->
                 redraw() unless !filterData()
             
-            guideLine = middle.append('line')
-                .classed 'verticalGuide', true
-                .attr 'y1', 0
-                .attr 'y2', layout.middle.h
-            
-            moveLine(guideLine, -1)
-            
+            trackGuideLineDateOffset = (graphData.dx / 2)
             trackGuideLine = (d, i) ->
-                xOffset = d3.event.x - 195 # this is the trickiest magic number in the whole script TODO: replace with dynamic computation which will need to figure out the x offset of vis from its parent (which is where the d3.event.x is in reference to).  Needs to take into account a little slack on either side of each data point
-                interpolatedDate = graphData.x.invert(xOffset)
+                xOffset = d3.mouse($('g.middle', viewport)[0])[0] # TODO: find out why middle can't be passed in here directly
+                interpolatedDate = graphData.x.invert(xOffset + trackGuideLineDateOffset)
                 $ 'fieldset.legend legend', els .text(dateFormatter(interpolatedDate))
                 d3.selectAll('span.legendItemValue')
                     .text((d, i) ->
@@ -276,7 +270,7 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
             
             # axes
             yTicksLabels = d3.range(yTicks.length / 2).map((i) -> return yTicks[i * 2]) # TODO: make different ticks logic for each type of quantitative scale
-            xAxis = d3.svg.axis().scale(graphData.x).ticks(d3.time.months, Math.floor(layout.middle.width / 187)).orient('bottom').tickFormat(dateFormatter)
+            xAxis = d3.svg.axis().scale(graphData.x).ticks(d3.time.months, 4).orient('bottom').tickFormat(dateFormatter) # TODO: don't hardcode this
             yAxis = d3.svg.axis().scale(graphData.y).tickValues(yTicksLabels).orient('left').tickFormat(numberFormatter)
             middle.append 'g'
                 .classed 'axis', true
@@ -321,6 +315,14 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
             
             legendItem.append('span')
                 .classed 'legendItemValue', true
+            
+            # guide line needs to go on top of everything
+            guideLine = middle.append('line')
+                .classed 'verticalGuide', true
+                .attr 'y1', 0
+                .attr 'y2', layout.middle.h
+            
+            moveLine(guideLine, -1)
         
         filterData()
         redraw()
