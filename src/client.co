@@ -183,6 +183,11 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
                 .attr 'width', layout.width
                 .attr 'height', layout.height
             
+            # middle first so it can hide if its pieces are transformed
+            middle = vis.append 'g'
+                .classed 'middle', true
+                .attr 'transform', "translate(#{layout.middle.x}, #{layout.middle.y})"
+            
             top = vis.append 'g'
                 .classed 'top', true
                 .attr 'transform', "translate(#{layout.top.x}, #{layout.top.y})"
@@ -199,20 +204,38 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
                 .classed 'right', true
                 .attr 'transform', "translate(#{layout.right.x}, #{layout.right.y})"
             
-            middle = vis.append 'g'
-                .classed 'middle', true
-                .attr 'transform', "translate(#{layout.middle.x}, #{layout.middle.y})"
-            
-            middle.append 'g'
+            zoomBrush = d3.svg.brush().x(graphData.x)
+                .on 'brushend', ->
+                    e = d3.event.target.extent()
+                    if !monthAndYearEqual(e[0], e[1]) # TODO: make tollerance dynamic
+                        /*
+                        redraw() unless !filterData e[0], e[1]
+                        */
+                        startX = graphData.x(e[0])
+                        stopX = graphData.x(e[1])
+                        xFactor = layout.middle.w / (stopX - startX)
+                        selection = middle.selectAll('g.metricVisualizations,g.verticalGrid')
+                        selection.attr('transform', "scale(#{xFactor},1) translate(#{-1*startX}, 0)")
+                        for noScale of middle.selectAll('g.metricVisualizations circle')[0]
+                            unscale noScale
+                        zoomBrush.clear()
+                        zoomBrushContainer.call(zoomBrush)
+
+            unscale = (el) ->
+                svg = el.ownerSVGElement
+                xf = el.scaleIndependentXForm
+                if !xf then
+                    xf = el.scaleIndependentXForm = svg.createSVGTransform()
+                    el.transform.baseVal.appendItem xf
+                m = svg.getTransformToElement el.parentNode
+                m.e = m.f = 0
+                xf.setMatrix m
+
+            zoomBrushContainer = middle.append 'g'
                 .classed 'brush', true
-                .call(d3.svg.brush().x(graphData.x)
-                    .on 'brushend', ->
-                        e = d3.event.target.extent()
-                        if !monthAndYearEqual(e[0], e[1]) # TODO: make tollerance dynamic
-                            redraw() unless !filterData e[0], e[1]
-                )
-                .selectAll('rect')
-                    .attr 'height', layout.middle.h
+                .call(zoomBrush)
+            zoomBrushContainer.selectAll('rect')
+                .attr 'height', layout.middle.h
             
             vis.on 'mouseout', (d, i) ->
                 moveLine(guideLine, -1)
@@ -223,7 +246,7 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
             
             trackGuideLineDateOffset = (graphData.dx / 2)
             trackGuideLine = (d, i) ->
-                xOffset = d3.mouse($('g.middle', viewport)[0])[0] # TODO: find out why middle can't be passed in here directly
+                xOffset ?= d3.mouse($('g.middle', viewport)[0])[0] # TODO: find out why middle can't be passed in here directly
                 interpolatedDate = graphData.x.invert(xOffset + trackGuideLineDateOffset)
                 $ 'fieldset.legend legend', els .text(dateFormatter(interpolatedDate))
                 d3.selectAll('span.legendItemValue')
@@ -263,6 +286,7 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
                 .selectAll 'line'
                     .data xTicks
                     .enter().append 'line'
+                        .attr 'vector-effect': 'non-scaling-stroke'
                         .attr 'x1', graphData.x
                         .attr 'y1', 0
                         .attr 'x2', graphData.x
@@ -291,6 +315,7 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
             metricVisualizations.append 'path'
                 .attr 'd', lineGenerator
                 .style 'stroke': color
+                .attr 'vector-effect': 'non-scaling-stroke'
             
             # a set of circles for each metric
             metricVisualizations.append 'g'
@@ -319,8 +344,8 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
             # guide line needs to go on top of everything
             guideLine = middle.append('line')
                 .classed 'verticalGuide', true
-                .attr 'y1', 0
-                .attr 'y2', layout.middle.h
+                .attr 'y1', layout.middle.h
+                .attr 'y2', 0
             
             moveLine(guideLine, -1)
         
