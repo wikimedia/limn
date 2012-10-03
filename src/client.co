@@ -109,6 +109,17 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
                 return i unless !monthAndYearEqual(d, date)
             return undefined
         
+        # helper function - might not be needed
+        unscale = (el) ->
+            svg = el.ownersvgelement
+            xf = el.scaleindependentxform
+            if !xf then
+                xf = el.scaleindependentxform = svg.createsvgtransform()
+                el.transform.baseval.appenditem xf
+            m = svg.gettransformtoelement el.parentnode
+            m.e = m.f = 0
+            xf.setMatrix m
+        
         w = -> viewport.width()
         h = -> viewport.height()
         circleRadius = 6
@@ -180,8 +191,13 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
             
             vis = d3.select('div.viewport')
                 .append 'svg'
+                    .attr 'width', layout.width
+                    .attr 'height', layout.height
+            vis.append 'rect'
+                .classed 'background', true
                 .attr 'width', layout.width
                 .attr 'height', layout.height
+                .attr 'fill', 'transparent'
             
             # middle first so it can hide if its pieces are transformed
             middle = vis.append 'g'
@@ -208,29 +224,28 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
                 .on 'brushend', ->
                     e = d3.event.target.extent()
                     if !monthAndYearEqual(e[0], e[1]) # TODO: make tollerance dynamic
-                        /*
-                        redraw() unless !filterData e[0], e[1]
-                        */
                         startX = graphData.x(e[0])
+                        translateX = -1 * startX
                         stopX = graphData.x(e[1])
                         xFactor = layout.middle.w / (stopX - startX)
-                        selection = middle.selectAll('g.metricVisualizations,g.verticalGrid')
-                        selection.attr('transform', "scale(#{xFactor},1) translate(#{-1*startX}, 0)")
-                        for noScale of middle.selectAll('g.metricVisualizations circle')[0]
-                            unscale noScale
+                        undoScale = 1 / xFactor
+                        middle.selectAll('g.metricVisualizations,g.verticalGrid').transition()
+                            .attr('transform', "scale(#{xFactor},1) translate(#{translateX}, 0)")
+                            .selectAll('circle').transition()
+                                .attr('transform', ->
+                                    # the circle ends up translated but not scaled after we apply undoScale
+                                    #   to correct this, we first observe where the circle is and where we want it:
+                                    #   actual x coordinate: cx - startX
+                                    #   desire x coordinate: cx * xFactor - startX
+                                    #   dx: (desired - actual) / xFactor    # divide by xFactor to adjust for the new scale
+                                    cx = d3.select(@).attr 'cx'
+                                    dx = cx * (xFactor - 1) / xFactor
+                                    "matrix(#undoScale 0 0 1 #dx 0)"
+                                )
+                        
                         zoomBrush.clear()
                         zoomBrushContainer.call(zoomBrush)
-
-            unscale = (el) ->
-                svg = el.ownerSVGElement
-                xf = el.scaleIndependentXForm
-                if !xf then
-                    xf = el.scaleIndependentXForm = svg.createSVGTransform()
-                    el.transform.baseVal.appendItem xf
-                m = svg.getTransformToElement el.parentNode
-                m.e = m.f = 0
-                xf.setMatrix m
-
+            
             zoomBrushContainer = middle.append 'g'
                 .classed 'brush', true
                 .call(zoomBrush)
@@ -242,7 +257,11 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
             vis.on 'mousemove', (d, i) ->
                 trackGuideLine.apply this, [d, i]
             vis.on 'dblclick', (d, i) ->
-                redraw() unless !filterData()
+                middle.selectAll('g.metricVisualizations,g.verticalGrid').transition()
+                    .attr('transform', '')
+                    .selectAll('circle').transition()
+                        .attr('transform', '')
+                true
             
             trackGuideLineDateOffset = (graphData.dx / 2)
             trackGuideLine = (d, i) ->
