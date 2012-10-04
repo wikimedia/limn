@@ -63,6 +63,7 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
             </section>
         ');
         els = '#content div.inner section.play'
+        legendTitle = $ 'fieldset.legend legend', els
         viewport = $ 'div.viewport', els
         
         # style to be factored out into css
@@ -106,14 +107,14 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
             return d1.getMonth() == d2.getMonth() && d1.getFullYear() == d2.getFullYear()
         findDateIndex = (d) ->
             for date, i of graphData.dateDomain
-                return i unless !monthAndYearEqual(d, date)
+                return i unless not monthAndYearEqual(d, date)
             return undefined
         
         # helper function - might not be needed
         unscale = (el) ->
             svg = el.ownersvgelement
             xf = el.scaleindependentxform
-            if !xf then
+            unless xf
                 xf = el.scaleindependentxform = svg.createsvgtransform()
                 el.transform.baseval.appenditem xf
             m = svg.gettransformtoelement el.parentnode
@@ -156,6 +157,8 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
             graphData.dateDomain = columns[0].map (d) -> new Date(d)
             graphData.minDate = d3.min(graphData.dateDomain)
             graphData.maxDate = d3.max(graphData.dateDomain)
+            graphData.zoomFactorX = 1
+            graphData.zoomStartX = 0
             
             startDate ?= graphData.minDate
             endDate ?= graphData.maxDate
@@ -165,7 +168,7 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
             for date, i of graphData.dateDomain
                 if startDate <= date && date <= endDate
                     indices.push i
-            return false if indices.length == 0
+            return false if indices.length is 0
             # slice
             startSlice = indices[0]
             sliceEnd = indices[indices.length-1] + 1
@@ -189,15 +192,9 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
         redraw = ->
             viewport.html('')
             
-            vis = d3.select('div.viewport')
-                .append 'svg'
-                    .attr 'width', layout.width
-                    .attr 'height', layout.height
-            vis.append 'rect'
-                .classed 'background', true
+            vis = d3.select('div.viewport').append 'svg'
                 .attr 'width', layout.width
                 .attr 'height', layout.height
-                .attr 'fill', 'transparent'
             
             # middle first so it can hide if its pieces are transformed
             middle = vis.append 'g'
@@ -223,23 +220,23 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
             zoomBrush = d3.svg.brush().x(graphData.x)
                 .on 'brushend', ->
                     e = d3.event.target.extent()
-                    if !monthAndYearEqual(e[0], e[1]) # TODO: make tollerance dynamic
-                        startX = graphData.x(e[0])
-                        translateX = -1 * startX
+                    if not monthAndYearEqual(e[0], e[1]) # TODO: make tollerance dynamic
+                        graphData.zoomStartX = graphData.x(e[0])
+                        translateX = -1 * graphData.zoomStartX
                         stopX = graphData.x(e[1])
-                        xFactor = layout.middle.w / (stopX - startX)
-                        undoScale = 1 / xFactor
+                        graphData.zoomFactorX = layout.middle.w / (stopX - graphData.zoomStartX)
+                        undoScale = 1 / graphData.zoomFactorX
                         middle.selectAll('g.metricVisualizations,g.verticalGrid').transition()
-                            .attr('transform', "scale(#{xFactor},1) translate(#{translateX}, 0)")
+                            .attr('transform', "scale(#{graphData.zoomFactorX},1) translate(#{translateX}, 0)")
                             .selectAll('circle').transition()
                                 .attr('transform', ->
                                     # the circle ends up translated but not scaled after we apply undoScale
                                     #   to correct this, we first observe where the circle is and where we want it:
-                                    #   actual x coordinate: cx - startX
-                                    #   desire x coordinate: cx * xFactor - startX
-                                    #   dx: (desired - actual) / xFactor    # divide by xFactor to adjust for the new scale
+                                    #   actual x coordinate: cx - zoomStartX
+                                    #   desire x coordinate: cx * zoomFactorX - zoomStartX
+                                    #   dx: (desired - actual) / zoomFactorX    # divide by zoomFactorX to adjust for the new scale
                                     cx = d3.select(@).attr 'cx'
-                                    dx = cx * (xFactor - 1) / xFactor
+                                    dx = cx * (graphData.zoomFactorX - 1) / graphData.zoomFactorX
                                     "matrix(#undoScale 0 0 1 #dx 0)"
                                 )
                         
@@ -257,23 +254,29 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
             vis.on 'mousemove', (d, i) ->
                 trackGuideLine.apply this, [d, i]
             vis.on 'dblclick', (d, i) ->
+                graphData.zoomFactorX = 1
+                graphData.zoomStartX = 0
                 middle.selectAll('g.metricVisualizations,g.verticalGrid').transition()
                     .attr('transform', '')
                     .selectAll('circle').transition()
                         .attr('transform', '')
                 true
             
-            trackGuideLineDateOffset = (graphData.dx / 2)
             trackGuideLine = (d, i) ->
-                xOffset ?= d3.mouse($('g.middle', viewport)[0])[0] # TODO: find out why middle can't be passed in here directly
-                interpolatedDate = graphData.x.invert(xOffset + trackGuideLineDateOffset)
-                $ 'fieldset.legend legend', els .text(dateFormatter(interpolatedDate))
+                xOffset = d3.mouse($('g.middle', viewport)[0])[0] # TODO: find out why middle can't be passed in here directly
+                xOffset /= graphData.zoomFactorX
+                trackGuideLineDateOffset = (graphData.dx / 2)
+                interpolatedDate = graphData.x.invert(xOffset + trackGuideLineDateOffset + graphData.zoomStartX)
+                
+                legendTitle.text(dateFormatter(interpolatedDate))
+                
                 d3.selectAll('span.legendItemValue')
                     .text((d, i) ->
                         numberFormatter(
                             graphData.lineData[i][findDateIndex(interpolatedDate)]
                         )
                     )
+                
                 guideLineOffset = if 0 < xOffset && xOffset < layout.middle.w then xOffset else -1
                 moveLine(guideLine, guideLineOffset)
             
