@@ -272,6 +272,7 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
                     
                     zoomBrush.clear()
                     zoomBrushContainer.call(zoomBrush)
+                    $(zoomBrushContainer).toggle(false)
             
             zoomBrushContainer = middle.append 'g'
                 .classed 'brush', true
@@ -290,6 +291,11 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
                     .attr('transform', '')
                 metricDefs.selectAll('circle').transition()
                         .attr('transform', '')
+                $(zoomBrushContainer).toggle(true)
+                
+                # clear any selections caused by this double click
+                window.getSelection?().removeAllRanges()
+                document.selection?.empty();
                 true
             
             trackGuideLine = (d, i) ->
