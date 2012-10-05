@@ -259,16 +259,16 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
                         undoScale = 1 / graphData.zoomFactorX
                         middle.selectAll('g.metricVisualizations,g.verticalGrid').transition()
                             .attr('transform', "scale(#{graphData.zoomFactorX},1) translate(#{translateX}, 0)")
-                            .selectAll('circle').transition()
-                                .attr 'transform', ->
-                                    # the circle ends up translated but not scaled after we apply undoScale
-                                    #   to correct this, we first observe where the circle is and where we want it:
-                                    #   actual x coordinate: cx - zoomStartX
-                                    #   desire x coordinate: cx * zoomFactorX - zoomStartX
-                                    #   dx: (desired - actual) / zoomFactorX    # divide by zoomFactorX to adjust for the new scale
-                                    cx = d3.select(@).attr 'cx'
-                                    dx = cx * (graphData.zoomFactorX - 1) / graphData.zoomFactorX
-                                    "matrix(#undoScale 0 0 1 #dx 0)"
+                        metricDefs.selectAll('circle').transition()
+                            .attr 'transform', ->
+                                # the circle ends up translated but not scaled after we apply undoScale
+                                #   to correct this, we first observe where the circle is and where we want it:
+                                #   actual x coordinate: cx - zoomStartX
+                                #   desire x coordinate: cx * zoomFactorX - zoomStartX
+                                #   dx: (desired - actual) / zoomFactorX    # divide by zoomFactorX to adjust for the new scale
+                                cx = d3.select(@).attr 'cx'
+                                dx = cx * (graphData.zoomFactorX - 1) / graphData.zoomFactorX
+                                "matrix(#undoScale 0 0 1 #dx 0)"
                     
                     zoomBrush.clear()
                     zoomBrushContainer.call(zoomBrush)
@@ -288,7 +288,7 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
                 graphData.zoomStartX = 0
                 middle.selectAll('g.metricVisualizations,g.verticalGrid').transition()
                     .attr('transform', '')
-                    .selectAll('circle').transition()
+                metricDefs.selectAll('circle').transition()
                         .attr('transform', '')
                 true
             
@@ -337,7 +337,7 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
             
             # a group for each metric
             dataViewport = middle.append 'g'
-                .classed 'metricHolder', true
+                .classed 'dataViewport', true
                 .attr 'clip-path', 'url(#clipMetricVisualizations)'
             
             # horizontal grid lines
@@ -396,19 +396,6 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
                 .attr 'marker-mid', (d, i) -> "url(\#metricPathDot#i)"
                 .attr 'marker-end', (d, i) -> "url(\#metricPathDot#i)"
             
-            /*
-            # a set of circles for each metric
-            metricVisualizations.append 'g'
-                .classed 'circleGroup', true
-                .style 'fill': color
-                .selectAll 'circle'
-                    .data (d) -> d
-                    .enter().append 'circle'
-                        .attr 'cx', plotX
-                        .attr 'cy', plotY
-                        .attr 'r', circleRadius
-            */
-            
             # legend
             legendItem = d3.select(els + ' fieldset.legend ul').selectAll('li')
                 .data(graphData.lineData)
@@ -423,7 +410,7 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
                 .classed 'legendItemValue', true
             
             # guide line needs to go on top of everything
-            guideLine = middle.append('line')
+            guideLine = dataViewport.append('line')
                 .classed 'verticalGuide', true
                 .attr 'pointer-events', 'none'
                 .attr 'y1', layout.middle.h
