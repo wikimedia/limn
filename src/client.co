@@ -181,7 +181,10 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
             yPadding = (stopY - startY) # TODO: figure out how to pad this
             graphData.x = d3.time.scale().domain([startDate, endDate]).range([0, layout.middle.w]).clamp(true)
             graphData.y = d3.scale.log().domain([startY, stopY]).range([0, layout.middle.h])
-            graphData.dx = (graphData.x(endDate) - graphData.x(startDate)) / (graphData.dateDomain.length - 1)
+            graphData.dx = (
+                graphData.x(graphData.dateDomain[graphData.dateDomain.length-1]) -
+                graphData.x(graphData.dateDomain[0])
+            ) / (graphData.dateDomain.length - 1)
             
             # ticks and axis setups # TODO: there is a lot of hard-coding and assumption about what types of scales are used in this section
             graphData.yTicks = graphData.y.ticks(Math.floor(startY - stopY/30))
@@ -309,78 +312,27 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
             # axes
             middle.append 'g'
                 .classed 'axis xAxis', true
-                .attr 'transform', "translate(0, #{layout.middle.h})"
-                .call graphData.xAxis
             middle.append 'g'
                 .classed 'axis yAxis', true
-                .call graphData.yAxis
             
-            # a group for each metric
+            # viewport is clipped so data visualizations are trapped
             dataViewport = middle.append 'g'
                 .classed 'dataViewport', true
                 .attr 'clip-path', 'url(#clipMetricVisualizations)'
             
             # horizontal grid lines
-            horizontalGridLinesData = dataViewport.append 'g'
+            dataViewport.append 'g'
                 .classed 'horizontalGrid', true
-                .selectAll 'line'
-                    .data graphData.yTicks
-            
-            horizontalGridLinesData.enter().append 'line'
-                .attr 'x1', 0
-                .attr 'y1', graphData.y
-                .attr 'x2', layout.middle.w
-                .attr 'y2', graphData.y
-            horizontalGridLinesData.exit().remove()
             
             # vertical grid line Labels
-            verticalGridLinesData = dataViewport.append 'g'
+            verticalGrid = dataViewport.append 'g'
                 .classed 'verticalGrid', true
-                .selectAll 'line'
-                    .data graphData.xTicks
             
-            verticalGridLinesData.enter().append 'line'
-                .attr 'vector-effect': 'non-scaling-stroke'
-                .attr 'x1', graphData.x
-                .attr 'y1', 0
-                .attr 'x2', graphData.x
-                .attr 'y2', layout.middle.h
-            verticalGridLinesData.exit().remove()
-            
-            metricVisualizationsData = dataViewport.append 'g'
+            # holder for metric visualization groups
+            dataViewport.append 'g'
                 .classed 'metricVisualizations', true
-                .selectAll 'g'
-                    .data graphData.lineData
-            metricVisualizations = metricVisualizationsData.enter().append 'g'
-            metricVisualizationsData.exit().remove()
             
-            # create a marker for each metric to display circles along the line
-            $('g.metricDefs marker').remove()
-            metricDefsData = metricDefs.selectAll 'marker'
-                .data graphData.lineData
-            metricDefsData.enter().append 'marker'
-                    .attr 'id', (d, i) -> "metricPathDot#i" # TODO: can't reuse because of hard-coded ids
-                    .attr 'markerUnits', 'userSpaceOnUse'
-                    .attr 'markerWidth', circleBoxRadius * 2
-                    .attr 'markerHeight', circleBoxRadius * 2
-                    .attr 'refX', circleBoxRadius
-                    .attr 'refY', circleBoxRadius
-                    .append 'circle'
-                        .attr 'r', circleRadius
-                        .attr 'cx', circleBoxRadius
-                        .attr 'cy', circleBoxRadius
-                        .attr 'fill', graphData.color
-                        .attr 'stroke', graphData.color
-            metricDefsData.exit().remove()
-            
-            # a polyline for each metric
-            metricVisualizations.append 'path'
-                .attr 'd', graphData.lineGenerator
-                .style 'stroke', graphData.color
-                .attr 'vector-effect', 'non-scaling-stroke'
-                .attr 'marker-start', (d, i) -> "url(\#metricPathDot#i)"
-                .attr 'marker-mid', (d, i) -> "url(\#metricPathDot#i)"
-                .attr 'marker-end', (d, i) -> "url(\#metricPathDot#i)"
+            redraw()
             
             # legend
             legendItemData = d3.select(els + ' fieldset.legend ul').selectAll('li')
@@ -407,36 +359,67 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
         # stuff that is changed by data gets selected and drawn under transitions
         redraw = ->
             # horizontal grid lines
-            d3.selectAll 'g.horizontalGrid line'
+            horizontalGridLinesData = d3.select 'g.horizontalGrid' .selectAll 'line'
                 .data graphData.yTicks
-                .transition()
-                    .attr 'y1', graphData.y
-                    .attr 'y2', graphData.y
+            horizontalGridLinesData.enter().append 'line'
+                .attr 'vector-effect': 'non-scaling-stroke'
+                .attr 'x1', 0
+                .attr 'x2', layout.middle.w
+            horizontalGridLinesData.transition()
+                .attr 'y1', graphData.y
+                .attr 'y2', graphData.y
+            horizontalGridLinesData.exit().remove()
             
             # vertical grid line Labels
-            d3.selectAll('g.verticalGrid line')
+            verticalGridLinesData = d3.select 'g.verticalGrid' .selectAll 'line'
                 .data graphData.xTicks
-                .transition()
-                    .attr 'x1', graphData.x
-                    .attr 'x2', graphData.x
+            verticalGridLinesData.enter().append 'line'
+                .attr 'vector-effect': 'non-scaling-stroke'
+                .attr 'y1', 0
+                .attr 'y2', layout.middle.h
+            verticalGridLinesData.transition()
+                .attr 'x1', graphData.x
+                .attr 'x2', graphData.x
+            verticalGridLinesData.exit().remove()
             
-            d3.selectAll 'g.metricVisualizations g'
+            # metric lines
+            metricVisualizationsData = d3.select 'g.dataViewport g.metricVisualizations' .selectAll 'path'
                 .data graphData.lineData
-                .selectAll('path')
-                .transition()
-                    .attr 'd', graphData.lineGenerator
+            metricVisualizationsData.enter().append 'path'
+                .attr 'd', graphData.lineGenerator
+                .style 'stroke', graphData.color
+                .attr 'vector-effect', 'non-scaling-stroke'
+                .attr 'marker-start', (d, i) -> "url(\#metricPathDot#i)"
+                .attr 'marker-mid', (d, i) -> "url(\#metricPathDot#i)"
+                .attr 'marker-end', (d, i) -> "url(\#metricPathDot#i)"
+            metricVisualizationsData.transition()
+                .attr 'd', graphData.lineGenerator
+            metricVisualizationsData.exit().remove()
+            
+            # create a marker for each metric to display circles along the line
+            metricDefsData = d3.select 'g.metricDefs' .selectAll 'marker'
+                .data graphData.lineData
+            metricDefsData.enter().append 'marker'
+                .attr 'id', (d, i) -> "metricPathDot#i" # TODO: can't reuse because of hard-coded ids
+                .attr 'markerUnits', 'userSpaceOnUse'
+                .attr 'markerWidth', circleBoxRadius * 2
+                .attr 'markerHeight', circleBoxRadius * 2
+                .attr 'refX', circleBoxRadius
+                .attr 'refY', circleBoxRadius
+                .append 'circle'
+                    .attr 'r', circleRadius
+                    .attr 'cx', circleBoxRadius
+                    .attr 'cy', circleBoxRadius
+                    .attr 'fill', graphData.color
+                    .attr 'stroke', graphData.color
+            metricDefsData.exit().remove()
             
             # axes
             d3.select 'g.middle g.xAxis'
-                .transition()
                 .attr 'transform', "translate(0, #{layout.middle.h})"
                 .call graphData.xAxis
             d3.select 'g.middle g.yAxis'
                 .call graphData.yAxis
-            
-            # create a marker for each metric to display circles along the line
-            d3.selectAll 'g.metricDefs marker'
-                .data graphData.lineData
         
         setupGraphData()
         draw()
