@@ -103,11 +103,11 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
                     return trimmed + format.f
             return n
         dateFormatter = d3.time.format("%b %Y")
-        selectionIsTooSmall = (d1, d2) ->
-            return graphData.x(d2) - graphData.x(d1) <= graphData.dx
+        xDistanceIsInsignificant = (d1, d2) ->
+            return Math.abs(graphData.x(d2) - graphData.x(d1)) <= graphData.dx
         findDateIndex = (d) ->
             for date, i of graphData.dateDomain
-                return i unless not selectionIsTooSmall(d, date)
+                return i if xDistanceIsInsignificant(d, date)
             return undefined
         
         # helper function - might not be needed
@@ -158,8 +158,6 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
             graphData.dateDomain = columns[0].map (d) -> new Date(d)
             graphData.minDate = d3.min(graphData.dateDomain)
             graphData.maxDate = d3.max(graphData.dateDomain)
-            graphData.zoomFactorX = 1
-            graphData.zoomStartX = 0
             
             startDate ?= graphData.minDate
             endDate ?= graphData.maxDate
@@ -180,12 +178,32 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
             mergedLineData = d3.merge(graphData.lineData)
             startY = d3.max(mergedLineData)
             stopY = d3.min(mergedLineData)
-            yPadding = (startY - stopY)
-            startY += yPadding / 10 # TODO: make these fudge factors dynamic
-            stopY -= yPadding / 500 # TODO: make these fudge factors dynamic
+            yPadding = (stopY - startY) # TODO: figure out how to pad this
             graphData.x = d3.time.scale().domain([startDate, endDate]).range([0, layout.middle.w]).clamp(true)
             graphData.y = d3.scale.log().domain([startY, stopY]).range([0, layout.middle.h])
-            graphData.dx = (graphData.x(graphData.maxDate) - graphData.x(graphData.minDate)) / (graphData.dateDomain.length - 1)
+            graphData.dx = (graphData.x(endDate) - graphData.x(startDate)) / (graphData.dateDomain.length - 1)
+            
+            # ticks and axis setups # TODO: there is a lot of hard-coding and assumption about what types of scales are used in this section
+            graphData.yTicks = graphData.y.ticks(Math.floor(startY - stopY/30))
+            graphData.xTicks = graphData.x.ticks(d3.time.months)
+            yTicksLabels = d3.range(graphData.yTicks.length / 2).map((i) -> return graphData.yTicks[i * 2])
+            graphData.xAxis = d3.svg.axis().scale(graphData.x).ticks(d3.time.months, 4).orient('bottom').tickFormat(dateFormatter)
+            graphData.yAxis = d3.svg.axis().scale(graphData.y).tickValues(yTicksLabels).orient('left').tickFormat(numberFormatter)
+            
+            # line generation
+            plotX = (d, i) ->
+                rx = graphData.x(graphData.dateDomain[i])
+                return rx unless isNaN(rx)
+                return layout.w # TODO: data isn't being set properly somehow, this hack isn't necessary
+            plotY = (d, i) ->
+                ry = graphData.y(d)
+                return ry unless isNaN(ry)
+                return null # TODO: data isn't being set properly somehow, this hack isn't necessary
+            graphData.color = (d, i) -> colorScale(columnHeaders[i])
+            graphData.lineGenerator = d3.svg.line()
+                .x plotX
+                .y plotY
+                .interpolate 'linear'
             return true
         
         # svg specific methods
@@ -194,8 +212,8 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
                 .attr 'x1', toX
                 .attr 'x2', toX
         
-        # start drawing
-        redraw = ->
+        # initial draw
+        draw = ->
             viewport.html('')
             
             vis = d3.select('div.viewport').append 'svg'
@@ -246,33 +264,13 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
                 .attr 'transform', "translate(#{layout.right.x}, #{layout.right.y})"
             
             zoomBrush = d3.svg.brush().x(graphData.x)
-                .on 'brushend', ->
+            zoomBrush.on 'brushend', ->
                     e = d3.event.target.extent()
-                    unless selectionIsTooSmall(e[0], e[1])
-                        graphData.zoomStartX = graphData.x(e[0])
-                        translateX = -1 * graphData.zoomStartX
-                        stopX = graphData.x(e[1])
-                        
-                        #graphData.x.domain([e[0], e[1]])
-                        
-                        graphData.zoomFactorX = layout.middle.w / (stopX - graphData.zoomStartX)
-                        undoScale = 1 / graphData.zoomFactorX
-                        middle.selectAll('g.metricVisualizations,g.verticalGrid').transition()
-                            .attr('transform', "scale(#{graphData.zoomFactorX},1) translate(#{translateX}, 0)")
-                        metricDefs.selectAll('circle').transition()
-                            .attr 'transform', ->
-                                # the circle ends up translated but not scaled after we apply undoScale
-                                #   to correct this, we first observe where the circle is and where we want it:
-                                #   actual x coordinate: cx - zoomStartX
-                                #   desire x coordinate: cx * zoomFactorX - zoomStartX
-                                #   dx: (desired - actual) / zoomFactorX    # divide by zoomFactorX to adjust for the new scale
-                                cx = d3.select(@).attr 'cx'
-                                dx = cx * (graphData.zoomFactorX - 1) / graphData.zoomFactorX
-                                "matrix(#undoScale 0 0 1 #dx 0)"
-                    
+                    unless xDistanceIsInsignificant(e[0], e[1])
+                        redraw() unless not setupGraphData(e[0], e[1])
+                        $(zoomBrushContainer).toggle(false)
                     zoomBrush.clear()
                     zoomBrushContainer.call(zoomBrush)
-                    $(zoomBrushContainer).toggle(false)
             
             zoomBrushContainer = middle.append 'g'
                 .classed 'brush', true
@@ -285,27 +283,19 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
             vis.on 'mousemove', (d, i) ->
                 trackGuideLine.apply this, [d, i]
             vis.on 'dblclick', (d, i) ->
-                graphData.zoomFactorX = 1
-                graphData.zoomStartX = 0
-                middle.selectAll('g.metricVisualizations,g.verticalGrid').transition()
-                    .attr('transform', '')
-                metricDefs.selectAll('circle').transition()
-                        .attr('transform', '')
-                $(zoomBrushContainer).toggle(true)
-                
+                redraw() unless not setupGraphData()
                 # clear any selections caused by this double click
                 window.getSelection?().removeAllRanges()
                 document.selection?.empty();
+                $(zoomBrushContainer).toggle(true)
                 true
             
             trackGuideLine = (d, i) ->
                 xOffset = d3.mouse($('g.middle', viewport)[0])[0] # TODO: find out why middle can't be passed in here directly
-                xOffset /= graphData.zoomFactorX
                 trackGuideLineDateOffset = (graphData.dx / 2)
-                interpolatedDate = graphData.x.invert(xOffset + trackGuideLineDateOffset + graphData.zoomStartX)
+                interpolatedDate = graphData.x.invert(xOffset + trackGuideLineDateOffset)
                 
                 legendTitle.text(dateFormatter(interpolatedDate))
-                
                 d3.selectAll('span.legendItemValue')
                     .text((d, i) ->
                         numberFormatter(
@@ -314,32 +304,16 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
                     )
                 
                 guideLineOffset = if 0 < xOffset && xOffset < layout.middle.w then xOffset else -1
-                moveLine(guideLine, guideLineOffset * graphData.zoomFactorX)
-            
-            # common functions
-            plotX = (d, i) -> graphData.x(graphData.dateDomain[i])
-            plotY = (d, i) -> graphData.y(d)
-            color = (d, i) -> colorScale(columnHeaders[i])
-            lineGenerator = d3.svg.line()
-                .x plotX
-                .y plotY
-                .interpolate 'linear'
-            
-            yTicks = graphData.y.ticks(Math.floor(layout.middle.h/30)) # TODO: ticks parameter ignored in log scales, required in linear
-            
-            xTicks = graphData.x.ticks(d3.time.months, Math.floor(layout.middle.width / 187)) # TODO: the concept of months is hardcoded in this whole approach
+                moveLine(guideLine, guideLineOffset)
             
             # axes
-            yTicksLabels = d3.range(yTicks.length / 2).map((i) -> return yTicks[i * 2]) # TODO: make different ticks logic for each type of quantitative scale
-            xAxis = d3.svg.axis().scale(graphData.x).ticks(d3.time.months, 4).orient('bottom').tickFormat(dateFormatter) # TODO: don't hardcode this
-            yAxis = d3.svg.axis().scale(graphData.y).tickValues(yTicksLabels).orient('left').tickFormat(numberFormatter)
             middle.append 'g'
-                .classed 'axis', true
+                .classed 'axis xAxis', true
                 .attr 'transform', "translate(0, #{layout.middle.h})"
-                .call xAxis
+                .call graphData.xAxis
             middle.append 'g'
-                .classed 'axis', true
-                .call yAxis
+                .classed 'axis yAxis', true
+                .call graphData.yAxis
             
             # a group for each metric
             dataViewport = middle.append 'g'
@@ -347,39 +321,44 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
                 .attr 'clip-path', 'url(#clipMetricVisualizations)'
             
             # horizontal grid lines
-            dataViewport.append 'g'
+            horizontalGridLinesData = dataViewport.append 'g'
                 .classed 'horizontalGrid', true
                 .selectAll 'line'
-                    .data yTicks
-                    .enter().append 'line'
-                        .attr 'x1', 0
-                        .attr 'y1', graphData.y
-                        .attr 'x2', layout.middle.w
-                        .attr 'y2', graphData.y
+                    .data graphData.yTicks
+            
+            horizontalGridLinesData.enter().append 'line'
+                .attr 'x1', 0
+                .attr 'y1', graphData.y
+                .attr 'x2', layout.middle.w
+                .attr 'y2', graphData.y
+            horizontalGridLinesData.exit().remove()
             
             # vertical grid line Labels
-            dataViewport.append 'g'
+            verticalGridLinesData = dataViewport.append 'g'
                 .classed 'verticalGrid', true
                 .selectAll 'line'
-                    .data xTicks
-                    .enter().append 'line'
-                        .attr 'vector-effect': 'non-scaling-stroke'
-                        .attr 'x1', graphData.x
-                        .attr 'y1', 0
-                        .attr 'x2', graphData.x
-                        .attr 'y2', layout.middle.h
+                    .data graphData.xTicks
             
-            metricVisualizations = dataViewport.append 'g'
+            verticalGridLinesData.enter().append 'line'
+                .attr 'vector-effect': 'non-scaling-stroke'
+                .attr 'x1', graphData.x
+                .attr 'y1', 0
+                .attr 'x2', graphData.x
+                .attr 'y2', layout.middle.h
+            verticalGridLinesData.exit().remove()
+            
+            metricVisualizationsData = dataViewport.append 'g'
                 .classed 'metricVisualizations', true
                 .selectAll 'g'
                     .data graphData.lineData
-                    .enter().append 'g'
+            metricVisualizations = metricVisualizationsData.enter().append 'g'
+            metricVisualizationsData.exit().remove()
             
             # create a marker for each metric to display circles along the line
             $('g.metricDefs marker').remove()
-            metricDefs.selectAll 'marker'
+            metricDefsData = metricDefs.selectAll 'marker'
                 .data graphData.lineData
-                .enter().append 'marker'
+            metricDefsData.enter().append 'marker'
                     .attr 'id', (d, i) -> "metricPathDot#i" # TODO: can't reuse because of hard-coded ids
                     .attr 'markerUnits', 'userSpaceOnUse'
                     .attr 'markerWidth', circleBoxRadius * 2
@@ -390,30 +369,31 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
                         .attr 'r', circleRadius
                         .attr 'cx', circleBoxRadius
                         .attr 'cy', circleBoxRadius
-                        .attr 'fill', color
-                        .attr 'stroke', color
+                        .attr 'fill', graphData.color
+                        .attr 'stroke', graphData.color
+            metricDefsData.exit().remove()
             
             # a polyline for each metric
             metricVisualizations.append 'path'
-                .attr 'd', lineGenerator
-                .style 'stroke', color
+                .attr 'd', graphData.lineGenerator
+                .style 'stroke', graphData.color
                 .attr 'vector-effect', 'non-scaling-stroke'
                 .attr 'marker-start', (d, i) -> "url(\#metricPathDot#i)"
                 .attr 'marker-mid', (d, i) -> "url(\#metricPathDot#i)"
                 .attr 'marker-end', (d, i) -> "url(\#metricPathDot#i)"
             
             # legend
-            legendItem = d3.select(els + ' fieldset.legend ul').selectAll('li')
+            legendItemData = d3.select(els + ' fieldset.legend ul').selectAll('li')
                 .data(graphData.lineData)
-                .enter().append('li')
-            
+            legendItem = legendItemData.enter().append('li')
             legendItem.append('span')
                 .text((d, i) -> columnHeaders[i+1])
                 .classed 'legendItemText', true
-                .style 'color', color
-            
+                .style 'color', graphData.color
             legendItem.append('span')
                 .classed 'legendItemValue', true
+
+            legendItemData.exit().remove()
             
             # guide line needs to go on top of everything
             guideLine = dataViewport.append('line')
@@ -424,8 +404,42 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
             
             moveLine(guideLine, -1)
         
+        # stuff that is changed by data gets selected and drawn under transitions
+        redraw = ->
+            # horizontal grid lines
+            d3.selectAll 'g.horizontalGrid line'
+                .data graphData.yTicks
+                .transition()
+                    .attr 'y1', graphData.y
+                    .attr 'y2', graphData.y
+            
+            # vertical grid line Labels
+            d3.selectAll('g.verticalGrid line')
+                .data graphData.xTicks
+                .transition()
+                    .attr 'x1', graphData.x
+                    .attr 'x2', graphData.x
+            
+            d3.selectAll 'g.metricVisualizations g'
+                .data graphData.lineData
+                .selectAll('path')
+                .transition()
+                    .attr 'd', graphData.lineGenerator
+            
+            # axes
+            d3.select 'g.middle g.xAxis'
+                .transition()
+                .attr 'transform', "translate(0, #{layout.middle.h})"
+                .call graphData.xAxis
+            d3.select 'g.middle g.yAxis'
+                .call graphData.yAxis
+            
+            # create a marker for each metric to display circles along the line
+            d3.selectAll 'g.metricDefs marker'
+                .data graphData.lineData
+        
         setupGraphData()
-        redraw()
+        draw()
         
     
     /**
