@@ -110,16 +110,11 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
                 return i if xDistanceIsInsignificant(d, date)
             return undefined
         
-        # helper function - might not be needed
-        unscale = (el) ->
-            svg = el.ownersvgelement
-            xf = el.scaleindependentxform
-            unless xf
-                xf = el.scaleindependentxform = svg.createsvgtransform()
-                el.transform.baseval.appenditem xf
-            m = svg.gettransformtoelement el.parentnode
-            m.e = m.f = 0
-            xf.setMatrix m
+        getLogPadding = (startY, stopY) ->
+            fudgeFactor = Math.abs(startY / stopY) + 2
+            yPaddingStop = stopY - startY / fudgeFactor
+            yPaddingStart = yPaddingStop * fudgeFactor
+            return [yPaddingStart, yPaddingStop]
         
         w = -> viewport.width()
         h = -> viewport.height()
@@ -178,7 +173,9 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
             mergedLineData = d3.merge(graphData.lineData)
             startY = d3.max(mergedLineData)
             stopY = d3.min(mergedLineData)
-            yPadding = (stopY - startY) # TODO: figure out how to pad this
+            [yPaddingStart, yPaddingStop] = getLogPadding(startY, stopY)
+            startY += yPaddingStart
+            stopY -= yPaddingStop
             graphData.x = d3.time.scale().domain([startDate, endDate]).range([0, layout.middle.w]).clamp(true)
             graphData.y = d3.scale.log().domain([startY, stopY]).range([0, layout.middle.h])
             graphData.dx = (
@@ -194,14 +191,8 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
             graphData.yAxis = d3.svg.axis().scale(graphData.y).tickValues(yTicksLabels).orient('left').tickFormat(numberFormatter)
             
             # line generation
-            plotX = (d, i) ->
-                rx = graphData.x(graphData.dateDomain[i])
-                return rx unless isNaN(rx)
-                return layout.w # TODO: data isn't being set properly somehow, this hack isn't necessary
-            plotY = (d, i) ->
-                ry = graphData.y(d)
-                return ry unless isNaN(ry)
-                return null # TODO: data isn't being set properly somehow, this hack isn't necessary
+            plotX = (d, i) -> graphData.x(graphData.dateDomain[i])
+            plotY = (d, i) -> graphData.y(d)
             graphData.color = (d, i) -> colorScale(columnHeaders[i])
             graphData.lineGenerator = d3.svg.line()
                 .x plotX
