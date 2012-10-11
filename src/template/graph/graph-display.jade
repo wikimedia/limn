@@ -14,7 +14,9 @@ section.graph-display.graph(id=graph_id)
         h2
             a.graph-name(href="#{model.toLink()}", data-bind='name', name="#{graph_id}") #{name}
     
-    .graph-viewport-row.row-fluid(data-subview='ChartView')
+    .graph-viewport-row.row-fluid: .inner
+        .viewport(data-subview='ChartView')
+        .graph-legend
     
     .graph-details-row.row
         .span7.offset3.ug.graph-desc(data-bind='desc')

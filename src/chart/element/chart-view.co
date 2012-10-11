@@ -11,8 +11,6 @@ Seq = require 'seq'
 } = require './chart-element'
 { LineChartElement,
 } = require './vis'
-{ LegendElement,
-} = require './meta'
 
 
 /**
@@ -20,7 +18,7 @@ Seq = require 'seq'
  * @extends BaseView
  */
 ChartView = exports.ChartView = BaseView.extend do # {{{
-    __bind__  : <[ build ]>
+    __bind__  : <[  ]>
     typeName  : 'ChartView'
     tagName   : 'section'
     className : 'chart'
@@ -44,9 +42,10 @@ ChartView = exports.ChartView = BaseView.extend do # {{{
     
     initialize: (opts) ->
         ChartView.__super__.initialize ...
+        @elements = ChartElement.createChildren this, { graph:@model, chart:this }
+        @addSubview new LineChartElement { @model } #TODO: resume work here kabal14
         @xScale = d3.time.scale()
         @yScale = d3.scale.linear()
-        @elements = ChartElement.createChildren this, { graph:@model, chart:this }
     
     updateScale: (dateCol, dataCol) ->
         dateCol = @xScale.domain().concat dateCol unless @xScaleUnset
@@ -80,13 +79,8 @@ ChartView = exports.ChartView = BaseView.extend do # {{{
     
     
     build: ->
-        return this unless @model?.dataReady
         ChartView.__super__.build ...
         @$ 'svg' .attr @determineSize()
-        columnModel = new ColumnDataModel { columns:@model.columns, columnHeaders:@model.columnHeaders }
-        # TODO: how do you copy models
-        @addSubview new LineChartElement { model:columnModel, chart:this }
-        @addSubview new LegendElement { model:columnModel, chart:this }
         this
     
     onRender: ->
@@ -98,19 +92,3 @@ ChartView = exports.ChartView = BaseView.extend do # {{{
     # }}}
 
 # }}}
-
-
-# TODO: remove hacky model once I learn where it's supposed to go
-{ BaseModel,
-} = require '../../base'
-
-ColumnDataModel = exports.ColumnDataModel = BaseModel.extend do
-    columns: null
-    columnHeaders: null
-    constructor: function ColumnDataModel (opts)
-        @columns = opts.columns
-        @columnHeaders = opts.columnHeaders
-        BaseModel ...
-    initialize: (opts) ->
-        ColumnDataModel.__super__.initialize ...
-        @triggerReady

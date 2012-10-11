@@ -1,11 +1,9 @@
 section.chart
-    .viewport
-        svg
-            g.axes(data-subview='AxesElement')
-            g.viewport
-                g.bg-elements(data-subview='GridElement')
-                g.fg-elements(data-subview='LineChartElement')
-                g.note-elements(data-subview='AnnotationsElement')
-            g.minimap(data-subview='MinimapElement')
-
-    .graph-legend(data-subview='LegendElement')
+    .chart-meta(data-subview='CalloutElement LegendElement')
+    svg
+        g.axes(data-subview='AxesElement')
+        g.viewport
+            g.note-elements(data-subview='AnnotationsElement')
+            g.fg-elements
+            g.bg-elements(data-subview='GridElement')
+        g.minimap(data-subview='MinimapElement')
