@@ -29,6 +29,13 @@ GraphView = exports.GraphView = BaseView.extend do # {{{
     __debounce__: <[ render ]>
     tagName   : 'section'
     
+    /**
+     * The chart type backing this graph.
+     * @type ChartType
+     */
+    chartType : null
+    
+    
     
     constructor: function GraphView
         BaseView ...
@@ -74,6 +81,8 @@ GraphView = exports.GraphView = BaseView.extend do # {{{
         Seq()
             .seq_ (next) ~>
                 @model.once 'ready', next.ok .load()
+            .seq_ (next) ~>
+                @model.chartType.once 'ready', next.ok
             .seq_ (next) ~>
                 @model.once 'data-ready', next.ok .loadData()
             .seq ~>
@@ -138,6 +147,19 @@ GraphView = exports.GraphView = BaseView.extend do # {{{
         delete attrs.options
         delete attrs.callout
         
+        if callout = @model.getCalloutData()
+            {year:yoy, month:mom} = callout
+            attrs.callout = 
+                latest : @model.chartType.numberFormatter(callout.latest, 2, false).toString()
+                year :
+                    dates : yoy.dates.map( -> moment(it).format('MMM YY') ).join(' &mdash; ')
+                    value : ( 100 * yoy.value[2] / yoy.value[0] ).toFixed(2) + '%'
+                    delta : yoy.value[2]
+                month :
+                    dates : mom.dates.map( -> moment(it).format('MMM YY') ).join(' &mdash; ')
+                    value : ( 100 * mom.value[2] / mom.value[0] ).toFixed(2) + '%'
+                    delta : mom.value[2]
+        
         { @model, @graph_id, view:this, slug:'', name:'', desc:'', callout: {
             latest : '',
             year   : { dates:'', value:'' },
@@ -149,14 +171,14 @@ GraphView = exports.GraphView = BaseView.extend do # {{{
      * Resize the viewport to the model-specified bounds.
      */
     resizeViewport: ->
-        # TODO: resize viewport (replace the old code which used to delegate to chartType)
+        @model.chartType?.withView(this).resizeViewport()
     
     
     /**
      * Redraw chart inside viewport.
      */
     renderChart: ->
-        # TODO: render (replace the old code which used to delegate to chartType)
+        @chart = @model.chartType?.withView(this).render()
         this
     
     /**
