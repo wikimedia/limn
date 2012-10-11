@@ -1,0 +1,31 @@
+d3 = require 'd3'
+Seq = require 'seq'
+
+{ _, op,
+} = limn = require 'limn/client'
+{ ChartElement,
+} = require '../chart-element'
+
+
+/**
+ * @class
+ * @extends ChartElement
+ */
+LegendElement = exports.LegendElement = ChartElement.extend do # {{{
+    __bind__  : <[ build ]>
+    typeName  : 'LegendElement'
+    tagName   : 'fieldset'
+    className : 'legend'
+    
+    
+    constructor: function LegendElement (opts)
+        @chart = opts.chart
+        ChartElement ...
+    
+    initialize: ->
+        ChartElement.__super__.initialize ...
+    
+    build: ->
+        return this unless @model?.ready
+    
+# }}}

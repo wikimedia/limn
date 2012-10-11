@@ -233,30 +233,6 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
                 .attr 'height', layout.middle.h
                 .attr 'transform', "translate(#{layout.middle.x}, #{layout.middle.y})"
             
-            top = vis.append 'g'
-                .classed 'top', true
-                .attr 'width', layout.top.w
-                .attr 'height', layout.top.h
-                .attr 'transform', "translate(#{layout.top.x}, #{layout.top.y})"
-            
-            bottom = vis.append 'g'
-                .classed 'bottom', true
-                .attr 'width', layout.bottom.w
-                .attr 'height', layout.bottom.h
-                .attr 'transform', "translate(#{layout.bottom.x}, #{layout.bottom.y})"
-            
-            left = vis.append 'g'
-                .classed 'left', true
-                .attr 'width', layout.left.w
-                .attr 'height', layout.left.h
-                .attr 'transform', "translate(#{layout.left.x}, #{layout.left.y})"
-            
-            right = vis.append 'g'
-                .classed 'right', true
-                .attr 'width', layout.right.w
-                .attr 'height', layout.right.h
-                .attr 'transform', "translate(#{layout.right.x}, #{layout.right.y})"
-            
             zoomBrush = d3.svg.brush().x(graphData.x)
             zoomBrush.on 'brushend', ->
                     e = d3.event.target.extent()
@@ -283,6 +259,8 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
                 document.selection?.empty();
                 $(zoomBrushContainer).toggle(true)
                 true
+            vis.on 'scroll', (d, i) ->
+                console.log d3.event.x
             
             trackGuideLine = (d, i) ->
                 xOffset = d3.mouse($('g.middle', viewport)[0])[0] # TODO: find out why middle can't be passed in here directly

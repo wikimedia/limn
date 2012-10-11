@@ -17,32 +17,349 @@ LineChartElement = exports.LineChartElement = TimeseriesChartElement.extend do #
     __bind__  : <[ build ]>
     typeName  : 'LineChartElement'
     tagName   : 'g'
-    className : 'line-chart-element chart-element'
+    className : 'fg-elements'
     
     
-    constructor: function LineChartElement
+    constructor: function LineChartElement (opts)
+        @chart = opts.chart
         TimeseriesChartElement ...
     
     initialize: ->
         LineChartElement.__super__.initialize ...
     
     build: ->
-        return this unless @model?.ready
-        dateCol = @model.getDateColumn()
-        dataCol = @model.getData()
-        @chart.updateScale dateCol, dataCol
-        data = d3.zip dateCol, dataCol
+        columns = @model.columns
+        columnHeaders = @model.columnHeaders
         
-        X = (d,i) ~> @chart.xScale d[0]
-        Y = (d,i) ~> @chart.yScale d[1]
-        line = d3.svg.line().x(X).y(Y)
+        # general setup - independent of data
+        # TODO: move everything out ignoring this code because it's using hard coded selections out of ignorance of how @sel works
+        sel = $('div.viewport')
+        numberFormats = [
+            { ge: 1000000000000,    f: 'T' },
+            { ge: 1000000000,       f: 'B' },
+            { ge: 1000000,          f: 'M' },
+            { ge: 1000,             f: 'K' },
+        ]
+        numberFormatter = (n) ->
+            for format of numberFormats
+                if n >= format.ge
+                    trimmed = n/format.ge
+                    trimmed = trimmed.toFixed(1) unless trimmed == Math.round(trimmed)
+                    return trimmed + format.f
+            return n
+        dateFormatter = d3.time.format("%b %Y")
+        xDistanceIsInsignificant = (d1, d2) ->
+            return Math.abs(graphData.x(d2) - graphData.x(d1)) <= graphData.dx
+        findDateIndex = (d) ->
+            for date, i of graphData.dateDomain
+                return i if xDistanceIsInsignificant(d, date)
+            return undefined
         
-        @sel.selectAll 'path.line'
-            .data d3.zip data.slice(0,-1), data.slice(1)
-            .enter().append 'path'
-                .attr 'd', line
-                .attr 'class', (d, i) -> "metric line segment #i"
-                # .style 'stroke', @model.getColor 'color'
+        getLogPadding = (startY, stopY) ->
+            fudgeFactor = Math.abs(startY / stopY) + 2
+            yPaddingStop = stopY - startY / fudgeFactor
+            yPaddingStart = yPaddingStop * fudgeFactor
+            return [yPaddingStart, yPaddingStop]
+        
+        w = -> sel.width()
+        h = -> sel.height()
+        circleRadius = 6
+        circleBoxRadius = circleRadius + 1
+        colorScale = d3.scale.category20().domain(columnHeaders)
+        
+        # data setup
+        layout = {
+            h: h(),
+            w:  w(),
+            top:    { x: 0,     y: 0,       h: 30,      w: null },
+            bottom: { x: 0,     y: null,    h: 30,      w: null },
+            left:   { x: 0,     y: null,    h: null,    w: 60   },
+            right:  { x: null,  y: null,    h: null,    w: 60   },
+            middle: { x: null,  y: null,    h: null,    w: null }
+        }
+        graphData = {}
+        
+        setupGraphData = (startDate, endDate) ->
+            # set up and calculate the layout (breaking down to steps in case the calculation itself is useful)
+            layout.w = w()
+            layout.h = h()
+            layout.top.w = layout.bottom.w = layout.w
+            layout.middle.w = layout.w - (layout.left.w + layout.right.w)
+            layout.left.h = layout.right.h = layout.middle.h = layout.h - (layout.top.h + layout.bottom.h)
+            
+            layout.bottom.y = layout.h - layout.bottom.h
+            layout.left.y = layout.right.y = layout.middle.y = layout.top.h
+            layout.right.x = layout.w - layout.right.w
+            layout.middle.x = layout.left.w
+            layout.middle.y = layout.top.h
+            
+            # set up graph data
+            graphData.lineData = columns.slice(1,columns.length)
+            graphData.dateDomain = columns[0].map (d) -> new Date(d)
+            graphData.minDate = d3.min(graphData.dateDomain)
+            graphData.maxDate = d3.max(graphData.dateDomain)
+            
+            startDate ?= graphData.minDate
+            endDate ?= graphData.maxDate
+            
+            # find what to slice out of the old data
+            indices = []
+            for date, i of graphData.dateDomain
+                if startDate <= date && date <= endDate
+                    indices.push i
+            return false if indices.length is 0
+            # slice
+            startSlice = indices[0]
+            sliceEnd = indices[indices.length-1] + 1
+            for line, i of graphData.lineData
+                graphData.lineData[i] = line.slice(startSlice, sliceEnd)
+            graphData.dateDomain = graphData.dateDomain.slice(startSlice, sliceEnd)
+            
+            mergedLineData = d3.merge(graphData.lineData)
+            startY = d3.max(mergedLineData)
+            stopY = d3.min(mergedLineData)
+            [yPaddingStart, yPaddingStop] = getLogPadding(startY, stopY)
+            startY += yPaddingStart
+            stopY -= yPaddingStop
+            graphData.x = d3.time.scale().domain([startDate, endDate]).range([0, layout.middle.w]).clamp(true)
+            graphData.y = d3.scale.log().domain([startY, stopY]).range([0, layout.middle.h])
+            graphData.dx = (
+                graphData.x(graphData.dateDomain[graphData.dateDomain.length-1]) -
+                graphData.x(graphData.dateDomain[0])
+            ) / (graphData.dateDomain.length - 1)
+            
+            # ticks and axis setups # TODO: there is a lot of hard-coding and assumption about what types of scales are used in this section
+            graphData.yTicks = graphData.y.ticks(Math.floor(startY - stopY/30))
+            graphData.xTicks = graphData.x.ticks(d3.time.months)
+            yTicksLabels = d3.range(graphData.yTicks.length / 2).map((i) -> return graphData.yTicks[i * 2])
+            graphData.xAxis = d3.svg.axis().scale(graphData.x).ticks(d3.time.months, 4).orient('bottom').tickFormat(dateFormatter)
+            graphData.yAxis = d3.svg.axis().scale(graphData.y).tickValues(yTicksLabels).orient('left').tickFormat(numberFormatter)
+            
+            # line generation
+            plotX = (d, i) -> graphData.x(graphData.dateDomain[i])
+            plotY = (d, i) -> graphData.y(d)
+            graphData.color = (d, i) -> colorScale(columnHeaders[i])
+            graphData.lineGenerator = d3.svg.line()
+                .x plotX
+                .y plotY
+                .interpolate 'linear'
+            return true
+        
+        # svg specific methods
+        moveLine = (l, toX) ->
+            l
+                .attr 'x1', toX
+                .attr 'x2', toX
+        
+        # initial draw
+        draw = ->
+            vis = d3.select('div.viewport svg')
+                .attr 'width', layout.w
+                .attr 'height', layout.h
+                .attr 'pointer-events', 'all'
+            legendTitle = $ 'fieldset.legend legend'
+            
+            # elements used throughout
+            defs = vis.append 'defs'
+            defs.append 'clipPath'
+                .attr 'id', 'clipMetricVisualizations' # TODO: can't reuse this because of hard coded id
+                .append 'rect'
+                    .attr 'width', layout.middle.w
+                    .attr 'height', layout.middle.h
+            # placeholder for defs used by metrics
+            metricDefs = defs.append 'g'
+                .classed 'metricDefs', true
+            
+            # middle first so it can hide if its pieces are transformed
+            middle = vis.append 'g'
+                .classed 'middle', true
+                .attr 'width', layout.middle.w
+                .attr 'height', layout.middle.h
+                .attr 'transform', "translate(#{layout.middle.x}, #{layout.middle.y})"
+            
+            top = vis.append 'g'
+                .classed 'top', true
+                .attr 'width', layout.top.w
+                .attr 'height', layout.top.h
+                .attr 'transform', "translate(#{layout.top.x}, #{layout.top.y})"
+            
+            bottom = vis.append 'g'
+                .classed 'bottom', true
+                .attr 'width', layout.bottom.w
+                .attr 'height', layout.bottom.h
+                .attr 'transform', "translate(#{layout.bottom.x}, #{layout.bottom.y})"
+            
+            left = vis.append 'g'
+                .classed 'left', true
+                .attr 'width', layout.left.w
+                .attr 'height', layout.left.h
+                .attr 'transform', "translate(#{layout.left.x}, #{layout.left.y})"
+            
+            right = vis.append 'g'
+                .classed 'right', true
+                .attr 'width', layout.right.w
+                .attr 'height', layout.right.h
+                .attr 'transform', "translate(#{layout.right.x}, #{layout.right.y})"
+            
+            zoomBrush = d3.svg.brush().x(graphData.x)
+            zoomBrush.on 'brushend', ->
+                    e = d3.event.target.extent()
+                    unless xDistanceIsInsignificant(e[0], e[1])
+                        redraw() unless not setupGraphData(e[0], e[1])
+                        $(zoomBrushContainer).toggle(false)
+                    zoomBrush.clear()
+                    zoomBrushContainer.call(zoomBrush)
+            
+            zoomBrushContainer = middle.append 'g'
+                .classed 'brush', true
+                .call(zoomBrush)
+            zoomBrushContainer.selectAll('rect')
+                .attr 'height', layout.middle.h
+            
+            vis.on 'mouseout', (d, i) ->
+                moveLine(guideLine, -10000)
+            vis.on 'mousemove', (d, i) ->
+                trackGuideLine.apply this, [d, i]
+            vis.on 'dblclick', (d, i) ->
+                redraw() unless not setupGraphData()
+                # clear any selections caused by this double click
+                window.getSelection?().removeAllRanges()
+                document.selection?.empty();
+                $(zoomBrushContainer).toggle(true)
+                true
+            vis.on 'scroll', (d, i) ->
+                console.log d3.event.x
+            
+            trackGuideLine = (d, i) ->
+                xOffset = d3.mouse($('g.middle', sel)[0])[0] # TODO: find out why middle can't be passed in here directly
+                trackGuideLineDateOffset = (graphData.dx / 2)
+                interpolatedDate = graphData.x.invert(xOffset + trackGuideLineDateOffset)
+                
+                legendTitle.text(dateFormatter(interpolatedDate))
+                d3.selectAll('span.legendItemValue')
+                    .text((d, i) ->
+                        numberFormatter(
+                            graphData.lineData[i][findDateIndex(interpolatedDate)]
+                        )
+                    )
+                
+                guideLineOffset = if 0 < xOffset && xOffset < layout.middle.w then xOffset else -1
+                moveLine(guideLine, guideLineOffset)
+            
+            # axes
+            middle.append 'g'
+                .classed 'axis xAxis', true
+            middle.append 'g'
+                .classed 'axis yAxis', true
+            
+            # clip (mask) so data visualizations are trapped
+            dataViewport = middle.append 'g'
+                .classed 'dataViewport', true
+                .attr 'clip-path', 'url(#clipMetricVisualizations)'
+            
+            # horizontal grid lines
+            dataViewport.append 'g'
+                .classed 'horizontalGrid', true
+            
+            # vertical grid line Labels
+            verticalGrid = dataViewport.append 'g'
+                .classed 'verticalGrid', true
+            
+            # holder for metric visualization groups
+            dataViewport.append 'g'
+                .classed 'metricVisualizations', true
+            
+            redraw()
+            
+            # legend
+            legendItemData = d3.select('fieldset.legend ul').selectAll('li')
+                .data(graphData.lineData)
+            legendItem = legendItemData.enter().append('li')
+            legendItem.append('span')
+                .text((d, i) -> columnHeaders[i+1])
+                .classed 'legendItemText', true
+                .style 'color', graphData.color
+            legendItem.append('span')
+                .classed 'legendItemValue', true
+
+            legendItemData.exit().remove()
+            
+            # guide line needs to go on top of everything
+            guideLine = dataViewport.append('line')
+                .classed 'verticalGuide', true
+                .attr 'pointer-events', 'none'
+                .attr 'y1', layout.middle.h
+                .attr 'y2', 0
+            
+            moveLine(guideLine, -1)
+        
+        # stuff that is changed by data gets selected and drawn under transitions
+        redraw = ->
+            # horizontal grid lines
+            horizontalGridLinesData = d3.select 'g.horizontalGrid' .selectAll 'line'
+                .data graphData.yTicks
+            horizontalGridLinesData.enter().append 'line'
+                .attr 'vector-effect': 'non-scaling-stroke'
+                .attr 'x1', 0
+                .attr 'x2', layout.middle.w
+            horizontalGridLinesData.transition()
+                .attr 'y1', graphData.y
+                .attr 'y2', graphData.y
+            horizontalGridLinesData.exit().remove()
+            
+            # vertical grid line Labels
+            verticalGridLinesData = d3.select 'g.verticalGrid' .selectAll 'line'
+                .data graphData.xTicks
+            verticalGridLinesData.enter().append 'line'
+                .attr 'vector-effect': 'non-scaling-stroke'
+                .attr 'y1', 0
+                .attr 'y2', layout.middle.h
+            verticalGridLinesData.transition()
+                .attr 'x1', graphData.x
+                .attr 'x2', graphData.x
+            verticalGridLinesData.exit().remove()
+            
+            # metric lines
+            metricVisualizationsData = d3.select 'g.dataViewport g.metricVisualizations' .selectAll 'path'
+                .data graphData.lineData
+            metricVisualizationsData.enter().append 'path'
+                .attr 'd', graphData.lineGenerator
+                .style 'stroke', graphData.color
+                .attr 'vector-effect', 'non-scaling-stroke'
+                .attr 'marker-start', (d, i) -> "url(\#metricPathDot#i)"
+                .attr 'marker-mid', (d, i) -> "url(\#metricPathDot#i)"
+                .attr 'marker-end', (d, i) -> "url(\#metricPathDot#i)"
+            metricVisualizationsData.transition()
+                .attr 'd', graphData.lineGenerator
+            metricVisualizationsData.exit().remove()
+            
+            # create a marker for each metric to display circles along the line
+            metricDefsData = d3.select 'g.metricDefs' .selectAll 'marker'
+                .data graphData.lineData
+            metricDefsData.enter().append 'marker'
+                .attr 'id', (d, i) -> "metricPathDot#i" # TODO: can't reuse because of hard-coded ids
+                .attr 'markerUnits', 'userSpaceOnUse'
+                .attr 'markerWidth', circleBoxRadius * 2
+                .attr 'markerHeight', circleBoxRadius * 2
+                .attr 'refX', circleBoxRadius
+                .attr 'refY', circleBoxRadius
+                .append 'circle'
+                    .attr 'r', circleRadius
+                    .attr 'cx', circleBoxRadius
+                    .attr 'cy', circleBoxRadius
+                    .attr 'fill', graphData.color
+                    .attr 'stroke', graphData.color
+            metricDefsData.exit().remove()
+            
+            # axes
+            d3.select 'g.middle g.xAxis'
+                .attr 'transform', "translate(0, #{layout.middle.h})"
+                .call graphData.xAxis
+            d3.select 'g.middle g.yAxis'
+                .call graphData.yAxis
+        
+        setupGraphData()
+        draw()
         
     
 # }}}
