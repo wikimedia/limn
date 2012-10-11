@@ -9,8 +9,6 @@ Seq = require 'seq'
 } = require './chart-element-data'
 { ChartElement,
 } = require './chart-element'
-{ LineChartElement,
-} = require './vis'
 
 
 /**
@@ -43,7 +41,6 @@ ChartView = exports.ChartView = BaseView.extend do # {{{
     initialize: (opts) ->
         ChartView.__super__.initialize ...
         @elements = ChartElement.createChildren this, { graph:@model, chart:this }
-        @addSubview new LineChartElement { @model } #TODO: resume work here kabal14
         @xScale = d3.time.scale()
         @yScale = d3.scale.linear()
     
@@ -69,10 +66,12 @@ ChartView = exports.ChartView = BaseView.extend do # {{{
         
         if width is 'auto'
             width = '100%'
+            # width = refEl.innerWidth() or 300
         width ?= modelW
         
         if height is 'auto'
             height = '100%'
+            # height = refEl.innerHeight() or 320
         height ?= modelH
         
         { width, height }

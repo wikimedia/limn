@@ -55,6 +55,8 @@ ChartElement = exports.ChartElement = BaseView.extend do # {{{
     initialize: (opts) ->
         @sel = d3.select @el
         ChartElement.__super__.initialize ...
+        # @elements = ChartElement.create @model, @chart, @graph
+        # @elements = ChartElement.createChildren this
     
     
     
@@ -117,6 +119,7 @@ ChartElement import do
      * Register a new chart type.
      */
     register : (Subclass) ->
+        # console.log "ChartElement.register(#Subclass)"
         unless Subclass?::?.hasOwnProperty('typeName') and typeName = Subclass?::?typeName
             throw new Error "Chart Element types must declare a new, unique typeName on the prototype! (got #{Subclass?::?typeName})"
         if KNOWN_CHART_TYPES[typeName]
@@ -129,7 +132,6 @@ ChartElement import do
      */
     lookup : (name) ->
         name = _.get name, 'elementType' unless _.isString name
-        name ?= 'GroupElement'
         KNOWN_CHART_TYPES[name]
     
     
@@ -140,14 +142,17 @@ ChartElement import do
      */
     create : (model, chart, graph, opts) ->
         opts = {+addSubviews, ...opts or {}}
+        # opts = {+recursive, +addSubviews, ...opts or {}}
+        # console.log "ChartElement.create(#model) ->", model
         model = new ChartElementData model unless model instanceof Backbone.Model
         return null unless Type = @lookup model
         view = new Type {model, chart, graph}
+        # @createChildren view, {chart, graph, ...opts} if opts.recursive
+        # view
     
     createChildren: (rootView, opts) ->
         opts = {+recursive, +addSubviews, chart:rootView.chart, graph:rootView.graph, ...opts or {}}
-        childElements = rootView.model.get 'elements'
-        childElements? .map (elModel) ~>
+        rootView.model.get 'elements' .map (elModel) ~>
             elView = @create elModel, opts.chart, opts.graph, opts
             rootView.addSubview elView      if opts.addSubviews
             @createChildren elView, opts    if opts.recursive
