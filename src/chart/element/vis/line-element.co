@@ -27,6 +27,7 @@ LineChartElement = exports.LineChartElement = TimeseriesChartElement.extend do #
         LineChartElement.__super__.initialize ...
     
     build: ->
+        return this # FIXME!
         return this unless @model?.ready
         dateCol = @model.getDateColumn()
         dataCol = @model.getData()
