@@ -29,9 +29,6 @@ ChartView = exports.ChartView = BaseView.extend do # {{{
     
     xScale : null
     yScale : null
-    xScaleUnset : true
-    yScaleUnset : true
-    
     
     
     constructor: function ChartView (opts)
@@ -41,52 +38,94 @@ ChartView = exports.ChartView = BaseView.extend do # {{{
     initialize: (opts) ->
         ChartView.__super__.initialize ...
         @elements = ChartElement.createChildren this, { graph:@model, chart:this }
-        @xScale = d3.time.scale()
-        @yScale = d3.scale.linear()
+        @xScale = d3.time.scale().clamp(true)
+        @yScale = d3.scale.log()
+        /* do something like this to get different types of scales
+        switch @model.get('yScale')
+            case 'log' then     @yScale = d3.scale.log()
+            case 'linear' then  @yScale = d3.scale.linear()
+            default then        console.error('The type of scale for the Y dimension is not specified')
+        */
     
-    updateScale: (dateCol, dataCol) ->
-        dateCol = @xScale.domain().concat dateCol unless @xScaleUnset
-        @xScale.domain d3.extent dateCol
-        dataCol = @yScale.domain().concat dataCol unless @yScaleUnset
-        @yScale.domain d3.extent dataCol
-        @xScaleUnset = @yScaleUnset = false
+    /**
+     * Changes the x and y scale domains to include the minimum and maximum of the values passed in
+     * @param - xValues: one or two dimensional array with values that the X domain should accomodate
+     * @param - yValues: one or two dimensional array with values that the Y domain should accomodate
+     */
+    changeScaleDomain: (xValues, yValues) ->
+        @xScale.domain d3.extent d3.merge xValues
+        @yScale.domain d3.extent d3.merge yValues
         this
     
+    /**
+     * Updates the x and y scale domains to include the minimum and maximum of the values passed in
+     * @param - xColumn: one dimensional array to accomodate in the X domain
+     * @param - yColumn: one dimensional array to accomodate in the Y domain
+     */
+    updateScaleDomain: (xColumn, yColumn) ->
+        xValues = @xScale.domain().concat xColumn
+        yValues = @yScale.domain().concat yColumn
+        changeScaleDomain xValues, yValues
+        this
     
     
     
     ### Rendering {{{
     
     
+    layout = {
+        h: 0,
+        w: 0,
+        top:    { x: 0,     y: 0,       h: 30,      w: null },
+        bottom: { x: 0,     y: null,    h: 30,      w: null },
+        left:   { x: 0,     y: null,    h: null,    w: 60   },
+        right:  { x: null,  y: null,    h: null,    w: 60   },
+        middle: { x: null,  y: null,    h: null,    w: null }
+    }
     
     determineSize: (refEl=@$el) ->
         refEl = $ refEl
-        modelW = width  = @model.get 'width'
-        modelH = height = @model.get 'height'
+        width  = @model.get 'width'
+        height = @model.get 'height'
         
         if width is 'auto'
-            width = '100%'
-            # width = refEl.innerWidth() or 300
-        width ?= modelW
+            width = refEl.innerWidth() or 300
         
         if height is 'auto'
-            height = '100%'
-            # height = refEl.innerHeight() or 320
-        height ?= modelH
+            height = refEl.innerHeight() or 320
         
         { width, height }
     
-    
+    /**
+     * Figures out common components that will be needed to manage any visualization
+     * 1. width and height
+     */
     build: ->
         ChartView.__super__.build ...
-        @$ 'svg' .attr @determineSize()
+        
+        size = @determineSize()
+        @$ 'svg' .attr size
+        
+        # set up and calculate the layout
+        @layout.w = size.width
+        @layout.h = size.height
+        @layout.top.w = @layout.bottom.w = @layout.w
+        @layout.middle.w = @layout.w - (@layout.left.w + @layout.right.w)
+        @layout.left.h = @layout.right.h = @layout.middle.h = @layout.h - (@layout.top.h + @layout.bottom.h)
+        
+        @layout.bottom.y = @layout.h - @layout.bottom.h
+        @layout.left.y = @layout.right.y = @layout.middle.y = @layout.top.h
+        @layout.right.x = @layout.w - @layout.right.w
+        @layout.middle.x = @layout.left.w
+        @layout.middle.y = layout.top.h
+        
         this
     
     onRender: ->
         { width, height } = size = @determineSize()
         @$ 'svg' .attr size
-        @xScale.range [ 0, width ]
-        @yScale.range [ height, 0 ]
+        @xScale.range [0, @layout.middle.w]
+        @yScale.range [0, @layout.middle.h]
     
     # }}}
 

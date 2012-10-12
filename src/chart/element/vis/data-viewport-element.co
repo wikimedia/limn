@@ -5,15 +5,15 @@ Seq = require 'seq'
 } = limn = require 'limn/client'
 { ChartElementData,
 } = require '../chart-element-data'
-{ ChartElement,
-} = require '../chart-element'
+{ GroupElement,
+} = require '../group-element'
 
 
 /**
  * @class
  * @extends ChartElement
  */
-DataViewportChartElement = exports.DataViewportChartElement = ChartElement.extend do # {{{
+DataViewportChartElement = exports.DataViewportChartElement = GroupElement.extend do # {{{
     __bind__       : <[  ]>
     typeName       : 'DataViewportChartElement'
     tagName        : 'g'
@@ -21,10 +21,10 @@ DataViewportChartElement = exports.DataViewportChartElement = ChartElement.exten
     
     
     constructor : function DataViewportChartElement
-        ChartElement ...
+        GroupElement ...
     
     initialize : ->
-        ChartElement::initialize ...
+        GroupElement::initialize ...
     
     
     
