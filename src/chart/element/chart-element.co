@@ -143,8 +143,10 @@ ChartElement import do
     create : (model, chart, graph, opts) ->
         opts = {+addSubviews, ...opts or {}}
         # opts = {+recursive, +addSubviews, ...opts or {}}
-        # console.log "ChartElement.create(#model) ->", model
+        # _model = model
+        # console.log "ChartElement.create(#_model) ->", _model
         model = new ChartElementData model unless model instanceof Backbone.Model
+        # console.log "  --> ", model
         return null unless Type = @lookup model
         view = new Type {model, chart, graph}
         # @createChildren view, {chart, graph, ...opts} if opts.recursive
