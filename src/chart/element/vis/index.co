@@ -1,7 +1,11 @@
-annotations = require './annotations-element'
-bar         = require './bar-element'
-geo         = require './geo-element'
-line        = require './line-element'
-points      = require './points-element'
+annotations     = require './annotations-element'
+bar             = require './bar-element'
+dataViewport    = require './data-viewport-element'
+geo             = require './geo-element'
+grid            = require './grid-element'
+line            = require './line-element'
+lineGroup       = require './line-group-element'
+points          = require './points-element'
+timeseries      = require './timeseries-element'
 
-exports import annotations import bar import geo import line import points
+exports import annotations import bar import dataViewport import geo import line import lineGroup import points import timeseries
