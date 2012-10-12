@@ -110,10 +110,9 @@ Graph = exports.Graph = BaseGraph.extend do # {{{
                         next.ok()
                     success : @unwaitAnd (model, res) ~>
                         # console.log "#{this}.fetch() --> success!", res
-                        # Update the DataSet model with the new values
-                        # @dataset.set @get 'data'
-                        # @set 'data', @dataset, {+silent}
-                        @elements = new ChartElementDataList @get 'elements'
+                        # Update sub-model with the new values
+                        # @elements = new ChartElementDataList @get 'elements'
+                        @elements.reset @get 'elements'
                         @set 'elements', @elements, {+silent}
                         next.ok res
             
@@ -160,7 +159,7 @@ Graph = exports.Graph = BaseGraph.extend do # {{{
             .parEach_ (next, child) ~>
                 child.once 'data-ready', next.ok .loadData()
             .seq ~>
-                console.log "#{this}.loadData() complete!"
+                # console.log "#{this}.loadData() complete!"
                 @loading = false
                 @unwait() # terminates the `load` wait
                 @triggerReady 'dataReady', 'data-ready'

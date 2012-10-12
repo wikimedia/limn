@@ -98,8 +98,10 @@ ChartElementData = exports.ChartElementData = BaseModel.extend do # {{{
     
     initialize : (attributes, opts) ->
         BaseModel::initialize ...
+        # console.log "new #{this}! \#elements=#{@elements?.length}", this, @elements
         @optionCascade.setData @attributes
         @elements.reset @get 'elements'
+        @set 'elements', @elements, {+silent}
         @setParent that if opts?.parent
         # @on 'change:source_id',     @load,          this
         # @on 'change:source_col',    @updateId,      this
@@ -248,8 +250,8 @@ ChartElementData = exports.ChartElementData = BaseModel.extend do # {{{
             return @triggerReady()
         
         # console.log "#this.load()..."
-        @loading = true
         @wait()
+        @loading = true
         @trigger 'load', this
         
         # perform lookup
@@ -259,7 +261,8 @@ ChartElementData = exports.ChartElementData = BaseModel.extend do # {{{
                     DataSource.lookup source_id, next
                 else
                     next.ok()
-            .seq_ (next, @source) ~>
+            .seq_ (next, source) ~>
+                @source = that if source
                 next.ok @elements.models
             .flatten()
             .parEach_ (next, child) ~>
@@ -285,18 +288,17 @@ ChartElementData = exports.ChartElementData = BaseModel.extend do # {{{
         @trigger 'load-data', this
         Seq()
             .seq_ (next) ~>
-                if @source
-                    @source.once 'load-data-success', next.ok .loadData()
-                else
+                if not @source or @source.dataReady
                     next.ok()
+                else
+                    @source.once 'load-data-success', next.ok .loadData()
             .seq_ (next) ~>
                 next.ok @elements.models
             .flatten()
             .parEach_ (next, child) ~>
-                unless child.source
-                    console.warn "#{this}.loadData() -- Skipping ChartElementData #child with invalid source!", child
-                    return next.ok()
-                child.source.once 'load-data-success', next.ok .loadData()
+                # Call child.loadData() even without child.source, as we must recurse
+                # -- the element could have children of its own.
+                child.once 'data-ready', next.ok .loadData()
             .seq ~>
                 # console.log "#{this}.loadData() complete!"
                 @loading = false
@@ -339,10 +341,18 @@ ChartElementData = exports.ChartElementData = BaseModel.extend do # {{{
         # { data: ...json }
     
     
-    toString: ->
+    getClassName: ->
+        className = ChartElementData.__super__.getClassName ...
+        "#className<#{@get 'elementType'}>"
+    
+    toString: (dumpChildren=false) ->
         {elementType, data} = @attributes
         dataset = if data then "#{data.source_id}[#{data.source_col}]" else null
-        "#elementType(cid=#{@cid}, data=#dataset)"
+        if dumpChildren
+            elements = "elements=[ #{@elements.invoke('toString', true).join ', '} ]"
+        else
+            elements = "\#elements=#{@elements?.length}"
+        "#{@getClassName()}(cid=#{@cid}, data=#dataset, #elements)"
     
 # }}}
 

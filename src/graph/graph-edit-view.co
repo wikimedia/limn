@@ -59,11 +59,12 @@ GraphEditView = exports.GraphEditView = BaseView.extend do # {{{
     
     onGraphReady: ->
         # console.log "#this.onGraphReady()!", @model
-        @addSubview @chart = new ChartView { @model }
         @model.once 'data-ready', @onDataReady .loadData()
     
     onDataReady: ->
         # console.log "#this.onDataReady()!", @model
+        # console.log "  --> elements: #{@model.elements}"
+        @addSubview @chart = new ChartView { @model }
         @render()
     
     
