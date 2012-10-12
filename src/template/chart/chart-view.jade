@@ -1,9 +1,8 @@
 section.chart
     .chart-meta(data-subview='CalloutElement LegendElement')
     svg
-        g.axes(data-subview='AxesElement')
+        defs.definitions(data-subview='DefsElement')
         g.viewport
+            g.chart-render(data-subview='')
             g.note-elements(data-subview='AnnotationsElement')
-            g.fg-elements(data-subview='')
-            g.bg-elements(data-subview='GridElement')
         g.minimap(data-subview='MinimapElement')

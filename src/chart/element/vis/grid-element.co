@@ -1,0 +1,31 @@
+d3 = require 'd3'
+Seq = require 'seq'
+
+{ _, op,
+} = limn = require 'limn/client'
+{ ChartElementData,
+} = require '../chart-element-data'
+{ ChartElement,
+} = require '../chart-element'
+
+
+/**
+ * @class
+ * @extends ChartElement
+ */
+GridChartElement = exports.GridChartElement = ChartElement.extend do # {{{
+    __bind__       : <[  ]>
+    typeName       : 'GridChartElement'
+    tagName        : 'g'
+    className      : 'grid'
+    
+    
+    constructor : function GridChartElement
+        ChartElement ...
+    
+    initialize : ->
+        ChartElement::initialize ...
+    
+    
+    
+# }}}

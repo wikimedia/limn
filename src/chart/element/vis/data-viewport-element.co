@@ -1,0 +1,31 @@
+d3 = require 'd3'
+Seq = require 'seq'
+
+{ _, op,
+} = limn = require 'limn/client'
+{ ChartElementData,
+} = require '../chart-element-data'
+{ ChartElement,
+} = require '../chart-element'
+
+
+/**
+ * @class
+ * @extends ChartElement
+ */
+DataViewportChartElement = exports.DataViewportChartElement = ChartElement.extend do # {{{
+    __bind__       : <[  ]>
+    typeName       : 'DataViewportChartElement'
+    tagName        : 'g'
+    className      : 'dataViewport'
+    
+    
+    constructor : function DataViewportChartElement
+        ChartElement ...
+    
+    initialize : ->
+        ChartElement::initialize ...
+    
+    
+    
+# }}}

@@ -1,0 +1,46 @@
+d3 = require 'd3'
+Seq = require 'seq'
+
+{ _, op,
+} = limn = require 'limn/client'
+{ ChartElementData,
+} = require '../chart-element-data'
+{ ChartElement,
+} = require '../chart-element'
+
+
+/**
+ * @class
+ * @extends ChartElement
+ * Adds a line which can be used to track mouse movement along data
+ * implemented options:
+ *      dimension:
+ *          x: this line will be set up to track the mouse along the x axis
+ */
+LineGuideChartElement = exports.LineGuideChartElement = ChartElement.extend do # {{{
+    __bind__       : <[  ]>
+    typeName       : 'LineGuideChartElement'
+    tagName        : 'g'
+    className      : 'guide'
+    
+    
+    constructor : function LineGuideChartElement
+        ChartElement ...
+    
+    initialize : ->
+        ChartElement::initialize ...
+    
+    build: ->
+        line = @sel.append('line')
+            .attr 'pointer-events', 'none'
+        
+        if @model.get('dimension') is 'x'
+            line
+                .classed 'verticalGuide', true
+                .attr 'y1', 0 # TODO: set to height of middle box in layout
+                .attr 'y2', 0
+        
+        @trigger 'guide.added'
+    
+    
+# }}}

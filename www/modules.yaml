@@ -108,19 +108,25 @@ development:
                 - index
             - chart:
                 - element:
-                    - vis:
-                        - timeseries-element
-                        - points-element
-                        - line-element
-                        - bar-element
-                        - annotations-element
-                        - geo-element
-                        - index
                     - meta:
-                        - axes-element
+                        - axis-element
                         - callout-element
+                        - defs-element
                         - legend-element
+                        - line-guide-element
                         - minimap-element
+                        - zoom-brush-element
+                        - index
+                    - vis:
+                        - annotations-element
+                        - bar-element
+                        - data-viewport-element
+                        - geo-element
+                        - grid-element
+                        - line-element
+                        - line-group-element
+                        - points-element
+                        - timeseries-element
                         - index
                     - chart-element-data
                     - chart-element
