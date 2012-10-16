@@ -14,10 +14,12 @@ Seq = require 'seq'
  * @extends ChartElement
  */
 ZoomBrushChartElement = exports.ZoomBrushChartElement = ChartElement.extend do # {{{
-    __bind__       : <[  ]>
+    __bind__       : <[ onLayoutChart ]>
     typeName       : 'ZoomBrushChartElement'
     tagName        : 'g'
     className      : 'brush'
+    viewEvents :
+        'layout:chart'  : 'onLayoutChart'
     
     
     constructor : function ZoomBrushChartElement
@@ -25,6 +27,22 @@ ZoomBrushChartElement = exports.ZoomBrushChartElement = ChartElement.extend do #
     
     initialize : ->
         ChartElement::initialize ...
+    
+    onLayoutChart: (clipIds) ->
+        zoomBrush = d3.svg.brush().x(@chart.xScale)
+        zoomBrush.on 'brushend', ->
+            e = d3.event.target.extent()
+            unless @chart.xDistanceIsInsignificant e[0], e[1]
+                # TODO: handle this event and redraw chart / or use d3.behavior.zoom
+                @trigger 'changed:data', e
+                # TODO: make a prettier way to get jQuery selections out of d3 elements
+                @$ @sel[0] .toggle false
+            zoomBrush.clear()
+            @sel.call zoomBrush
+        
+        @sel.call zoomBrush
+        @sel.selectAll 'rect'
+            .attr 'height', @chart.layout.viewport.h
     
     
     
