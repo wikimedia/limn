@@ -1,0 +1,47 @@
+// Styling for line charts
+fieldset.legend
+    width 150px
+    margin 0.5em
+    font-size 1.2em
+    display inline-block
+    vertical-align top
+    ul
+        list-style-type none
+        margin 0
+        li
+            display table-row
+            span
+                display table-cell
+            span.legendItemText
+                width 120px
+            span.legendItemValue
+                text-align right
+
+g.brush
+    stroke #fff
+    fill-opacity .125
+    shape-rendering crispEdges
+
+line.verticalGuide
+    stroke red
+    stroke-width 1
+
+g.horizontalGrid
+g.verticalGrid
+    line
+        stroke #cacaca
+        stroke-width 1
+
+g.axis
+    path
+        stroke #cacaca
+        stroke-width 3
+    text
+        font-size 1.1em
+        stroke #666
+        stroke-width 1
+
+g.metricVisualizations
+    path
+        fill none
+        stroke-width 5
