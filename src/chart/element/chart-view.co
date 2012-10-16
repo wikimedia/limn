@@ -16,19 +16,23 @@ Seq = require 'seq'
  * @extends BaseView
  */
 ChartView = exports.ChartView = BaseView.extend do # {{{
-    __bind__  : <[ determineSize build numberFormatter changeScaleDomain updateScaleDomain addMetric dateFormatter xDistanceIsInsignificant findDomainIndex addLogPadding lineGenerator moveLine ]>
+    __bind__  : <[
+        determineSize build relayout
+        numberFormatter changeScaleDomain updateScaleDomain
+        addMetric dateFormatter xDistanceIsInsignificant
+        findDomainIndex addLogPadding lineGenerator
+        moveLine prepareDefs
+    ]>
     typeName  : 'ChartView'
     tagName   : 'section'
     className : 'chart'
     template : require '../../template/chart/chart-view'
     
-    viewEvents :
-        'render' : 'onRender'
-    
     /**
      * The scale that translates x domain values into x output range values
      */
     xScale: null
+    xScaleSet: false
     
     /**
      * The x domain materialized as a finite array
@@ -49,6 +53,7 @@ ChartView = exports.ChartView = BaseView.extend do # {{{
      * The scale that translates y domain values into y output range values
      */
     yScale: null
+    yScaleSet: false
     
     /**
      * A scale that can assign unique colors to each metric
@@ -64,10 +69,12 @@ ChartView = exports.ChartView = BaseView.extend do # {{{
     metricLabels: []
     
     /**
-     * A reference to the only svg element this chart knows about
+     * references to svg elements
      */
+    svgJquery: null
     svg: null
-    
+    viewport: null
+    defs: null
     
     
     constructor: function ChartView (opts)
@@ -80,8 +87,11 @@ ChartView = exports.ChartView = BaseView.extend do # {{{
         @yScale = d3.scale.log()
         
         ChartView.__super__.initialize ...
+        ChartElement.propagateEvent 'layout:chart', this
+        ChartElement.propagateEvent 'ready:defs', this
         @elements = ChartElement.createChildren this, { graph:@model, chart:this }
-    
+        _.defer @relayout
+        _.defer @prepareDefs
     
     ### Rendering {{{
     
@@ -89,11 +99,11 @@ ChartView = exports.ChartView = BaseView.extend do # {{{
     layout: {
         h: 0,
         w: 0,
-        top:    { x: 0,     y: 0,       h: 30,      w: null },
-        bottom: { x: 0,     y: null,    h: 30,      w: null },
-        left:   { x: 0,     y: null,    h: null,    w: 60   },
-        right:  { x: null,  y: null,    h: null,    w: 60   },
-        middle: { x: null,  y: null,    h: null,    w: null }
+        top:        { x: 0,     y: 0,       h: 30,      w: null },
+        bottom:     { x: 0,     y: null,    h: 30,      w: null },
+        left:       { x: 0,     y: null,    h: null,    w: 60   },
+        right:      { x: null,  y: null,    h: null,    w: 60   },
+        viewport:   { x: null,  y: null,    h: null,    w: null }
     }
     
     determineSize: (refEl=@$el) ->
@@ -115,33 +125,61 @@ ChartView = exports.ChartView = BaseView.extend do # {{{
      */
     build: ->
         ChartView.__super__.build ...
-        @svg = @$ 'svg'
+        @svgJquery = @$ 'svg'
+        @svg = d3.select @svgJquery[0]
+        @viewport = @svg.select 'g.viewport'
+        @defs = @svg.select 'defs'
+        
+        @svg.attr 'pointer-events', 'all'
         this
     
-    onRender: ->
-        @svg .attr @determineSize()
+    relayout: ->
+        @svg.attr @determineSize()
         
         # update anything that might've been affected by changing metrics
         @colorScale.domain(@metricLabels)
         
         # set up and calculate the layout and any dependent properties
-        @layout.w = @svg.width()
-        @layout.h = @svg.height()
+        @layout.w = @svgJquery.width()
+        @layout.h = @svgJquery.height()
         @layout.top.w = @layout.bottom.w = @layout.w
-        @layout.middle.w = @layout.w - (@layout.left.w + @layout.right.w)
-        @layout.left.h = @layout.right.h = @layout.middle.h = @layout.h - (@layout.top.h + @layout.bottom.h)
+        @layout.viewport.w = @layout.w - (@layout.left.w + @layout.right.w)
+        @layout.left.h = @layout.right.h = @layout.viewport.h = @layout.h - (@layout.top.h + @layout.bottom.h)
         
         @layout.bottom.y = @layout.h - @layout.bottom.h
-        @layout.left.y = @layout.right.y = @layout.middle.y = @layout.top.h
+        @layout.left.y = @layout.right.y = @layout.viewport.y = @layout.top.h
         @layout.right.x = @layout.w - @layout.right.w
-        @layout.middle.x = @layout.left.w
-        @layout.middle.y = @layout.top.h
+        @layout.viewport.x = @layout.left.w
+        @layout.viewport.y = @layout.top.h
+        
+        @viewport.attr {
+            width: @layout.viewport.w,
+            height: @layout.viewport.h
+        }
+        
+        @viewport.attr {
+            transform: "translate(#{@layout.viewport.x},#{@layout.viewport.y})"
+        }
         
         # and update the ranges accordingly
-        @xScale.range [0, @layout.middle.w]
-        @yScale.range [0, @layout.middle.h]
-        @trigger 'ready:chart'
+        @xScale.range [0, @layout.viewport.w]
+        @yScale.range [0, @layout.viewport.h]
+        @trigger 'layout:chart'
         this
+    
+    prepareDefs: ->
+        clipIds = {
+            metricVisualizations: "clip-#{@model.cid}"
+        }
+        # TODO: figure out why d3 can't select elements with tag "clipPath" (as in d3.select('clipPath'))
+        clipPath = @defs.select '.metricVisualizations' .attr {
+            id: clipIds.metricVisualizations
+        }
+        clipPath.select 'rect' .attr {
+            width: @layout.viewport.w,
+            height: @layout.viewport.h
+        }
+        @trigger 'ready:defs', clipIds
     
     # }}}
     
@@ -156,7 +194,7 @@ ChartView = exports.ChartView = BaseView.extend do # {{{
      * @returns {string} string representation of n
      */
     numberFormatter: (n) ->
-        for format of numberFormats
+        for format of @numberFormats
             if n >= format.ge
                 trimmed = n/format.ge
                 trimmed = trimmed.toFixed(1) unless trimmed == Math.round(trimmed)
@@ -182,6 +220,9 @@ ChartView = exports.ChartView = BaseView.extend do # {{{
         
         @xStep = (@xScale(@xSteps[@xSteps.length - 1]) - @xScale(@xSteps[0])) / @xSteps.length - 1
         @dx = @xStep / 2
+        
+        @xScaleSet = true
+        @yScaleSet = true
         this
     
     /**
@@ -192,8 +233,10 @@ ChartView = exports.ChartView = BaseView.extend do # {{{
      */
     updateScaleDomain: (xValues, yValues) ->
         @xSteps = xValues # TODO: account for metrics with mis-aligned x domains
-        xValues = @xScale.domain().concat xValues
-        yValues = @yScale.domain().concat yValues
+        if @xScaleSet
+            xValues = @xScale.domain().concat xValues
+        if @yScaleSet
+            yValues = @yScale.domain().concat yValues
         @changeScaleDomain xValues, yValues
         this
     
@@ -255,6 +298,7 @@ ChartView = exports.ChartView = BaseView.extend do # {{{
     
     /**
      * Line generator that uses the chart x and y scales
+     * TODO: the closure of "this" in the x and y subfunctions shouldn't work here - fix later
      */
     lineGenerator: d3.svg.line()
         .x (d, i) -> @xScale(@xSteps[i]) # TODO: assumes all metrics have the same x domain
