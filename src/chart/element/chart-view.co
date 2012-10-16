@@ -16,19 +16,58 @@ Seq = require 'seq'
  * @extends BaseView
  */
 ChartView = exports.ChartView = BaseView.extend do # {{{
-    __bind__  : <[  ]>
+    __bind__  : <[ determineSize build numberFormatter changeScaleDomain updateScaleDomain addMetric dateFormatter xDistanceIsInsignificant findDomainIndex addLogPadding lineGenerator moveLine ]>
     typeName  : 'ChartView'
     tagName   : 'section'
     className : 'chart'
     template : require '../../template/chart/chart-view'
     
-    events : {}
-    
     viewEvents :
         'render' : 'onRender'
     
-    xScale : null
-    yScale : null
+    /**
+     * The scale that translates x domain values into x output range values
+     */
+    xScale: null
+    
+    /**
+     * The x domain materialized as a finite array
+     */
+    xSteps: []
+    
+    /**
+     * The x output range distance between two x domain values.  Dynamically calculated to spread just enough xSteps over the x output range
+     */
+    xStep: 0
+    
+    /**
+     * The x output range distance which is "close enough" to an xStep
+     */
+    dx: 0
+    
+    /**
+     * The scale that translates y domain values into y output range values
+     */
+    yScale: null
+    
+    /**
+     * A scale that can assign unique colors to each metric
+     * @param {string} label is the label of the metric
+     * @returns {string} a hex-value color
+     * TODO: make customizable
+     */
+    colorScale: null
+    
+    /**
+     * The labels of all the metrics being visualized
+     */
+    metricLabels: []
+    
+    /**
+     * A reference to the only svg element this chart knows about
+     */
+    svg: null
+    
     
     
     constructor: function ChartView (opts)
@@ -36,44 +75,18 @@ ChartView = exports.ChartView = BaseView.extend do # {{{
         @chart = this
     
     initialize: (opts) ->
-        ChartView.__super__.initialize ...
-        @elements = ChartElement.createChildren this, { graph:@model, chart:this }
+        @colorScale = d3.scale.category20()
         @xScale = d3.time.scale().clamp(true)
         @yScale = d3.scale.log()
-        /* do something like this to get different types of scales
-        switch @model.get('yScale')
-            case 'log' then     @yScale = d3.scale.log()
-            case 'linear' then  @yScale = d3.scale.linear()
-            default then        console.error('The type of scale for the Y dimension is not specified')
-        */
-    
-    /**
-     * Changes the x and y scale domains to include the minimum and maximum of the values passed in
-     * @param - xValues: one or two dimensional array with values that the X domain should accomodate
-     * @param - yValues: one or two dimensional array with values that the Y domain should accomodate
-     */
-    changeScaleDomain: (xValues, yValues) ->
-        @xScale.domain d3.extent d3.merge xValues
-        @yScale.domain d3.extent d3.merge yValues
-        this
-    
-    /**
-     * Updates the x and y scale domains to include the minimum and maximum of the values passed in
-     * @param - xColumn: one dimensional array to accomodate in the X domain
-     * @param - yColumn: one dimensional array to accomodate in the Y domain
-     */
-    updateScaleDomain: (xColumn, yColumn) ->
-        xValues = @xScale.domain().concat xColumn
-        yValues = @yScale.domain().concat yColumn
-        changeScaleDomain xValues, yValues
-        this
-    
+        
+        ChartView.__super__.initialize ...
+        @elements = ChartElement.createChildren this, { graph:@model, chart:this }
     
     
     ### Rendering {{{
     
     
-    layout = {
+    layout: {
         h: 0,
         w: 0,
         top:    { x: 0,     y: 0,       h: 30,      w: null },
@@ -102,13 +115,18 @@ ChartView = exports.ChartView = BaseView.extend do # {{{
      */
     build: ->
         ChartView.__super__.build ...
+        @svg = @$ 'svg'
+        this
+    
+    onRender: ->
+        @svg .attr @determineSize()
         
-        size = @determineSize()
-        @$ 'svg' .attr size
+        # update anything that might've been affected by changing metrics
+        @colorScale.domain(@metricLabels)
         
-        # set up and calculate the layout
-        @layout.w = size.width
-        @layout.h = size.height
+        # set up and calculate the layout and any dependent properties
+        @layout.w = @svg.width()
+        @layout.h = @svg.height()
         @layout.top.w = @layout.bottom.w = @layout.w
         @layout.middle.w = @layout.w - (@layout.left.w + @layout.right.w)
         @layout.left.h = @layout.right.h = @layout.middle.h = @layout.h - (@layout.top.h + @layout.bottom.h)
@@ -117,16 +135,143 @@ ChartView = exports.ChartView = BaseView.extend do # {{{
         @layout.left.y = @layout.right.y = @layout.middle.y = @layout.top.h
         @layout.right.x = @layout.w - @layout.right.w
         @layout.middle.x = @layout.left.w
-        @layout.middle.y = layout.top.h
+        @layout.middle.y = @layout.top.h
         
-        this
-    
-    onRender: ->
-        { width, height } = size = @determineSize()
-        @$ 'svg' .attr size
+        # and update the ranges accordingly
         @xScale.range [0, @layout.middle.w]
         @yScale.range [0, @layout.middle.h]
+        @trigger 'ready:chart'
+        this
     
     # }}}
-
+    
+    
+    
+    ### Helper Functions {{{
+    
+    /**
+     * @public
+     * Formats a number as Thousands, Millions, Billions, etc.
+     * @param {number} n
+     * @returns {string} string representation of n
+     */
+    numberFormatter: (n) ->
+        for format of numberFormats
+            if n >= format.ge
+                trimmed = n/format.ge
+                trimmed = trimmed.toFixed(1) unless trimmed == Math.round(trimmed)
+                return trimmed + format.f
+        return n
+    numberFormats: [
+        { ge: 1000000000000,    f: 'T' },
+        { ge: 1000000000,       f: 'B' },
+        { ge: 1000000,          f: 'M' },
+        { ge: 1000,             f: 'K' },
+    ]
+    
+    /**
+     * Changes the x and y scale domains to include the minimum and maximum of the values passed in
+     * @param {Array} xValues one or two dimensional array with values that the X domain should accomodate
+     * @param {Array} yValues one or two dimensional array with values that the Y domain should accomodate
+     * @returns {ChartView} this
+     */
+    changeScaleDomain: (xValues, yValues) ->
+        @xScale.domain d3.extent d3.merge xValues
+        # TODO: hardcoded log scale
+        @yScale.domain @addLogPadding d3.extent d3.merge yValues
+        
+        @xStep = (@xScale(@xSteps[@xSteps.length - 1]) - @xScale(@xSteps[0])) / @xSteps.length - 1
+        @dx = @xStep / 2
+        this
+    
+    /**
+     * Updates the x and y scale domains to include the minimum and maximum of the values passed in
+     * @param {Array} column one dimensional array to accomodate in the X domain
+     * @param {Array} yColumn one dimensional array to accomodate in the Y domain
+     * @returns {ChartView} this
+     */
+    updateScaleDomain: (xValues, yValues) ->
+        @xSteps = xValues # TODO: account for metrics with mis-aligned x domains
+        xValues = @xScale.domain().concat xValues
+        yValues = @yScale.domain().concat yValues
+        @changeScaleDomain xValues, yValues
+        this
+    
+    /**
+     * Takes into account a new metric to display on the graph
+     * @param {string} label the name or short description of the metric
+     * @param {Array} xValues the x domain values
+     * @param {Array} yValues the corresponding y domain values
+     * @returns {number} the index of this metric in the collection
+     */
+    addMetric: (label, xValues, yValues) ->
+        unless label of @metricLabels
+            @metricLabels.push label
+            @updateScaleDomain xValues, yValues
+        return @metricLabels.indexOf label
+    
+    /**
+     * @public
+     * Default standard date formatter
+     * @param {Date}
+     * returns {string} the date formatted as [abrev. month] [YYYY]
+     */
+    dateFormatter: d3.time.format("%b %Y")
+    
+    /**
+     * @public
+     * Using @see xScale, maps two domain values to their output range values and finds whether the distance between these is less than a threshhold
+     * @param {Object} d1 the first domain value
+     * @param {Object} d2 the second domain value
+     * @param {number} [dx] The threshhold for insignificant. optional, defaults to 1/2 the space between adjacent domain values
+     * @returns {boolean} |x(d1) - x(d2)| <= dx
+     */
+    xDistanceIsInsignificant: (d1, d2) ->
+        return Math.abs(@xScale(d2) - @xScale(d1)) <= @dx
+    
+    /**
+     * @public
+     * Finds the index of the closest domain value to the passed in value
+     * @param {Object} d a value in the domain of @see xScale
+     * @returns {number} the index of the closest domain value to d or undefined
+     */
+    findDomainIndex: (d) ->
+        for domainValue, i of graphData.domainValues
+            return i if xDistanceIsInsignificant(d, domainValue)
+        return undefined
+    
+    /**
+     * @public
+     * Adds padding to a domain such that it's framed by the same margins within a log scale
+     * @param {Array} domain is a domain in the format [highest, lowest]
+     * @returns {Array} a new domain with the padding applied
+     */
+    addLogPadding: (domain) ->
+        [start, stop] = domain
+        fudgeFactor = Math.abs(start / stop) + 2
+        paddingStop = stop - start / fudgeFactor
+        paddingStart = paddingStop * fudgeFactor
+        return [start + paddingStart, stop - paddingStop]
+    
+    /**
+     * Line generator that uses the chart x and y scales
+     */
+    lineGenerator: d3.svg.line()
+        .x (d, i) -> @xScale(@xSteps[i]) # TODO: assumes all metrics have the same x domain
+        .y (d, i) -> @yScale(d)
+        .interpolate 'linear'
+    
+    /**
+     * Change a line's x coordinates
+     * @param {SVGLineElement} l
+     * @param {number} toX a value that should be based on the x output range
+     * returns {SVGLineElement} the line object passed in
+     */
+    moveLine: (l, toX) ->
+        l
+            .attr 'x1', toX
+            .attr 'x2', toX
+    
+    
+    # }}}
 # }}}

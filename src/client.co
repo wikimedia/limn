@@ -105,21 +105,20 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
         dateFormatter = d3.time.format("%b %Y")
         xDistanceIsInsignificant = (d1, d2) ->
             return Math.abs(graphData.x(d2) - graphData.x(d1)) <= graphData.dx
-        findDateIndex = (d) ->
-            for date, i of graphData.dateDomain
-                return i if xDistanceIsInsignificant(d, date)
+        findDomainIndex = (d) ->
+            for domainValue, i of graphData.domainValues
+                return i if xDistanceIsInsignificant(d, domainValue)
             return undefined
         
-        getLogPadding = (startY, stopY) ->
-            fudgeFactor = Math.abs(startY / stopY) + 2
-            yPaddingStop = stopY - startY / fudgeFactor
-            yPaddingStart = yPaddingStop * fudgeFactor
-            return [yPaddingStart, yPaddingStop]
+        addLogPadding = (domain) ->
+            [start, stop] = domain
+            fudgeFactor = Math.abs(start / stop) + 2
+            paddingStop = stop - start / fudgeFactor
+            paddingStart = paddingStop * fudgeFactor
+            return [start + paddingStart, stop - paddingStop]
         
         w = -> viewport.width()
         h = -> viewport.height()
-        circleRadius = 6
-        circleBoxRadius = circleRadius + 1
         colorScale = d3.scale.category20().domain(columnHeaders)
         
         # data setup
@@ -150,16 +149,16 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
             
             # set up graph data
             graphData.lineData = columns.slice(1,columns.length)
-            graphData.dateDomain = columns[0].map (d) -> new Date(d)
-            graphData.minDate = d3.min(graphData.dateDomain)
-            graphData.maxDate = d3.max(graphData.dateDomain)
+            graphData.domainValues = columns[0].map (d) -> new Date(d)
+            graphData.minDate = d3.min(graphData.domainValues)
+            graphData.maxDate = d3.max(graphData.domainValues)
             
             startDate ?= graphData.minDate
             endDate ?= graphData.maxDate
             
             # find what to slice out of the old data
             indices = []
-            for date, i of graphData.dateDomain
+            for date, i of graphData.domainValues
                 if startDate <= date && date <= endDate
                     indices.push i
             return false if indices.length is 0
@@ -168,20 +167,16 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
             sliceEnd = indices[indices.length-1] + 1
             for line, i of graphData.lineData
                 graphData.lineData[i] = line.slice(startSlice, sliceEnd)
-            graphData.dateDomain = graphData.dateDomain.slice(startSlice, sliceEnd)
+            graphData.domainValues = graphData.domainValues.slice(startSlice, sliceEnd)
             
             mergedLineData = d3.merge(graphData.lineData)
-            startY = d3.max(mergedLineData)
-            stopY = d3.min(mergedLineData)
-            [yPaddingStart, yPaddingStop] = getLogPadding(startY, stopY)
-            startY += yPaddingStart
-            stopY -= yPaddingStop
+            [startY, stopY] = addLogPadding [d3.max(mergedLineData), d3.min(mergedLineData)]
             graphData.x = d3.time.scale().domain([startDate, endDate]).range([0, layout.middle.w]).clamp(true)
             graphData.y = d3.scale.log().domain([startY, stopY]).range([0, layout.middle.h])
             graphData.dx = (
-                graphData.x(graphData.dateDomain[graphData.dateDomain.length-1]) -
-                graphData.x(graphData.dateDomain[0])
-            ) / (graphData.dateDomain.length - 1)
+                graphData.x(graphData.domainValues[graphData.domainValues.length-1]) -
+                graphData.x(graphData.domainValues[0])
+            ) / (graphData.domainValues.length - 1)
             
             # ticks and axis setups # TODO: there is a lot of hard-coding and assumption about what types of scales are used in this section
             graphData.yTicks = graphData.y.ticks(Math.floor(startY - stopY/30))
@@ -191,7 +186,7 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
             graphData.yAxis = d3.svg.axis().scale(graphData.y).tickValues(yTicksLabels).orient('left').tickFormat(numberFormatter)
             
             # line generation
-            plotX = (d, i) -> graphData.x(graphData.dateDomain[i])
+            plotX = (d, i) -> graphData.x(graphData.domainValues[i])
             plotY = (d, i) -> graphData.y(d)
             graphData.color = (d, i) -> colorScale(columnHeaders[i])
             graphData.lineGenerator = d3.svg.line()
@@ -208,7 +203,6 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
         
         # initial draw
         draw = ->
-            viewport.html('')
             
             vis = d3.select('div.viewport').append 'svg'
                 .attr 'width', layout.w
@@ -263,13 +257,13 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
             trackGuideLine = (d, i) ->
                 xOffset = d3.mouse($('g.middle', viewport)[0])[0] # TODO: find out why middle can't be passed in here directly
                 trackGuideLineDateOffset = (graphData.dx / 2)
-                interpolatedDate = graphData.x.invert(xOffset + trackGuideLineDateOffset)
+                domainValue = graphData.x.invert(xOffset + trackGuideLineDateOffset)
                 
-                legendTitle.text(dateFormatter(interpolatedDate))
+                legendTitle.text(dateFormatter(domainValue))
                 d3.selectAll('span.legendItemValue')
                     .text((d, i) ->
                         numberFormatter(
-                            graphData.lineData[i][findDateIndex(interpolatedDate)]
+                            graphData.lineData[i][findDomainIndex(domainValue)]
                         )
                     )
                 
@@ -369,14 +363,14 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
             metricDefsData.enter().append 'marker'
                 .attr 'id', (d, i) -> "metricPathDot#i" # TODO: can't reuse because of hard-coded ids
                 .attr 'markerUnits', 'userSpaceOnUse'
-                .attr 'markerWidth', circleBoxRadius * 2
-                .attr 'markerHeight', circleBoxRadius * 2
-                .attr 'refX', circleBoxRadius
-                .attr 'refY', circleBoxRadius
+                .attr 'markerWidth', 14
+                .attr 'markerHeight', 14
+                .attr 'refX', 7
+                .attr 'refY', 7
                 .append 'circle'
-                    .attr 'r', circleRadius
-                    .attr 'cx', circleBoxRadius
-                    .attr 'cy', circleBoxRadius
+                    .attr 'r', 6
+                    .attr 'cx', 7
+                    .attr 'cy', 7
                     .attr 'fill', graphData.color
                     .attr 'stroke', graphData.color
             metricDefsData.exit().remove()
