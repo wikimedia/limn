@@ -111,7 +111,6 @@ development:
                     - meta:
                         - axis-element
                         - callout-element
-                        - defs-element
                         - legend-element
                         - line-guide-element
                         - minimap-element

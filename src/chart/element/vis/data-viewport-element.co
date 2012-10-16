@@ -18,6 +18,9 @@ DataViewportChartElement = exports.DataViewportChartElement = GroupElement.exten
     typeName       : 'DataViewportChartElement'
     tagName        : 'g'
     className      : 'dataViewport'
+    viewEvents :
+        'layout:chart'  : 'onLayoutChart'
+        'ready:defs'    : 'onReadyDefs'
     
     
     constructor : function DataViewportChartElement
@@ -25,6 +28,9 @@ DataViewportChartElement = exports.DataViewportChartElement = GroupElement.exten
     
     initialize : ->
         GroupElement::initialize ...
+    
+    onReadyDefs: (clipIds) ->
+        @sel.attr 'clip-path', "url(##{clipIds.metricVisualizations})"
     
     
     

@@ -19,8 +19,8 @@ LineChartElement = exports.LineChartElement = TimeseriesChartElement.extend do #
     tagName   : 'g'
     className : 'line-chart-element chart-element'
     
-    events :
-        'ready:chart' : 'onReadyChart'
+    viewEvents :
+        'layout:chart' : 'onLayoutChart'
     
     /**
      * the unique human-friendly text that describes this metric
@@ -43,7 +43,7 @@ LineChartElement = exports.LineChartElement = TimeseriesChartElement.extend do #
     initialize: ->
         LineChartElement.__super__.initialize ...
     
-    onReadyChart: ->
+    onLayoutChart: ->
         # report as a metric to the chart
         dateCol = @model.getDateColumn()
         @data = @model.getData()

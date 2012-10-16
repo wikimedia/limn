@@ -59,17 +59,17 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
                     <legend>Legend</legend>
                     <ul></ul>
                 </fieldset>
-                <div class="viewport"></div>
+                <div class="chartContainer"></div>
             </section>
         ');
         els = '#content div.inner section.play'
         legendTitle = $ 'fieldset.legend legend', els
-        viewport = $ 'div.viewport', els
+        chartContainer = $ 'div.chartContainer', els
         
         # style to be factored out into css
         $('<style>
             section.play { max-width: 1000px; margin: 2em; position: relative; }
-            div.viewport { width: 750px; height: 365px; display: inline-block }
+            div.chartContainer { width: 750px; height: 365px; display: inline-block }
             fieldset.legend { width: 150px; margin: 0.5em; font-size: 1.2em; display: inline-block; vertical-align: top; }
             fieldset.legend ul { list-style-type: none; margin: 0 }
             fieldset.legend li { display: table-row; }
@@ -117,8 +117,8 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
             paddingStart = paddingStop * fudgeFactor
             return [start + paddingStart, stop - paddingStop]
         
-        w = -> viewport.width()
-        h = -> viewport.height()
+        w = -> chartContainer.width()
+        h = -> chartContainer.height()
         colorScale = d3.scale.category20().domain(columnHeaders)
         
         # data setup
@@ -129,7 +129,7 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
             bottom: { x: 0,     y: null,    h: 30,      w: null },
             left:   { x: 0,     y: null,    h: null,    w: 60   },
             right:  { x: null,  y: null,    h: null,    w: 60   },
-            middle: { x: null,  y: null,    h: null,    w: null }
+            viewport: { x: null,  y: null,    h: null,    w: null }
         }
         graphData = {}
         
@@ -138,14 +138,14 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
             layout.w = w()
             layout.h = h()
             layout.top.w = layout.bottom.w = layout.w
-            layout.middle.w = layout.w - (layout.left.w + layout.right.w)
-            layout.left.h = layout.right.h = layout.middle.h = layout.h - (layout.top.h + layout.bottom.h)
+            layout.viewport.w = layout.w - (layout.left.w + layout.right.w)
+            layout.left.h = layout.right.h = layout.viewport.h = layout.h - (layout.top.h + layout.bottom.h)
             
             layout.bottom.y = layout.h - layout.bottom.h
-            layout.left.y = layout.right.y = layout.middle.y = layout.top.h
+            layout.left.y = layout.right.y = layout.viewport.y = layout.top.h
             layout.right.x = layout.w - layout.right.w
-            layout.middle.x = layout.left.w
-            layout.middle.y = layout.top.h
+            layout.viewport.x = layout.left.w
+            layout.viewport.y = layout.top.h
             
             # set up graph data
             graphData.lineData = columns.slice(1,columns.length)
@@ -171,8 +171,8 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
             
             mergedLineData = d3.merge(graphData.lineData)
             [startY, stopY] = addLogPadding [d3.max(mergedLineData), d3.min(mergedLineData)]
-            graphData.x = d3.time.scale().domain([startDate, endDate]).range([0, layout.middle.w]).clamp(true)
-            graphData.y = d3.scale.log().domain([startY, stopY]).range([0, layout.middle.h])
+            graphData.x = d3.time.scale().domain([startDate, endDate]).range([0, layout.viewport.w]).clamp(true)
+            graphData.y = d3.scale.log().domain([startY, stopY]).range([0, layout.viewport.h])
             graphData.dx = (
                 graphData.x(graphData.domainValues[graphData.domainValues.length-1]) -
                 graphData.x(graphData.domainValues[0])
@@ -204,7 +204,7 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
         # initial draw
         draw = ->
             
-            vis = d3.select('div.viewport').append 'svg'
+            vis = d3.select('div.chartContainer').append 'svg'
                 .attr 'width', layout.w
                 .attr 'height', layout.h
                 .attr 'pointer-events', 'all'
@@ -212,20 +212,20 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
             # elements used throughout
             defs = vis.append 'defs'
             defs.append 'clipPath'
-                .attr 'id', 'clipMetricVisualizations' # TODO: can't reuse this because of hard coded id
+                .attr 'id', 'clipMetricVisualizations'
                 .append 'rect'
-                    .attr 'width', layout.middle.w
-                    .attr 'height', layout.middle.h
+                    .attr 'width', layout.viewport.w
+                    .attr 'height', layout.viewport.h
             # placeholder for defs used by metrics
             metricDefs = defs.append 'g'
                 .classed 'metricDefs', true
             
-            # middle first so it can hide if its pieces are transformed
-            middle = vis.append 'g'
-                .classed 'middle', true
-                .attr 'width', layout.middle.w
-                .attr 'height', layout.middle.h
-                .attr 'transform', "translate(#{layout.middle.x}, #{layout.middle.y})"
+            # viewport first so it can hide if its pieces are transformed
+            viewport = vis.append 'g'
+                .classed 'viewport', true
+                .attr 'width', layout.viewport.w
+                .attr 'height', layout.viewport.h
+                .attr 'transform', "translate(#{layout.viewport.x}, #{layout.viewport.y})"
             
             zoomBrush = d3.svg.brush().x(graphData.x)
             zoomBrush.on 'brushend', ->
@@ -236,11 +236,11 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
                     zoomBrush.clear()
                     zoomBrushContainer.call(zoomBrush)
             
-            zoomBrushContainer = middle.append 'g'
+            zoomBrushContainer = viewport.append 'g'
                 .classed 'brush', true
                 .call(zoomBrush)
             zoomBrushContainer.selectAll('rect')
-                .attr 'height', layout.middle.h
+                .attr 'height', layout.viewport.h
             
             vis.on 'mouseout', (d, i) ->
                 moveLine(guideLine, -10000)
@@ -255,7 +255,7 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
                 true
             
             trackGuideLine = (d, i) ->
-                xOffset = d3.mouse($('g.middle', viewport)[0])[0] # TODO: find out why middle can't be passed in here directly
+                xOffset = d3.mouse($('g.viewport', chartContainer)[0])[0] # TODO: find out why viewport can't be passed in here directly
                 trackGuideLineDateOffset = (graphData.dx / 2)
                 domainValue = graphData.x.invert(xOffset + trackGuideLineDateOffset)
                 
@@ -267,17 +267,17 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
                         )
                     )
                 
-                guideLineOffset = if 0 < xOffset && xOffset < layout.middle.w then xOffset else -1
+                guideLineOffset = if 0 < xOffset && xOffset < layout.viewport.w then xOffset else -1
                 moveLine(guideLine, guideLineOffset)
             
             # axes
-            middle.append 'g'
+            viewport.append 'g'
                 .classed 'axis xAxis', true
-            middle.append 'g'
+            viewport.append 'g'
                 .classed 'axis yAxis', true
             
-            # viewport is clipped so data visualizations are trapped
-            dataViewport = middle.append 'g'
+            # chartContainer is clipped so data visualizations are trapped
+            dataViewport = viewport.append 'g'
                 .classed 'dataViewport', true
                 .attr 'clip-path', 'url(#clipMetricVisualizations)'
             
@@ -312,7 +312,7 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
             guideLine = dataViewport.append('line')
                 .classed 'verticalGuide', true
                 .attr 'pointer-events', 'none'
-                .attr 'y1', layout.middle.h
+                .attr 'y1', layout.viewport.h
                 .attr 'y2', 0
             
             moveLine(guideLine, -1)
@@ -325,7 +325,7 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
             horizontalGridLinesData.enter().append 'line'
                 .attr 'vector-effect': 'non-scaling-stroke'
                 .attr 'x1', 0
-                .attr 'x2', layout.middle.w
+                .attr 'x2', layout.viewport.w
             horizontalGridLinesData.transition()
                 .attr 'y1', graphData.y
                 .attr 'y2', graphData.y
@@ -337,7 +337,7 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
             verticalGridLinesData.enter().append 'line'
                 .attr 'vector-effect': 'non-scaling-stroke'
                 .attr 'y1', 0
-                .attr 'y2', layout.middle.h
+                .attr 'y2', layout.viewport.h
             verticalGridLinesData.transition()
                 .attr 'x1', graphData.x
                 .attr 'x2', graphData.x
@@ -376,10 +376,10 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
             metricDefsData.exit().remove()
             
             # axes
-            d3.select 'g.middle g.xAxis'
-                .attr 'transform', "translate(0, #{layout.middle.h})"
+            d3.select 'g.viewport g.xAxis'
+                .attr 'transform', "translate(0, #{layout.viewport.h})"
                 .call graphData.xAxis
-            d3.select 'g.middle g.yAxis'
+            d3.select 'g.viewport g.yAxis'
                 .call graphData.yAxis
         
         setupGraphData()

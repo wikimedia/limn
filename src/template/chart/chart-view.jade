@@ -1,7 +1,10 @@
 section.chart
     .chart-meta(data-subview='CalloutElement LegendElement')
     svg
-        defs.definitions(data-subview='DefsElement')
+        defs.definitions
+            clipPath.metricVisualizations
+                rect
+            g.metricDefs
         g.viewport
             g.chart-render(data-subview='')
             g.note-elements(data-subview='AnnotationsElement')

@@ -55,8 +55,8 @@ ChartElement = exports.ChartElement = BaseView.extend do # {{{
     initialize: (opts) ->
         @sel = d3.select @el
         ChartElement.__super__.initialize ...
-        # @elements = ChartElement.create @model, @chart, @graph
-        # @elements = ChartElement.createChildren this
+        ChartElement.propagateEvent 'layout:chart', this
+        ChartElement.propagateEvent 'ready:defs', this
     
     
     
@@ -134,6 +134,13 @@ ChartElement import do
         name = _.get name, 'elementType' unless _.isString name
         KNOWN_CHART_TYPES[name]
     
+    /**
+     * Help bubble events down from a reference point
+     * @param {string} name is the event name
+     * @param {Object} reference is the object that would catch the event and has children that might handle it
+     */
+    propagateEvent: (name, reference) ->
+        reference.on name, reference.bubbleEventDown.bind reference, name
     
     /**
      * Look up a chart type by name, returning a new instance
