@@ -91,7 +91,6 @@ ChartView = exports.ChartView = BaseView.extend do # {{{
         ChartElement.propagateEvent 'ready:defs', this
         @elements = ChartElement.createChildren this, { graph:@model, chart:this }
         _.defer @relayout
-        _.defer @prepareDefs
     
     ### Rendering {{{
     
@@ -125,6 +124,7 @@ ChartView = exports.ChartView = BaseView.extend do # {{{
      */
     build: ->
         ChartView.__super__.build ...
+        
         @svgJquery = @$ 'svg'
         @svg = d3.select @svgJquery[0]
         @viewport = @svg.select 'g.viewport'
@@ -165,6 +165,7 @@ ChartView = exports.ChartView = BaseView.extend do # {{{
         @xScale.range [0, @layout.viewport.w]
         @yScale.range [0, @layout.viewport.h]
         @trigger 'layout:chart'
+        _.defer @prepareDefs
         this
     
     prepareDefs: ->
