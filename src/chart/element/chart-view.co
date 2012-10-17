@@ -33,6 +33,7 @@ ChartView = exports.ChartView = BaseView.extend do # {{{
      */
     xScale: null
     xScaleSet: false
+    xTicks: null
     
     /**
      * The x domain materialized as a finite array
@@ -54,6 +55,7 @@ ChartView = exports.ChartView = BaseView.extend do # {{{
      */
     yScale: null
     yScaleSet: false
+    yTicks: null
     
     /**
      * A scale that can assign unique colors to each metric
@@ -89,8 +91,11 @@ ChartView = exports.ChartView = BaseView.extend do # {{{
         ChartView.__super__.initialize ...
         ChartElement.propagateEvent 'layout:chart', this
         ChartElement.propagateEvent 'ready:defs', this
+        ChartElement.propagateEvent 'changed:data', this
         @elements = ChartElement.createChildren this, { graph:@model, chart:this }
+        # TODO: find something prettier than this hack of using underscore's defer
         _.defer @relayout
+        _.defer @prepareDefs
     
     ### Rendering {{{
     
@@ -164,8 +169,9 @@ ChartView = exports.ChartView = BaseView.extend do # {{{
         # and update the ranges accordingly
         @xScale.range [0, @layout.viewport.w]
         @yScale.range [0, @layout.viewport.h]
+        
         @trigger 'layout:chart'
-        _.defer @prepareDefs
+        
         this
     
     prepareDefs: ->
@@ -224,6 +230,13 @@ ChartView = exports.ChartView = BaseView.extend do # {{{
         
         @xScaleSet = true
         @yScaleSet = true
+        
+        # ticks setups
+        # TODO: fix hard-coding and assumption about what types of scales are used
+        @yTicks = @yScale.ticks(10)
+        @xTicks = @xScale.ticks(d3.time.months)
+        
+        @trigger 'changed:data'
         this
     
     /**
@@ -277,10 +290,12 @@ ChartView = exports.ChartView = BaseView.extend do # {{{
      * @public
      * Finds the index of the closest domain value to the passed in value
      * @param {Object} d a value in the domain of @see xScale
+     * @param {Array} [domainValues] a set of values that comprises a domain.  Default is this chart's x domain
      * @returns {number} the index of the closest domain value to d or undefined
      */
-    findDomainIndex: (d) ->
-        for domainValue, i of graphData.domainValues
+    findDomainIndex: (d, domainValues) ->
+        domainValues ?= @xSteps
+        for domainValue, i of domainValues
             return i if xDistanceIsInsignificant(d, domainValue)
         return undefined
     

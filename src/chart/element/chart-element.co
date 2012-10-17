@@ -57,6 +57,7 @@ ChartElement = exports.ChartElement = BaseView.extend do # {{{
         ChartElement.__super__.initialize ...
         ChartElement.propagateEvent 'layout:chart', this
         ChartElement.propagateEvent 'ready:defs', this
+        ChartElement.propagateEvent 'changed:data', this
     
     
     

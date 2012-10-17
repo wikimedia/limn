@@ -19,8 +19,8 @@ LineChartElement = exports.LineChartElement = TimeseriesChartElement.extend do #
     tagName   : 'g'
     className : 'line-chart-element chart-element'
     
-    viewEvents :
-        'layout:chart' : 'onLayoutChart'
+    viewEvents:
+        'layout:chart': 'onLayoutChart'
     
     /**
      * the unique human-friendly text that describes this metric

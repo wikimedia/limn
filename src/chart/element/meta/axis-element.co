@@ -19,12 +19,46 @@ AxisChartElement = exports.AxisChartElement = ChartElement.extend do # {{{
     tagName        : 'g'
     className      : 'axis'
     
+    viewEvents:
+        'changed:data': 'onDataChanged'
+        'layout:chart': 'onLayoutChart'
     
-    constructor : function AxisChartElement
+    
+    constructor: function AxisChartElement
         ChartElement ...
     
-    initialize : ->
+    # TODO: move out to separate elements once we figure out axes and how configurable they'll be
+    # TODO: fix hard-coding and assumption about what types of scales are used
+    initialize: ->
+        @options = @model.get 'options'
+        @dimension = @options.dimension
+        @orient = @options.orient
         ChartElement::initialize ...
+        
+        @axis = null
+        switch @dimension
+            case 'x'
+                @scale = @chart.xScale
+                @axis = d3.svg.axis().scale(@scale).ticks(d3.time.months, 4).tickFormat(@chart.dateFormatter)
+            case 'y'
+                @scale = @chart.yScale
+                @axis = d3.svg.axis().scale(@scale).tickFormat(@chart.numberFormatter)
+            
+        @axis.orient(@orient)
+        @sel .classed "#{@dimension}Axis", true
+    
+    onDataChanged: ->
+        @axis.scale(@scale)
+        if @dimension is 'y'
+            yTicks = @chart.yTicks
+            @axis.tickValues(d3.range(yTicks.length / 2).map((i) -> return yTicks[i * 2]))
+        
+        @sel.call @axis
+    
+    onLayoutChart: ->
+        if @dimension is 'x'
+            @sel.attr transform: "translate(0, #{@chart.layout.viewport.h})"
+    
     
     
     
