@@ -256,6 +256,14 @@ BaseView = exports.BaseView = Backbone.View.extend mixinBase do # {{{
         @invokeSubviews 'trigger', ...arguments
         this
     
+    /**
+     * Register to bubble an event down from a reference point.
+     * @param {string} name The event name
+     * @param {Object} reference The object that would catch the event and has children that might handle it
+     */
+    propagateEvent: (evt) ->
+        @on evt, @bubbleEventDown.bind this, evt
+    
     redispatch: (evt, ...args) ->
         @trigger evt, this, ...args
         this
