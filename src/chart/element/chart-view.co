@@ -124,6 +124,7 @@ ChartView = exports.ChartView = BaseView.extend do # {{{
      */
     build: ->
         ChartView.__super__.build ...
+        
         @svgJquery = @$ 'svg'
         @svg = d3.select @svgJquery[0]
         @viewport = @svg.select 'g.viewport'

@@ -19,7 +19,6 @@ DataViewportChartElement = exports.DataViewportChartElement = GroupElement.exten
     tagName        : 'g'
     className      : 'dataViewport'
     viewEvents :
-        'layout:chart'  : 'onLayoutChart'
         'ready:defs'    : 'onReadyDefs'
     
     
