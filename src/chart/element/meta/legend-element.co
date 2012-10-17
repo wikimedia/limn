@@ -1,0 +1,47 @@
+d3 = require 'd3'
+Seq = require 'seq'
+
+{ _, op,
+} = limn = require 'limn/client'
+
+
+{ ChartElement,
+} = require '../chart-element'
+
+
+/**
+ * @class
+ * @extends ChartElement
+ */
+LegendElement = exports.LegendElement = ChartElement.extend do # {{{
+    __bind__    : <[ ]>
+    typeName    : 'LegendElement'
+    tagName     : 'fieldset'
+    className   : 'legend'
+    notSVG      : true
+    
+    viewEvents:
+        'changed:data': 'onChangedData'
+    
+    constructor: function LegendElement
+        ChartElement ...
+    
+    initialize: ->
+        LegendElement.__super__.initialize ...
+        @$el.append "<legend>#{@model.get 'label'}</legend>"
+        @$el.append '<ul></ul>'
+    
+    onChangedData: ->
+        chart = @chart
+        legendItemData = @sel.select 'ul' .selectAll 'li'
+            .data @chart.metricLabels
+        
+        legendItem = legendItemData.enter().append('li')
+        legendItem.append('span')
+            .text (d) -> d
+            .classed 'legendItemText', true
+            .style 'color', (d) -> chart.colorScale d
+        legendItem.append('span')
+            .classed 'legendItemValue', true
+
+        legendItemData.exit().remove()

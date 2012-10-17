@@ -98,7 +98,12 @@ ChartElement = exports.ChartElement = BaseView.extend do # {{{
      * Overwriting Backbone's BackboneView.make method to use the SVG namespace
      */
     make: (tagName, attributes, content) ->
-        el = document.createElementNS 'http://www.w3.org/2000/svg', tagName
+        el = null
+        if @notSVG
+            el = document.createElement tagName
+        else
+            el = document.createElementNS 'http://www.w3.org/2000/svg', tagName
+        
         if attributes
             $(el).attr attributes
         if content

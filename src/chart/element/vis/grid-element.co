@@ -18,6 +18,8 @@ GridChartElement = exports.GridChartElement = ChartElement.extend do # {{{
     typeName       : 'GridChartElement'
     tagName        : 'g'
     className      : 'grid'
+    viewEvents:
+        'changed:data': 'onChangedData'
     
     
     constructor : function GridChartElement
@@ -25,7 +27,42 @@ GridChartElement = exports.GridChartElement = ChartElement.extend do # {{{
     
     initialize : ->
         ChartElement::initialize ...
+        @options = @model.get 'options'
+        @dimension = @options.dimension
+        @sel .classed "#{@dimension}Grid", true
     
-    
-    
+    onChangedData: ->
+        ticks = null
+        scale = null
+        enter = null
+        transition = null
+        switch @dimension
+            case 'x'
+                ticks = @chart.xTicks
+                scale = @chart.xScale
+                enter =
+                    y1: 0
+                    y2: @chart.layout.viewport.h
+                transition =
+                    x1: @chart.xScale
+                    x2: @chart.xScale
+        
+            case 'y'
+                ticks = @chart.yTicks
+                scale = @chart.yScale
+                enter =
+                    x1: 0
+                    x2: @chart.layout.viewport.w
+                transition =
+                    y1: @chart.yScale
+                    y2: @chart.yScale
+        
+        gridLinesData = @sel.selectAll 'line'
+            .data ticks
+        gridLinesData.enter().append 'line'
+            .attr 'vector-effect': 'non-scaling-stroke'
+            .attr enter
+        gridLinesData.transition()
+            .attr transition
+        gridLinesData.exit().remove()
 # }}}

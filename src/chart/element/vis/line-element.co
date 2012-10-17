@@ -11,7 +11,7 @@ Seq = require 'seq'
 
 /**
  * @class
- * @extends ChartElement
+ * @extends TimeseriesChartElement
  */
 LineChartElement = exports.LineChartElement = TimeseriesChartElement.extend do # {{{
     __bind__  : <[ ]>
@@ -51,7 +51,6 @@ LineChartElement = exports.LineChartElement = TimeseriesChartElement.extend do #
         @index = @chart.addMetric @label, dateCol, @data
         
         @sel.selectAll 'path.line'
-            # NOTE: @data is inside an array.  Path data is not descending from two dimensional matrices
             .data [@data]
             .enter().append 'path'
                 .attr 'd', @chart.lineGenerator
