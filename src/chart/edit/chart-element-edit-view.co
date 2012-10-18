@@ -1,0 +1,83 @@
+d3 = require 'd3'
+Seq = require 'seq'
+
+{ _, op,
+} = limn = require 'limn/client'
+{ BaseView,
+} = require '../../base'
+
+
+
+/**
+ * @class
+ * @extends BaseView
+ */
+ChartElementEditView = exports.ChartElementEditView = BaseView.extend do # {{{
+    __bind__     : <[ show hide ]>
+    __opt2attr__ : <[ graph chart chartElement ]>
+    tagName      : 'section'
+    className    : 'chart-element-edit'
+    elementType  : 'ChartElement' # ChartElement type this view provides an editor for
+    # template       : require 'kraken/template/chart/edit/chart-element-edit'
+    
+    chartElement : null
+    
+    events:
+        'click .close': 'hide'
+    
+    
+    constructor: function ChartElementEditView
+        BaseView ...
+    
+    initialize: ->
+        ChartElementEditView.__super__.initialize ...
+        @chartElement.on 'layout:chart', @onLayoutChart, this
+    
+    onLayoutChart: ->
+        # override to do stuff
+    
+# }}}
+
+
+
+/**
+ * Map of known element edit-views by name.
+ * @type Object
+ */
+KNOWN_CHART_EDIT_VIEWS = exports.KNOWN_CHART_EDIT_VIEWS = {}
+_extendChartElementEditView = ChartElementEditView.extend
+
+
+### Class Methods
+ChartElementEditView import do
+    
+    /**
+     * Register a new chart type.
+     */
+    register : (Subclass) ->
+        # console.log "ChartElementEditView.register(#Subclass)"
+        unless Subclass?::?.hasOwnProperty('elementType') and elementType = Subclass?::?elementType
+            throw new Error "ChartElementEditView types must declare a new, unique elementType on the prototype! (got #{Subclass?::?elementType})"
+        if KNOWN_CHART_EDIT_VIEWS[elementType]
+            throw new Error "Duplicate ChartElementEditView for elementType! (got #elementType)"
+        KNOWN_CHART_EDIT_VIEWS[ elementType ] = Subclass
+    
+    
+    /**
+     * Look up a `ChartElementEditView` by `typeName`.
+     */
+    lookup : (name) ->
+        name = _.get name, 'typeName' unless _.isString name
+        KNOWN_CHART_EDIT_VIEWS[name]
+    
+    extend : (proto, statics) ->
+        unless proto?.hasOwnProperty('elementType') and elementType = proto.elementType
+            throw new Error "ChartElementEditView types must declare a new, unique elementType on the prototype! (got #{proto?.elementType})"
+        if KNOWN_CHART_EDIT_VIEWS[elementType]
+            throw new Error "Duplicate ChartElementEditView for elementType! (got #elementType)"
+        
+        Subclass = _extendChartElementEditView.call this, proto, statics
+        @register Subclass
+    
+
+

@@ -1,4 +1,14 @@
 // Styling for line charts
+
+// section.play
+//     max-width: 1000px
+//     margin: 2em
+//     position: relative
+// div.chartContainer
+//     width: 750px
+//     height: 365px
+//     display: inline-block
+
 fieldset.legend
     width 150px
     margin 0.5em
@@ -17,6 +27,10 @@ fieldset.legend
             span.legendItemValue
                 text-align right
 
+svg
+    width 800
+    height 500
+
 g.brush
     stroke #fff
     fill-opacity .125
@@ -26,10 +40,9 @@ line.verticalGuide
     stroke red
     stroke-width 1
 
-g.grid
-    line
-        stroke #cacaca
-        stroke-width 1
+g.grid line
+    stroke #cacaca
+    stroke-width 1
 
 g.axis
     path
@@ -40,7 +53,13 @@ g.axis
         stroke #666
         stroke-width 1
 
-g.metricVisualizations
-    path
-        fill none
-        stroke-width 5
+g.metricVisualizations path
+    fill none
+    stroke-width 5
+
+.line
+    fill none
+    stroke #000
+    stroke-width 3px
+
+

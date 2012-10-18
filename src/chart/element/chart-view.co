@@ -26,7 +26,7 @@ ChartView = exports.ChartView = BaseView.extend do # {{{
     typeName  : 'ChartView'
     tagName   : 'section'
     className : 'chart'
-    template : require '../../template/chart/chart-view'
+    template  : require '../../template/chart/chart-view'
     
     /**
      * The scale that translates x domain values into x output range values
@@ -85,10 +85,11 @@ ChartView = exports.ChartView = BaseView.extend do # {{{
     
     
     constructor: function ChartView (opts)
-        BaseView ...
         @chart = this
+        BaseView ...
     
     initialize: (opts) ->
+        @graph = @model
         @colorScale = d3.scale.category20()
         @xScale = d3.time.scale().clamp(true)
         @yScale = d3.scale.log()
@@ -158,6 +159,7 @@ ChartView = exports.ChartView = BaseView.extend do # {{{
             $(zoomBrushContainer).toggle(true)
             true
     
+        @isBuilt = true
         this
     
     relayout: ->
@@ -192,8 +194,7 @@ ChartView = exports.ChartView = BaseView.extend do # {{{
         @xScale.range [0, @layout.viewport.w]
         @yScale.range [0, @layout.viewport.h]
         
-        @trigger 'layout:chart'
-        
+        @trigger 'layout:chart', this
         this
     
     prepareDefs: ->
