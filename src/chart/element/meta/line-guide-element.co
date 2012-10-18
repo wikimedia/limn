@@ -18,29 +18,48 @@ Seq = require 'seq'
  *          x: this line will be set up to track the mouse along the x axis
  */
 LineGuideChartElement = exports.LineGuideChartElement = ChartElement.extend do # {{{
-    __bind__       : <[  ]>
-    typeName       : 'LineGuideChartElement'
-    tagName        : 'g'
-    className      : 'guide'
+    __bind__        : <[  ]>
+    typeName        : 'LineGuideChartElement'
+    tagName         : 'g'
+    className       : 'guide'
+    defaultX        : -10000
+    viewEvents      :
+        'layout:chart'  : 'onLayoutChart'
+        'hover:xDomain' : 'onHoverX'
+        'hover:out'     : 'onHoverOut'
     
     
-    constructor : function LineGuideChartElement
+    constructor: function LineGuideChartElement
         ChartElement ...
     
-    initialize : ->
+    initialize: ->
         ChartElement::initialize ...
-    
-    build: ->
-        line = @sel.append('line')
+        @line = @sel.append('line')
             .attr 'pointer-events', 'none'
         
-        if @model.get('dimension') is 'x'
-            line
-                .classed 'verticalGuide', true
-                .attr 'y1', 0 # TODO: set to height of middle box in layout
-                .attr 'y2', 0
-        
-        @trigger 'guide.added'
+        @options = @model.get 'options'
+        @dimension = @options.dimension
     
+    onLayoutChart: ->
+        switch @dimension
+            case 'x'
+                @line
+                    .classed 'verticalGuide', true
+                    .attr 'y1', @chart.layout.viewport.h
+                    .attr 'y2', 0
+    
+    onHoverOut: ->
+        switch @dimension
+            case 'x'
+                @chart.moveLine(@line, @defaultX)
+    
+    onHoverX: (xOffset) ->
+        switch @dimension
+            case 'x'
+                guideLineOffset = @defaultX
+                if 0 < xOffset && xOffset < @chart.layout.viewport.w
+                    guideLineOffset = xOffset
+                
+                @chart.moveLine(@line, guideLineOffset)
     
 # }}}

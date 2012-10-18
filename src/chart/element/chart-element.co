@@ -58,6 +58,8 @@ ChartElement = exports.ChartElement = BaseView.extend do # {{{
         ChartElement.propagateEvent 'layout:chart', this
         ChartElement.propagateEvent 'ready:defs', this
         ChartElement.propagateEvent 'changed:data', this
+        ChartElement.propagateEvent 'hover:xDomain', this
+        ChartElement.propagateEvent 'hover:out', this
     
     
     

@@ -71,6 +71,11 @@ ChartView = exports.ChartView = BaseView.extend do # {{{
     metricLabels: []
     
     /**
+     * The data for each metric, indexed the same way as @see metricLabels
+     */
+    metricDataByIndex: []
+    
+    /**
      * references to svg elements
      */
     svgJquery: null
@@ -92,6 +97,8 @@ ChartView = exports.ChartView = BaseView.extend do # {{{
         ChartElement.propagateEvent 'layout:chart', this
         ChartElement.propagateEvent 'ready:defs', this
         ChartElement.propagateEvent 'changed:data', this
+        ChartElement.propagateEvent 'hover:xDomain', this
+        ChartElement.propagateEvent 'hover:out', this
         @elements = ChartElement.createChildren this, { graph:@model, chart:this }
         # TODO: find something prettier than this hack of using underscore's defer
         _.defer @relayout
@@ -136,6 +143,21 @@ ChartView = exports.ChartView = BaseView.extend do # {{{
         @defs = @svg.select 'defs'
         
         @svg.attr 'pointer-events', 'all'
+        
+        chart = @
+        @svg.on 'mouseout', (d, i) ->
+            chart.trigger 'hover:out'
+        @svg.on 'mousemove', (d, i) ->
+            chart.trackGuideLine.apply chart, [d, i]
+        @svg.on 'dblclick', (d, i) ->
+            # TODO, not implemented
+            redraw() unless not setupGraphData()
+            # clear any selections caused by this double click
+            window.getSelection?().removeAllRanges()
+            document.selection?.empty();
+            $(zoomBrushContainer).toggle(true)
+            true
+    
         this
     
     relayout: ->
@@ -265,7 +287,12 @@ ChartView = exports.ChartView = BaseView.extend do # {{{
         unless label of @metricLabels
             @metricLabels.push label
             @updateScaleDomain xValues, yValues
-        return @metricLabels.indexOf label
+        index = @metricLabels.indexOf label
+        
+        # TODO: cleaner way to relay metric data for elements that want it
+        # TODO: handle mismatched domains
+        @metricDataByIndex[index] = yValues
+        index
     
     /**
      * @public
@@ -296,7 +323,7 @@ ChartView = exports.ChartView = BaseView.extend do # {{{
     findDomainIndex: (d, domainValues) ->
         domainValues ?= @xSteps
         for domainValue, i of domainValues
-            return i if xDistanceIsInsignificant(d, domainValue)
+            return i if @xDistanceIsInsignificant(d, domainValue)
         return undefined
     
     /**
@@ -332,6 +359,10 @@ ChartView = exports.ChartView = BaseView.extend do # {{{
             .attr 'x1', toX
             .attr 'x2', toX
     
+    trackGuideLine: (d, i) ->
+        xOffset = d3.mouse(@viewport[0][0])[0]
+        
+        @trigger 'hover:xDomain', xOffset
     
     # }}}
 # }}}

@@ -50,11 +50,11 @@ LineChartElement = exports.LineChartElement = TimeseriesChartElement.extend do #
         @label = "Get Label #{@model.cid}"
         @index = @chart.addMetric @label, dateCol, @data
         
-        @sel.selectAll 'path.line'
+        @sel.selectAll 'path.metricLine'
             .data [@data]
             .enter().append 'path'
                 .attr 'd', @chart.lineGenerator
-                .classed 'line', true
+                .classed 'metricLine', true
                 .attr 'data-metricIndex', @index
                 .style 'stroke', @chart.colorScale @label
         
