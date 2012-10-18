@@ -51,6 +51,8 @@ development:
                     - chart-option.jade
                     - chart-scaffold.jade
                     - chart-view.jade
+                    - edit:
+                        - line-element-edit.jade
                 - dashboard:
                     - dashboard.jade
                     - dashboard-tab.jade
@@ -107,6 +109,11 @@ development:
                 - graph-list-view
                 - index
             - chart:
+                - edit:
+                    - chart-edit-view
+                    - chart-element-edit-view
+                    - line-chart-element-edit-view
+                    - index
                 - element:
                     - meta:
                         - axis-element

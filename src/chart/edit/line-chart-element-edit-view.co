@@ -1,0 +1,39 @@
+d3 = require 'd3'
+Seq = require 'seq'
+
+{ _, op,
+} = limn = require 'limn/client'
+{ ChartElementEditView,
+} = require './chart-element-edit-view'
+
+
+/**
+ * @class
+ * @extends ChartElementEditView
+ */
+LineChartElementEditView = exports.LineChartElementEditView = ChartElementEditView.extend do # {{{
+    __bind__       : <[ show hide ]>
+    tagName        : 'section'
+    className      : 'line-chart-element-edit chart-element-edit'
+    elementType    : 'LineChartElement'
+    template       : require '../../template/chart/edit/line-element-edit'
+    
+    # events:
+    #     'click .close': 'hide'
+    
+    
+    constructor: function LineChartElementEditView
+        ChartElementEditView ...
+    
+    initialize: ->
+        LineChartElementEditView.__super__.initialize ...
+    
+    
+    
+    onLayoutChart: ->
+        @chartElement.$ 'path' .on 'click', @show
+    
+    
+    
+# }}}
+

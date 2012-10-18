@@ -9,7 +9,7 @@ _ = require '../util/underscore'
 } = require './graph-model'
 { GraphView,
 } = require './graph-view'
-{ ChartElementData, ChartElementDataList, ChartElement, ChartView, ChartViewport,
+{ ChartElementData, ChartElementDataList, ChartElement, ChartView, ChartEditView, 
 } = require '../chart'
 { DataView, DataSetView, DataSet, DataSource,
 } = require '../data'
@@ -64,7 +64,7 @@ GraphEditView = exports.GraphEditView = BaseView.extend do # {{{
     onDataReady: ->
         # console.log "#this.onDataReady()!", @model
         # console.log "  --> elements: #{@model.elements}"
-        @addSubview @chart = new ChartView { @model }
+        @addSubview @chart = new ChartEditView { @model }
         @render()
     
     

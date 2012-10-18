@@ -1,9 +1,10 @@
 chart_option  = exports.option  = require './option'
+chart_edit    = exports.edit    = require './edit'
 chart_element = exports.element = require './element'
 chart_type    = exports.type    = require './type'
 dygraphs      = require './type/dygraphs'
 d3_chart      = require './type/d3-chart'
 d3_elements   = require './type/d3'
 
-exports import chart_option import chart_element \
+exports import chart_option import chart_element import chart_edit \
         import chart_type import dygraphs import d3_chart import d3_elements
