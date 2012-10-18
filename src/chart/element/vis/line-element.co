@@ -46,17 +46,40 @@ LineChartElement = exports.LineChartElement = TimeseriesChartElement.extend do #
     onLayoutChart: ->
         # report as a metric to the chart
         dateCol = @model.getDateColumn()
-        @data = @model.getData()
-        @label = "Get Label #{@model.cid}"
-        @index = @chart.addMetric @label, dateCol, @data
+        data = @model.getData()
+        label = "Get Label #{@model.cid}"
+        index = @chart.addMetric label, dateCol, data
+        color = @chart.colorScale label
         
+        # metric marker
+        # TODO: make into an option
+        # TODO: should defs be their own element?  we'd have to change the root element
+        @chart.defs.select 'g.metricDefs' .append 'marker'
+            .attr 'id', (d, i) -> "metricPathDot#{index}"
+            .attr 'markerUnits', 'userSpaceOnUse'
+            .attr 'markerWidth', 14
+            .attr 'markerHeight', 14
+            .attr 'refX', 7
+            .attr 'refY', 7
+            .append 'circle'
+                .attr 'r', 6
+                .attr 'cx', 7
+                .attr 'cy', 7
+                .attr 'fill', color
+                .attr 'stroke', color
+        
+        # metric lines
         @sel.selectAll 'path.metricLine'
-            .data [@data]
+            .data [data]
             .enter().append 'path'
                 .attr 'd', @chart.lineGenerator
                 .classed 'metricLine', true
-                .attr 'data-metricIndex', @index
-                .style 'stroke', @chart.colorScale @label
+                .attr 'data-metricIndex', index
+                .style 'stroke', color
+                .attr 'vector-effect', 'non-scaling-stroke'
+                .attr 'marker-start', (d, i) -> "url(\#metricPathDot#{index})"
+                .attr 'marker-mid', (d, i) -> "url(\#metricPathDot#{index})"
+                .attr 'marker-end', (d, i) -> "url(\#metricPathDot#{index})"
         
     
 # }}}
