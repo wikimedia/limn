@@ -49,7 +49,9 @@ LineChartElement = exports.LineChartElement = TimeseriesChartElement.extend do #
         options = @model.getOptions()
         dateCol = @model.getDateColumn()
         data = @model.getData()
-        label = options.label ?= "#{@model.cid} (change)"
+        label = "#{options.label}"
+        if label.length is 0
+            label = "#{@model.cid} (change)"
         index = @chart.addMetric label, dateCol, data
         color = @chart.colorScale label
         
