@@ -56,6 +56,10 @@ ChartView = exports.ChartView = BaseView.extend do # {{{
     yScale: null
     yScaleSet: false
     yTicks: null
+    /**
+     * The domain of @see yScale needs to be kept separately so we can add padding that takes into account all metrics
+     */
+    yDomain: []
     
     /**
      * A scale that can assign unique colors to each metric
@@ -246,7 +250,8 @@ ChartView = exports.ChartView = BaseView.extend do # {{{
     changeScaleDomain: (xValues, yValues) ->
         @xScale.domain d3.extent d3.merge xValues
         # TODO: hardcoded log scale
-        @yScale.domain @addLogPadding d3.extent d3.merge yValues
+        @yDomain = d3.extent d3.merge yValues
+        @yScale.domain @addLogPadding @yDomain
         
         @xStep = (@xScale(@xSteps[@xSteps.length - 1]) - @xScale(@xSteps[0])) / @xSteps.length - 1
         @dx = @xStep / 2
@@ -273,7 +278,7 @@ ChartView = exports.ChartView = BaseView.extend do # {{{
         if @xScaleSet
             xValues = @xScale.domain().concat xValues
         if @yScaleSet
-            yValues = @yScale.domain().concat yValues
+            yValues = @yDomain.concat yValues
         @changeScaleDomain xValues, yValues
         this
     
@@ -287,9 +292,9 @@ ChartView = exports.ChartView = BaseView.extend do # {{{
     addMetric: (label, xValues, yValues) ->
         unless label of @metricLabels
             @metricLabels.push label
-            @updateScaleDomain xValues, yValues
         index = @metricLabels.indexOf label
         
+        @updateScaleDomain xValues, yValues
         # TODO: cleaner way to relay metric data for elements that want it
         # TODO: handle mismatched domains
         @metricDataByIndex[index] = yValues

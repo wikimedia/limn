@@ -21,6 +21,7 @@ LineChartElement = exports.LineChartElement = TimeseriesChartElement.extend do #
     
     viewEvents:
         'layout:chart': 'onLayoutChart'
+        'changed:data': 'onChangedData'
     
     /**
      * the unique human-friendly text that describes this metric
@@ -45,9 +46,10 @@ LineChartElement = exports.LineChartElement = TimeseriesChartElement.extend do #
     
     onLayoutChart: ->
         # report as a metric to the chart
+        options = @model.getOptions()
         dateCol = @model.getDateColumn()
         data = @model.getData()
-        label = "Get Label #{@model.cid}"
+        label = options.label ?= "#{@model.cid} (change)"
         index = @chart.addMetric label, dateCol, data
         color = @chart.colorScale label
         
@@ -80,7 +82,9 @@ LineChartElement = exports.LineChartElement = TimeseriesChartElement.extend do #
                 .attr 'marker-start', (d, i) -> "url(\#metricPathDot#{index})"
                 .attr 'marker-mid', (d, i) -> "url(\#metricPathDot#{index})"
                 .attr 'marker-end', (d, i) -> "url(\#metricPathDot#{index})"
-        
     
+    onChangedData: ->
+        @sel.selectAll 'path.metricLine'
+            .transition()
+            .attr 'd', @chart.lineGenerator
 # }}}
-

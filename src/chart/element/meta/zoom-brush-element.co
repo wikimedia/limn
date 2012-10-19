@@ -29,20 +29,21 @@ ZoomBrushChartElement = exports.ZoomBrushChartElement = ChartElement.extend do #
         ChartElement::initialize ...
     
     onLayoutChart: (clipIds) ->
-        zoomBrush = d3.svg.brush().x(@chart.xScale)
+        me = @
+        zoomBrush = d3.svg.brush().x(me.chart.xScale)
         zoomBrush.on 'brushend', ->
             e = d3.event.target.extent()
-            unless @chart.xDistanceIsInsignificant e[0], e[1]
+            unless me.chart.xDistanceIsInsignificant e[0], e[1]
                 # TODO: handle this event and redraw chart / or use d3.behavior.zoom
-                @trigger 'changed:data', e
+                me.trigger 'changed:data', e
                 # TODO: make a prettier way to get jQuery selections out of d3 elements
-                @$ @sel[0] .toggle false
+                me.$ me.sel[0] .toggle false
             zoomBrush.clear()
-            @sel.call zoomBrush
+            me.sel.call zoomBrush
         
-        @sel.call zoomBrush
-        @sel.selectAll 'rect'
-            .attr 'height', @chart.layout.viewport.h
+        me.sel.call zoomBrush
+        me.sel.selectAll 'rect'
+            .attr 'height', me.chart.layout.viewport.h
     
     
     

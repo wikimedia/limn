@@ -22,21 +22,22 @@ GridChartElement = exports.GridChartElement = ChartElement.extend do # {{{
         'changed:data': 'onChangedData'
     
     
-    constructor : function GridChartElement
+    constructor: function GridChartElement
         ChartElement ...
     
-    initialize : ->
+    dimension: ->
+        @model.getOptions().options.dimension
+    
+    initialize: ->
         ChartElement::initialize ...
-        @options = @model.get 'options'
-        @dimension = @options.dimension
-        @sel .classed "#{@dimension}Grid", true
+        @sel .classed "#{@dimension()}Grid", true
     
     onChangedData: ->
         ticks = null
         scale = null
         enter = null
         transition = null
-        switch @dimension
+        switch @dimension()
             case 'x'
                 ticks = @chart.xTicks
                 scale = @chart.xScale

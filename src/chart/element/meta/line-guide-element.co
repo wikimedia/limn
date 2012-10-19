@@ -32,16 +32,16 @@ LineGuideChartElement = exports.LineGuideChartElement = ChartElement.extend do #
     constructor: function LineGuideChartElement
         ChartElement ...
     
+    dimension: ->
+        @model.getOptions().options.dimension
+    
     initialize: ->
         ChartElement::initialize ...
         @line = @sel.append('line')
             .attr 'pointer-events', 'none'
-        
-        @options = @model.get 'options'
-        @dimension = @options.dimension
     
     onLayoutChart: ->
-        switch @dimension
+        switch @dimension()
             case 'x'
                 @line
                     .classed 'verticalGuide', true
@@ -49,12 +49,12 @@ LineGuideChartElement = exports.LineGuideChartElement = ChartElement.extend do #
                     .attr 'y2', 0
     
     onHoverOut: ->
-        switch @dimension
+        switch @dimension()
             case 'x'
                 @chart.moveLine(@line, @defaultX)
     
     onHoverX: (xOffset) ->
-        switch @dimension
+        switch @dimension()
             case 'x'
                 guideLineOffset = @defaultX
                 if 0 < xOffset && xOffset < @chart.layout.viewport.w
