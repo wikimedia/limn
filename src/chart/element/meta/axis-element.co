@@ -46,7 +46,7 @@ AxisChartElement = exports.AxisChartElement = ChartElement.extend do # {{{
             case 'y'
                 @scale = @chart.yScale
                 @axis = d3.svg.axis().scale(@scale).tickFormat(@chart.numberFormatter)
-            
+        
         @axis.orient(@orient())
         @sel .classed "#{@dimension()}Axis", true
     

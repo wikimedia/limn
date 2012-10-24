@@ -74,8 +74,11 @@ BarChartElement = exports.BarChartElement = TimeseriesChartElement.extend do # {
     
     onChangedData: ->
         chart = @chart
+        options = @model.getOptions()
+        inverted = options.options.inverted
         @sel.selectAll 'rect.metricBar'
             .transition()
-            .attr 'height', chart.yScale
+                .attr 'y', (d) -> if inverted then 0 else chart.yScale(d)
+                .attr 'height', (d) -> if inverted then chart.yScale(d) else chart.layout.viewport.h - chart.yScale(d)
 # }}}
 
