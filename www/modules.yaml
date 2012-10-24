@@ -19,6 +19,7 @@ development:
         - jquery.hotkeys.min
         - jquery.isotope.min
         - jquery.spin.min
+        - jquery.transit.min
         
         - bootstrap.min
         - bootstrap-colorpicker

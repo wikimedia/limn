@@ -1,19 +1,67 @@
 // Styling for line charts
+/******** TODO: figure out how to properly slice up this style ***/
+body
+    background-color white
 
-// section.play
-//     max-width: 1000px
-//     margin: 2em
-//     position: relative
-// div.chartContainer
-//     width: 750px
-//     height: 365px
-//     display: inline-block
+    #content
+        width auto
+        height 100%
+        z-index 10
+        padding 20px
+        min-height none
+        background-color white
+        box-shadow none
+        
+        & > .inner
+            z-index 12
+            position relative
+            margin 0 auto
+            
+            &.fluid-inner
+                width 100%
+                min-width none
+                max-width none
+            
+            .centered
+                margin 0 auto
+                max-width none
+
+        section.graph
+            max-height none
+            max-width none
+
+    footer
+        display none
+
+    .rilke
+        display none
+
+.btn.edit
+    position: absolute
+    top 4px
+    right 0px
+    width 40px
+    height 20px
+    display none
+    z-index 10
+
+.chart-edit-row
+    position absolute!important
+    width 72%
+    left 26%
+    float right
+/******** The above is for an experiment with CSS transitions ****/
+
+.chart-meta
+    width 18%
+    margin-right 20px
+    padding 10px 24px 10px 10px
+    display inline-block
+    vertical-align top
 
 fieldset.legend
     margin 0.5em
     font-size 1.2em
-    display inline-block
-    vertical-align top
     ul
         list-style-type none
         margin 0
@@ -27,8 +75,10 @@ fieldset.legend
                 text-align right
 
 svg
-    width 800
-    height 500
+    width 78%
+    height 90%
+    display inline-block
+    position absolute
 
 g.brush
     stroke #fff
