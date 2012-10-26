@@ -104,6 +104,7 @@ ChartView = exports.ChartView = BaseView.extend do # {{{
         ChartElement.propagateEvent 'changed:data', this
         ChartElement.propagateEvent 'hover:xDomain', this
         ChartElement.propagateEvent 'hover:out', this
+        ChartElement.propagateEvent 'edit', this
         @elements = ChartElement.createChildren this, { graph:@model, chart:this }
         # TODO: find something prettier than this hack of using underscore's defer
         _.defer @relayout
@@ -162,8 +163,34 @@ ChartView = exports.ChartView = BaseView.extend do # {{{
             document.selection?.empty();
             $(zoomBrushContainer).toggle(true)
             true
-    
+        
+        # TODO: find out how to trigger this from inside legend maybe
+        @editing = false
+        $ document .on 'click', '.btn.edit', ->
+            chart.trigger 'edit'
+            if chart.editing
+                $('.left.box').transition({ left: '-20%', top: '-20%', right: '100%' })
+                $('.top.box').transition({ top: '-20%', bottom: '100%', left: '0' })
+                $('.middle.box').transition({ top: '0', left: '0', bottom: '0', right: '0' })
+                $('.right.box').transition({ left: '100%', right: '-20%' })
+                $('.bottom.box').transition({ top: '100%', bottom: '-20%' })
+            else
+                $('.left.box').transition({ left: '0', top: '0', right: '80%' })
+                $('.top.box').transition({ top: '0', bottom: '80%', left: '20%' })
+                $('.middle.box').transition({ top: '20%', left: '20%' })
+            
+            chart.editing = not chart.editing
+        @$('.bottom.box').bind 'proximity', { max: 20 }, (event, proximity, distance) ->
+            if chart.editing and $(this).css('top') === '100%'
+                chart.$ '.middle.box' .transition bottom: '20%'
+                $(this).transition({ top: '80%', bottom: '0' })
+        @$('.right.box').bind 'proximity', { max: 20 }, (event, proximity, distance) ->
+            if chart.editing and $(this).css('left') === '100%'
+                chart.$ '.middle.box' .transition right: '20%'
+                $(this).transition({ left: '80%', right: '0' })
+        
         @isBuilt = true
+        
         this
     
     relayout: ->

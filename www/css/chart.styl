@@ -1,18 +1,66 @@
-// Styling for SVG charts
+// Styling for charts and chart elements
 
-.chart svg
+.chart
+    height: 100%
+    position: relative
+
+.chart-meta
+    width 18%
+    padding 10px 24px 10px 10px
+    display inline-block
+    vertical-align top
     
-    .line
-      fill none
-      stroke #000
-      stroke-width 3px
+    .btn.edit
+        position: absolute
+        top: 4px
+        right: 0px
+        width: 40px
+        height: 20px
+        display: none
     
-    .axis
-        font-size 11px
-        color #666
+    fieldset.legend
+        position: relative
+        margin 0.5em
+        font-size 1.2em
         
-        text
-            fill #666
-    
-    
+        ul
+            list-style-type none
+            margin 0
+            li
+                display table-row
+                span
+                    display table-cell
+                span.legendItemText
+                    text-align left
+                span.legendItemValue
+                    text-align right
 
+svg
+    width 76%
+    height 90%
+    
+    g.brush
+        stroke #fff
+        fill-opacity .125
+        shape-rendering crispEdges
+    
+    line.verticalGuide
+        stroke red
+        stroke-width 1
+    
+    g.grid line
+        stroke #cacaca
+        stroke-width 1
+    
+    g.axis
+        path
+            stroke #cacaca
+            stroke-width 3
+        text
+            font-size 1.1em
+            stroke #666
+            stroke-width 1
+    
+    g.metricVisualizations path
+        fill none
+        stroke-width 5

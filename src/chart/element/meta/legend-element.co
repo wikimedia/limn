@@ -36,36 +36,6 @@ LegendElement = exports.LegendElement = ChartElement.extend do # {{{
         editButton = @$el.find '.edit'
         @$el.on 'mouseover', -> editButton.show()
         @$el.on 'mouseout', -> editButton.hide()
-        # TODO: just testing out, move this to their corresponding elements
-        editButton.on 'click', (e) ->
-            e.preventDefault()
-            
-            chart = $ 'section.chart'
-            chartMeta = $ '.chart-meta'
-            svg = $ 'svg'
-            editBox = $ '.chart-edit-row'
-            
-            chartMeta.css transformOrigin: '0px 0px'
-            svg.css transformOrigin: "#{width/2}px #{height/2}px"
-            
-            if editBox.css('height') == '160px'
-                chartMeta.transition width: '18%', height: 'auto', 'box-shadow': 'none'
-                
-                width = svg.innerWidth()
-                height = svg.innerHeight()
-                svg.transition scale: 1, width: '78%', y: '0'
-                
-                editBox.transition height: '0px', 'box-shadow': 'none'
-            else
-                chartMeta.transition width: '20%', height: chart.innerHeight(), 'box-shadow': '0 0 5px 5px #999'
-                
-                width = svg.innerWidth()
-                height = svg.innerHeight()
-                svg.transition scale: 0.8, width: '76%', y: '120px'
-                
-                editBox.transition height: '160px', 'box-shadow': '0 0 5px 5px #999'
-                
-            true
         
         @$el.append '<legend></legend>'
         @legend = @$el.find('legend')

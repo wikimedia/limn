@@ -20,6 +20,7 @@ development:
         - jquery.isotope.min
         - jquery.spin.min
         - jquery.transit.min
+        - jquery.proximity
         
         - bootstrap.min
         - bootstrap-colorpicker
