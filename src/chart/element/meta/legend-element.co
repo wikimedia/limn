@@ -34,8 +34,6 @@ LegendElement = exports.LegendElement = ChartElement.extend do # {{{
         @$el.append do
             $ '<a>Edit</a>' .addClass 'btn' .addClass 'edit'
         editButton = @$el.find '.edit'
-        @$el.on 'mouseover', -> editButton.show()
-        @$el.on 'mouseout', -> editButton.hide()
         
         @$el.append '<legend></legend>'
         @legend = @$el.find('legend')
