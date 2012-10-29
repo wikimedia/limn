@@ -19,9 +19,9 @@
     
     fieldset.legend
         position: relative
-        margin 0.5em
-        font-size 1.2em
-        
+        margin: 0.5em
+        font-weight: 100
+        font-family: "Helvetica Neue", Helvetica, Arial, sans-serif
         ul
             list-style-type none
             margin 0
@@ -44,8 +44,8 @@ svg
         shape-rendering crispEdges
     
     line.verticalGuide
-        stroke red
-        stroke-width 1
+        stroke #cacaca
+        stroke-width 2
     
     g.grid line
         stroke #cacaca
@@ -53,10 +53,11 @@ svg
     
     g.axis
         path
+            fill none
             stroke #cacaca
             stroke-width 3
         text
-            font-size 1.1em
+            font 100 1em "Helvetica Neue", Helvetica, Arial, sans-serif
             stroke #666
             stroke-width 1
     
