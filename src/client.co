@@ -178,7 +178,7 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
                 graphData.x(graphData.domainValues[0])
             ) / (graphData.domainValues.length - 1)
             
-            # ticks and axis setups # TODO: there is a lot of hard-coding and assumption about what types of scales are used in this section
+            # ticks and axis setups
             graphData.yTicks = graphData.y.ticks(Math.floor(startY - stopY/30))
             graphData.xTicks = graphData.x.ticks(d3.time.months)
             yTicksLabels = d3.range(graphData.yTicks.length / 2).map((i) -> return graphData.yTicks[i * 2])
@@ -255,7 +255,7 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
                 true
             
             trackGuideLine = (d, i) ->
-                xOffset = d3.mouse($('g.viewport', chartContainer)[0])[0] # TODO: find out why viewport can't be passed in here directly
+                xOffset = d3.mouse($('g.viewport', chartContainer)[0])[0]
                 trackGuideLineDateOffset = (graphData.dx / 2)
                 domainValue = graphData.x.invert(xOffset + trackGuideLineDateOffset)
                 
@@ -361,7 +361,7 @@ LimnApp = limn.LimnApp = Backbone.Router.extend do # {{{
             metricDefsData = d3.select 'g.metricDefs' .selectAll 'marker'
                 .data graphData.lineData
             metricDefsData.enter().append 'marker'
-                .attr 'id', (d, i) -> "metricPathDot#i" # TODO: can't reuse because of hard-coded ids
+                .attr 'id', (d, i) -> "metricPathDot#i"
                 .attr 'markerUnits', 'userSpaceOnUse'
                 .attr 'markerWidth', 14
                 .attr 'markerHeight', 14
