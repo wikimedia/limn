@@ -6,7 +6,7 @@ Seq = require 'seq'
 
 
 { ChartElementEditView,
-} = require '../chart-element'
+} = require './chart-element-edit-view'
 
 
 /**
@@ -15,7 +15,7 @@ Seq = require 'seq'
  */
 LegendEditElement = exports.LegendEditElement = ChartElementEditView.extend do # {{{
     __bind__    : <[ ]>
-    typeName    : 'LegendEditElement'
+    elementType : 'LegendElement'
     tagName     : 'fieldset'
     className   : 'legend'
     notSVG      : true
@@ -29,45 +29,3 @@ LegendEditElement = exports.LegendEditElement = ChartElementEditView.extend do #
     
     initialize: ->
         LegendEditElement.__super__.initialize ...
-        
-        # TODO: I really don't like appending elements dynamically
-        @$el.append do
-            $ '<a>Edit</a>' .addClass 'btn' .addClass 'edit'
-        editButton = @$el.find '.edit'
-        
-        @$el.append '<legend></legend>'
-        @legend = @$el.find('legend')
-        @$el.append '<ul></ul>'
-        @list = @$el.find('ul')
-        
-        @legend.text @model.get 'label'
-    
-    onChangedData: ->
-        chart = @chart
-        legendItemData = @sel.select 'ul' .selectAll 'li'
-            .data @chart.metricLabels
-        
-        legendItem = legendItemData.enter().append 'li'
-            .attr 'data-metricIndex', (d, i) -> i
-        legendItem.append 'span'
-            .text (d) -> d
-            .classed 'legendItemText', true
-            .style 'color', (d) -> chart.colorScale d
-        legendItem.append 'span'
-            .classed 'legendItemValue', true
-
-        legendItemData.exit().remove()
-    
-    onHoverX: (xOffset) ->
-        chart = @chart
-        domainValue = chart.xScale.invert(xOffset)
-        domainValueOffCenter = chart.xScale.invert(xOffset + chart.dx)
-        @legend.text chart.dateFormatter(domainValueOffCenter)
-        @list.find('li').each ->
-            metricIndex = $(@).data().metricindex
-            dataSet = chart.metricDataByIndex[metricIndex]
-            dataIndex = chart.findDomainIndex(domainValue)
-            $(@).find('span.legendItemValue').text chart.numberFormatter(
-                dataSet[dataIndex]
-            )
-    
