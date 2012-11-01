@@ -114,6 +114,7 @@ development:
                 - edit:
                     - chart-edit-view
                     - chart-element-edit-view
+                    - legend-edit-element-view
                     - line-chart-element-edit-view
                     - index
                 - element:

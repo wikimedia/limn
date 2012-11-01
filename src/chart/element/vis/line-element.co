@@ -57,7 +57,6 @@ LineChartElement = exports.LineChartElement = TimeseriesChartElement.extend do #
         
         # metric marker
         # TODO: make into an option
-        # TODO: should defs be their own element?  we'd have to change the root element
         @chart.defs.select 'g.metricDefs' .append 'marker'
             .attr 'id', (d, i) -> "metricPathDot#{index}"
             .attr 'markerUnits', 'userSpaceOnUse'
