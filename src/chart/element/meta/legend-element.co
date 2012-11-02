@@ -55,7 +55,7 @@ LegendElement = exports.LegendElement = ChartElement.extend do # {{{
             .style 'color', (d) -> chart.colorScale d
         legendItem.append 'span'
             .classed 'legendItemValue', true
-
+        
         legendItemData.exit().remove()
     
     onHoverX: (xOffset) ->

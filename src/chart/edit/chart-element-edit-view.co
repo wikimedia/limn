@@ -30,6 +30,7 @@ ChartElementEditView = exports.ChartElementEditView = BaseView.extend do # {{{
         BaseView ...
     
     initialize: ->
+        @sel = d3.select @el
         ChartElementEditView.__super__.initialize ...
         @chartElement.on 'layout:chart', @onLayoutChart, this
     

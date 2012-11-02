@@ -11,6 +11,10 @@
     padding: 10px
     p
         font-size: 16px
+    > div
+        position: relative
+        height: 100%
+        width: 100%
 
 .left.box
     top: -20%
@@ -71,3 +75,24 @@
 
 .line:hover
     cursor pointer
+
+.edit-legend
+    ul
+        list-style: none
+        margin: 0
+    li.draggable
+        padding: 6px
+        border-radius: 5px
+        border-width: 2px
+        border-style: solid
+        cursor: -webkit-grab
+        cursor: -moz-grab
+        cursor: grab
+        margin: 0 0 8px 0
+        text-align: left
+    li.ui-sortable-placeholder, li.ui-sortable-helper
+        cursor: -webkit-grabbing
+        cursor: -moz-grabbing
+        cursor: grabbing
+        background-color: white
+        box-shadow: 2px 2px 2px 2px #bbb
