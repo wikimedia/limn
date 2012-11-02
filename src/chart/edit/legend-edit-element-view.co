@@ -17,7 +17,7 @@ LegendEditElement = exports.LegendEditElement = ChartElementEditView.extend do #
     __bind__    : <[ ]>
     elementType : 'LegendElement'
     tagName     : 'fieldset'
-    className   : 'legend'
+    className   : 'edit-legend'
     notSVG      : true
     
     viewEvents:
@@ -29,3 +29,37 @@ LegendEditElement = exports.LegendEditElement = ChartElementEditView.extend do #
     
     initialize: ->
         LegendEditElement.__super__.initialize ...
+        
+        @$el.append '<legend></legend>'
+        @legend = @$el.find('legend')
+        @$el.append '<ul class="sortable"></ul>'
+        @list = @$el.find('ul')
+        @list.sortable {
+            connectWith: 'ul'
+        }
+        
+        @legend.text "Edit #{@model.get 'label'}"
+        
+        @list.after '<a class="btn pull-right" href="#">Add Scale</a>'
+        newScaleButton = @$el.find 'a.btn'
+        newScaleButton.on 'click', ->
+            console.log 'clicked'
+    
+    build: ->
+        @$el.appendTo '.left.box div'
+    
+    onChangedData: ->
+        chart = @chart
+        legendItemData = @sel.select 'ul' .selectAll 'li'
+            .data @chart.metricLabels
+        
+        legendItem = legendItemData.enter().append 'li'
+            .attr 'data-metricIndex', (d, i) -> i
+            .classed 'draggable', true
+            .style 'border-color', (d) -> chart.colorScale d
+        legendItem.append 'span'
+            .text (d) -> d
+            .classed 'legendItemText', true
+            .style 'color', (d) -> chart.colorScale d
+        
+        legendItemData.exit().remove()

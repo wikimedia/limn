@@ -21,6 +21,7 @@ development:
         - jquery.spin.min
         - jquery.transit.min
         - jquery.proximity
+        - jquery-ui-1.9.1.custom.min
         
         - bootstrap.min
         - bootstrap-colorpicker
