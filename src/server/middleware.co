@@ -206,6 +206,7 @@ application = limn.application =
                 src     : WWW
                 dest    : varDir
                 options : stylus : { nib:true, include:"#WWW/css" }
+                allowed_methods : <[ GET HEAD ]>
                 log_level : LOG_LEVEL
             @use compiler do
                 enabled : 'yaml'

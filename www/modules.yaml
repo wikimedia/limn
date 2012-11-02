@@ -44,6 +44,8 @@ development:
         - dygraph
         - dygraph-extra
         - d3.v2
+        
+        - livecss
 
 -   suffix: .mod.js
     paths:
