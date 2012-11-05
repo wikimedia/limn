@@ -42,7 +42,8 @@ var livecss = {
   },
 
   watch: function(linkElement) {
-    var url = linkElement.getAttribute("href");
+    // var url = linkElement.getAttribute("href");
+    var url = linkElement.href;
     this.unwatch(url);
     this.watchTimers[url] = setInterval(this.proxy(function() {
       var linkElement = this.linkElementWithHref(url);
@@ -66,7 +67,7 @@ var livecss = {
   linkElementWithHref: function(url) {
     var linkElements = document.getElementsByTagName("link");
     for (var i = 0; i < linkElements.length; i++)
-      if (linkElements[i].href == url)
+      if (this.removeCacheBust(linkElements[i].href) == url)
         return linkElements[i]
   },
 
