@@ -1,11 +1,11 @@
 - if (!locals.version) locals.version = 'HEAD';
 - if (version == null || !version || version === 'HEAD') { locals.version = String(new Date().getTime()); }
 
-mixin css(href, media, path_root)
+mixin css(href, media, path_root, cssClasses)
     - media = media || 'screen'
     - path_root = path_root || (href.charAt(0) === '/' ? locals.mount : locals.path.join(locals.mount, 'css'))
-    - var ver = (locals.version ? '?'+locals.version : '')
+    - var ver = (locals.version ? (href.indexOf('?') === -1 ? '?' : '&')+locals.version : '')
     - href = locals.path.join(path_root, href) + ver
-    link(type='text/css', rel='stylesheet', media=media, href=href)
+    link(type='text/css', rel='stylesheet', media=media, href=href, class=cssClasses)
 
 

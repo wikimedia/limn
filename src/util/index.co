@@ -13,8 +13,12 @@ try
 catch ex
     require.define 'd3', (require, module, exports) -> module.exports = d3
 
-# watch all css files for changes (only in dev mode)
-root.livecss?.watchAll?()
+# watch css files for changes (only in dev mode)
+# root.livecss?.watchAll?()
+
+if root.livecss?.watch?
+    root.jQuery? 'head link.livecss' .each (i, el) ->
+        root.livecss.watch el
 
 ### Extend jQuery with useful functions
 

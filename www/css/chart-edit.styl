@@ -55,15 +55,23 @@
     left: 20%
 */
 
+.chart-edit-row
+    position absolute
+    // top 0
+    // bottom 0
+    // left 0
+    // right 0
+
 .chart-element-edit
     display none
     
+    z-index 99999
     position relative
     margin 1em
-    padding 1em
+    padding 1.75em 1.75em 1em 1em
     border 1px solid #ddd
     border-radius 4px
-    
+    background-color #fff
     
     .close
         position absolute
@@ -72,6 +80,11 @@
         right 0.35em
         z-index 100
     
+    form:last-child, form > :last-child
+        margin-bottom 0
+
+.line-chart-element-edit
+    display none
 
 .line:hover
     cursor pointer
