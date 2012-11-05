@@ -90,8 +90,9 @@ ChartElementData = exports.ChartElementData = BaseModel.extend do # {{{
     /**
      * @constructor
      */
-    constructor: function ChartElementData (attributes={}, opts)
-        @elements = new ChartElementDataList
+    constructor: function ChartElementData (attributes={}, opts={})
+        @graph = opts.graph = that if opts.collection?.graph
+        @elements = new ChartElementDataList [], {@graph}
         @optionCascade = new Cascade attributes.options
         BaseModel.call this, attributes, opts
     
@@ -103,8 +104,11 @@ ChartElementData = exports.ChartElementData = BaseModel.extend do # {{{
         @elements.reset @get 'elements'
         @set 'elements', @elements, {+silent}
         @setParent that if opts?.parent
-        # @on 'change:source_id',     @load,          this
-        # @on 'change:source_col',    @updateId,      this
+        
+        @on 'change:data', @onDataChange, this
+        # TODO: fix nested property-change events for data object.
+        # @on 'change:data.source_id',     @load,          this
+        # @on 'change:data.source_col',    @updateId,      this
         # @load()
     
     
@@ -157,7 +161,12 @@ ChartElementData = exports.ChartElementData = BaseModel.extend do # {{{
         # Deal with everything else
         setter.call this, values, opts
     
-    
+    walkElements: (acc, cxt, fn) ->
+        [fn, cxt] = [cxt, null] unless typeof fn is 'function'
+        acc = fn.call(cxt or this, acc, this)
+        for child of @elements.models.slice()
+            acc = child.walkElements acc, cxt, fn
+        acc
     
     # }}}
     ### Chart Option Accessors {{{
@@ -331,6 +340,19 @@ ChartElementData = exports.ChartElementData = BaseModel.extend do # {{{
     getColor: ->
         @get('color') or ProjectColors.lookup(@get('label')) or 'black'
     
+    onDataChange: ->
+        console.log "#this.onDataChange!"
+        # Lookup datasource and reload datafile if necessary.
+        # TODO: reload datafile
+        # TODO: load both source+data, waiting for ready
+        @load()
+        
+        # The data-bearing ChartElementData nodes are deeply and arbitrarily nested
+        # in the chart-element hierarchy, making it extremely difficult to find them all
+        # and listen for changes, even for the graph-model itself. To avoid this, we have
+        # the models trigger an event on the Graph, which everyone has a reference to anyway.
+        @graph.trigger 'element-change:data', this, @graph
+    
     
     # }}}
     
@@ -362,6 +384,7 @@ ChartElementData = exports.ChartElementData = BaseModel.extend do # {{{
  * @extends BaseList
  */
 ChartElementDataList = exports.ChartElementDataList = BaseList.extend do # {{{
+    __opt2attr__ : <[ graph ]>
     model : ChartElementData
     
     constructor: function ChartElementDataList then BaseList ...

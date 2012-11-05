@@ -20,7 +20,7 @@ ChartView = exports.ChartView = BaseView.extend do # {{{
         determineSize build relayout
         numberFormatter changeScaleDomain updateScaleDomain
         addMetric dateFormatter xDistanceIsInsignificant
-        findDomainIndex addLogPadding lineGenerator
+        findDomainIndex addLogPadding
         moveLine prepareDefs
     ]>
     typeName  : 'ChartView'
@@ -38,7 +38,7 @@ ChartView = exports.ChartView = BaseView.extend do # {{{
     /**
      * The x domain materialized as a finite array
      */
-    xSteps: []
+    xSteps: null
     
     /**
      * The x output range distance between two x domain values.  Dynamically calculated to spread just enough xSteps over the x output range
@@ -56,10 +56,11 @@ ChartView = exports.ChartView = BaseView.extend do # {{{
     yScale: null
     yScaleSet: false
     yTicks: null
+    
     /**
      * The domain of @see yScale needs to be kept separately so we can add padding that takes into account all metrics
      */
-    yDomain: []
+    yDomain: null
     
     /**
      * A scale that can assign unique colors to each metric
@@ -72,41 +73,52 @@ ChartView = exports.ChartView = BaseView.extend do # {{{
     /**
      * The labels of all the metrics being visualized
      */
-    metricLabels: []
+    metricLabels: null
     
     /**
      * The data for each metric, indexed the same way as @see metricLabels
      */
-    metricDataByIndex: []
+    metricDataByIndex: null
     
     /**
      * references to svg elements
      */
-    svgJquery: null
+    $svg: null
     svg: null
     viewport: null
     defs: null
     
     
     constructor: function ChartView (opts)
-        @chart = this
+        @chart             = this
+        # Initialize collections for instance (avoiding shared class-level state)
+        @xSteps            = []
+        @yDomain           = []
+        @metricLabels      = []
+        @metricDataByIndex = []
         BaseView ...
     
     initialize: (opts) ->
-        @graph = @model
+        @graph      = @model
         @colorScale = d3.scale.category20()
-        @xScale = d3.time.scale().clamp(true)
-        @yScale = d3.scale.log()
+        @xScale     = d3.time.scale().clamp(true)
+        @yScale     = d3.scale.log()
+        
+        @lineGenerator = d3.svg.line()
+            .x (d, i) ~> @xScale @xSteps[i] # TODO: assumes all metrics have the same x domain
+            .y (d, i) ~> @yScale d
+            .interpolate 'linear'
         
         ChartView.__super__.initialize ...
         ChartElement.propagateEvent 'layout:chart', this
         ChartElement.propagateEvent 'ready:defs', this
-        ChartElement.propagateEvent 'changed:data', this
+        ChartElement.propagateEvent 'changed:data', this # XXX: This probably needs to be renamed/removed
         ChartElement.propagateEvent 'hover:xDomain', this
         ChartElement.propagateEvent 'hover:out', this
         ChartElement.propagateEvent 'edit', this
         @elements = ChartElement.createChildren this, { graph:@model, chart:this }
         # TODO: find something prettier than this hack of using underscore's defer
+        
         _.defer @relayout
         _.defer @prepareDefs
     
@@ -143,70 +155,73 @@ ChartView = exports.ChartView = BaseView.extend do # {{{
     build: ->
         ChartView.__super__.build ...
         
-        @svgJquery = @$ 'svg'
-        @svg = d3.select @svgJquery[0]
+        @$svg = @$ 'svg'
+        @svg = d3.select @$svg[0]
         @viewport = @svg.select 'g.viewport'
         @defs = @svg.select 'defs'
         
         @svg.attr 'pointer-events', 'all'
         
-        chart = @
+        chart = this
         @svg.on 'mouseout', (d, i) ->
             chart.trigger 'hover:out'
         @svg.on 'mousemove', (d, i) ->
             chart.trackGuideLine.apply chart, [d, i]
-        @svg.on 'dblclick', (d, i) ->
-            # TODO, not implemented
-            redraw() unless not setupGraphData()
-            # clear any selections caused by this double click
-            window.getSelection?().removeAllRanges()
-            document.selection?.empty();
-            $(zoomBrushContainer).toggle(true)
-            true
+        
+        # @svg.on 'dblclick', (d, i) ->
+        #     # TODO, not implemented
+        #     redraw() unless not setupGraphData()
+        #     # clear any selections caused by this double click
+        #     window.getSelection?().removeAllRanges()
+        #     document.selection?.empty();
+        #     $(zoomBrushContainer).toggle(true)
+        #     true
         
         # TODO: find out how to trigger this from inside legend maybe
-        @editing = false
-        $ document .on 'click', '.btn.edit', ->
-            chart.trigger 'edit'
-            $('g.viewport').css({ transformOrigin: '0px 0px' })
-            if chart.editing
-                $ this .text('Edit')
-                $('.left.box').transition({ left: '-20%', top: '-20%', right: '100%' })
-                $('.top.box').transition({ top: '-20%', bottom: '100%', left: '0' })
-                $('.middle.box').transition({ top: '0', left: '0', bottom: '0', right: '0' })
-                $('.right.box').transition({ left: '100%', right: '-20%' })
-                $('.bottom.box').transition({ top: '100%', bottom: '-20%' })
-                $('g.viewport').transition({ scale: 1 })
-            else
-                $ this .text('Done')
-                $('.left.box').transition({ left: '0', top: '0', right: '80%' })
-                $('.top.box').transition({ top: '0', bottom: '80%', left: '20%' })
-                $('.middle.box').transition({ top: '20%', left: '20%' })
-                $('g.viewport').transition({ x: 60, y: 20, scale: 0.80 })
-            
-            chart.editing = not chart.editing
-        @$('.bottom.box').bind 'proximity', { max: 20 }, (event, proximity, distance) ->
-            if chart.editing and $(this).css('top') === '100%'
-                chart.$ '.middle.box' .transition bottom: '20%'
-                $(this).transition({ top: '80%', bottom: '0' })
-        @$('.right.box').bind 'proximity', { max: 20 }, (event, proximity, distance) ->
-            if chart.editing and $(this).css('left') === '100%'
-                chart.$ '.middle.box' .transition right: '20%'
-                $(this).transition({ left: '80%', right: '0' })
+        # @editing = false
+        # $ document .on 'click', '.btn.edit', ->
+        #     chart.trigger 'edit'
+        #     $('g.viewport').css({ transformOrigin: '0px 0px' })
+        #     if chart.editing
+        #         $ this .text('Edit')
+        #         $('.left.box').transition({ left: '-20%', top: '-20%', right: '100%' })
+        #         $('.top.box').transition({ top: '-20%', bottom: '100%', left: '0' })
+        #         $('.middle.box').transition({ top: '0', left: '0', bottom: '0', right: '0' })
+        #         $('.right.box').transition({ left: '100%', right: '-20%' })
+        #         $('.bottom.box').transition({ top: '100%', bottom: '-20%' })
+        #         $('g.viewport').transition({ scale: 1 })
+        #     else
+        #         $ this .text('Done')
+        #         $('.left.box').transition({ left: '0', top: '0', right: '80%' })
+        #         $('.top.box').transition({ top: '0', bottom: '80%', left: '20%' })
+        #         $('.middle.box').transition({ top: '20%', left: '20%' })
+        #         $('g.viewport').transition({ x: 60, y: 20, scale: 0.80 })
+        #     
+        #     chart.editing = not chart.editing
+        # 
+        # @$('.bottom.box').bind 'proximity', { max: 20 }, (event, proximity, distance) ->
+        #     if chart.editing and $(this).css('top') === '100%'
+        #         chart.$ '.middle.box' .transition bottom: '20%'
+        #         $(this).transition({ top: '80%', bottom: '0' })
+        # @$('.right.box').bind 'proximity', { max: 20 }, (event, proximity, distance) ->
+        #     if chart.editing and $(this).css('left') === '100%'
+        #         chart.$ '.middle.box' .transition right: '20%'
+        #         $(this).transition({ left: '80%', right: '0' })
         
         @isBuilt = true
         
         this
     
     relayout: ->
+        console.log "#this.relayout!"
         @svg.attr @determineSize()
         
         # update anything that might've been affected by changing metrics
         @colorScale.domain(@metricLabels)
         
         # set up and calculate the layout and any dependent properties
-        @layout.w = @svgJquery.width()
-        @layout.h = @svgJquery.height()
+        @layout.w = @$svg.width()
+        @layout.h = @$svg.height()
         @layout.top.w = @layout.bottom.w = @layout.w
         @layout.viewport.w = @layout.w - (@layout.left.w + @layout.right.w)
         @layout.left.h = @layout.right.h = @layout.viewport.h = @layout.h - (@layout.top.h + @layout.bottom.h)
@@ -247,31 +262,29 @@ ChartView = exports.ChartView = BaseView.extend do # {{{
         }
         @trigger 'ready:defs', clipIds
     
-    # }}}
-    
-    
-    
-    ### Helper Functions {{{
-    
     /**
-     * @public
-     * Formats a number as Thousands, Millions, Billions, etc.
-     * @param {number} n
-     * @returns {string} string representation of n
+     * Takes into account a new metric to display on the graph
+     * @param {string} label the name or short description of the metric
+     * @param {Array} xValues the x domain values
+     * @param {Array} yValues the corresponding y domain values
+     * @returns {number} the index of this metric in the collection
      */
-    numberFormatter: (n) ->
-        for format of @numberFormats
-            if n >= format.ge
-                trimmed = n/format.ge
-                trimmed = trimmed.toFixed(1) unless trimmed == Math.round(trimmed)
-                return trimmed + format.f
-        return n
-    numberFormats: [
-        { ge: 1000000000000,    f: 'T' },
-        { ge: 1000000000,       f: 'B' },
-        { ge: 1000000,          f: 'M' },
-        { ge: 1000,             f: 'K' },
-    ]
+    addMetric: (label, xValues, yValues) ->
+        unless label of @metricLabels
+            @metricLabels.push label
+        index = @metricLabels.indexOf label
+        
+        @updateScaleDomain xValues, yValues
+        # TODO: cleaner way to relay metric data for elements that want it
+        # TODO: handle mismatched domains
+        @metricDataByIndex[index] = yValues
+        index
+    
+    update: ->
+        console.log "#this.update!"
+        @relayout()
+        @trigger 'update', this, {}
+        this
     
     /**
      * Changes the x and y scale domains to include the minimum and maximum of the values passed in
@@ -314,23 +327,31 @@ ChartView = exports.ChartView = BaseView.extend do # {{{
         @changeScaleDomain xValues, yValues
         this
     
+    # }}}
+    
+    
+    
+    ### Helper Functions {{{
+    
     /**
-     * Takes into account a new metric to display on the graph
-     * @param {string} label the name or short description of the metric
-     * @param {Array} xValues the x domain values
-     * @param {Array} yValues the corresponding y domain values
-     * @returns {number} the index of this metric in the collection
+     * @public
+     * Formats a number as Thousands, Millions, Billions, etc.
+     * @param {number} n
+     * @returns {string} string representation of n
      */
-    addMetric: (label, xValues, yValues) ->
-        unless label of @metricLabels
-            @metricLabels.push label
-        index = @metricLabels.indexOf label
-        
-        @updateScaleDomain xValues, yValues
-        # TODO: cleaner way to relay metric data for elements that want it
-        # TODO: handle mismatched domains
-        @metricDataByIndex[index] = yValues
-        index
+    numberFormatter: (n) ->
+        for format of @numberFormats
+            if n >= format.ge
+                trimmed = n/format.ge
+                trimmed = trimmed.toFixed(1) unless trimmed == Math.round(trimmed)
+                return trimmed + format.f
+        return n
+    numberFormats: [
+        { ge: 1000000000000,    f: 'T' },
+        { ge: 1000000000,       f: 'B' },
+        { ge: 1000000,          f: 'M' },
+        { ge: 1000,             f: 'K' },
+    ]
     
     /**
      * @public
@@ -377,14 +398,6 @@ ChartView = exports.ChartView = BaseView.extend do # {{{
         paddingStart = paddingStop * fudgeFactor
         return [start + paddingStart, stop - paddingStop]
     
-    /**
-     * Line generator that uses the chart x and y scales
-     * TODO: the closure of "this" in the x and y subfunctions shouldn't work here - fix later
-     */
-    lineGenerator: d3.svg.line()
-        .x (d, i) -> @xScale(@xSteps[i]) # TODO: assumes all metrics have the same x domain
-        .y (d, i) -> @yScale(d)
-        .interpolate 'linear'
     
     /**
      * Change a line's x coordinates

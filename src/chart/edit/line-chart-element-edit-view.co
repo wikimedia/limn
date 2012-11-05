@@ -18,8 +18,10 @@ LineChartElementEditView = exports.LineChartElementEditView = ChartElementEditVi
     elementType    : 'LineChartElement'
     template       : require '../../template/chart/edit/line-element-edit'
     
-    # events:
-    #     'click .close': 'hide'
+    callOnReturnKeypress : 'onChange'
+    events:
+        'click .close'       : 'hide'
+        'keydown form input' : 'onReturnKeypress'
     
     
     constructor: function LineChartElementEditView
@@ -31,9 +33,24 @@ LineChartElementEditView = exports.LineChartElementEditView = ChartElementEditVi
     
     
     onLayoutChart: ->
-        @chartElement.$ 'path' .on 'click', @show
+        # Unregister first to avoid duplicate listeners
+        @chartElement.$el
+            .off 'click', 'path', @show
+            .on  'click', 'path', @show
     
-    
+    onChange: (evt) ->
+        attrs = _.uncollapseObject @$('form.line-chart-element-edit-form').formData()
+        if data = attrs.data
+            data.source_col = parseInt that if data.source_col?
+            attrs.data = _.extend {}, @model.get('data'), data
+        # attrs.color = that if evt?.color
+        
+        # same = _.isEqual @model.attributes, attrs
+        # console.log "#this.onChange! (same? #same)"
+        # _.dump @model.attributes, 'old', not same
+        # _.dump attrs, 'new', not same
+        
+        @model.set attrs
     
 # }}}
 

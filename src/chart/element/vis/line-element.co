@@ -21,7 +21,6 @@ LineChartElement = exports.LineChartElement = TimeseriesChartElement.extend do #
     
     viewEvents:
         'layout:chart': 'onLayoutChart'
-        'changed:data': 'onChangedData'
     
     /**
      * the unique human-friendly text that describes this metric
@@ -45,6 +44,7 @@ LineChartElement = exports.LineChartElement = TimeseriesChartElement.extend do #
         LineChartElement.__super__.initialize ...
     
     onLayoutChart: ->
+        console.log "#this.onLayoutChart!"
         # report as a metric to the chart
         options = @model.getOptions()
         dateCol = @model.getDateColumn()
@@ -84,8 +84,15 @@ LineChartElement = exports.LineChartElement = TimeseriesChartElement.extend do #
                 .attr 'marker-mid', (d, i) -> "url(\#metricPathDot#{index})"
                 .attr 'marker-end', (d, i) -> "url(\#metricPathDot#{index})"
     
-    onChangedData: ->
+    /**
+     * Responds to all data changes, as the scale might have changed when the dataset did.
+     * (Auto-registered by ChartElement.)
+     */
+    onDataChange: ->
+        console.log "#this.onDataChange!"
+        # Set data with new value before recalculating line's value to force an update.
         @sel.selectAll 'path.metricLine'
+            .data [@model.getData()]
             .transition()
             .attr 'd', @chart.lineGenerator
 # }}}

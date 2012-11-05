@@ -35,7 +35,7 @@ ChartElementEditView = exports.ChartElementEditView = BaseView.extend do # {{{
         @chartElement.on 'layout:chart', @onLayoutChart, this
     
     onLayoutChart: ->
-        # override to do stuff
+        # Override to respond when the associated ChartElement completes layout.
     
 # }}}
 

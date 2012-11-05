@@ -58,12 +58,18 @@ ChartElement = exports.ChartElement = BaseView.extend do # {{{
         ChartElement.__super__.initialize ...
         ChartElement.propagateEvent 'layout:chart', this
         ChartElement.propagateEvent 'ready:defs', this
-        ChartElement.propagateEvent 'changed:data', this
+        ChartElement.propagateEvent 'changed:data', this # XXX: This probably needs to be renamed/removed
         ChartElement.propagateEvent 'hover:xDomain', this
         ChartElement.propagateEvent 'hover:out', this
         ChartElement.propagateEvent 'edit', this
+        @model.on 'change:data',            @onModelDataChange, this
+        @graph.on 'element-change:data',    @onDataChange,      this
     
+    onDataChange: ->
+        # Override to respond to *ALL* element-data changes in this Graph.
     
+    onModelDataChange: ->
+        # Override to respond to local element-data changes.
     
     ### d3 integration {{{
     
@@ -174,7 +180,7 @@ ChartElement import do
         # opts = {+recursive, +addSubviews, ...opts or {}}
         # _model = model
         # console.log "ChartElement.create(#_model) ->", _model
-        model = new ChartElementData model unless model instanceof Backbone.Model
+        model = new ChartElementData model, {graph} unless model instanceof Backbone.Model
         # console.log "  --> ", model
         return null unless Type = @lookup model
         view = new Type {model, chart, graph}

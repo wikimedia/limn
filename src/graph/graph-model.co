@@ -85,7 +85,7 @@ Graph = exports.Graph = BaseGraph.extend do # {{{
     initialize: (attributes) ->
         BaseGraph::initialize ...
         @parents = new GraphList
-        @elements = new ChartElementDataList @get 'elements'
+        @elements = new ChartElementDataList @get('elements'), {graph:this}
         @set 'elements', @elements, {+silent}
     
     
@@ -202,6 +202,11 @@ Graph = exports.Graph = BaseGraph.extend do # {{{
         # Deal with everything else
         setter.call this, values, opts
     
+    walkElements: (acc, cxt, fn) ->
+        [fn, cxt] = [cxt, null] unless typeof fn is 'function'
+        for child of @elements.models.slice()
+            acc = child.walkElements acc, cxt, fn
+        acc
     
     
     ### }}}
