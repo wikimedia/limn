@@ -227,6 +227,10 @@ BaseList = exports.BaseList = Backbone.Collection.extend mixinBase do # {{{
         Backbone.Collection ...
         # @trigger 'create', this
     
+    initialize : (models, options) ->
+        @__apply_bind__()
+        @__apply_opt2attr__ options
+    
     
     getIds: ->
         @models.map -> it.id or it.get('id') or it.cid
