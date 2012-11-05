@@ -26,10 +26,10 @@ TimeseriesChartElement = exports.TimeseriesChartElement = ChartElement.extend do
     initialize: ->
         ChartElement::initialize ...
         # FIXME
-        @model.on 'change:data', @updateScaleOnDataChange, this
+        # @model.on 'change:data', @updateScaleOnDataChange, this
     
-    updateScaleOnDataChange: ->
-        @chart.updateScaleDomain @model.getDateColumn(), @model.getData()
+    # updateScaleOnDataChange: ->
+    #     @chart.updateScaleDomain @model.getDateColumn(), @model.getData()
     
 # }}}
 

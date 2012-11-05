@@ -119,6 +119,9 @@ ChartView = exports.ChartView = BaseView.extend do # {{{
         @elements = ChartElement.createChildren this, { graph:@model, chart:this }
         # TODO: find something prettier than this hack of using underscore's defer
         
+        # respond to all data changes
+        @graph.on 'element-change:data', @onDataChange, this
+        
         _.defer @relayout
         _.defer @prepareDefs
     
@@ -285,6 +288,16 @@ ChartView = exports.ChartView = BaseView.extend do # {{{
         @relayout()
         @trigger 'update', this, {}
         this
+    
+    /**
+     * Respond to all data changes.
+     */
+    onDataChange: ->
+        [xValues, yValues] = @graph.walkElements [[], []], ([xs, ys], elData) ->
+            xs = xs.concat that if elData.getDateColumn()
+            ys = ys.concat that if elData.getData()
+            [xs, ys]
+        @changeScaleDomain xValues, yValues
     
     /**
      * Changes the x and y scale domains to include the minimum and maximum of the values passed in
