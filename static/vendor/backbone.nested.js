@@ -1,20 +1,18 @@
 /**
- * Backbone-Nested 1.1.0 - An extension of Backbone.js that keeps track of nested attributes
+ * Backbone-Nested 1.1.2 - An extension of Backbone.js that keeps track of nested attributes
  *
  * http://afeld.github.com/backbone-nested/
  *
  * Copyright (c) 2011-2012 Aidan Feldman
  * MIT Licensed (LICENSE)
  */
-/*global Backbone, _, $ */
+/*global $, _, Backbone */
 (function(){
   'use strict';
 
   Backbone.NestedModel = Backbone.Model.extend({
 
-    get: function(attrStrOrPath, opts){
-      opts = opts || {};
-
+    get: function(attrStrOrPath){
       var attrPath = Backbone.NestedModel.attrPath(attrStrOrPath),
         childAttr = attrPath[0],
         result = Backbone.NestedModel.__super__.get.call(this, childAttr);
@@ -29,40 +27,35 @@
         result = result[childAttr];
       }
 
-      // check if the result is an Object, Array, etc.
-      // if (!opts.silent && _.isObject(result) && window.console){
-      //   window.console.log("Backbone-Nested syntax is preferred for accesing values of attribute '" + attrStrOrPath + "'.");
-      // }
-      // else it's a leaf
-
       return result;
     },
 
     has: function(attr){
       // for some reason this is not how Backbone.Model is implemented - it accesses the attributes object directly
-      var result = this.get(attr, {silent: true});
+      var result = this.get(attr);
       return !(result === null || _.isUndefined(result));
     },
 
     set: function(key, value, opts){
-      var attrs;
-      if (_.isObject(key) || key == null) {
-        attrs = key;
-        opts = value;
-      } else {
-        attrs = {};
-        attrs[key] = value;
+      var newAttrs = Backbone.NestedModel.deepClone(this.attributes);
+
+      if (_.isString(key)) {
+        // Backbone 0.9.0+ syntax: `model.set(key, val)` - convert the key to an attribute path
+        key = Backbone.NestedModel.attrPath(key);
       }
-      opts = opts || {};
 
-      var newAttrs = Backbone.NestedModel.deepClone(this.attributes),
-        attrVal, attrPath, attrObj;
-      
-      for (var attrStr in attrs){
-        attrPath = Backbone.NestedModel.attrPath(attrStr);
-        attrObj = Backbone.NestedModel.createAttrObj(attrPath, attrs[attrStr]);
+      if (_.isArray(key)) {
+        // attribute path
+        this._mergeAttr(newAttrs, key, value, opts);
+      } else { // it's an Object
+        opts = value;
+        var attrs = key,
+          attrPath;
 
-        this._mergeAttrs(newAttrs, attrObj, opts);
+        for (var attrStr in attrs){
+          attrPath = Backbone.NestedModel.attrPath(attrStr);
+          this._mergeAttr(newAttrs, attrPath, attrs[attrStr], opts);
+        }
       }
 
       return Backbone.NestedModel.__super__.set.call(this, newAttrs, opts);
@@ -76,7 +69,7 @@
     },
 
     add: function(attrStr, value, opts){
-      var current = this.get(attrStr, {silent: true});
+      var current = this.get(attrStr);
       this.set(attrStr + '[' + current.length + ']', value, opts);
     },
 
@@ -85,7 +78,7 @@
 
       var attrPath = Backbone.NestedModel.attrPath(attrStr),
         aryPath = _.initial(attrPath),
-        val = this.get(aryPath, {silent: true}),
+        val = this.get(aryPath),
         i = _.last(attrPath);
 
       if (!_.isArray(val)){
@@ -98,7 +91,7 @@
 
       // remove the element from the array
       val.splice(i, 1);
-      this.set(attrStr, val, opts);
+      this.set(aryPath, val, opts);
 
       if (trigger){
         this.trigger('remove:' + Backbone.NestedModel.createAttrStr(aryPath), this, oldEl);
@@ -108,14 +101,21 @@
     },
 
     toJSON: function(){
-      var json = Backbone.NestedModel.__super__.toJSON.apply(this);
-      return Backbone.NestedModel.deepClone(json);
+      return Backbone.NestedModel.deepClone(this.attributes);
     },
 
 
     // private
 
+    // note: modifies `newAttrs`
+    _mergeAttr: function(newAttrs, attrPath, value, opts){
+      var attrObj = Backbone.NestedModel.createAttrObj(attrPath, value);
+      this._mergeAttrs(newAttrs, attrObj, opts);
+    },
+
+    // note: modifies `dest`
     _mergeAttrs: function(dest, source, opts, stack){
+      opts = opts || {};
       stack = stack || [];
 
       _.each(source, function(sourceVal, prop){
@@ -132,12 +132,15 @@
         });
 
         if (isChildAry && !_.isArray(destVal)){
+          // assigning an array to a previously non-array value
           destVal = dest[prop] = [];
         }
 
         if (prop in dest && _.isObject(sourceVal) && _.isObject(destVal)){
+          // both new and original are objects/arrays, and thus need to be merged
           destVal = dest[prop] = this._mergeAttrs(destVal, sourceVal, opts, newStack);
         } else {
+          // new value is a primitive
           var oldVal = destVal;
 
           destVal = dest[prop] = sourceVal;
@@ -157,6 +160,7 @@
         if (!opts.silent && newStack.length > 1){
           attrStr = Backbone.NestedModel.createAttrStr(newStack);
           this.trigger('change:' + attrStr, this, destVal);
+          this.changed[attrStr] = destVal;
         }
       }, this);
 
