@@ -35,7 +35,7 @@ development:
         - underscore.string.mod
         
         - backbone.mod
-        # - synapse.mod
+        - backbone.nested.mod
         
         - colorbrewer.mod
         - showdown.mod.min
