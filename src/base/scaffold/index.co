@@ -1,3 +1,0 @@
-models = require './scaffold-model'
-views  = require './scaffold-view'
-exports import models import views

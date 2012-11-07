@@ -1,2 +1,0 @@
-chart_type = require './chart-type'
-exports import chart_type

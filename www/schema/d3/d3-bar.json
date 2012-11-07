@@ -1,1 +1,0 @@
-[{"name":"zoom.start","tags":["interactivity","zoom"],"type":"Float","default":1,"desc":"Initial zoom-level, where 1.0 (100% zoom) shows the full map in the frame (the default)."}]

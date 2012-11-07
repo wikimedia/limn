@@ -1,9 +1,0 @@
-section.graph-display.graph {
-  page-break-after: always;
-}
-section.graph-display.graph .graph-legend {
-  position: relative;
-}
-section.graph-display.graph .graph-permalink {
-  padding: 1em;
-}
