@@ -12,7 +12,7 @@ define ['elements/Base', 'Storage'], (BaseElement, Storage) ->
             self.chart = self.$el.parents('svg')
             
             # make sure we can receive updates before we broadcast the metric
-            self.chart.on 'added:metric', (event, scales) ->
+            self.chart.on 'changed:scales', (event, scales) ->
             
             self.column.subscribe (value) ->
                 self.broadcastMetric()

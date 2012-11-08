@@ -1,10 +1,15 @@
 define ['elements/Base'], (BaseElement) ->
     class ChartView extends BaseElement
+        initialize: ->
+            @metrics = ko.observableArray()
+        
         template: 'element/svg'
         rendered: (elements, self) ->
             self.$el = $(elements[0])
             self.$el.parents('.visualization').trigger('rendered:svg')
             
             self.$el.on 'rendered:metric', (event, metric) ->
-                self.$el.trigger 'added:metric', {x: 'x', y: 'y'}
+                self.metrics.push(metric)
+                self.$el.trigger 'added:metric', [self.metrics()]
+                self.$el.trigger 'changed:scales', {x: 'x', y: 'y'}
             
