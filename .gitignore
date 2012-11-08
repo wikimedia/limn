@@ -29,6 +29,7 @@ test/fixtures/logs/*.log
 .tmp/
 
 build
+data
 dist
 var
 log
