@@ -1,25 +1,27 @@
 define ['elements/Base', 'Storage'], (BaseElement, Storage) ->
     class LineChartElement extends BaseElement
-        column: ko.observable()
-        columnHeader: ko.observable()
-        dates: ko.observable()
         
         initialize: ->
-            self = this
-            Storage.getTimeseriesMetric self.data.source_id(), (source) ->
-                self.column source.columns[self.data.source_col()-1]
-                self.columnHeader source.columnHeaders[self.data.source_col()-1]
-                self.dates source.dates
-                
+            source = Storage.getTimeseriesMetric @data.source_id()
+            @dates = ko.observable source.dates
+            @columnHeader = ko.observable source.columnHeaders[@data.source_col()]
+            @column = ko.observable source.columns[@data.source_col()]
         
         rendered: (elements, self) ->
             self.$el = $(elements[0])
             self.chart = self.$el.parents('svg')
             
-            # make sure we can expect the scales before we tell chart about ourselves
+            # make sure we can receive updates before we broadcast the metric
             self.chart.on 'added:metric', (event, scales) ->
-                console.log scales.x
-                console.log scales.y
             
-            # announce the metric and wait to get a scale back
-            self.$el.trigger 'rendered:metric', self
+            self.column.subscribe (value) ->
+                self.broadcastMetric()
+            # initial broadcast if we already have a value in column
+            self.broadcastMetric() if self.column()
+        
+        /*
+         * Announces the metric.  This event will most likely be caught by a @see ChartView parent
+         * The @see ChartView parent should trigger an event that we can listen to and receive updated scales on
+         */
+        broadcastMetric: ->
+            @$el.trigger 'rendered:metric', this

@@ -18,27 +18,29 @@ define ->
             $.ajax options
             ret.loaded
         
-        # TODO: make this not load each time it's called
+        # TODO: make this not crappy and synchronous
         getTimeseriesMetric: (sourceId, callback) ->
             self = this
             if sourceId in datasources
-                callback.call self, datasources[sourceId]
+                datasources[sourceId]
             else
-                d3.text "/datafiles/#{sourceId}.csv", (csv) ->
-                    datasources[sourceId] = do
-                        dateColumn: new Array(),
-                        columns: new Array()
-                    
-                    rows = d3.csv.parseRows csv
-                    dataRows = rows.slice(1, rows.length)
-                    datasources[sourceId].columnHeaders = rows[0].slice(1, rows[0].length)
-                    datasources[sourceId].dates = new Array()
-                    datasources[sourceId].columns = dataRows[0].slice(1, dataRows[0].length).map -> new Array()
-                    dataRows.map (row) ->
-                        datasources[sourceId].dates.push row[0]
-                        row.slice(1, row.length).map (item, col) ->
-                            datasources[sourceId].columns[col].push item
-                    
-                    callback.call self, datasources[sourceId]
+                $.ajax do
+                    url: "/datafiles/#{sourceId}.csv",
+                    async: false
+                    success: (csv) ->
+                        rows = d3.csv.parseRows csv
+                        dataRows = rows.slice(1, rows.length)
+                        
+                        datasources[sourceId] = do
+                            columnHeaders: rows[0],
+                            dates: new Array(),
+                            columns: dataRows[0].map -> new Array()
+                        
+                        dataRows.map (row) ->
+                            datasources[sourceId].dates.push row[0]
+                            row.map (item, col) ->
+                                datasources[sourceId].columns[col].push item
+                
+                datasources[sourceId]
     
     new Storage()
