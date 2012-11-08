@@ -1,0 +1,9 @@
+define ['Storage', 'elements/Base'], (Storage, BaseElement) ->
+    # needs to extend from BaseElement for populateTypeInformation, maybe there's a better way (like a mixin)
+    class Graph extends BaseElement
+        (path) ->
+            self = this
+            Storage.load path, (json) ->
+                $.extend(true, self, ko.mapping.fromJSON json)
+                self.populateTypeInformation(self.elements)
+                self

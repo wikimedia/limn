@@ -1,0 +1,7 @@
+define ['Storage'], (Storage) ->
+    class Dashboard
+        (path) ->
+            json = Storage.load path
+            $.extend(true, this, ko.mapping.fromJSON json)
+        
+        graphs: ko.observableArray()

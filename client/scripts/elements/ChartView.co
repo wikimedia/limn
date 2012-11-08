@@ -1,0 +1,10 @@
+define ['elements/Base'], (BaseElement) ->
+    class ChartView extends BaseElement
+        template: 'element/svg'
+        rendered: (elements, self) ->
+            self.$el = $(elements[0])
+            
+            self.$el.on 'rendered:metric', (event, metric) ->
+                console.log metric.data.column
+                self.$el.trigger 'added:metric', {x: 'x', y: 'y'}
+            

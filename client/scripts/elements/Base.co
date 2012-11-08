@@ -1,0 +1,33 @@
+define ->
+    class Base
+        elements: ko.observableArray()
+        
+        initialize: ->
+        
+        renderChild: (elements, data) ->
+            if elements?[0] and $(elements[0]).is(':not(.infuser-loading)')
+                data.rendered.call(this, elements, data)
+        
+        rendered: (elements, data) ->
+        
+        template: 'element/container'
+        determineTemplate: (childBeingRendered) ->
+            unless childBeingRendered.template
+                # removing this reveals a race condition in which the raw json is being bound and rendered before it's converted by populateTypeInformation.  TODO: look into making populate synchronous (perhaps just include all the elements on page load)
+                return 'element/empty'
+            childBeingRendered.template
+        
+        /**
+         * Converts, in place, the items in an observable array to children of @see elements/Base
+         * MAGIC: dynamically figures out what type each member of the elements array wants to be instantiated as
+         * @param {ko.observableArray} elements a knockout observable array
+         */
+        populateTypeInformation: (elements) ->
+            self = this
+            elements ?= ko.observableArray()
+            ko.utils.arrayMap elements(), (element) ->
+                i = elements.indexOf element
+                require ["elements/#{element.elementType()}"], (ElementType) ->
+                    elements()[i] := $.extend(true, new ElementType(), element)
+                    elements()[i].initialize()
+                    self.populateTypeInformation(elements()[i].elements)

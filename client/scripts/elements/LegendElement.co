@@ -1,0 +1,6 @@
+define ['elements/Base'], (BaseElement) ->
+    class LegendElement extends BaseElement
+        template: 'element/legend'
+        metrics: ko.observableArray()
+        rendered: (elements, self) ->
+            self.$el = $(elements[0])

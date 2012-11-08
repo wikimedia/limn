@@ -1,0 +1,2 @@
+define ['elements/Base'], (BaseElement) ->
+    class BarChartElement extends BaseElement

@@ -1,6 +1,6 @@
 {
   "name": "limn",
-  "version": "0.1.0",
+  "version": "0.8.0",
   "description": "A GUI Visualization Toolkit",
   "homepage": "https://github.com/wikimedia/limn",
   "keywords": [
@@ -29,7 +29,7 @@
     "d3": "== 2.9.x",
     "backbone": "== 0.9.2",
     "timeseries": "== 0.1.x",
-    "express": "== 2.5.11",
+    "express": "== 3.x",
     "express-resource": "== 0.2.4",
     "minimatch": "== 0.2.5",
     "glob": "== 3.1.9",
@@ -48,6 +48,9 @@
     "connect-compiler-extras": "https://github.com/dsc/connect-compiler-extras/tarball/master",
     "browserify": "== 1.9.4",
     "uglify-js": "== 1.2.6"
+  },
+  "scripts": {
+    "start": "node app"
   },
   "repository": {
     "type": "git",

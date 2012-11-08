@@ -1,0 +1,9 @@
+define ['models/Dashboard', 'Storage', 'pages/Base'], (DashboardModel, Storage, BasePage) ->
+    class Home extends BasePage
+        ->
+            @template('home')
+            for id of Storage.load @dashboardsPath
+                @dashboards.push(new DashboardModel("#{@dashboardsPath}#{id}"))
+        
+        dashboardsPath: '/data/dashboards/'
+        dashboards: ko.observableArray()

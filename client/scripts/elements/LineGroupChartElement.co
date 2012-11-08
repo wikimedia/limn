@@ -1,0 +1,3 @@
+define ['elements/Base'], (BaseElement) ->
+    class LineGroupChartElement extends BaseElement
+        template: 'element/group'

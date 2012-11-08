@@ -1,0 +1,12 @@
+define ['pages/Base', 'models/Graph'], (BasePage, GraphModel) ->
+    class Dashboard extends BasePage
+        (dashboard) ->
+            @template('dashboard')
+            @dashboard(dashboard)
+            for tab of dashboard.tabs()
+                for id of tab.graph_ids()
+                    @graphs.push(new GraphModel("#{@graphsPath}#{id}.json"))
+        
+        graphsPath: '/data/graphs/'
+        dashboard: ko.observable()
+        graphs: ko.observableArray()

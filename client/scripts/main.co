@@ -1,0 +1,15 @@
+infuser.defaults.templateUrl = "templates"
+
+require ['pages/Home'], (HomePage) ->
+    $(document).ready ->
+        # TODO: replace with routing mechanism
+        viewModel = {
+            page: ko.observable(new HomePage())
+        }
+        $(document).on 'click', 'a.navigate', ->
+            elementData = ko.dataFor(this)
+            newPageRequirePath = $(this).attr('href').replace '#',''
+            require [newPageRequirePath], (NewPage) ->
+                page = new NewPage(elementData)
+                viewModel.page page
+        ko.applyBindings viewModel

@@ -1,0 +1,25 @@
+define ['elements/Base', 'Storage'], (BaseElement, Storage) ->
+    class LineChartElement extends BaseElement
+        column: ko.observable()
+        columnHeader: ko.observable()
+        dates: ko.observable()
+        
+        initialize: ->
+            self = this
+            Storage.getTimeseriesMetric self.data.source_id(), (source) ->
+                self.column source.columns[self.data.source_col()-1]
+                self.columnHeader source.columnHeaders[self.data.source_col()-1]
+                self.dates source.dates
+                
+        
+        rendered: (elements, self) ->
+            self.$el = $(elements[0])
+            self.chart = self.$el.parents('svg')
+            
+            # make sure we can expect the scales before we tell chart about ourselves
+            self.chart.on 'added:metric', (event, scales) ->
+                console.log scales.x
+                console.log scales.y
+            
+            # announce the metric and wait to get a scale back
+            self.$el.trigger 'rendered:metric', self

@@ -1,0 +1,42 @@
+express = require 'express'
+http = require 'http'
+fs = require 'fs'
+path = require 'path'
+
+app = express()
+
+dir = (relative) ->
+    return path.join __dirname, relative
+
+app.configure ->
+    app.set 'port', process.env.PORT || 3000
+    app.set 'views', dir('pages')
+    app.set 'view engine', 'jade'
+    
+    app.use express.favicon()
+    app.use express.logger('dev')
+    app.use express.bodyParser()
+    app.use express.methodOverride()
+    app.use app.router
+    
+    app.use express.static dir('client')
+    app.use express.static dir('data')
+
+app.configure 'development', ->
+    app.use express.errorHandler()
+
+app.get '/', (request, response) ->
+    response.render 'index'
+
+dashboards = dir 'data/dashboards/'
+app.get '/data/dashboards/', (request, response) ->
+    response.send fs.readdirSync dashboards
+app.get '/data/dashboards/:id', (request, response) ->
+    response.send fs.readFileSync path.join(dashboards, request.params.id)
+
+graphs = dir 'data/graphs/'
+app.get '/data/graphs/:id', (request, response) ->
+    response.send fs.readFileSync path.join(graphs, request.params.id)
+
+http.createServer(app).listen app.get('port'), ->
+    console.log "Express server listening on port #{app.get('port')}"

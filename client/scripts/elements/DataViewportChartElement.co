@@ -1,0 +1,3 @@
+define ['elements/Base'], (BaseElement) ->
+    class DataViewportChartElement extends BaseElement
+        template: 'element/group'

@@ -1,0 +1,44 @@
+# TODO: global bad, make this part of a real singleton Storage mechanism
+datasources = {}
+
+define ->
+    class Storage
+        load: (path, callback) ->
+            ret = {}
+            options = do
+                url: path,
+                async: !!callback
+                error: (err) -> ret.error = err
+            
+            if callback
+                options.success = callback
+            else
+                options.success = (data) -> ret.loaded = data
+            
+            $.ajax options
+            ret.loaded
+        
+        # TODO: make this not load each time it's called
+        getTimeseriesMetric: (sourceId, callback) ->
+            self = this
+            if sourceId in datasources
+                callback.call self, datasources[sourceId]
+            else
+                d3.text "/datafiles/#{sourceId}.csv", (csv) ->
+                    datasources[sourceId] = do
+                        dateColumn: new Array(),
+                        columns: new Array()
+                    
+                    rows = d3.csv.parseRows csv
+                    dataRows = rows.slice(1, rows.length)
+                    datasources[sourceId].columnHeaders = rows[0].slice(1, rows[0].length)
+                    datasources[sourceId].dates = new Array()
+                    datasources[sourceId].columns = dataRows[0].slice(1, dataRows[0].length).map -> new Array()
+                    dataRows.map (row) ->
+                        datasources[sourceId].dates.push row[0]
+                        row.slice(1, row.length).map (item, col) ->
+                            datasources[sourceId].columns[col].push item
+                    
+                    callback.call self, datasources[sourceId]
+    
+    new Storage()
