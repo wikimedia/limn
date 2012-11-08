@@ -1,6 +1,13 @@
 define ['elements/Base'], (BaseElement) ->
     class LegendElement extends BaseElement
         template: 'element/legend'
-        metrics: ko.observableArray()
+        initialize: ->
+            @metrics = ko.observableArray()
+        
         rendered: (elements, self) ->
             self.$el = $(elements[0])
+            
+            self.$el.parents('.visualization').on 'rendered:svg', ->
+                self.chart = self.$el.next('svg')
+                self.chart.on 'added:metric', (event, scales) ->
+                    self.$el.find('ul').append('<li>metric added</li>')
