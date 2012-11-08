@@ -1,17 +1,17 @@
-define ['pages/Base', 'models/Graph', 'models/Dashboard'], (BasePage, GraphModel, DashboardModel) ->
+define ['pages/Base', 'models/Dashboard'], (BasePage, DashboardModel) ->
     class Dashboard extends BasePage
         (id, currentPage) ->
+            
+            # instantiate properties
+            @dashboard = ko.observable()
+            
+            # fetch model if we don't already have it
             model = null
             if currentPage?.dashboards?()
                 model = ko.utils.arrayFirst currentPage.dashboards(), (d) -> d.id == id
-            else
-                model = new DashboardModel(id)
-            @dashboard(model)
-            for tab of @dashboard().tabs()
-                for id of tab.graph_ids()
-                    @graphs.push(new GraphModel(id))
+            model = new DashboardModel(id) unless model
             
-            @template('dashboard')
-        
-        dashboard: ko.observable()
-        graphs: ko.observableArray()
+            @dashboard model
+            
+            # render template
+            @template 'dashboard'
