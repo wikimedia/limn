@@ -1,7 +1,11 @@
-define ['pages/Base'], (BasePage) ->
+define ['pages/Base', 'models/Graph'], (BasePage, GraphModel) ->
     class Graph extends BasePage
-        (graph) ->
+        (id, currentPage) ->
+            if currentPage?.graphs?()
+                model = ko.utils.arrayFirst currentPage.graphs(), (d) -> d.id() == id
+            else
+                model = new GraphModel(id)
+            @graph(model)
             @template('graph')
-            @graph(graph)
         
         graph: ko.observable()

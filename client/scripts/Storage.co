@@ -3,6 +3,13 @@ datasources = {}
 
 define ->
     class Storage
+        dashboardsPath: '/data/dashboards/'
+        graphsPath: '/data/graphs/'
+        
+        loadDashboards: -> @load @dashboardsPath
+        loadDashboard: (id) -> @load "#{@dashboardsPath}#{id}"
+        loadGraph: (id, callback) -> @load "#{@graphsPath}#{id}.json", callback
+        
         load: (path, callback) ->
             ret = {}
             options = do

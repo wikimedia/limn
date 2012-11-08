@@ -25,9 +25,6 @@ app.configure ->
 app.configure 'development', ->
     app.use express.errorHandler()
 
-app.get '/', (request, response) ->
-    response.render 'index'
-
 dashboards = dir 'data/dashboards/'
 app.get '/data/dashboards/', (request, response) ->
     response.send fs.readdirSync dashboards
@@ -37,6 +34,14 @@ app.get '/data/dashboards/:id', (request, response) ->
 graphs = dir 'data/graphs/'
 app.get '/data/graphs/:id', (request, response) ->
     response.send fs.readFileSync path.join(graphs, request.params.id)
+
+app.get '/', (request, response) ->
+    response.render 'index'
+# TODO: figure out how to remove this horrible hack
+app.get '/Dashboard-:id', (request, response) ->
+    response.render 'index'
+app.get '/Graph-:id', (request, response) ->
+    response.render 'index'
 
 http.createServer(app).listen app.get('port'), ->
     console.log "Express server listening on port #{app.get('port')}"
