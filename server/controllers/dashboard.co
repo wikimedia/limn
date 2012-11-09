@@ -32,10 +32,9 @@ class DashboardController extends FileBackedController
         # if format is json, then return the dashboard JSON
         switch req.format
             case 'json'
-                pattern = "#{@dataDir}/*.json"
                 Seq()
                     # find list of data/dashboard/*.json files, send back the objects
-                    .seq -> readJSONFilesAsync pattern, this
+                    .seq readJSONFilesAsync, "#{@dataDir}/**", Seq
                     # remove filepath info
                     .seq (files) -> res.send _.values files
             default 

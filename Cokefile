@@ -24,7 +24,7 @@ task \setup 'Ensure project is set up for development.' ->
 
 
 task \server 'Start dev server' ->
-    run './src/server/server.co'
+    run './server/server.co'
 
 
 task \build 'Build coco sources' ->

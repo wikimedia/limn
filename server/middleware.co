@@ -6,6 +6,7 @@ path    = {dirname}     = require 'path'
 subproc = {exec, spawn} = require 'child_process'
 exists  = fs.existsSync or path.existsSync
 
+op                    = require 'operator'
 Seq                   = require 'seq'
 glob                  = require 'glob'
 yaml                  = require 'js-yaml'
@@ -13,7 +14,7 @@ mkdirp                = require 'mkdirp'
 
 express               = require 'express'
 
-{_, op}               = require '../util'
+_                     = require '../src/util/underscore'
 {readFilesAsync}      = require './files'
 Controller            = require './controller'
 view_helpers          = require './view-helpers'
@@ -22,10 +23,10 @@ view_helpers          = require './view-helpers'
 /**
  * Limn project-internals
  */
-BASE   = dirname dirname __dirname
+BASE   = dirname __dirname
 SRC    = "#BASE/src"
 STATIC = "#BASE/static"
-VIEWS    = "#BASE/views"
+VIEWS  = "#BASE/views"
 WWW    = "#BASE/www"
 
 NODE_ENV = process.env.NODE_ENV or 'development'

@@ -2,17 +2,16 @@ fs         = require 'fs'
 path       = require 'path'
 exists     = fs.existsSync or path.existsSync
 
+op         = require 'operator'
 Seq        = require 'seq'
 glob       = require 'glob'
 mkdirp     = require 'mkdirp'
 yaml       = require 'js-yaml'
 
-{ _, op,
-} = require '../../util'
+_ = require '../../src/util/underscore'
 { readFilesAsync, readJSONFilesAsync,
 } = require '../files'
 
-Controller           = require '../controller'
 FileBackedController = require '../file-controller'
 
 

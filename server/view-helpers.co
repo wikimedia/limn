@@ -4,7 +4,7 @@ fs    = exports.fs   = require 'fs'
 path  = exports.path = require 'path'
 
 {dirname} = path
-BASE   = exports.BASE   = dirname dirname __dirname
+BASE   = exports.BASE   = dirname __dirname
 WWW    = exports.WWW    = "#BASE/www"
 VAR    = exports.VAR    = "#BASE/var"
 STATIC = exports.STATIC = "#BASE/static"

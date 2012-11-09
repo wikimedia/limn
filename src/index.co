@@ -7,7 +7,7 @@ function loadMiddleware
     limn.middleware = limn import require './server/middleware'
 
 if process?.title is 'node' and process.version
-    limn = module.exports = require './server/middleware'
+    limn = module.exports = require '../server/middleware'
     loadMiddleware()
 if window? and navigator? and document?
     limn = module.exports = require './client'
