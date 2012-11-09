@@ -3,14 +3,33 @@ define ['elements/Base', 'Storage'], (BaseElement, Storage) ->
         
         initialize: ->
             source = Storage.getTimeseriesMetric @data.source_id()
-            @dates = ko.observable source.dates
+            @dates = ko.observable source.dates.map (d) -> new Date(d)
             @columnHeader = ko.observable source.columnHeaders[@data.source_col()]
-            @column = ko.observable source.columns[@data.source_col()]
+            @column = ko.observable source.columns[@data.source_col()].map (n) -> parseInt n
         
         rendered: (elements, self) ->
             self.el = $ elements[0]
+            self.sel = d3.select elements[0]
             
             # make sure we can receive updates before we broadcast the metric
-            self.chart.xScale.subscribe (xScale) ->
+            self.chart.scales.subscribe (updated) ->
+                self.renderLine.call self if updated
             
-            self.chart.metrics.push(self.columnHeader())
+            self.chart.metrics.push(self)
+            
+            self.sel.selectAll 'path.metricLine'
+                .data [self.column()]
+                .enter().append 'path'
+                    .attr 'd', self.chart.lineGenerator
+                    .classed 'metricLine', true
+                    .attr 'data-metricIndex', self.columnHeader()
+                    .style 'stroke', self.chart.colorScale
+                    .style 'stroke-width', 5
+                    .style 'fill', 'none'
+                    .attr 'vector-effect', 'non-scaling-stroke'
+        
+        renderLine: ->
+            @sel.selectAll 'path.metricLine'
+                .data [@column()]
+                .transition()
+                .attr 'd', @chart.lineGenerator

@@ -7,9 +7,11 @@ define ['elements/Base'], (BaseElement) ->
             self.el = $ elements[0]
             self.sel = d3.select elements[0]
             
-            self.chart.metrics.subscribe (metrics) -> self.metricChanged.call self, metrics
+            self.chart.metricLabels.subscribe (metrics) -> self.metricsChanged.call self, metrics
         
-        metricChanged: (metrics) ->
+        metricsChanged: (metrics) ->
+            self = this
+            
             legendItemData = @sel.select 'ul' .selectAll 'li'
                 .data metrics
             
@@ -18,7 +20,7 @@ define ['elements/Base'], (BaseElement) ->
             legendItem.append 'span'
                 .text (d) -> d
                 .classed 'legendItemText', true
-                .style 'color', '#112233'# TODO: (d) -> chart.colorScale d
+                .style 'color', (d) -> self.chart.colorScale d
             legendItem.append 'span'
                 .classed 'legendItemValue', true
             

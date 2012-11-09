@@ -3,6 +3,7 @@ define ['Storage', 'elements/Base'], (Storage, BaseElement) ->
     class Graph extends BaseElement
         (id) ->
             self = this
+            self.elements = ko.observableArray([])
             
             self.elementsToLoad = ko.observable -1
             # TODO: remove hack to let populateTypeInformation finish setting the elements collection

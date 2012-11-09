@@ -3,10 +3,38 @@ define ['elements/Base'], (BaseElement) ->
         initialize: ->
             self = this
             self.metrics = ko.observableArray()
+            self.metricLabels = ko.computed ->
+                self.metrics().map (m) -> m.columnHeader()
             self.isChart = true
-            self.xScale = ko.computed ->
-                self.metrics().join ', '
+            
+            self.xScale = ko.observable(d3.time.scale().clamp(true))
+            self.yScale = ko.observable(d3.scale.log())
+            self.xSteps = ko.observable([])
+            
+            # updates the scales when metrics change
+            self.scales = ko.computed ->
+                xDomain = d3.extent _.flatten self.metrics().map (m) -> m.dates()
+                self.xScale().domain xDomain
+                
+                yDomain = d3.extent _.flatten self.metrics().map (m) -> m.column()
+                self.yScale().domain yDomain.reverse()
+                
+                if self.metrics?().length > 0
+                    self.xSteps self.metrics()[0].dates()
+                    true
+                else
+                    false
+            
+            self.colorScale = d3.scale.category20()
+            self.lineGenerator = d3.svg.line()
+                .x (d, i) -> self.xScale() self.xSteps()[i] # TODO: assumes all metrics have the same x domain
+                .y (d, i) -> self.yScale() d
+                .interpolate 'linear'
         
         template: 'element/svg'
         rendered: (elements, self) ->
             self.el = $ elements[0]
+            self.sel = $ elements[0]
+            
+            self.xScale().range [0, self.el.innerWidth()]
+            self.yScale().range [0, self.el.innerHeight()]

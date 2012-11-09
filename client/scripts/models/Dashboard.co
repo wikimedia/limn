@@ -9,7 +9,4 @@ define ['models/Graph', 'Storage'], (GraphModel, Storage) ->
             
             for tab of @tabs()
                 for id of tab.graph_ids()
-                    new GraphModel(id, @graphReady, this)
-        
-        graphReady: (graph) ->
-            @graphs.push(graph)
+                    @graphs.push new GraphModel(id)
