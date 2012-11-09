@@ -23,9 +23,9 @@ view_helpers          = require './view-helpers'
  * Limn project-internals
  */
 BASE   = dirname dirname __dirname
-LIB    = "#BASE/lib"
 SRC    = "#BASE/src"
 STATIC = "#BASE/static"
+VIEWS    = "#BASE/views"
 WWW    = "#BASE/www"
 
 NODE_ENV = process.env.NODE_ENV or 'development'
@@ -152,7 +152,6 @@ application = limn.application =
         
         # config shared by all environments
         @configure ->
-            @set 'views', WWW
             @set 'view engine', 'jade'
             
             view_opts = {
@@ -186,14 +185,15 @@ application = limn.application =
             # turn on pretty-printing of views
             @set('view options').pretty = true
             
+            # import dev-only deps here, so prod users don't need them
+            browserify = require 'browserify'
+            compiler   = require 'connect-compiler-extras'
+            
             # Browserify some deps
-            @use require('browserify') do
+            @use browserify do
                 mount   : '/vendor/browserify.js'
                 require : <[ operator underscore underscore.nested underscore.kv async-cache seq timeseries emitters events ]>
                 cache   : "#varDir/.cache/browserify/cache.json"
-            
-            # import dev-only deps here, so prod users don't need them
-            compiler = require 'connect-compiler-extras'
             
             # transparently recompile modules that have changed
             @use '/js/limn', compiler do
@@ -201,31 +201,36 @@ application = limn.application =
                 src     : SRC
                 dest    : "#varDir/js/limn"
                 log_level : LOG_LEVEL
-            @use compiler do
-                enabled : <[ jade-browser stylus yaml ]>
-                src     : WWW
-                dest    : varDir
+            @use '/js/limn/template', compiler do
+                enabled : 'jade-browser'
+                src     : "#SRC/template"
+                dest    : "#varDir/js/limn/template"
+                log_level : LOG_LEVEL
+            @use '/css', compiler do
+                enabled : 'stylus'
+                src     : "#WWW/css"
+                dest    : "#varDir/css"
                 options : stylus : { nib:true, include:"#WWW/css" }
                 allowed_methods : <[ GET HEAD ]>
                 log_level : LOG_LEVEL
-            @use compiler do
-                enabled : 'yaml'
-                src     : dataDir
-                dest    : "#varDir/data"
-                log_level : LOG_LEVEL
+            # @use '/data', compiler do
+            #     enabled : 'yaml'
+            #     src     : dataDir
+            #     dest    : "#varDir/data"
+            #     log_level : LOG_LEVEL
             
             # wrap modules in commonjs closure for browser
             @use compiler do
-                enabled : <[ amd commonjs_define ]>
-                src     : [ STATIC ]
+                enabled : <[ commonjs_define ]>
+                src     : STATIC
                 dest    : varDir
                 options :
                     amd             : { drop_path_parts:1, drop_full_ext:false }
                     commonjs_define : { drop_path_parts:1, drop_full_ext:false }
                 log_level : LOG_LEVEL
             @use compiler do
-                enabled : <[ amd commonjs_define ]>
-                src     : [ varDir, WWW ]
+                enabled : <[ commonjs_define ]>
+                src     : varDir
                 dest    : varDir
                 options :
                     amd             : { drop_path_parts:1, drop_full_ext:true }
@@ -294,14 +299,10 @@ application = limn.application =
         @get '/', (req, res) ->
             res.render 'dashboard/view'
         
-        ### FIXME
-        @get '/geo', (req, res) ->
-            res.render 'geo'
-        
         ### FIXME?
         @get '/:type/:action/?', (req, res, next) ->
             {type, action} = req.params
-            if exists "#WWW/#type/#action.jade"
+            if exists "#VIEWS/#type/#action.jade"
                 res.render "#type/#action"
             else
                 next()
