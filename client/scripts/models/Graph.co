@@ -5,9 +5,10 @@ define ['Storage', 'elements/Base'], (Storage, BaseElement) ->
             self = this
             
             self.elementsToLoad = ko.observable -1
-            self.elementsLoaded = ko.computed -> self.elementsToLoad() is 0
-            self.ready = ko.observable(false)
-            self.chart = null
+            # TODO: remove hack to let populateTypeInformation finish setting the elements collection
+            self.changingElements = ko.observable false
+            self.elementsLoaded = ko.computed -> self.elementsToLoad() is 0 and not self.changingElements()
+            self.ready = ko.observable false
             
             Storage.loadGraph id, (json) ->
                 temporaryObject = ko.mapping.fromJSON json
@@ -17,7 +18,7 @@ define ['Storage', 'elements/Base'], (Storage, BaseElement) ->
                     if loaded
                         self.populateChart temporaryObject.elements
                         $.extend(true, self, temporaryObject)
-                        self.ready(true)
+                        self.ready true
         
         /**
          * Converts, in place, the items in an observable array to children of @see elements/Base
@@ -30,13 +31,14 @@ define ['Storage', 'elements/Base'], (Storage, BaseElement) ->
             typeNames = elements().map (el) -> "elements/#{el.elementType()}"
             require typeNames, ->
                 types = arguments
-                elements elements().map (element, i) ->
-                    element := $.extend(true, new types[i](), element)
-                    element.initialize()
-                    self.populateTypeInformation element.elements
+                self.changingElements true
+                elements elements().map (el, i) ->
+                    el = $.extend(true, new types[i](), el)
+                    el.initialize()
+                    self.populateTypeInformation el.elements
                     self.elementsToLoad self.elementsToLoad()-1
-                    element
-            true
+                    el
+                self.changingElements false
         
         /**
          * Counts the number of elements that we have to load.  Used to compute the ready observable

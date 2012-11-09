@@ -12,6 +12,5 @@ define ['elements/Base', 'Storage'], (BaseElement, Storage) ->
             
             # make sure we can receive updates before we broadcast the metric
             self.chart.xScale.subscribe (xScale) ->
-                console.log xScale
             
-            self.chart.metrics.push(columnHeader)
+            self.chart.metrics.push(self.columnHeader())
