@@ -107,7 +107,6 @@ development:
             - graph:
                 - base-graph
                 - graph-model
-                - legacy-graph-model
                 - graph-view
                 - graph-display-view
                 - graph-edit-view
