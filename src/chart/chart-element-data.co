@@ -1,0 +1,31 @@
+{ Model,
+} = require '../model'
+
+class exports.ChartElementData extends Model
+    
+    /**
+     * @constructor
+     */
+    (attributes) ->
+        super ...
+    
+    
+    /**
+     * Model attribute defaults.
+     */
+    defaults: ->
+        elementType    : null # Typename of the ChartElement which renders this element.
+        
+        index          : 0
+        label          : ''
+        disabled       : false
+        
+        data :
+            source_id  : null
+            source_col : null
+            type       : 'int'
+            timespan   : { start:null, end:null, step:null }
+        
+        options        : {}
+        elements       : []
+    

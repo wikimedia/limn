@@ -1,6 +1,0 @@
-chart_edit_view                 = require './chart-edit-view'
-chart_element_edit_view         = require './chart-element-edit-view'
-line_chart_element_edit_view    = require './line-chart-element-edit-view'
-legend_element_edit_view        = require './legend-edit-element-view'
-
-exports import chart_edit_view import chart_element_edit_view import line_chart_element_edit_view import legend_element_edit_view

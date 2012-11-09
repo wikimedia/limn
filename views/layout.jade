@@ -32,6 +32,14 @@ html(lang="en", dir="ltr")
             footer
                 block footer
             
+            .templates
+                block handlebars
+                    for f in glob.sync(TEMPLATE+'/**/*.@(jade|html)')
+                        - var template = getTemplate(f)
+                        - var id = template.filename.replace(TEMPLATE+'/', '').replace(/\.[^\.]+$/, '')
+                        script(id=id, data-template-name=template.name, type="text/html")
+                            !{ '\n'+template.text }
+            
             .scripts
                 block scripts
                     - var limn_config = { 'mount':mount, 'rev':version, 'env':NODE_ENV };

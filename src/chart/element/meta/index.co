@@ -1,8 +1,0 @@
-axis        = require './axis-element'
-callout     = require './callout-element'
-legend      = require './legend-element'
-lineGuide   = require './line-guide-element'
-minimap     = require './minimap-element'
-zoomBrush   = require './zoom-brush-element'
-
-exports import axis import callout import legend import lineGuide import minimap import zoomBrush

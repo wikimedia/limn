@@ -1,3 +1,0 @@
-models = require './dashboard-model'
-views  = require './dashboard-view'
-exports import models import views

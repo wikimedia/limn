@@ -222,7 +222,7 @@ application = limn.application =
             
             # wrap modules in commonjs closure for browser
             @use compiler do
-                enabled : <[ commonjs_define ]>
+                enabled : <[ amd commonjs_define ]>
                 src     : STATIC
                 dest    : varDir
                 options :

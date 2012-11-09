@@ -39,10 +39,9 @@ root.jQuery?.fn.invoke = (method, ...args) ->
         jQuery(el)[method] ...args
 
 
-event = exports.event = require './event'
-exports import event
+emitters = exports.emitters = require 'emitters'
+exports import emitters
 
-backbone  = exports.backbone  = require './backbone'
 parser    = exports.parser    = require './parser'
 AliasDict = exports.AliasDict = require './aliasdict'
 Cascade   = exports.Cascade   = require './cascade'

@@ -1,5 +1,0 @@
-chart_option  = exports.option  = require './option'
-chart_edit    = exports.edit    = require './edit'
-chart_element = exports.element = require './element'
-
-exports import chart_option import chart_element import chart_edit

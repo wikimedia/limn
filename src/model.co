@@ -1,0 +1,27 @@
+_ = require 'underscore'
+{ ReadyEmitter,
+} = require 'emitters'
+
+/**
+ * @class Root-class for all Models.
+ */
+class exports.Model extends ReadyEmitter
+    
+    /**
+     * @constructor
+     */
+    (attributes={}) ->
+        attributes = _.merge @defaults(), attributes
+        _.merge this, ko.mapping.fromJS attributes
+        this
+    
+    /**
+     * Invoked to acquire default values.
+     */
+    defaults: ->
+        {}
+    
+    fetch: ->
+        
+    
+
