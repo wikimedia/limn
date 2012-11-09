@@ -3,7 +3,46 @@ define ['Storage', 'elements/Base'], (Storage, BaseElement) ->
     class Graph extends BaseElement
         (id) ->
             self = this
+            
+            self.elementsToLoad = ko.observable -1
+            self.elementsLoaded = ko.computed -> self.elementsToLoad() is 0
+            self.ready = ko.observable(false)
+            
             Storage.loadGraph id, (json) ->
-                $.extend(true, self, ko.mapping.fromJSON json)
-                self.populateTypeInformation(self.elements)
-                self
+                temporaryObject = ko.mapping.fromJSON json
+                self.elementsToLoad self.countElements temporaryObject.elements
+                self.populateTypeInformation temporaryObject.elements
+                self.elementsLoaded.subscribe (loaded) ->
+                    if loaded
+                        $.extend(true, self, temporaryObject)
+                        self.ready(true)
+        
+        /**
+         * Converts, in place, the items in an observable array to children of @see elements/Base
+         * MAGIC: dynamically figures out what type each member of the elements array wants to be instantiated as
+         * @param {ko.observableArray} elements a knockout observable array
+         */
+        populateTypeInformation: (elements) ->
+            self = this
+            elements ?= ko.observableArray()
+            typeNames = elements().map (el) -> "elements/#{el.elementType()}"
+            require typeNames, ->
+                types = arguments
+                elements elements().map (element, i) ->
+                    element := $.extend(true, new types[i](), element)
+                    element.initialize()
+                    self.populateTypeInformation(element.elements)
+                    self.elementsToLoad(self.elementsToLoad() - 1)
+                    element
+            true
+        
+        /**
+         * Counts the number of elements that we have to load.  Used to compute the ready observable
+         * @param {ko.observableArray} elements a knockout observable array
+         */
+        countElements: (elements) ->
+            elements ?= ko.observableArray()
+            childElements = 0
+            for element of elements()
+                childElements += @countElements element.elements
+            elements().length + childElements

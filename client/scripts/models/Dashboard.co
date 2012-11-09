@@ -2,11 +2,14 @@ define ['models/Graph', 'Storage'], (GraphModel, Storage) ->
     class Dashboard
         (id) ->
             @id = id
+            @graphs = ko.observableArray()
+            
             json = Storage.loadDashboard id
             $.extend(true, this, ko.mapping.fromJSON json)
             
             for tab of @tabs()
                 for id of tab.graph_ids()
-                    @graphs.push(new GraphModel(id))
+                    new GraphModel(id, @graphReady, this)
         
-        graphs: ko.observableArray()
+        graphReady: (graph) ->
+            @graphs.push(graph)

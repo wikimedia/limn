@@ -16,7 +16,7 @@ navigateWithId = (context) ->
     id = context.params.id
     
     require ["pages/#{pageName}"], (NewPage) ->
-        viewModel.page(new NewPage(id, viewModel.page()))
+        viewModel.page(new NewPage(id, viewModel.page())) # TODO: instead of passing .page() think about a clean way to access $root.page()
         ko.applyBindings viewModel
 
 page '/:pageName-:id', navigateWithId

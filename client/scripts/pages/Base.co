@@ -1,3 +1,2 @@
 define ->
     class Base
-        template: ko.observable()

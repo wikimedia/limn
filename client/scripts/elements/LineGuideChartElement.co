@@ -1,2 +1,2 @@
 define ['elements/Base'], (BaseElement) ->
-    class LineGuideElement extends BaseElement
+    class LineGuideChartElement extends BaseElement

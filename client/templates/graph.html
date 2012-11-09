@@ -1,3 +1,5 @@
 <section class="graph" data-bind="with: page">
+<!-- ko if: graph().ready -->
     <div data-bind="template: {name: 'graph/view', data: graph}"></div>
+<!-- /ko -->
 </section>

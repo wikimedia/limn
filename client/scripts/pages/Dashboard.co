@@ -4,6 +4,7 @@ define ['pages/Base', 'models/Dashboard'], (BasePage, DashboardModel) ->
             
             # instantiate properties
             @dashboard = ko.observable()
+            @template = ko.observable()
             
             # fetch model if we don't already have it
             model = null
