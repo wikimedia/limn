@@ -8,20 +8,10 @@ define ['elements/Base', 'Storage'], (BaseElement, Storage) ->
             @column = ko.observable source.columns[@data.source_col()]
         
         rendered: (elements, self) ->
-            self.$el = $(elements[0])
-            self.chart = self.$el.parents('svg')
+            self.el = $ elements[0]
             
             # make sure we can receive updates before we broadcast the metric
-            self.chart.on 'changed:scales', (event, scales) ->
+            self.chart.xScale.subscribe (xScale) ->
+                console.log xScale
             
-            self.column.subscribe (value) ->
-                self.broadcastMetric()
-            # initial broadcast if we already have a value in column
-            self.broadcastMetric() if self.column()
-        
-        /*
-         * Announces the metric.  This event will most likely be caught by a @see ChartView parent
-         * The @see ChartView parent should trigger an event that we can listen to and receive updated scales on
-         */
-        broadcastMetric: ->
-            @$el.trigger 'rendered:metric', this
+            self.chart.metrics.push(columnHeader)

@@ -2,10 +2,9 @@ define ['elements/Base'], (BaseElement) ->
     class LegendElement extends BaseElement
         template: 'element/legend'
         initialize: ->
-            @metrics = ko.observableArray()
         
         rendered: (elements, self) ->
-            self.$el = $ elements[0]
+            self.el = $ elements[0]
             self.sel = d3.select elements[0]
             
             self.$el.parents('.visualization').on 'rendered:svg', ->

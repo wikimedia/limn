@@ -7,6 +7,7 @@ define ['Storage', 'elements/Base'], (Storage, BaseElement) ->
             self.elementsToLoad = ko.observable -1
             self.elementsLoaded = ko.computed -> self.elementsToLoad() is 0
             self.ready = ko.observable(false)
+            self.chart = null
             
             Storage.loadGraph id, (json) ->
                 temporaryObject = ko.mapping.fromJSON json
@@ -14,6 +15,7 @@ define ['Storage', 'elements/Base'], (Storage, BaseElement) ->
                 self.populateTypeInformation temporaryObject.elements
                 self.elementsLoaded.subscribe (loaded) ->
                     if loaded
+                        self.populateChart temporaryObject.elements
                         $.extend(true, self, temporaryObject)
                         self.ready(true)
         
@@ -31,8 +33,8 @@ define ['Storage', 'elements/Base'], (Storage, BaseElement) ->
                 elements elements().map (element, i) ->
                     element := $.extend(true, new types[i](), element)
                     element.initialize()
-                    self.populateTypeInformation(element.elements)
-                    self.elementsToLoad(self.elementsToLoad() - 1)
+                    self.populateTypeInformation element.elements
+                    self.elementsToLoad self.elementsToLoad()-1
                     element
             true
         
@@ -46,3 +48,18 @@ define ['Storage', 'elements/Base'], (Storage, BaseElement) ->
             for element of elements()
                 childElements += @countElements element.elements
             elements().length + childElements
+        
+        /**
+         * Finds the first element that declares isChart
+         * Populates the chart property of all the other elements to the found element
+         * TODO: enforce chart is at top level
+         * @param {ko.observableArray} elements a knockout observable array
+         */
+        populateChart: (elements, chart) ->
+            return unless elements?()
+            self = this
+            chart ?= _.find elements(), (el) -> el.isChart
+            
+            _.each elements(), (el) ->
+                el.chart = chart unless el.isChart
+                self.populateChart el.elements, chart
