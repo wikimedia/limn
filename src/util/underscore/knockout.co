@@ -1,0 +1,116 @@
+root = do -> this
+
+_ = require?('underscore') or root._
+unless _obj = module?.exports or exports?
+    root.UnderscoreNested = _obj = {}
+
+
+getProto    = Object.getPrototypeOf
+OBJ_PROTO   = Object.prototype
+{
+    hasOwnProperty : hasOwn
+    toString       : objToString
+} = {}
+
+/**
+ * Default options for delegate-accessor functions.
+ */
+DEFAULT_DELEGATE_OPTIONS = _obj.DEFAULT_DELEGATE_OPTIONS =
+    getter  : 'get'
+    setter  : 'set'
+    deleter : 'unset'
+
+/**
+ * Tombstone for deleted, non-passthrough keys.
+ */
+TOMBSTONE = _obj.TOMBSTONE = {}
+
+/**
+ * Default options for nested-accessor functions.
+ */
+DEFAULT_NESTED_OPTIONS = _obj.DEFAULT_NESTED_OPTIONS =
+    {-ensure, tombstone:TOMBSTONE} import DEFAULT_DELEGATE_OPTIONS
+
+
+
+/**
+ * @namespace Functions for working with objects and object graphs.
+ */
+_obj import {
+    
+    
+    ### Delegating Accessors
+    
+    /**
+     * Gets the value at `key` from the object if present, returning `def` otherwise.
+     * 
+     * @param {Object} object Object on which to perform lookup.
+     * @param {String} key Key to get.
+     * @param {*} [def=undefined] Default value.
+     * @param {Object} [opts] Options.
+     * @returns {*} Value or default.
+     */
+    get: (obj, key, def, opts) ->
+        return unless obj?
+        getter = opts?.getter or 'get'
+        if typeof obj[getter] is 'function'
+            return obj[getter] key, def, opts
+        
+        val = obj[key]
+        if ko.isObservable val
+            if (v = val()) is not void  then v   else def
+        else
+            if val is not void          then val else def
+    
+    /**
+     * Puts the given value to `key` on the given target object.
+     * 
+     * @param {Object} target Target object for the set.
+     * @param {String|Object} key The key to set. If an object is supplied here, each key will be set with its value on the target object.
+     * @param {*} [value] Value to set at `key`. Omit this if an object of KV-pairs was passed as `key`.
+     * @param {Object} [opts] Options.
+     * @returns {Object} The target object.
+     */
+    set: (obj, key, value, opts) ->
+        return unless obj?
+        if key? and _.isObject(key)
+            [values, opts] = [key, value]
+        else
+            values = { "#key": value }
+        
+        setter = opts?.setter or 'set'
+        if typeof obj[setter] is 'function'
+            for key, value in values
+                obj[setter] key, value, opts
+        else
+            for key, value in values
+                current = obj[key]
+                if ko.isObservable current
+                    current value
+                else
+                    obj[key] = value
+        
+        obj
+    
+    /**
+     * Deletes `key` from the target object.
+     * 
+     * @param {Object} target Target object.
+     * @param {String} key Key to be deleted.
+     * @param {Object} [opts] Options.
+     * @returns {*} Value at `key` prior to being removed from the target.
+     */
+    unset: (obj, key, opts) ->
+        return unless obj?
+        deleter = opts?.deleter or 'unset'
+        if typeof obj[deleter] is 'function'
+            obj[deleter] key, opts
+        else
+            val = obj[key]
+            if ko.isObservable val
+                val void
+            else
+                delete obj[key]
+    
+}
+

@@ -33,7 +33,7 @@ html(lang="en", dir="ltr")
                 block footer
             
             .templates
-                block handlebars
+                block jade-templates
                     for f in glob.sync(TEMPLATE+'/**/*.@(jade|html)')
                         - var template = getTemplate(f)
                         - var id = template.filename.replace(TEMPLATE+'/', '').replace(/\.[^\.]+$/, '')

@@ -1,0 +1,80 @@
+{EventEmitter} = require 'events'
+
+ACTION_TO_METHOD =
+    create : 'POST'
+    update : 'PUT'
+    delete : 'DELETE'
+    read   : 'GET'
+
+
+/**
+ * @class Represents a remote resource following the REST pattern:
+ * 
+ * GET     /<RESOURCE>              ->  index
+ * GET     /<RESOURCE>/new          ->  new
+ * POST    /<RESOURCE>              ->  create
+ * GET     /<RESOURCE>/:id          ->  show
+ * GET     /<RESOURCE>/:id/edit     ->  edit
+ * PUT     /<RESOURCE>/:id          ->  update
+ * DELETE  /<RESOURCE>/:id          ->  destroy
+ * 
+ * By convention, resources are named with plural nouns.
+ */
+class Resource extends EventEmitter
+    root : '/'
+    ajaxOptions : null
+    emulateHTTP : false
+    emulateJSON : false
+    
+    name : null
+    
+    
+    (@name, @model, opts={}) ->
+        @opts = @defaults() import opts
+    
+    url: (model) ->
+        "#{@root}/#{@name}" + model.id
+    
+    
+    defaults: ->
+        /**
+         * URL root for all resource calls.
+         * @name root
+         * @type String
+         */
+        root : '/'
+        
+        /**
+         * Default options passed to the Ajax request.
+         */
+        ajaxOptions : { dataType:'json' }
+        
+        /**
+         * Turn on `emulateHTTP` to support legacy HTTP servers. Setting this option
+         * will fake `"PUT"` and `"DELETE"` requests via the `_method` parameter and
+         * set a `X-Http-Method-Override` header.
+         * @name emulateHTTP
+         * @type Boolean
+         */
+        emulateHTTP : false
+        
+        /**
+         * Turn on `emulateJSON` to support legacy servers that can't deal with direct
+         * `application/json` requests ... will encode the body as
+         * `application/x-www-form-urlencoded` instead and will send the model in a
+         * form param named `model`.
+         * @name emulateJSON
+         * @type Boolean
+         */
+        emulateJSON : false
+    
+    /**
+     * Execute a resource request.
+     */
+    sync: (action, model, options={}) ->
+        type = ACTION_TO_METHOD[action]
+        params = { type } import @ajaxOptions import options
+        
+    
+    
+    

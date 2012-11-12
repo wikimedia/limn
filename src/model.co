@@ -2,18 +2,36 @@ _ = require 'underscore'
 { ReadyEmitter,
 } = require 'emitters'
 
+unwrap = ko.utils.unwrapObservable
+
+
 /**
  * @class Root-class for all Models.
  */
 class exports.Model extends ReadyEmitter
+    /**
+     * Attribute data of the model. Individual properties are also aliased 
+     * onto the model object itself if no property already exists.
+     * @type Map<Key, ko.observable>
+     */
+    attributes : null
+    
+    /**
+     * Maps attribute keys to sub-models.
+     * @type Map<Key, ModelClass>
+     */
+    mapping : null
+    
     
     /**
      * @constructor
      */
     (attributes={}) ->
         attributes = _.merge @defaults(), attributes
-        _.merge this, ko.mapping.fromJS attributes
+        @attributes = ko.mapping.fromJS attributes, @generateMapping(), {}
+        _.merge this, @attributes
         this
+    
     
     /**
      * Invoked to acquire default values.
@@ -21,7 +39,31 @@ class exports.Model extends ReadyEmitter
     defaults: ->
         {}
     
-    fetch: ->
-        
+    
+    
+    
+    generateMapping: ->
+        return {} unless @mapping
+        _.reduce do
+            @mapping
+            (mappers, ModelType, key) ->
+                id = ModelType::idAttribute or 'id'
+                mappers[key] =
+                    key: (data) ->
+                        # TODO: allow customization of id/key
+                        unwrap data[id]
+                    
+                    create: (opts) ->
+                        {data, parent} = opts
+                        new ModelType data
+                    
+                    update: (opts) ->
+                        {data, parent, observable} = opts
+                        if observable
+                            ko.mapping.fromJS data, {}, unwrap(observable)
+                        else
+                            new ModelType data
+                mapping
+            {}
     
 
