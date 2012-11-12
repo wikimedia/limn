@@ -1,5 +1,7 @@
-_  = exports._  = require './underscore'
-op = exports.op = require 'operator'
+_    = exports._    = require './underscore'
+op   = exports.op   = require 'operator'
+guid = exports.guid = require './guid'
+exports import guid
 
 # Root object -- `window` in the browser, `global` in Node.
 root = exports.root = do -> this or eval('this')
@@ -12,6 +14,9 @@ try
     require 'd3'
 catch ex
     require.define 'd3', (require, module, exports) -> module.exports = d3
+
+# stub out knockout
+require.define 'knockout', (require, module, exports) -> module.exports = ko
 
 # watch css files for changes (only in dev mode)
 # root.livecss?.watchAll?()

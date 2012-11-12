@@ -8,7 +8,7 @@ _.mixin require './function'
 _.mixin require './array'
 _.mixin require './class'
 _.mixin require './string'
-_.mixin require './knockout'
+_.ko  = require './knockout'
 
 
 ## Debug

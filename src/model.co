@@ -1,14 +1,35 @@
 _ = require 'underscore'
-{ ReadyEmitter,
+{ EventEmitter, ReadyEmitter,
 } = require 'emitters'
+{ generateId, guidFor,
+} = require './util'
 
 unwrap = ko.utils.unwrapObservable
+
+
 
 
 /**
  * @class Root-class for all Models.
  */
-class exports.Model extends ReadyEmitter
+class exports.Model extends EventEmitter
+    /**
+     * Unique identifier for this object. Uniqueness is only guaranteed for this
+     * pageload session; this value is safe to use in circumstances requiring numeric identity
+     * (such as calculating a hashkey for a Map, or for DOM id attributes) but not when
+     * global uniqueness is required.
+     * @type String
+     */
+    __id__ : null
+    
+    /**
+     * Attribute key used to uniquely identify this model instance. Note that
+     * it should be expected that models sometimes have a null id prior to save,
+     * as the server may be used to enforce uniqueness.
+     * @type String
+     */
+    idAttribute : 'id'
+    
     /**
      * Attribute data of the model. Individual properties are also aliased 
      * onto the model object itself if no property already exists.
@@ -27,21 +48,90 @@ class exports.Model extends ReadyEmitter
      * @constructor
      */
     (attributes={}) ->
-        attributes = _.merge @defaults(), attributes
+        @__id__     = generateId()
+        attributes  = _.merge @defaults(), attributes
         @attributes = ko.mapping.fromJS attributes, @generateMapping(), {}
         _.merge this, @attributes
         this
     
     
     /**
-     * Invoked to acquire default values.
+     * Invoked to acquire default attribute values.
+     * @returns {Object} Default attribute values.
      */
     defaults: ->
-        {}
+        { id:null }
+    
+    
+    /* * * *  Knockout-Aware Accessors  * * * {{{ */
+    
+    /**
+     * Gets the attribute value at `key` if present, returning `def` otherwise.
+     * @returns {*} Value at `key`.
+     */
+    get: (key, def) ->
+        val = @attributes[key]
+        return def unless val?
+        
+        if ko.isObservable val
+            val()
+        else
+            val
+    
+    /**
+     * Puts a single attribute value to `key`.
+     * 
+     * @protected
+     * @param {String} key The key to set.
+     * @param {*} val Value to set at `key`.
+     * @returns {this}
+     */
+    _set: (key, val) ->
+        return this unless key?
+        
+        obs = @attributes[key]
+        unless ko.isObservable obs
+            throw new Error("Key '#key' is not observable!")
+        obs val
+        this
+    
+    /**
+     * Sets attribute values, taking either a single (key, value)-pair, or a map of them.
+     * 
+     * @param {String|Object} key The key to set. If an object is supplied here, each key will be set with its value on the target object.
+     * @param {*} [value] Value to set at `key`. Omit this if an object of KV-pairs was passed as `key`.
+     * @returns {this}
+     */
+    set: (key, val) ->
+        return this unless key?
+        if key and _.isObject(key)
+            values = key
+        else
+            values = { "#key": value }
+        for key, value in values
+            @_set key, value
+        this
+    
+    /**
+     * Sets the attribute value at `key` to `null`.
+     * @returns {this}
+     */
+    unset: (key) ->
+        obs = @attributes[key]
+        unless ko.isObservable obs
+            throw new Error("Key '#key' is not observable!")
+        obs null
+        this
+    
+    # }}}
     
     
     
-    
+    /**
+     * Transforms a mapping object (keyname -> Model class) into a `ko.mapping`
+     * options object.
+     * @returns {Object} Knockout mapping object for all listed (key, type) pairs.
+     */
     generateMapping: ->
         return {} unless @mapping
         _.reduce do
@@ -63,7 +153,14 @@ class exports.Model extends ReadyEmitter
                             ko.mapping.fromJS data, {}, unwrap(observable)
                         else
                             new ModelType data
-                mapping
+                mappers
             {}
     
+    
+    toJSON: ->
+        ko.mapping.toJS @attributes
+    
+    toString: ->
+        "#{@..displayName or @..name}(cid=#{@cid}, id=#{@id})"
+
 

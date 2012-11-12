@@ -56,12 +56,16 @@ development:
                     - array
                     - class
                     - string
+                    - knockout
                     - index
+                - guid
                 - parser
                 - aliasdict
                 - cascade
                 - hashset
                 - formatters
                 - index
+            - model
+            - resource
             - index
 

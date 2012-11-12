@@ -1,0 +1,40 @@
+/**
+ * Generate unique IDs.
+ */
+
+GUID_KEY    = '__id__'
+UUID        = 0
+numberCache = {}
+stringCache = {}
+
+
+generateId = exports.generateId = (prefix='limn') ->
+    id = UUID++
+    "#prefix#id"
+
+guidFor = exports.guidFor = (obj) ->
+    # special cases where we don't want to add a key to object
+    return "(undefined)"  if obj is void
+    return "(null)"       if obj is null
+    
+    # Don't allow prototype changes to String etc. to change the guidFor
+    switch typeof obj
+    case 'number'
+        unless ret = numberCache[obj]
+            ret := numberCache[obj] = "nu#obj"
+        return ret
+    
+    case 'string'
+        unless ret = stringCache[obj]
+            ret = stringCache[obj] = "st#{(UUID++)}"
+        return ret
+    
+    case 'boolean'
+        return if obj then '(true)' else '(false)'
+    
+    default
+        return obj[GUID_KEY]    if obj[GUID_KEY]
+        return '(Object)'       if obj is Object
+        return '(Array)'        if obj is Array
+        return obj[GUID_KEY] = "limn#{(UUID++)}"
+
