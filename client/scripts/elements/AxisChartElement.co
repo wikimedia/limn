@@ -1,2 +1,4 @@
 define ['elements/Base'], (BaseElement) ->
     class AxisChartElement extends BaseElement
+        build: (parentElement) ->
+            

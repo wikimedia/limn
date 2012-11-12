@@ -2,13 +2,16 @@ define ->
     class Base
         initialize: ->
         
-        renderChild: (elements, child) ->
-            if elements?[0] and $(elements[0]).is(':not(.infuser-loading)')
-                child.rendered.call(this, elements, child)
+        beginRenderChildren: (elementInDOM) ->
+            @renderChildren d3.select elementInDOM[0]
         
-        rendered: (elements, self) ->
+        renderChildren: (d3Element) ->
+            return unless @elements?()
+            for element of @elements()
+                element.build?.call element, d3Element
         
-        template: 'element/container'
+        build: (parentElement) ->
+        
         determineTemplate: (childBeingRendered) ->
             unless childBeingRendered.template
                 # removing this reveals a race condition in which the raw json is being bound and rendered before it's converted by populateTypeInformation.  TODO: look into making populate synchronous (perhaps just include all the elements on page load)

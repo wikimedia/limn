@@ -3,14 +3,19 @@ define ['elements/Base'], (BaseElement) ->
         template: 'element/legend'
         initialize: ->
         
-        rendered: (elements, self) ->
-            self.el = $ elements[0]
-            self.sel = d3.select elements[0]
+        build: (parentElement) ->
+            $(parentElement[0][0]).append "
+                <fieldset>
+                    <legend>#{@label()}</legend>
+                    <ul></ul>
+                </fieldset>
+            "
+            @el = $(parentElement[0][0]).find 'fieldset'
+            @sel = d3.select @el[0]
             
-            self.chart.metricLabels.subscribe (metrics) -> self.metricsChanged.call self, metrics
+            @chart.metricLabels.subscribe (metrics) ~> @metricsChanged metrics
         
         metricsChanged: (metrics) ->
-            self = this
             
             legendItemData = @sel.select 'ul' .selectAll 'li'
                 .data metrics
@@ -20,7 +25,7 @@ define ['elements/Base'], (BaseElement) ->
             legendItem.append 'span'
                 .text (d) -> d
                 .classed 'legendItemText', true
-                .style 'color', (d) -> self.chart.colorScale d
+                .style 'color', (d) ~> @chart.colorScale d
             legendItem.append 'span'
                 .classed 'legendItemValue', true
             

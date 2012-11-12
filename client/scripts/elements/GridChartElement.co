@@ -1,2 +1,4 @@
 define ['elements/Base'], (BaseElement) ->
     class GridChartElement extends BaseElement
+        build: (parentElement) ->
+            

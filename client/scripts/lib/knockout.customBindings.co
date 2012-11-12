@@ -1,0 +1,4 @@
+ko.bindingHandlers.ready = do
+    init: (element, valueAccessor, allBindingsAccessor, bindingContext) ->
+        readyHandler = ko.utils.unwrapObservable valueAccessor()
+        readyHandler?.call bindingContext, $(element)

@@ -1,5 +1,6 @@
 define ['elements/Base'], (BaseElement) ->
     class GroupElement extends BaseElement
-        template: 'element/group'
-        rendered: (elements, data) ->
-            @$el = $(elements[0])
+        
+        build: (parentElement) ->
+            @sel = parentElement.append 'g'
+            @renderChildren @sel

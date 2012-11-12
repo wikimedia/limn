@@ -1,3 +1,7 @@
-define ['elements/Base'], (BaseElement) ->
-    class LineGroupChartElement extends BaseElement
-        template: 'element/group'
+define ['elements/GroupElement'], (GroupElement) ->
+    class LineGroupChartElement extends GroupElement
+        
+        build: (parentElement) ->
+            @sel = parentElement.append 'g'
+                .classed 'metricVisualizations', true
+            @renderChildren @sel

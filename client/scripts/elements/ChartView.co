@@ -31,10 +31,11 @@ define ['elements/Base'], (BaseElement) ->
                 .y (d, i) -> self.yScale() d
                 .interpolate 'linear'
         
-        template: 'element/svg'
-        rendered: (elements, self) ->
-            self.el = $ elements[0]
-            self.sel = $ elements[0]
+        build: (parentElement) ->
+            @sel = parentElement.append 'svg'
+            @el = $(parentElement[0][0]).find 'svg'
             
-            self.xScale().range [0, self.el.innerWidth()]
-            self.yScale().range [0, self.el.innerHeight()]
+            @xScale().range [0, @el.innerWidth()]
+            @yScale().range [0, @el.innerHeight()]
+            
+            @renderChildren @sel

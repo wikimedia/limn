@@ -1,3 +1,7 @@
-define ['elements/Base'], (BaseElement) ->
-    class DataViewportChartElement extends BaseElement
-        template: 'element/group'
+define ['elements/GroupElement'], (GroupElement) ->
+    class DataViewportChartElement extends GroupElement
+        
+        build: (parentElement) ->
+            @sel = parentElement.append 'g'
+                .classed 'dataViewport', true
+            @renderChildren @sel
