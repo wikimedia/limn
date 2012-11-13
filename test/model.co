@@ -1,7 +1,8 @@
 vows = require 'vows'
 assert = require 'assert'
 
-Model = require '../src/model'
+{ Model,
+} = require '../src/model'
 
 bareModel = new Model()
 bareJSON = '{"name":"math class","room":"1A","teacher":"Jones","students":[{"name":"Alex"},{"name":"Maria"}]}'

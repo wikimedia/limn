@@ -5,6 +5,8 @@
 { Resource,
 } = require './resource'
 
+ko = require 'knockout'
+
 unwrap = ko.utils.unwrapObservable
 
 

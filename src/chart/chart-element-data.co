@@ -1,4 +1,6 @@
 _ = require 'underscore'
+ko = require 'knockout'
+
 { generateId, guidFor,
 } = require '../util'
 { Model,

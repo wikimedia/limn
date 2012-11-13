@@ -100,14 +100,14 @@ class exports.Resource extends Mixin
     /**
      * $.ajax() provider.
      */
-    @$: root.jQuery or root.Zepto or root.ender
+    @$ = root.jQuery or root.Zepto or root.ender
     
     
     /**
      * Execute a resource request. Adapted from `Backbone.sync`.
      * @returns {XMLHTTPRequest}
      */
-    @sync: (action, model, options={}) ->
+    @sync = (action, model, options={}) ->
         type    = ACTION_TO_METHOD[action]
         params  = { type, dataType:'json' }
         options = _.extend {}, DEFAULT_OPTIONS, options
@@ -157,7 +157,7 @@ class exports.Resource extends Mixin
         @ajax _.extend(params, options)
     
     
-    @ajax: ->
+    @ajax = ->
         @$.ajax.apply @$, arguments
     
     # }}}
