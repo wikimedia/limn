@@ -1,3 +1,0 @@
-cascade = require './cascade-test'
-underscore = require './underscore'
-exports import cascade import underscore

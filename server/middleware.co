@@ -298,7 +298,7 @@ application = limn.application =
         
         # non-controller endpoints
         @get '/', (req, res) ->
-            res.render 'dashboard/view'
+            res.render 'index'
         
         ### FIXME?
         @get '/:type/:action/?', (req, res, next) ->
