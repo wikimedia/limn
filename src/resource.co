@@ -1,4 +1,8 @@
-{EventEmitter} = require 'events'
+{ _, op, root, generateId, guidFor,
+} = require './util'
+{ EventEmitter,
+} = require 'emitters'
+
 
 ACTION_TO_METHOD =
     create : 'POST'
@@ -6,75 +10,134 @@ ACTION_TO_METHOD =
     delete : 'DELETE'
     read   : 'GET'
 
+DEFAULT_OPTIONS =
+    /**
+     * Turn on `emulateHTTP` to support legacy HTTP servers. Setting this option
+     * will fake `"PUT"` and `"DELETE"` requests via the `_method` parameter and
+     * set a `X-Http-Method-Override` header.
+     * @name emulateHTTP
+     * @type Boolean
+     */
+    emulateHTTP : false
+    
+    /**
+     * Turn on `emulateJSON` to support legacy servers that can't deal with direct
+     * `application/json` requests ... will encode the body as
+     * `application/x-www-form-urlencoded` instead and will send the model in a
+     * form param named `model`.
+     * @name emulateJSON
+     * @type Boolean
+     */
+    emulateJSON : false
+
+
 
 /**
- * @class Represents a remote resource following the REST pattern:
+ * @class Mixin which represents a remote resource following the REST pattern:
  * 
- * GET     /<RESOURCE>              ->  index
- * GET     /<RESOURCE>/new          ->  new
  * POST    /<RESOURCE>              ->  create
  * GET     /<RESOURCE>/:id          ->  show
- * GET     /<RESOURCE>/:id/edit     ->  edit
  * PUT     /<RESOURCE>/:id          ->  update
  * DELETE  /<RESOURCE>/:id          ->  destroy
  * 
  * By convention, resources are named with plural nouns.
  */
 class Resource extends EventEmitter
-    root : '/'
-    ajaxOptions : null
-    emulateHTTP : false
-    emulateJSON : false
+    resource : ''
     
-    name : null
+    url: ->
+        id = @getId() or ''
+        base = _.rtrim @resource, '/'
+        "#base/#{encodeURIComponent id}"
     
-    
-    (@name, @model, opts={}) ->
-        @opts = @defaults() import opts
-    
-    url: (model) ->
-        "#{@root}/#{@name}" + model.id
-    
-    
-    defaults: ->
-        /**
-         * URL root for all resource calls.
-         * @name root
-         * @type String
-         */
-        root : '/'
+    sync: ->
         
-        /**
-         * Default options passed to the Ajax request.
-         */
-        ajaxOptions : { dataType:'json' }
+    
+    save: (options) ->
         
-        /**
-         * Turn on `emulateHTTP` to support legacy HTTP servers. Setting this option
-         * will fake `"PUT"` and `"DELETE"` requests via the `_method` parameter and
-         * set a `X-Http-Method-Override` header.
-         * @name emulateHTTP
-         * @type Boolean
-         */
-        emulateHTTP : false
-        
-        /**
-         * Turn on `emulateJSON` to support legacy servers that can't deal with direct
-         * `application/json` requests ... will encode the body as
-         * `application/x-www-form-urlencoded` instead and will send the model in a
-         * form param named `model`.
-         * @name emulateJSON
-         * @type Boolean
-         */
-        emulateJSON : false
+    
+    destroy: (options) ->
+        action = if @isNew() then 'create' else 'update'
+        xhr = @sync action, this, options
+    
+
+
+
+
+### Helpers
+
+urlError = -> throw new Error "A 'url' property or function must be specified!"
+
+/**
+ * Make the class itself an event emitter.
+ */
+Resource import EventEmitter::
+
+/**
+ * Class methods.
+ */
+Resource import do
+    /**
+     * $.ajax() provider.
+     */
+    $: root.jQuery or root.Zepto or root.ender
+    
     
     /**
-     * Execute a resource request.
+     * Execute a resource request. Adapted from `Backbone.sync`.
+     * @returns {XMLHTTPRequest}
      */
     sync: (action, model, options={}) ->
-        type = ACTION_TO_METHOD[action]
-        params = { type } import @ajaxOptions import options
+        type    = ACTION_TO_METHOD[action]
+        params  = { type, dataType:'json' }
+        options = _.extend {}, DEFAULT_OPTIONS, options
         
+        # Ensure that we have a URL.
+        unless options.url
+            params.url = _.result(model, 'url') or urlError()
+        
+        # Ensure that we have the appropriate request data.
+        if not options.data and model and (action is 'create' or action is 'update')
+            params.contentType = 'application/json'
+            params.data        = JSON.stringify model
+        
+        # For older servers, emulate JSON by encoding the request into an HTML-form.
+        if options.emulateJSON
+            params.contentType = 'application/x-www-form-urlencoded'
+            params.data        = if params.data then { model:that } else {}
+        
+        # For older servers, emulate HTTP by mimicking the HTTP method with `_method`
+        # And an `X-HTTP-Method-Override` header.
+        if options.emulateHTTP and (type is 'PUT' or type is 'DELETE')
+            params.type         = 'POST'
+            params.data._method = type if options.emulateJSON
+            beforeSendFn        = options.beforeSend
+            options.beforeSend  = (xhr) ->
+                xhr.setRequestHeader 'X-HTTP-Method-Override', type
+                beforeSendFn? ...
+                model.constructor.trigger?('before-sync', model, xhr, options)
+        
+        # Don't process data on a non-GET request.
+        if params.type is not 'GET' and not options.emulateJSON
+            params.processData = false
+        
+        successFn = options.success
+        options.success = (resp, status, xhr) ->
+            successFn?(resp, status, xhr)
+            model.trigger('sync', model, resp, options)
+            model.constructor.trigger?('sync', model, resp, options)
+        
+        errorFn = options.error
+        options.error = (xhr, status, thrown) ->
+            errorFn?(model, xhr, options)
+            model.trigger('sync-error', model, xhr, options)
+            model.constructor.trigger?('sync-error', model, xhr, options)
+        
+        # Make the request, allowing the user to override any Ajax options.
+        @ajax _.extend(params, options)
     
     
-    
+    ajax: ->
+        @$.ajax.apply @$, arguments
+
+

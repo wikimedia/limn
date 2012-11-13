@@ -1,8 +1,7 @@
-_ = require 'underscore'
+{ _, op, root, generateId, guidFor,
+} = require './util'
 { EventEmitter, ReadyEmitter,
 } = require 'emitters'
-{ generateId, guidFor,
-} = require './util'
 
 unwrap = ko.utils.unwrapObservable
 
@@ -44,6 +43,7 @@ class exports.Model extends EventEmitter
     mapping : null
     
     
+    
     /**
      * @constructor
      */
@@ -51,7 +51,7 @@ class exports.Model extends EventEmitter
         @__id__     = generateId()
         attributes  = _.merge @defaults(), attributes
         @attributes = ko.mapping.fromJS attributes, @generateMapping(), {}
-        _.merge this, @attributes
+        _.defaults this, @attributes
         this
     
     
@@ -62,18 +62,18 @@ class exports.Model extends EventEmitter
     defaults: ->
         { id:null }
     
+    getId: ->
+        @get(@idAttribute or 'id') or null
+    
     
     /* * * *  Knockout-Aware Accessors  * * * {{{ */
     
     /**
-     * Gets the attribute value at `key` if present, returning `def` otherwise.
+     * Gets the attribute value at `key`.
      * @returns {*} Value at `key`.
      */
-    get: (key, def) ->
-        val = @attributes[key]
-        return def unless val?
-        
-        if ko.isObservable val
+    get: (key) ->
+        if ko.isObservable val = @attributes[key]
             val()
         else
             val
@@ -87,7 +87,7 @@ class exports.Model extends EventEmitter
      * @returns {this}
      */
     _set: (key, val) ->
-        return this unless key?
+        return this unless key? and val is not void
         
         obs = @attributes[key]
         unless ko.isObservable obs

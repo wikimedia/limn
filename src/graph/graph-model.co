@@ -11,6 +11,7 @@ class exports.Graph extends Model
     
     
     defaults: ->
+        id        : null
         slug      : ''
         
         name      : ''
