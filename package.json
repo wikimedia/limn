@@ -46,6 +46,7 @@
     "buildtools": "https://github.com/dsc/node-buildtools/tarball/master",
     "connect-compiler": "https://github.com/dsc/connect-compiler/tarball/master",
     "connect-compiler-extras": "https://github.com/dsc/connect-compiler-extras/tarball/master",
+    "knockout": "https://github.com/dsc/node-knockout/archive/2.2.0.tar.gz",
     "browserify": "== 1.9.4",
     "uglify-js": "== 1.2.6"
   },
