@@ -1,0 +1,67 @@
+_ = require 'underscore'
+{ EventEmitter,
+} = require 'emitters'
+
+/**
+ * @class Base mixin class. Extend this to create a new mixin, attaching the
+ *  donor methods as you would instance methods.
+ *  
+ *  To mingle your mixin with another class or object:
+ *  
+ *  class MyMixin extends Mixin
+ *      foo: -> "foo!"
+ *  
+ *  # Mix into an object...
+ *  o = MyMixin.mix { bar:1 }
+ *  
+ *  # Mix into a Coco class...
+ *  class Bar
+ *      MyMixin.mix this
+ *      bar : 1
+ *  
+ */
+class exports.Mixin
+    # Make all Mixin class-objects event emitters
+    this import EventEmitter::
+    
+    
+    /**
+     * Mixes this mixin into the target. If `target` is not a class, a new
+     * object will be returned which inherits from the mixin.
+     */
+    @mix = (target) ->
+        return that unless target
+        
+        MixinClass = Mixin
+        MixinClass = @constructor   if this instanceof Mixin
+        MixinClass = this           if this instanceof Function
+        
+        # Fire an event on the Mixin class prior to modifying the target
+        MixinClass.trigger 'before-mix', target, MixinClass
+        
+        if typeof target is 'function'
+            TargetClass = target
+            TargetClass:: import MixinClass::
+            for k, v in MixinClass
+                continue if _.contains <[ mix extended ]>, k
+                TargetClass[k] = v
+        else
+            target = new MixinClass() import target
+            # target = _.clone(MixinClass::) import target
+        
+        (target.__mixins__ or= []).push MixinClass
+        
+        # Fire an event on the Mixin class now that we're done
+        MixinClass.trigger 'mix', target, MixinClass
+        
+        target
+    
+    /**
+     * Coco metaprogramming hook to propagate class properties and methods.
+     */
+    @extended = (SubClass) ->
+        SuperClass = this
+        for own k, v in SuperClass
+            SubClass[k] = v unless SubClass[k]
+        SubClass
+

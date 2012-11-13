@@ -65,6 +65,7 @@ development:
                 - hashset
                 - formatters
                 - index
+            - mixin
             - model
             - resource
             - index

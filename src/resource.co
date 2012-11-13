@@ -1,8 +1,18 @@
+/**
+ * @fileOverview RESTful Resource Mixin. Mostly adapted from Backbone.
+ */
+
 { _, op, root, generateId, guidFor,
 } = require './util'
 { EventEmitter,
 } = require 'emitters'
+{ Mixin,
+} = require './mixin'
 
+
+### Helpers & Constants
+
+urlError = -> throw new Error "A 'url' property or function must be specified!"
 
 ACTION_TO_METHOD =
     create : 'POST'
@@ -40,18 +50,34 @@ DEFAULT_OPTIONS =
  * PUT     /<RESOURCE>/:id          ->  update
  * DELETE  /<RESOURCE>/:id          ->  destroy
  * 
- * By convention, resources are named with plural nouns.
  */
-class Resource extends EventEmitter
+class exports.Resource extends Mixin
+    
+    /* * * *  Instance Methods  * * * {{{ */
+    
+    /**
+     * Root prepended to all resource requests
+     * @type String
+     */
+    urlRoot : ''
+    
+    /**
+     * The name of the resource -- by convention, resources are named with plural nouns.
+     * @type String
+     */
     resource : ''
     
+    
     url: ->
-        id = @getId() or ''
-        base = _.rtrim @resource, '/'
-        "#base/#{encodeURIComponent id}"
+        throw new Error "No Resource name found! (@resource = #{@resource}, model=#this)" unless @resource
+        root = _.result this, 'urlRoot'
+        id = encodeURIComponent(@getId() or '')
+        _.compact [ root, @resource, id ]
+            .map -> _.rtrim it, '/'
+            .join '/'
     
     sync: ->
-        
+        Resource.sync.apply Resource, arguments
     
     save: (options) ->
         
@@ -60,34 +86,27 @@ class Resource extends EventEmitter
         action = if @isNew() then 'create' else 'update'
         xhr = @sync action, this, options
     
-
-
-
-
-### Helpers
-
-urlError = -> throw new Error "A 'url' property or function must be specified!"
-
-/**
- * Make the class itself an event emitter.
- */
-Resource import EventEmitter::
-
-/**
- * Class methods.
- */
-Resource import do
+    
+    
+    # }}}
+    /* * * *  Class Methods  * * * {{{ */
+    
+    # Make the class-object itself an event emitter.
+    this import EventEmitter::
+    
+    
+    
     /**
      * $.ajax() provider.
      */
-    $: root.jQuery or root.Zepto or root.ender
+    @$: root.jQuery or root.Zepto or root.ender
     
     
     /**
      * Execute a resource request. Adapted from `Backbone.sync`.
      * @returns {XMLHTTPRequest}
      */
-    sync: (action, model, options={}) ->
+    @sync: (action, model, options={}) ->
         type    = ACTION_TO_METHOD[action]
         params  = { type, dataType:'json' }
         options = _.extend {}, DEFAULT_OPTIONS, options
@@ -137,7 +156,8 @@ Resource import do
         @ajax _.extend(params, options)
     
     
-    ajax: ->
+    @ajax: ->
         @$.ajax.apply @$, arguments
-
+    
+    # }}}
 

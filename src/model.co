@@ -2,6 +2,8 @@
 } = require './util'
 { EventEmitter, ReadyEmitter,
 } = require 'emitters'
+{ Resource,
+} = require './resource'
 
 unwrap = ko.utils.unwrapObservable
 
@@ -10,8 +12,13 @@ unwrap = ko.utils.unwrapObservable
 
 /**
  * @class Root-class for all Models.
+ * @extends EventEmitter
+ * @mixes Resource
  */
 class exports.Model extends EventEmitter
+    # Apply Resource mixin
+    Resource.mix this
+    
     /**
      * Unique identifier for this object. Uniqueness is only guaranteed for this
      * pageload session; this value is safe to use in circumstances requiring numeric identity
@@ -62,6 +69,10 @@ class exports.Model extends EventEmitter
     defaults: ->
         { id:null }
     
+    /**
+     * Gets the value of the id attribute for this model.
+     * @returns {String} Instance's id.
+     */
     getId: ->
         @get(@idAttribute or 'id') or null
     
@@ -162,5 +173,23 @@ class exports.Model extends EventEmitter
     
     toString: ->
         "#{@..displayName or @..name}(cid=#{@cid}, id=#{@id})"
-
+    
+    
+    
+    /* * * *  Class Methods  * * * {{{ */
+    
+    # Make the Model class-object itself an event emitter, so it can fire global events
+    this import EventEmitter::
+    
+    
+    /**
+     * When Model is extended, copy over all class methods to the Subclass (including this).
+     */
+    @extended = (Subclass) ->
+        for k, v in this
+            Subclass[k] = v if typeof v is 'function' and not _.contains <[ apply call constructor toString ]>, k
+        Subclass.__super__ = this::
+        Subclass
+    
+    # }}}
 
