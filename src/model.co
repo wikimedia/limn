@@ -178,7 +178,10 @@ class exports.Model extends EventEmitter
     
     
     toJSON: ->
-        ko.mapping.toJS @attributes
+        json = ko.mapping.toJS @attributes
+        for k, v in json
+            delete json[k] unless v?
+        json
     
     toString: ->
         "#{@..displayName or @..name}(cid=#{@cid}, id=#{@id})"

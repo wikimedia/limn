@@ -1,6 +1,9 @@
 vows = require 'vows'
 assert = require 'assert'
 
+ko = require 'knockout'
+ko.mapping = require '../static/vendor/knockout.mapping.js' unless ko.mapping
+
 { Model,
 } = require '../src/model'
 
@@ -10,28 +13,27 @@ bareObject = JSON.parse bareJSON
 
 vows
     .describe('Model Serialization')
-    .addBatch(
+    .addBatch do
         'when serializing an empty model':
             topic: ->
-                bareModel.toJSON()
+                JSON.stringify bareModel
             'we get JSON representing an empty object': (topic) ->
                 assert.equal topic, "{}"
         
-        ,'when serializing a model with JSON':
+        'when serializing a model with JSON':
             topic: ->
                 modelFromObject = new Model(bareObject)
-                modelFromObject.toJSON()
+                JSON.stringify modelFromObject
             'we get the same JSON we constructed it with': (topic) ->
                 assert.equal topic, bareJSON
         
-        ,'when serializing a model with JSON after it was modified':
+        'when serializing a model with JSON after it was modified':
             topic: ->
                 modelFromObject = new Model(bareObject)
                 modelFromObject.set 'name', 'mathematics class'
                 modelFromObject.unset 'students'
-                modelFromObject.toJSON()
-            'we get the expected JSON'
-                assert.equal topic, '{"name":"mathematics class","room":"1A","teacher":"Jones"}'
-    )
+                JSON.stringify modelFromObject
+            'we get the expected JSON': (topic) ->
+                assert.equal topic, '{"name":"math class","room":"1A","teacher":"Jones"}'
     .export(module)
 
