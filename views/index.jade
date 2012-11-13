@@ -1,0 +1,28 @@
+extends layout
+
+block title
+    title Limn
+
+block addenda
+
+append styles
+    // TODO: sort these out for a client side app
+    // from dashboard/view.jade
+    mixin css('graph-display.css')
+    mixin css('graph-display.css', media='print')
+    //- graph-display-print contains overrides
+    //- needed to make printed pages look better
+    mixin css('graph-display-print.css', media='print')
+    mixin css('dashboard.css')
+    mixin css('dashboard.css', media='print')
+    
+    // from graph/view.jade
+    mixin css('graph-display.css')
+    
+    // from graph/edit.jade
+    mixin css('/vendor/bootstrap-colorpicker/css/colorpicker.css')
+    mixin css('/vendor/bootstrap-datepicker/css/datepicker.css')
+    mixin css('graph-edit.css')
+    mixin css('chart.css')
+    mixin css('chart-edit.css')
+    //- mixin css('chart-edit.css', null, null, 'livecss')
