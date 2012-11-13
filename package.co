@@ -49,8 +49,9 @@ devDependencies                 :
     'knockout'                  : 'https://github.com/dsc/node-knockout/archive/2.2.0.tar.gz'
     'browserify'                : '== 1.9.4'
     'uglify-js'                 : '== 1.2.6'
+    'vows'                      : '>= 0.6.4'
 
-# scripts                         : test:'vows'
+scripts                         : test:'vows test/coco.js test/*'
 repository                      : type:'git', url:'git://github.com/wikimedia/limn.git'
 
 engine                          : node:'>=0.8.x'

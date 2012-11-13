@@ -1,10 +1,15 @@
 _ = require 'underscore'
+ko = require 'knockout'
+
 { generateId, guidFor,
 } = require '../util'
 { Model,
 } = require '../model'
 
 class exports.ChartElementData extends Model
+    
+    attributeTypes :
+        metric : Metric
     
     /**
      * @constructor
@@ -24,7 +29,7 @@ class exports.ChartElementData extends Model
         label          : ''
         disabled       : false
         
-        data :
+        metric :
             source_id  : null
             source_col : null
             type       : 'int'

@@ -69,7 +69,7 @@ class exports.Resource extends Mixin
     
     
     url: ->
-        throw new Error "No Resource name found! (@resource = #{@resource}, model=#this)" unless @resource
+        throw new Error "No Resource name found! (@resource=#{@resource}, model=#this)" unless @resource
         root = _.result this, 'urlRoot'
         id = encodeURIComponent(@getId() or '')
         _.compact [ root, @resource, id ]
@@ -80,11 +80,12 @@ class exports.Resource extends Mixin
         Resource.sync.apply Resource, arguments
     
     save: (options) ->
+        action = if @isNew() then 'create' else 'update'
+        xhr = @sync action, this, options
         
     
     destroy: (options) ->
-        action = if @isNew() then 'create' else 'update'
-        xhr = @sync action, this, options
+        
     
     
     
@@ -99,14 +100,14 @@ class exports.Resource extends Mixin
     /**
      * $.ajax() provider.
      */
-    @$: root.jQuery or root.Zepto or root.ender
+    @$ = root.jQuery or root.Zepto or root.ender
     
     
     /**
      * Execute a resource request. Adapted from `Backbone.sync`.
      * @returns {XMLHTTPRequest}
      */
-    @sync: (action, model, options={}) ->
+    @sync = (action, model, options={}) ->
         type    = ACTION_TO_METHOD[action]
         params  = { type, dataType:'json' }
         options = _.extend {}, DEFAULT_OPTIONS, options
@@ -156,7 +157,7 @@ class exports.Resource extends Mixin
         @ajax _.extend(params, options)
     
     
-    @ajax: ->
+    @ajax = ->
         @$.ajax.apply @$, arguments
     
     # }}}

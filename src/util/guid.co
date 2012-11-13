@@ -21,7 +21,7 @@ guidFor = exports.guidFor = (obj) ->
     switch typeof obj
     case 'number'
         unless ret = numberCache[obj]
-            ret := numberCache[obj] = "nu#obj"
+            ret = numberCache[obj] = "nu#obj"
         return ret
     
     case 'string'
