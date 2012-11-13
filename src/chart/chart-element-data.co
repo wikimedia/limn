@@ -6,6 +6,9 @@ _ = require 'underscore'
 
 class exports.ChartElementData extends Model
     
+    attributeTypes :
+        metric : Metric
+    
     /**
      * @constructor
      */
@@ -24,7 +27,7 @@ class exports.ChartElementData extends Model
         label          : ''
         disabled       : false
         
-        data :
+        metric :
             source_id  : null
             source_col : null
             type       : 'int'

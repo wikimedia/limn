@@ -47,7 +47,7 @@ class exports.Model extends EventEmitter
      * Maps attribute keys to sub-models.
      * @type Map<Key, ModelClass>
      */
-    mapping : null
+    attributeTypes : null
     
     
     
@@ -64,6 +64,7 @@ class exports.Model extends EventEmitter
     
     /**
      * Invoked to acquire default attribute values.
+     * TODO COMMENT
      * @returns {Object} Default attribute values.
      */
     defaults: ->
@@ -75,6 +76,12 @@ class exports.Model extends EventEmitter
      */
     getId: ->
         @get(@idAttribute or 'id') or null
+    
+    /**
+     * @returns {Boolean} Whether the model has been saved to the server.
+     */
+    isNew: ->
+        @getId()?
     
     
     /* * * *  Knockout-Aware Accessors  * * * {{{ */
@@ -139,14 +146,14 @@ class exports.Model extends EventEmitter
     
     
     /**
-     * Transforms a mapping object (keyname -> Model class) into a `ko.mapping`
+     * Transforms the `attributeType` mapping object (keyname -> Model class) into a `ko.mapping`
      * options object.
      * @returns {Object} Knockout mapping object for all listed (key, type) pairs.
      */
     generateMapping: ->
-        return {} unless @mapping
+        return {} unless @attributeTypes
         _.reduce do
-            @mapping
+            @attributeTypes
             (mappers, ModelType, key) ->
                 id = ModelType::idAttribute or 'id'
                 mappers[key] =
