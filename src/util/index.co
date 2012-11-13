@@ -9,14 +9,19 @@ root = exports.root = do -> this or eval('this')
 # Stub out console with empty methods
 root.console or= _ <[ log info warn error dir table group groupCollapsed groupEnd ]> .synthesize -> [it, op.nop]
 
-# stub out d3 common js module
-try
-    require 'd3'
-catch ex
-    require.define 'd3', (require, module, exports) -> module.exports = d3
 
-# stub out knockout
-require.define 'knockout', (require, module, exports) -> module.exports = ko
+# Stub out CommonJS modules that might be included as normal JS globals
+
+moduleShim = (name, mod) ->
+    return unless mod
+    if require.define?
+        require.define  name, (require, module, exports) -> module.exports = mod
+    else if define?
+        define          name, (require, exports, module) -> module.exports = mod
+
+try require 'd3'        catch ex then moduleShim 'd3',       root.d3
+try require 'knockout'  catch ex then moduleShim 'knockout', root.ko
+
 
 # watch css files for changes (only in dev mode)
 # root.livecss?.watchAll?()
