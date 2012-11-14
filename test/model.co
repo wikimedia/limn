@@ -33,7 +33,15 @@ vows
                 modelFromObject.set 'name', 'mathematics class'
                 modelFromObject.unset 'students'
                 JSON.stringify modelFromObject
-            'we get the expected JSON': (topic) ->
-                assert.equal topic, '{"name":"math class","room":"1A","teacher":"Jones"}'
+            'the JSON changes as expected': (topic) ->
+                assert.equal topic, '{"name":"mathematics class","room":"1A","teacher":"Jones"}'
+        
+        'when serializing a model with JSON after it was modified without Model::set':
+            topic: ->
+                modelFromObject = new Model(bareObject)
+                modelFromObject.name 'mathematics class'
+                JSON.stringify modelFromObject
+            'we get the original JSON': (topic) ->
+                assert.equal topic, bareJSON
     .export(module)
 
