@@ -58,6 +58,10 @@ development:
                     - string
                     - knockout
                     - index
+                - knockout:
+                    - add-extender
+                    - typed-observable
+                    - index
                 - guid
                 - parser
                 - aliasdict
@@ -65,8 +69,16 @@ development:
                 - hashset
                 - formatters
                 - index
+            - graph:
+                - graph-model
+                - graph-node-data
+                - index
+            - data:
+                - metric-model
+                - datasource-model
+                - index
             - mixin
-            - model
             - resource
+            - model
             - index
 

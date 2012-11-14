@@ -5,8 +5,7 @@
 { Resource,
 } = require './resource'
 
-ko = require 'knockout'
-
+ko     = require 'knockout'
 unwrap = ko.utils.unwrapObservable
 
 
@@ -59,16 +58,19 @@ class exports.Model extends EventEmitter
     (attributes={}) ->
         @__id__     = generateId()
         attributes  = _.merge @defaults(), attributes
-        @attributes = ko.mapping.fromJS attributes, @generateMapping(), {}
-        for k, v in @attributes
-            this[k] ?= v unless k is '__knockout_mapping__'
+        @attributes = @generateAttributes attributes, @attributeTypes
+        _.defaults this, @attributes
         this
     
     
     /**
      * Invoked to acquire default attribute values.
-     * TODO COMMENT
-     * @returns {Object} Default attribute values.
+     * 
+     * Note that *all* known attributes of the Model should be included -- even
+     * if simply as `null` keys (even the `id` attribute!) -- so Knockout knows
+     * to create the observables.
+     * 
+     * @returns {Object} Hash of default attribute values.
      */
     defaults: ->
         { id:null }
@@ -92,8 +94,11 @@ class exports.Model extends EventEmitter
      * @returns {Model} A new instance of this model, bearing the same attributes.
      */
     clone: ->
+        # TODO: @attributes might contain objects or models that need recursive cloning?
+        json = @toJS @attributes
+        delete json[@idAttribute or 'id']
         ModelClass = @constructor
-        new ModelClass ko.mapping.toJS @attributes
+        new ModelClass json
     
     
     /* * * *  Knockout-Aware Accessors  * * * {{{ */
@@ -103,8 +108,15 @@ class exports.Model extends EventEmitter
      * @returns {*} Value at `key`.
      */
     get: (key) ->
-        if ko.isObservable val = @attributes[key]
-            val()
+        unwrap @attributes?[key]
+    
+    /**
+     * Gets the attribute value at `key`, circumventing dependency tracking.
+     * @returns {*} Value at `key`.
+     */
+    peek: (key) ->
+        if ko.isObservable val = @attributes?[key]
+            val.peek()
         else
             val
     
@@ -156,45 +168,59 @@ class exports.Model extends EventEmitter
     # }}}
     
     
+    /**
+     * Wraps the properties found in the `attributes` map with observables,
+     * applying types as specified in `attrTypes`.
+     * @returns {Object} The transformed attributes map.
+     */
+    generateAttributes: (attributes, attrTypes={}) ->
+        return {} unless attributes
+        return _.reduce do
+            attributes
+            (attrs, val, key) ~>
+                ModelType = attrTypes[key]
+                if _.isArray val
+                    obs = ko.observableArray val
+                else
+                    if not ModelType and _.isPlainObject(val)
+                        val = @generateAttributes val, attrTypes[key]
+                    obs = ko.observable val
+                
+                # idAttr = ModelType?::idAttribute or 'id'
+                obs = obs.typed ModelType if ModelType
+                attrs[key] = obs
+                attrs
+            {}
+        
     
     /**
-     * Transforms the `attributeType` mapping object (keyname -> Model class) into a `ko.mapping`
-     * options object.
-     * @returns {Object} Knockout mapping object for all listed (key, type) pairs.
+     * Recursively unwrap any observables in the given attributes hash.
+     * @returns {Object} A plain JS object, suitable for serialization.
      */
-    generateMapping: ->
-        return {} unless @attributeTypes
+    toJS: (attributes=@attributes) ->
+        console.log "#{this}.toJS()", arguments
         _.reduce do
-            @attributeTypes
-            (mappers, ModelType, key) ->
-                id = ModelType::idAttribute or 'id'
-                mappers[key] =
-                    key: (data) ->
-                        # TODO: allow customization of id/key
-                        unwrap data[id]
-                    
-                    create: (opts) ->
-                        {data, parent} = opts
-                        new ModelType data
-                    
-                    update: (opts) ->
-                        {data, parent, observable} = opts
-                        if observable
-                            ko.mapping.fromJS data, {}, unwrap(observable)
-                        else
-                            new ModelType data
-                mappers
+            attributes
+            (json, obs, key) ~>
+                # val = unwrap(obs)
+                val = if ko.isObservable obs then obs.peek() else obs
+                if typeof val?.toJSON is 'function'
+                    val = val.toJSON() ? val
+                else if _.isPlainObject val
+                    val = @toJS val
+                json[key] = val if val?
+                json
             {}
     
-    
     toJSON: ->
-        json = ko.mapping.toJS @attributes
-        for k, v in json
-            delete json[k] unless v?
-        json
+        @toJS @attributes
     
     toString: ->
-        "#{@..displayName or @..name}(cid=#{@cid}, id=#{@id})"
+        cid       = @__id__
+        id        = @peek(@idAttribute or 'id')
+        Class     = @constructor
+        className = Class.displayName or Class.name
+        "#className(cid=#cid, id=#id)"
     
     
     
@@ -207,11 +233,14 @@ class exports.Model extends EventEmitter
     /**
      * When Model is extended, copy over all class methods to the Subclass (including this).
      */
-    @extended = (Subclass) ->
-        for k, v in this
-            Subclass[k] = v if typeof v is 'function' and not _.contains <[ apply call constructor toString ]>, k
-        Subclass.__super__ = this::
-        Subclass
+    @extended = (SubClass) ->
+        SuperClass = this
+        for own k, v in SuperClass
+            SubClass[k] = v unless SubClass[k]
+            # SubClass[k] = v unless _.contains <[ apply call constructor toString ]>, k
+        SubClass.__super__ = SuperClass::
+        SubClass
     
     # }}}
+
 

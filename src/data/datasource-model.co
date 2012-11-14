@@ -1,0 +1,33 @@
+_  = require 'underscore'
+ko = require 'knockout'
+
+{ Model,
+} = require '../model'
+
+class exports.DataSource extends Model
+    
+    /**
+     * @constructor
+     */
+    (attributes) ->
+        super ...
+    
+    /**
+     * Attribute defaults.
+     */
+    defaults: ->
+        id            : null
+        url           : ''
+        format        : 'json'
+        
+        name          : ''
+        shortName     : ''
+        title         : ''
+        subtitle      : ''
+        desc          : ''
+        notes         : ''
+        
+        timespan      : { start:null, end:null, step:'1mo' }
+        columns       : []
+
+

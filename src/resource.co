@@ -1,5 +1,7 @@
 /**
  * @fileOverview RESTful Resource Mixin. Mostly adapted from Backbone.
+ * 
+ * TODO: In-flight request tracking; squelch double-requests; ModelCache.
  */
 
 { _, op, root, generateId, guidFor,
@@ -77,12 +79,6 @@ class exports.Resource extends Mixin
             .join '/'
     
     /**
-     * @see Resource#sync()
-     */
-    sync: ->
-        Resource.sync.apply Resource, arguments
-    
-    /**
      * Fetch the model from the server.
      * 
      * Fires a "before-fetch" event prior to execution, and a "fetch" event upon completion.
@@ -95,7 +91,7 @@ class exports.Resource extends Mixin
         unless typeof successFn is 'function'
             [options, successFn] = [successFn, null]
         options.success = [successFn, options.success]
-        @sync 'read', 'fetch', this, options
+        @sync 'read', 'fetch', options
     
     /**
      * Save the model to the server.
@@ -111,7 +107,7 @@ class exports.Resource extends Mixin
             [options, successFn] = [successFn, null]
         action = if @isNew() then 'create' else 'update'
         options.success = [successFn, options.success]
-        @sync action, 'save', this, options
+        @sync action, 'save', options
     
     /**
      * Destroy the model.
@@ -138,22 +134,8 @@ class exports.Resource extends Mixin
             @trigger 'destroy', this, false
             return false
         
-        @sync 'delete', 'destroy', this, options
+        @sync 'delete', 'destroy', options
     
-    
-    
-    # }}}
-    /* * * *  Class Methods  * * * {{{ */
-    
-    # Make the class-object itself an event emitter.
-    this import EventEmitter::
-    
-    
-    
-    /**
-     * $.ajax() provider.
-     */
-    @$ = root.jQuery or root.Zepto or root.ender
     
     
     /**
@@ -166,7 +148,8 @@ class exports.Resource extends Mixin
      * 
      * @returns {XMLHTTPRequest}
      */
-    @sync = (action, event, model, options={}) ->
+    sync: (action, event, options={}) ->
+        model   = this
         type    = ACTION_TO_METHOD[action]
         params  = { type, dataType:'json' }
         options = _.extend {}, DEFAULT_OPTIONS, options
@@ -224,11 +207,27 @@ class exports.Resource extends Mixin
         model.trigger("before-#event", model)
         
         # Make the request, allowing the user to override any Ajax options.
-        @ajax _.extend(params, options)
+        Resource.ajax _.extend(params, options)
     
     
+    
+    
+    # }}}
+    /* * * *  Class Methods  * * * {{{ */
+    
+    # Make the class-object itself an event emitter.
+    this import EventEmitter::
+    
+    /**
+     * $.ajax() provider.
+     */
+    @$ = root.jQuery or root.Zepto or root.ender
+    
+    /**
+     * Issue an ajax request.
+     */
     @ajax = ->
-        @$.ajax.apply @$, arguments
+        Resource.$.ajax.apply Resource.$, arguments
     
     # }}}
 

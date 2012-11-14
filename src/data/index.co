@@ -1,0 +1,4 @@
+datasource_model = require './datasource-model'
+metric_model     = require './metric-model'
+
+exports import datasource_model import metric_model

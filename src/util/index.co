@@ -11,7 +11,6 @@ root.console or= _ <[ log info warn error dir table group groupCollapsed groupEn
 
 
 # Stub out CommonJS modules that might be included as normal JS globals
-
 moduleShim = (name, mod) ->
     return unless mod
     if require.define?
@@ -22,7 +21,8 @@ moduleShim = (name, mod) ->
 try require 'd3'        catch ex then moduleShim 'd3',       root.d3
 try require 'knockout'  catch ex then moduleShim 'knockout', root.ko
 
-
+# Load Knockout Plugins
+exports.knockout = require './knockout'
 
 # watch css files for changes (only in dev mode)
 # root.livecss?.watchAll?()

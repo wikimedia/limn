@@ -3,6 +3,7 @@ _.str = require 'underscore.string'
 _.mixin _.str.exports()
 _.mixin require 'underscore.nested'
 _.mixin require 'underscore.kv'
+_.mixin require 'underscore.deferred'
 
 _.mixin require './function'
 _.mixin require './array'
