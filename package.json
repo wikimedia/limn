@@ -11,6 +11,7 @@
   ],
   "author": "David Schoonover <dsc@wikimedia.org> (http://less.ly)",
   "contributors": [
+    "Dan Andreescu <dandreescu@wikimedia.org>",
     "Andrew Otto <otto@wikimedia.org>",
     "Fabian Kaelin <fabian.kaelin@gmail.com>",
     "Evan Rosen <erosen@wikimedia.org>",
@@ -22,6 +23,7 @@
     "underscore.string": "== 2.1.1",
     "underscore.nested": "== 0.1.x",
     "underscore.kv": "== 0.1.x",
+    "underscore.deferred": "== 0.2.x",
     "operator": "== 0.1.x",
     "emitters": "== 0.1.x",
     "seq": "== 0.3.5",
