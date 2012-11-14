@@ -7,8 +7,42 @@ ko.mapping = require '../static/vendor/knockout.mapping.js' unless ko.mapping
 { Model,
 } = require '../src/model'
 
+
+class Person extends Model
+    idAttribute : 'name'
+    defaults: ->
+        name : ''
+        age  : 18
+    -> super ...
+
+class Classroom extends Model
+    idAttribute : 'room'
+    defaults: ->
+        room     : ''
+        name     : ''
+        teacher  : null
+        students : []
+    attributeTypes :
+        teacher  : Person
+        students : Person
+    
+    -> super ...
+
+
+data =
+    room : "1A"
+    name : "math class"
+    teacher:
+        name : "Mr. Jones"
+        age  : 42
+    students:
+        *   name : "Alex"
+        *   name : "Maria"
+            age  : 17
+
+
 bareModel = new Model()
-bareJSON = '{"name":"math class","room":"1A","teacher":"Jones","students":[{"name":"Alex"},{"name":"Maria"}]}'
+bareJSON = '{"name":"math class","room":"1A","teacher":{"name":"Mr. Jones","age":42},"students":[{"name":"Alex"},{"name":"Maria","age":17}]}'
 bareObject = JSON.parse bareJSON
 
 vows
