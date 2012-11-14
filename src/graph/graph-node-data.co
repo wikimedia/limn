@@ -5,8 +5,11 @@ ko = require 'knockout'
 } = require '../util'
 { Model,
 } = require '../model'
+{ Metric,
+} = require '../data/metric-model'
 
-class exports.ChartElementData extends Model
+
+class exports.GraphNodeData extends Model
     
     attributeTypes :
         metric : Metric
@@ -23,7 +26,7 @@ class exports.ChartElementData extends Model
      * Model attribute defaults.
      */
     defaults: ->
-        elementType    : null # Typename of the ChartElement which renders this element.
+        elementType    : null # Typename of the GraphNode which renders this element.
         
         index          : 0
         label          : ''
@@ -36,7 +39,7 @@ class exports.ChartElementData extends Model
             timespan   : { start:null, end:null, step:null }
         
         options        : {}
-        elements       : []
+        children       : []
     
     
     

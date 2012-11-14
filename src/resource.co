@@ -76,16 +76,69 @@ class exports.Resource extends Mixin
             .map -> _.rtrim it, '/'
             .join '/'
     
+    /**
+     * @see Resource#sync()
+     */
     sync: ->
         Resource.sync.apply Resource, arguments
     
-    save: (options) ->
-        action = if @isNew() then 'create' else 'update'
-        xhr = @sync action, this, options
-        
+    /**
+     * Fetch the model from the server.
+     * 
+     * Fires a "before-fetch" event prior to execution, and a "fetch" event upon completion.
+     * 
+     * @param {Function} [successFn] Called on fetch success: successFn(model, response, status, xhr)
+     * @param {Object} [options={}] Options passed to `sync()`.
+     * @returns {XMLHTTPRequest}
+     */
+    fetch: (successFn, options={}) ->
+        unless typeof successFn is 'function'
+            [options, successFn] = [successFn, null]
+        options.success = [successFn, options.success]
+        @sync 'read', 'fetch', this, options
     
-    destroy: (options) ->
+    /**
+     * Save the model to the server.
+     * 
+     * Fires a "before-save" event prior to execution, and a "save" event upon completion.
+     * 
+     * @param {Function} [successFn] Called on save success: `successFn(model, response, status, xhr)`
+     * @param {Object} [options={}] Options passed to `sync()`.
+     * @returns {XMLHTTPRequest}
+     */
+    save: (successFn, options={}) ->
+        unless typeof successFn is 'function'
+            [options, successFn] = [successFn, null]
+        action = if @isNew() then 'create' else 'update'
+        options.success = [successFn, options.success]
+        @sync action, 'save', this, options
+    
+    /**
+     * Destroy the model.
+     * 
+     * Fires a `before-destroy` event prior to execution, and a `destroy` event upon completion.
+     * 
+     * No network request is made if it has not been persisted to the server. In this case, only
+     * the `before-destroy` and `destroy` events will still fire (additionally passing `false`
+     * as the second parameter to the callback) -- `sync` events will not.
+     * 
+     * @param {Function} [successFn] Called on save success: `successFn(model, response, status, xhr)`
+     * @param {Object} [options={}] Options passed to `sync()`.
+     * @returns {XMLHTTPRequest}
+     */
+    destroy: (successFn, options={}) ->
+        unless typeof successFn is 'function'
+            [options, successFn] = [successFn, null]
+        options.success = [successFn, options.success]
         
+        # Don't issue request if the server doesn't know about the model
+        if @isNew()
+            @trigger 'before-destroy', this, false
+            for cb of options.success then cb?(this, false)
+            @trigger 'destroy', this, false
+            return false
+        
+        @sync 'delete', 'destroy', this, options
     
     
     
@@ -104,10 +157,16 @@ class exports.Resource extends Mixin
     
     
     /**
-     * Execute a resource request. Adapted from `Backbone.sync`.
+     * Execute a resource request. Adapted from `Backbone.sync`. Fires multiple events
+     * during the request lifecycle:
+     *  - `sync` 
+     *  - `sync-#{action}`
+     * 
+     * TODO: Actually doc the events.
+     * 
      * @returns {XMLHTTPRequest}
      */
-    @sync = (action, model, options={}) ->
+    @sync = (action, event, model, options={}) ->
         type    = ACTION_TO_METHOD[action]
         params  = { type, dataType:'json' }
         options = _.extend {}, DEFAULT_OPTIONS, options
@@ -128,30 +187,41 @@ class exports.Resource extends Mixin
         
         # For older servers, emulate HTTP by mimicking the HTTP method with `_method`
         # And an `X-HTTP-Method-Override` header.
-        if options.emulateHTTP and (type is 'PUT' or type is 'DELETE')
+        if setOverride = options.emulateHTTP and (type is 'PUT' or type is 'DELETE')
             params.type         = 'POST'
             params.data._method = type if options.emulateJSON
-            beforeSendFn        = options.beforeSend
-            options.beforeSend  = (xhr) ->
-                xhr.setRequestHeader 'X-HTTP-Method-Override', type
-                beforeSendFn? ...
-                model.constructor.trigger?('before-sync', model, xhr, options)
+        
+        beforeSendFn = options.beforeSend
+        options.beforeSend  = (xhr) ->
+            xhr.setRequestHeader 'X-HTTP-Method-Override', type if setOverride
+            beforeSendFn? ...
+            model.constructor.trigger?('before-sync', model, xhr, options)
+        
         
         # Don't process data on a non-GET request.
         if params.type is not 'GET' and not options.emulateJSON
             params.processData = false
         
-        successFn = options.success
-        options.success = (resp, status, xhr) ->
-            successFn?(resp, status, xhr)
-            model.trigger('sync', model, resp, options)
-            model.constructor.trigger?('sync', model, resp, options)
+        successFns = options.success
+        successFns = [successFns] unless _.isArray successFns
+        options.success = (response, status, xhr) ->
+            for cb of successFns
+                cb?(model, response, status, xhr)
+            model.trigger("sync-#action", model, response, options)
+            model.trigger("sync", model, response, options)
+            model.trigger(event, model)
+            model.constructor.trigger?("sync", model, response, options)
         
         errorFn = options.error
-        options.error = (xhr, status, thrown) ->
-            errorFn?(model, xhr, options)
-            model.trigger('sync-error', model, xhr, options)
-            model.constructor.trigger?('sync-error', model, xhr, options)
+        options.error = (xhr, status, errorThrown) ->
+            errorFn?(model, errorThrown, status, xhr, options)
+            model.trigger("sync-error-#action", model, xhr, options)
+            model.trigger("sync-error", model, xhr, options)
+            model.trigger("#event-error", model)
+            model.constructor.trigger?("sync-error", model, xhr, options)
+        
+        # Trigger the `before` event.
+        model.trigger("before-#event", model)
         
         # Make the request, allowing the user to override any Ajax options.
         @ajax _.extend(params, options)

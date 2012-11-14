@@ -1,3 +1,4 @@
+_ = require 'underscore'
 ko = require 'knockout'
 
 { Model,
@@ -24,7 +25,7 @@ class exports.Graph extends Model
         width     : 'auto'
         height    : 320
         
-        elements : []
+        children : []
     
 
 

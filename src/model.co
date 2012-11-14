@@ -85,6 +85,15 @@ class exports.Model extends EventEmitter
     isNew: ->
         @getId()?
     
+    /**
+     * Clone this model.
+     * 
+     * @returns {Model} A new instance of this model, bearing the same attributes.
+     */
+    clone: ->
+        ModelClass = @constructor
+        new ModelClass ko.mapping.toJS @attributes
+    
     
     /* * * *  Knockout-Aware Accessors  * * * {{{ */
     
