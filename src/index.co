@@ -13,9 +13,12 @@ limn.mount = (path) ->
     mnt = limn.config?.mount or '/'
     (if mnt is not '/' then mnt else '') + path
 
-limn.Mixin    = Mixin    = require './mixin'    .Mixin
-limn.Resource = Resource = require './resource' .Resource
-limn.Model    = Model    = require './model'    .Model
+# limn.Mixin    = Mixin    = require './mixin'    .Mixin
+# limn.Resource = Resource = require './resource' .Resource
+# limn.Model    = Model    = require './model'    .Model
+limn import require './mixin'
+limn import require './resource'
+limn import require './model'
 
 # { ChartElement, ChartElementData,
 # } = limn.chart      = require './chart'

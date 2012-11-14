@@ -1,4 +1,4 @@
-add_extender   = require './add-extender'
-typed_extender = require './typed-extender'
+add_extender     = require './add-extender'
+typed_observable = require './typed-observable'
 
-exports import add_extender import typed_extender
+exports import add_extender import typed_observable

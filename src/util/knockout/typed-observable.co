@@ -51,3 +51,16 @@ exports.typedExtender = ko.addExtender 'typed', (obs, ModelType) ->
     # Replace with decorated property
     wrapper
 
+
+/**
+ * Convenience for wrapping a value in both an observable and the type coercion wrapper.
+ * @returns {ko.dependentObservable}
+ */
+exports.typedObservable = ko.typedObservable = (ModelType, val) ->
+    if _.isArray val
+        obs = ko.observableArray val
+    else
+        obs = ko.observable val
+    obs.typed ModelType
+
+

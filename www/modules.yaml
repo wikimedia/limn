@@ -60,7 +60,7 @@ development:
                     - index
                 - knockout:
                     - add-extender
-                    - typed-extender
+                    - typed-observable
                     - index
                 - guid
                 - parser
