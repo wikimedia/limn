@@ -1,0 +1,32 @@
+_  = require 'underscore'
+ko = require 'knockout'
+
+{ Model,
+} = require '../model'
+
+class exports.Metric extends Model
+    /**
+     * Data source of the Metric.
+     * @type ko.computed<DataSource>
+     */
+    source : null
+    
+    
+    /**
+     * @constructor
+     */
+    (attributes) ->
+        super ...
+    
+    /**
+     * Attribute defaults.
+     */
+    defaults: ->
+        id         : null
+        source_id  : null
+        source_col : -1
+        type       : 'int'
+        timespan   : { start:null, end:null, step:null }
+    
+
+
