@@ -1,0 +1,32 @@
+_  = require 'underscore'
+ko = require 'knockout'
+
+own = Object::hasOwnProperty
+
+/**
+ * Attaches a new extender to `ko.extenders` and augments the `ko.subscribable` 
+ * prototype with a method of the same name, which invokes the extender with the supplied data.
+ * 
+ * @param {String} name Name of the extender.
+ * @param {Function} extender Handler function which implements the extender.
+ * @returns {Function} The extender.
+ */
+exports.addExtender = ko.addExtender = (name, extender) ->
+    throw new Error "Extender name required!"                               unless name
+    throw new Error "Extender handler for '#name' must be a function!"      unless typeof extender is 'function'
+    throw new Error "An extender named '#name' already exists!"             if ko.extenders[name]
+    throw new Error "A subscribable method named '#name' already exists!"   if ko.subscribable.fn[name]
+    
+    ko.extenders[name] = extender
+    ko.subscribable.fn[name] = (...options) ->
+        ko.extenders[name].apply this, [this].concat(options)
+    extender
+
+
+# Apply the decorator to each extant extender.
+_.each ko.extenders, (extender, name) ->
+    return unless own.call ko.extenders, name
+    # remove the reference so error-checking doesn't think there's a conflict
+    delete ko.extenders[name]
+    ko.addExtender name, extender
+

@@ -1,0 +1,4 @@
+add_extender   = require './add-extender'
+typed_extender = require './typed-extender'
+
+exports import add_extender import typed_extender
