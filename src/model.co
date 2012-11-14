@@ -60,7 +60,8 @@ class exports.Model extends EventEmitter
         @__id__     = generateId()
         attributes  = _.merge @defaults(), attributes
         @attributes = ko.mapping.fromJS attributes, @generateMapping(), {}
-        _.defaults this, @attributes
+        for k, v in @attributes
+            this[k] ?= v unless k is '__knockout_mapping__'
         this
     
     
@@ -136,7 +137,7 @@ class exports.Model extends EventEmitter
         if key and _.isObject(key)
             values = key
         else
-            values = { "#key": value }
+            values = { "#key": val }
         for key, value in values
             @_set key, value
         this
