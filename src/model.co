@@ -30,14 +30,6 @@ class exports.Model extends EventEmitter
     __id__ : null
     
     /**
-     * Attribute key used to uniquely identify this model instance. Note that
-     * it should be expected that models sometimes have a null id prior to save,
-     * as the server may be used to enforce uniqueness.
-     * @type String
-     */
-    idAttribute : 'id'
-    
-    /**
      * Attribute data of the model. Individual properties are also aliased 
      * onto the model object itself if no property already exists.
      * @type Map<Key, ko.observable>
@@ -67,20 +59,21 @@ class exports.Model extends EventEmitter
      * Invoked to acquire default attribute values.
      * 
      * Note that *all* known attributes of the Model should be included -- even
-     * if simply as `null` keys (even the `id` attribute!) -- so Knockout knows
-     * to create the observables.
+     * if simply as `null` keys (even the `id` attribute, if the model has a concept
+     * of server-side global uniqueness!) -- so we can create the observables
+     * fields.
      * 
      * @returns {Object} Hash of default attribute values.
      */
-    defaults: ->
-        { id:null }
+    defaults: -> 
+        {}
     
     /**
      * Gets the value of the id attribute for this model.
      * @returns {String} Instance's id.
      */
     getId: ->
-        @get(@idAttribute or 'id') or null
+        @__id__
     
     /**
      * @returns {Boolean} Whether the model has been saved to the server.
@@ -96,7 +89,6 @@ class exports.Model extends EventEmitter
     clone: ->
         # TODO: @attributes might contain objects or models that need recursive cloning?
         json = @toJS @attributes
-        delete json[@idAttribute or 'id']
         ModelClass = @constructor
         new ModelClass json
     
@@ -131,9 +123,8 @@ class exports.Model extends EventEmitter
     _set: (key, val) ->
         return this unless key? and val is not void
         
-        obs = @attributes[key]
-        unless ko.isObservable obs
-            throw new Error("Key '#key' is not observable!")
+        if ko.isObservable obs = @attributes?[key]
+        
         obs val
         this
     
@@ -171,40 +162,55 @@ class exports.Model extends EventEmitter
     /**
      * Wraps the properties found in the `attributes` map with observables,
      * applying types as specified in `attrTypes`.
+     * 
+     * @param {Map} data Hash of nascent attributes.
+     * @param {Map<Key, ModelClass>} [attrTypes={}] Model type to ensure.
+     * @param {Object} [target={}] Hash to which nascent attributes shall be attached.
      * @returns {Object} The transformed attributes map.
      */
-    generateAttributes: (attributes, attrTypes={}) ->
-        return {} unless attributes
+    generateAttributes: (data, attrTypes={}, target={}) ->
+        return target unless data
         return _.reduce do
-            attributes
-            (attrs, val, key) ~>
-                ModelType = attrTypes[key]
-                if _.isArray val
-                    obs = ko.observableArray val
-                else
-                    if not ModelType and _.isPlainObject(val)
-                        val = @generateAttributes val, attrTypes[key]
-                    obs = ko.observable val
-                
-                # idAttr = ModelType?::idAttribute or 'id'
-                obs = obs.typed ModelType if ModelType
-                attrs[key] = obs
-                attrs
-            {}
-        
+            data
+            (attributes, val, key) ~>
+                attributes[key] = @generateAttribute val, attrTypes[key]
+                attributes
+            target
+    
+    /**
+     * Wraps a single attribute value with the appropriate observable machinery,
+     * auto-coercing incoming data to `ModelType` if provided.
+     * 
+     * @param {*} val Initial value.
+     * @param {Class<Model>} [ModelType] Model type to ensure.
+     * @returns {ko.observable} The new observable attribute. You should assign
+     *  this to the right place on `attributes`, bro.
+     */
+    generateAttribute: (val, ModelType) ->
+        if _.isArray val
+            obs = ko.observableArray val
+        else
+            if typeof ModelType is not 'function' and _.isPlainObject(val)
+                val = @generateAttributes val, ModelType
+            obs = ko.observable val
+        obs = obs.typed ModelType if ModelType
+        obs
+    
+    
     
     /**
      * Recursively unwrap any observables in the given attributes hash.
      * @returns {Object} A plain JS object, suitable for serialization.
      */
     toJS: (attributes=@attributes) ->
-        console.log "#{this}.toJS()", arguments
+        # console.log "#{this}.toJS()", arguments
         _.reduce do
             attributes
             (json, obs, key) ~>
-                # val = unwrap(obs)
                 val = if ko.isObservable obs then obs.peek() else obs
-                if typeof val?.toJSON is 'function'
+                if typeof val?.toJS is 'function'
+                    val = val.toJS() ? val
+                else if typeof val?.toJSON is 'function'
                     val = val.toJSON() ? val
                 else if _.isPlainObject val
                     val = @toJS val
