@@ -10,6 +10,19 @@ limn   = require '../src'
 
 
 
+/**
+ * Decorator to log test errors to the console instead of letting vows silently swallow them.
+ * @param {Function} topic Topic function to decorate.
+ * @returns {Function} Topic decorator that logs exceptions.
+ */
+function reporter(topic)
+    ->
+        try
+            topic ...
+        catch
+            console.error "Test ***#{@context.name}*** threw an exception: #e"
+            throw e
+
 
 class exports.Person extends Model
     defaults: ->
@@ -44,14 +57,21 @@ mathClassData = exports.mathClassData =
             age  : 17
 
 
+bareModel = new Model()
+bareJSON = '{"name":"math class","room":"1A","teacher":{"name":"Mr. Jones","age":42},"students":[{"name":"Alex"},{"name":"Maria","age":17}]}'
+bareObject = JSON.parse bareJSON
+
+
 vows.describe 'Model'
+    
     .addBatch do
         'An empty Model':
             topic: -> new Model()
             'has the right defaults': (model) ->
-                assert.
+                
         
     
+    # WIP: porting serialization tests to use vows idioms
     .addBatch do
         'An empty Model':
             topic: -> new Model()
@@ -66,8 +86,22 @@ vows.describe 'Model'
                     JSON.stringify modelFromObject
                 'we get the same JSON we constructed it with': (topic) ->
                     assert.equal topic, bareJSON
+    
+    .addBatch do
+        'create empty, serialize':
+            topic: ->
+                JSON.stringify bareModel
+            'we get JSON representing an empty object': (topic) ->
+                assert.equal topic, "{}"
         
-        'when serializing a model with JSON after it was modified':
+        'create from JSON, serialize':
+            topic: ->
+                modelFromObject = new Model(bareObject)
+                JSON.stringify modelFromObject
+            'we get the same JSON we constructed it with': (topic) ->
+                assert.equal topic, bareJSON
+        
+        'create from JSON, modify, serialize':
             topic: ->
                 modelFromObject = new Model(bareObject)
                 modelFromObject.set 'name', 'mathematics class'
@@ -76,12 +110,31 @@ vows.describe 'Model'
             'the JSON changes as expected': (topic) ->
                 assert.equal topic, '{"name":"mathematics class","room":"1A","teacher":"Jones"}'
         
-        'when serializing a model with JSON after it was modified without Model::set':
+        'create from JSON, modify without Model::set, serialize':
             topic: ->
                 modelFromObject = new Model(bareObject)
                 modelFromObject.name 'mathematics class'
                 JSON.stringify modelFromObject
-            'we get the original JSON': (topic) ->
-                assert.equal topic, bareJSON
+            'the JSON changes as expected': (topic) ->
+                assert.equal topic, '{"name":"mathematics class","room":"1A","teacher":"Jones","students":[{"name":"Alex"},{"name":"Maria"}]}'
+        
+        'create empty, add observables to the instance, serialize':
+            topic: ->
+                modelFromEmtpy = new Model()
+                modelFromEmtpy.name = ko.observable 'dan'
+                modelFromEmtpy.description = ko.observable 'person'
+                JSON.stringify modelFromEmtpy
+            'the JSON does not contain the new observables': (topic) ->
+                assert.equal topic, '{}'
+        
+        'create empty, add attributes, serialize':
+            topic: reporter ->
+                modelFromEmpty = new Model()
+                modelFromEmpty.set 'name', 'dan'
+                modelFromEmpty.set 'description', 'person'
+                JSON.stringify modelFromEmpty
+            'the JSON contains the added attributes': (topic) ->
+                assert.equal topic, '{"name":"dan","description":"person"}'
+    
     .export(module)
 
