@@ -170,4 +170,4 @@ LimnApp import do
         limn.emit 'main', limn.app
 
 
-jQuery LimnApp.main
+root.jQuery? LimnApp.main
