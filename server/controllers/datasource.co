@@ -29,20 +29,11 @@ class DataSourceController extends FileBackedController
     
     
     /**
-     * GET /datasources/:datasource
-     */
-    show: (req, res) ->
-        res.send req.datasource
-        # if req.format is 'json'
-        #     res.send req.datasource
-        # else
-        #     res.render 'datasource/view'
-    
-    /**
      * GET /datasources
      * @returns {Object} JSON listing of the datasource metadata files.
      */
     index : (req, res, next) ->
+        return next() unless req.format is 'json'
         Seq()
             .seq glob, "#{@dataDir}/**/*.@(yaml|json)", {+nocase, +nosort}, Seq
             .map -> "#it".replace YAML_EXT_PAT, '.json'

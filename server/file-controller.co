@@ -16,6 +16,9 @@ Controller = require './controller'
 
 /**
  * @class Resource controller backed by flat json or yaml files.
+ * 
+ * TODO: writeFile(id, data, [options], [cb]): error checks for existence, handles IOErrors
+ * TODO: deleteFile(id, [options], [cb]): error checks for existence, handles IOErrors
  */
 class FileBackedController extends Controller
     
@@ -67,6 +70,12 @@ class FileBackedController extends Controller
     
     ### Helpers
     
+    /**
+     * Parses the body content of an HTTP request (usually a POST). Sends back an error object
+     * and the appropriate HTTP status code for bad requests (400), like an empty body or 
+     * missing `id`.
+     * @returns {Boolean|Object} `false` if an error was sent, and the body content otherwise.
+     */
     processBody: (req, res) ->
         unless req.body
             res.send {result:"error", message:"Data required!"}, 400 # 400: Bad Request

@@ -28,38 +28,16 @@ class DashboardController extends FileBackedController
     
     
     # GET /dashboards.:format?
-    index: (req, res) ->
-        # if format is json, then return the dashboard JSON
-        switch req.format
-            case 'json'
-                Seq()
-                    # find list of data/dashboard/*.json files, send back the objects
-                    .seq readJSONFilesAsync, "#{@dataDir}/**", Seq
-                    # remove filepath info
-                    .seq (files) -> res.send _.values files
-            default 
-                res.render "#{@id}/index"
-    
-    # GET /dashboards/:dashboard
-    show: (req, res) ->
-        if req.format is 'json'
-            res.send req.dashboard
-        else
-            res.render "#{@id}/view"
-    
-    # GET /dashboards/:dashboard/edit
-    edit: (req, res) ->
-        if req.format is 'json'
-            res.send req.dashboard
-        else
-            res.render "#{@id}/edit"
-    
-    # GET /dashboards/new
-    new: (req, res) ->
-        res.render "#{@id}/edit"
+    index: (req, res, next) ->
+        return next() unless req.format is 'json'
+        Seq()
+            # find list of data/dashboard/*.json files, send back the objects
+            .seq readJSONFilesAsync, "#{@dataDir}/**", Seq
+            # remove filepath info
+            .seq (files) -> res.send _.values files
     
     # POST /dashboards
-    create: (req, res) ->
+    create: (req, res, next) ->
         return unless data = @processBody req, res
         file = @toFile data.id
         if exists file
@@ -68,14 +46,14 @@ class DashboardController extends FileBackedController
             fs.writeFile file, JSON.stringify(data), "utf8", @errorHandler(res, "Error writing Dashboard!")
     
     # PUT /dashboards/:dashboard
-    update: (req, res) ->
+    update: (req, res, next) ->
         return unless data = @processBody req, res
         if @PROTECT and _ @PROTECTED_IDS .contains data.id
             return res.send {result:"error", message:"Dashboard '#{data.id}' is read-only."}, 403 # 403: Forbidden
         fs.writeFile @toFile(data.id), JSON.stringify(data), "utf8", @errorHandler(res, "Error writing Dashboard!")
     
     # DELETE /dashboards/:dashboard
-    destroy: (req, res) ->
+    destroy: (req, res, next) ->
         id = req.param.dashboard
         if @PROTECT and _ @PROTECTED_IDS .contains id
             return res.send {result:"error", message:"Dashboard '#{id}' is read-only."}, 403 # 403: Forbidden

@@ -151,32 +151,31 @@ application = limn.application =
         
         ### apply configuration
         
-        # config shared by all environments
+        @set 'view engine', 'jade'
+        
+        view_opts = {
+            layout  : false
+            config  : @set('limn options')
+            version : REV
+            IS_DEV, IS_PROD, REV
+        } import view_helpers
+        view_opts.__defineGetter__ 'mount', -> app.route or '/'
+        @set 'view options', view_opts
+        
+        /**
+         * All environments: pre-process requests.
+         */
         @configure ->
-            @set 'view engine', 'jade'
-            
-            view_opts = {
-                layout  : false
-                config  : @set('limn options')
-                version : REV
-                IS_DEV, IS_PROD, REV
-            } import view_helpers
-            view_opts.__defineGetter__ 'mount', -> app.route or '/'
-            @set 'view options', view_opts
-            
             # Parse URL, fiddle
-            @use (req, res, next) ->
-                req.info = url.parse req.url
-                next()
+            # @use (req, res, next) ->
+            #     req.info = url.parse req.url
+            #     next()
             
             # Parse form submits into req.params
             @use express.bodyParser()
             
             # Allow "spoofing" HTTP methods that IE doesn't support
             @use express.methodOverride()
-            
-            # Route to the web services
-            @use @router
         
         
         # development config
@@ -238,7 +237,9 @@ application = limn.application =
                     commonjs_define : { drop_path_parts:1, drop_full_ext:true }
                 log_level : LOG_LEVEL
         
-        # serve static files
+        /**
+         * All environments: static files prior to applying routes and controllers.
+         */
         @configure ->
             {varDir, staticMaxAge} = @set 'limn options'
             maxAge = staticMaxAge[NODE_ENV] ? staticMaxAge.default
@@ -246,6 +247,8 @@ application = limn.application =
             @use express.static varDir, {maxAge}
             @use express.static WWW,    {maxAge}
             @use express.static STATIC, {maxAge}
+            
+            @use @router
         
         
         
@@ -253,6 +256,8 @@ application = limn.application =
         @controller require './controllers/graph'
         @controller require './controllers/dashboard'
         
+        # Has to preceed controllers/datasource to override
+        # TODO: fix Controller#mapping!
         YAML_EXT_PAT = /\.ya?ml$/i
         @get '/datasources/all', (req, res, next) ->
             opts = {varDir, dataDir} = app.set 'limn options'
@@ -289,16 +294,12 @@ application = limn.application =
         @controller require './controllers/datasource'
         
         
-        # proxy endpoint
+        # Proxy endpoint: /x
         if opts.proxy.enabled
             proxy = require('./proxy')(opts.proxy)
             @get '/x',   proxy
             @get '/x/*', proxy
         
-        
-        # non-controller endpoints
-        @get '/', (req, res) ->
-            res.render 'index'
         
         ### FIXME?
         @get '/:type/:action/?', (req, res, next) ->
@@ -313,6 +314,11 @@ application = limn.application =
                 res.render "#type"
             else
                 next()
+        
+        # All other non-controller, non-static endpoints mapped to default view
+        # for client-side routing
+        @get '/*', (req, res) ->
+            res.render 'index'
         
         this
     

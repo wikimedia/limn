@@ -5,6 +5,10 @@ hasOwn = Object::hasOwnProperty
 
 /**
  * @class Resource controller for easily subclassing an express Resource.
+ * 
+ * TODO: Default support for multi-gets (at new endpoint?) if autoload() is implemented.
+ * TODO: Default support for get-all at /<resource>s.json (with paging!) if autoload() is implemented.
+ * TODO: validate(id, data) method auto-run (if it exists) before any mutation (abstracts away PROTECTED_GRAPHS and such).
  */
 class Controller extends Resource
     /**
@@ -52,6 +56,7 @@ class Controller extends Resource
      *          GET     '/nonya/bar' -> NonyaController.get_bar()
      *          DELETE  '/nonya/bar' -> NonyaController.delete_bar()
      * 
+     * FIXME: er, doesn't seem to work
      * @type Object
      */
     mapping : null
@@ -89,8 +94,52 @@ class Controller extends Resource
             if typeof methods is 'string'
                 methods = { all:methods }
             for verb, method in methods
-                @map verb, subroute, @[method]
+                handler = @[method]
+                unless typeof handler is 'function'
+                    throw new Error "Cannot map #verb #subroute to non-function #method! type=#{typeof handler}, handler=#handler"
+                @map verb, subroute, handler
         this
+    
+    /* * * *  Resource Stubs  * * * */
+    
+    # GET     /forums              ->  index
+    # GET     /forums/new          ->  new
+    # POST    /forums              ->  create
+    # GET     /forums/:forum       ->  show
+    # GET     /forums/:forum/edit  ->  edit
+    # PUT     /forums/:forum       ->  update
+    # DELETE  /forums/:forum       ->  destroy
+    
+    # GET /#{@name}
+    index: (req, res, next) ->
+        next()
+    
+    # GET /#{@name}/new
+    new: (req, res, next) ->
+        next()
+    
+    # POST /#{@name}
+    create: (req, res, next) ->
+        throw new Error "Resource creation unimplemented for '#{@name}'!"
+    
+    # GET /#{@name}/:id
+    show: (req, res, next) ->
+        return next() unless req.format is 'json'
+        return res.send that if req[@id]
+        throw new Error "Resource retrieval unimplemented for '#{@name}'!"
+    
+    # GET /#{@name}/:id/edit
+    edit: (req, res, next) ->
+        next()
+    
+    # PUT /#{@name}/:id
+    update: (req, res, next) ->
+        throw new Error "Resource update unimplemented for '#{@name}'!"
+    
+    # DELETE /#{@name}/:id
+    destroy: (req, res, next) ->
+        throw new Error "Resource destruction unimplemented for '#{@name}'!"
+    
     
     
     /**
