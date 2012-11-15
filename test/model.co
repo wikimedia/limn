@@ -68,8 +68,7 @@ vows.describe 'Model'
         'An empty Model':
             topic: -> new Model()
             'has the right defaults': (model) ->
-                
-        
+                assert.equal model, null # FIXME was a half-finished line
     
     # WIP: porting serialization tests to use vows idioms
     .addBatch do
