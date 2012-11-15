@@ -28,6 +28,7 @@ SRC    = "#BASE/src"
 STATIC = "#BASE/static"
 VIEWS  = "#BASE/views"
 WWW    = "#BASE/www"
+TEST   = "#BASE/test"
 
 NODE_ENV = process.env.NODE_ENV or 'development'
 IS_DEV   = NODE_ENV is 'development'
@@ -210,16 +211,28 @@ application = limn.application =
                 enabled : 'stylus'
                 src     : "#WWW/css"
                 dest    : "#varDir/css"
-                options : stylus : { nib:true, include:"#WWW/css" }
+                options : stylus : { +nib, include:"#WWW/css" }
                 allowed_methods : <[ GET HEAD ]>
                 log_level : LOG_LEVEL
+            
+            # Support dynamic resources in tests
+            @use '/test', compiler do
+                enabled : <[ coco stylus jade-browser jade ]>
+                src     : TEST
+                dest    : "#varDir/test"
+                options : stylus : { +nib, include:"#WWW/css" }
+                allowed_methods : <[ GET HEAD ]>
+                log_level : LOG_LEVEL
+            
+            # Compile YAML to JSON
+            # XXX: Unnecessary due to controllers
             # @use '/data', compiler do
             #     enabled : 'yaml'
             #     src     : dataDir
             #     dest    : "#varDir/data"
             #     log_level : LOG_LEVEL
             
-            # wrap modules in commonjs closure for browser
+            # Wrap modules in AMD/CommonJS closure for browser
             @use compiler do
                 enabled : <[ amd commonjs_define ]>
                 src     : STATIC
@@ -229,7 +242,7 @@ application = limn.application =
                     commonjs_define : { drop_path_parts:1, drop_full_ext:false }
                 log_level : LOG_LEVEL
             @use compiler do
-                enabled : <[ commonjs_define ]>
+                enabled : <[ amd commonjs_define ]>
                 src     : varDir
                 dest    : varDir
                 options :
@@ -245,6 +258,7 @@ application = limn.application =
             maxAge = staticMaxAge[NODE_ENV] ? staticMaxAge.default
             
             @use express.static varDir, {maxAge}
+            @use express.static TEST,   {maxAge}
             @use express.static WWW,    {maxAge}
             @use express.static STATIC, {maxAge}
             
