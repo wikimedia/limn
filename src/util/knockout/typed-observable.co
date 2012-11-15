@@ -13,6 +13,8 @@ exports.typedExtender = ko.addExtender 'typed', (obs, ModelType) ->
     coerce = (value) ->
         # XXX: accept arbitrary transform function instead of assuming Model constructor?
         return value if value instanceof ModelType
+        # Do not wrap undefined or nulls
+        return value unless value?
         new ModelType value
     
     # current = obs() # peek?

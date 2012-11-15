@@ -122,10 +122,11 @@ class exports.Model extends EventEmitter
      */
     _set: (key, val) ->
         return this unless key? and val is not void
-        
-        if ko.isObservable obs = @attributes?[key]
-        
-        obs val
+        throw new Error "Attributes hash does not exist!" unless @attributes?
+        unless ko.isObservable obs = @attributes[key]
+            @attributes[key] = @generateAttribute val, @attributeTypes[key]
+        else
+            obs val
         this
     
     /**
@@ -150,10 +151,13 @@ class exports.Model extends EventEmitter
      * @returns {this}
      */
     unset: (key) ->
-        obs = @attributes[key]
-        unless ko.isObservable obs
-            throw new Error("Key '#key' is not observable!")
-        obs null
+        return this unless key?
+        throw new Error "Attributes hash does not exist!" unless @attributes?
+        
+        unless ko.isObservable obs = @attributes[key]
+            @attributes[key] = @generateAttribute null, @attributeTypes[key]
+        else
+            obs null
         this
     
     # }}}
@@ -196,8 +200,6 @@ class exports.Model extends EventEmitter
         obs = obs.typed ModelType if ModelType
         obs
     
-    
-    
     /**
      * Recursively unwrap any observables in the given attributes hash.
      * @returns {Object} A plain JS object, suitable for serialization.
@@ -220,6 +222,7 @@ class exports.Model extends EventEmitter
     
     toJSON: ->
         @toJS @attributes
+    
     
     toString: ->
         cid       = @__id__
