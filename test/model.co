@@ -1,24 +1,26 @@
-vows = require 'vows'
+vows   = require 'vows'
 assert = require 'assert'
+ko     = require 'knockout'
 
-ko = require 'knockout'
-ko.mapping = require '../static/vendor/knockout.mapping.js' unless ko.mapping
+# Require Limn's client-side entry point to ensure things are set up properly
+limn   = require '../src'
 
 { Model,
 } = require '../src/model'
 
 
-class Person extends Model
-    idAttribute : 'name'
+
+
+class exports.Person extends Model
     defaults: ->
         name : ''
         age  : 18
     -> super ...
+    getId: -> @get 'name'
 
-class Classroom extends Model
-    idAttribute : 'room'
+class exports.Classroom extends Model
     defaults: ->
-        room     : ''
+        room     : null
         name     : ''
         teacher  : null
         students : []
@@ -27,9 +29,10 @@ class Classroom extends Model
         students : Person
     
     -> super ...
+    getId: -> @get 'room'
 
 
-data =
+mathClassData = exports.mathClassData =
     room : "1A"
     name : "math class"
     teacher:
@@ -41,25 +44,28 @@ data =
             age  : 17
 
 
-bareModel = new Model()
-bareJSON = '{"name":"math class","room":"1A","teacher":{"name":"Mr. Jones","age":42},"students":[{"name":"Alex"},{"name":"Maria","age":17}]}'
-bareObject = JSON.parse bareJSON
-
-vows
-    .describe('Model Serialization')
+vows.describe 'Model'
     .addBatch do
-        'when serializing an empty model':
-            topic: ->
-                JSON.stringify bareModel
-            'we get JSON representing an empty object': (topic) ->
-                assert.equal topic, "{}"
+        'An empty Model':
+            topic: -> new Model()
+            'has the right defaults': (model) ->
+                assert.
         
-        'when serializing a model with JSON':
-            topic: ->
-                modelFromObject = new Model(bareObject)
-                JSON.stringify modelFromObject
-            'we get the same JSON we constructed it with': (topic) ->
-                assert.equal topic, bareJSON
+    
+    .addBatch do
+        'An empty Model':
+            topic: -> new Model()
+            'serializes to JSON':
+                topic: (model) ->
+                    JSON.stringify model
+                'as an empty object': (topic) ->
+                    assert.equal topic, "{}"
+            'initialized with a plain object':
+                topic: (model) ->
+                    modelFromObject = new Model(bareObject)
+                    JSON.stringify modelFromObject
+                'we get the same JSON we constructed it with': (topic) ->
+                    assert.equal topic, bareJSON
         
         'when serializing a model with JSON after it was modified':
             topic: ->

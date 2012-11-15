@@ -11,10 +11,12 @@ ko = require 'knockout'
  */
 exports.typedExtender = ko.addExtender 'typed', (obs, ModelType) ->
     coerce = (value) ->
+        # XXX: accept arbitrary transform function instead of assuming Model constructor?
         return value if value instanceof ModelType
         new ModelType value
     
-    current = obs() # peek?
+    # current = obs() # peek?
+    current = obs.peek()
     
     # Wrap observer with the coercion transform
     wrapper = ko.computed do
