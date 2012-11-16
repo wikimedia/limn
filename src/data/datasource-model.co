@@ -1,20 +1,39 @@
 _  = require 'underscore'
+op = require 'operator'
 ko = require 'knockout'
 
 { Model,
 } = require '../model'
+{ ParserMixin,
+} = require '../util/parser-mixin'
+
+
+
+
+class exports.Column extends Model
+    ParserMixin.mix this
+    
+    (attributes, @source) -> super ...
+    
+    defaults: ->
+        id    : null
+        label : ''
+        type  : 'int'
+        index : -1
+    
+    /**
+     * Convert the string representation of a value from this Column to
+     * its real type.
+     * 
+     * @param {String} value A serialized value.
+     * @returns {*} The value parsed into the appropriate type.
+     */
+    parse: (value) ->
+        @parseValue value, @get 'type'
+
 
 class exports.DataSource extends Model
     
-    /**
-     * @constructor
-     */
-    (attributes) ->
-        super ...
-    
-    /**
-     * Attribute defaults.
-     */
     defaults: ->
         id            : null
         url           : ''
@@ -28,6 +47,42 @@ class exports.DataSource extends Model
         notes         : ''
         
         timespan      : { start:null, end:null, step:'1mo' }
+        
+        /**
+         * @type Column[]
+         */
         columns       : []
+    
+    attributeTypes :
+        columns : Column
+    
+    /**
+     * The reified dataset associated with this DataSource.
+     * @type ko.computed<DataSet>
+     */
+    data : null
+    
+    
+    /**
+     * @constructor
+     */
+    (attributes={}) ->
+        attributes = @canonicalize attributes
+        super attributes
+    
+    
+    /**
+     * Enforces backwards compatibility at runtime by converting a DataSource from
+     * one of many of the historical "formats" we've used to whatever the modern
+     * format looks like.
+     * 
+     * @param {Object} data Raw DataSource attributes to canonicalize.
+     * @returns {Object} Converted raw data.
+     */
+    canonicalize: (data) ->
+    
+    
+    
+    
 
 

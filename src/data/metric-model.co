@@ -3,30 +3,48 @@ ko = require 'knockout'
 
 { Model,
 } = require '../model'
+{ ParserMixin,
+} = require '../util/parser-mixin'
+
 
 class exports.Metric extends Model
+    ParserMixin.mix this
+    
+    defaults: ->
+        source_id  : null
+        source_col : null
+        type       : 'int'
+        timespan   : { start:null, end:null, step:null }
+    
     /**
      * Data source of the Metric.
      * @type ko.computed<DataSource>
+     * @depends source_id
      */
     source : null
+    
+    /**
+     * The reified dates for the dataset associated with this Metric.
+     * @type ko.computed<Array>
+     * @depends source, source_col
+     */
+    dates : null
+    
+    /**
+     * The reified dataset associated with this Metric.
+     * @type ko.computed<Array>
+     * @depends source, source_col
+     */
+    data : null
+    
+    
     
     
     /**
      * @constructor
      */
-    (attributes) ->
+    (attributes, @source) ->
         super ...
     
-    /**
-     * Attribute defaults.
-     */
-    defaults: ->
-        id         : null
-        source_id  : null
-        source_col : -1
-        type       : 'int'
-        timespan   : { start:null, end:null, step:null }
     
-
 
