@@ -81,5 +81,6 @@ development:
                 - index
             - resource
             - model
+            - stored-model
             - index
 
