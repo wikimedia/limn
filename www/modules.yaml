@@ -28,13 +28,12 @@ development:
         # - bootstrap-datepicker
         
         - knockout-2.2.0
-        - knockout.mapping
-        - knockoutExternalTemplateEngine
+        # - knockoutExternalTemplateEngine
         
         ### CommonJS Support Starts Here
         ### (this means Browserify must come before any .mod files)
         - browserify
-        - require
+        # - require
         
         - underscore.string.mod
         
@@ -63,7 +62,9 @@ development:
                     - typed-observable
                     - index
                 - guid
+                - mixin
                 - parser
+                - parser-mixin
                 - aliasdict
                 - cascade
                 - hashset
@@ -77,7 +78,6 @@ development:
                 - metric-model
                 - datasource-model
                 - index
-            - mixin
             - resource
             - model
             - index
