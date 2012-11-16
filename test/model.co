@@ -1,5 +1,6 @@
 Model = limn.Model
 
+/******** Model ********/
 module 'Model', do
     setup: ->
     teardown: ->
@@ -39,6 +40,38 @@ test 'create empty, add attributes, serialize', ->
     modelFromEmpty.set 'description', 'person'
     serialized = JSON.stringify modelFromEmpty
     strictEqual serialized, '{"name":"dan","description":"person"}', 'the JSON contains the added attributes'
+
+
+/******** Inheriting Model ********/
+module 'Inheriting Model', do
+    setup: ->
+    teardown: ->
+
+test 'create empty', ->
+    person = new Person()
+    strictEqual person.get('name'), '', 'string attribute default is set'
+    strictEqual person.get('age'), 18, 'int attribute default is set'
+    strictEqual person.name(), '', 'string default copied to object'
+    strictEqual person.age(), 18, 'int default copied to object'
+
+test 'create from object with non-default values', ->
+    old = (new Date()).getFullYear() - 1981
+    person = new Person({name:'Dan',age:old})
+    strictEqual person.name(), 'Dan', 'string default ignored'
+    strictEqual person.age(), old, 'int default ignored'
+
+
+/******** Typed Model ********/
+test 'create empty', ->
+    classroom = new Classroom()
+    strictEqual classroom.teacher(), null, 'complex property not initialized'
+    
+    classroom.teacher(new Person())
+    strictEqual classroom.teacher().age(), 18, 'property typed correctly and defaults set'
+    strictEqual classroom.get('teacher').get('age'), 18, 'getters work the same as copies on object'
+    
+    classroom.students.push(new Person())
+    strictEqual classroom.students()[0].age(), 18, 'array item typed correctly and defaults set'
 
 class Person extends Model
     defaults: ->
