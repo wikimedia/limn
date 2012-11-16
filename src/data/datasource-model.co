@@ -4,6 +4,8 @@ ko = require 'knockout'
 
 { Model,
 } = require '../model'
+{ StoredModel,
+} = require '../stored-model'
 { ParserMixin,
 } = require '../util/parser-mixin'
 
@@ -32,7 +34,7 @@ class exports.Column extends Model
         @parseValue value, @get 'type'
 
 
-class exports.DataSource extends Model
+class exports.DataSource extends StoredModel
     
     defaults: ->
         id            : null

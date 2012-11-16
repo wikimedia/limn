@@ -1,0 +1,19 @@
+{ Resource,
+} = require './resource'
+{ Model,
+} = require './model'
+
+/**
+ * @class Root-class for all Models which sync with the server.
+ * @extends Model
+ * @mixes Resource
+ */
+class exports.StoredModel extends Model
+    # Apply Resource mixin
+    Resource.mix this
+    
+    /**
+     * @constructor
+     */
+    (attributes) ->
+        super ...
