@@ -4,60 +4,41 @@ module 'Model', do
     setup: ->
     teardown: ->
 
-test 'An empty Model', ->
+test 'create empty, serialize', ->
     emptyModel = new Model()
     serialized = JSON.stringify(emptyModel)
-    strictEqual serialized, "{}", 'serializes to an empty JSON object'
+    strictEqual serialized, "{}", 'empty JSON object'
 
-test 'A Model initialized with a plain object', ->
-    modelFromObject = new Model(bareObject)
+test 'initialize with a plain object, serialize', ->
+    modelFromObject = new Model(basicObject)
     serialized = JSON.stringify(modelFromObject)
-    strictEqual serialized, bareJSON, 'serializes to the JSON representation of that object'
+    strictEqual serialized, basicJSON, 'JSON representation of the plain object'
 
-/*
-'create empty, serialize':
-    topic: ->
-        JSON.stringify bareModel
-    'we get JSON representing an empty object': (topic) ->
-        assert.equal topic, "{}"
-'create from JSON, serialize':
-    topic: ->
-        modelFromObject = new Model(bareObject)
-        JSON.stringify modelFromObject
-    'we get the same JSON we constructed it with': (topic) ->
-        assert.equal topic, bareJSON
-'create from JSON, modify, serialize':
-    topic: ->
-        modelFromObject = new Model(bareObject)
-        modelFromObject.set 'name', 'mathematics class'
-        modelFromObject.unset 'students'
-        JSON.stringify modelFromObject
-    'the JSON changes as expected': (topic) ->
-        assert.equal topic, '{"name":"mathematics class","room":"1A","teacher":"Jones"}'
-'create from JSON, modify without Model::set, serialize':
-    topic: ->
-        modelFromObject = new Model(bareObject)
-        modelFromObject.name 'mathematics class'
-        JSON.stringify modelFromObject
-    'the JSON changes as expected': (topic) ->
-        assert.equal topic, '{"name":"mathematics class","room":"1A","teacher":"Jones","students":[{"name":"Alex"},{"name":"Maria"}]}'
-'create empty, add observables to the instance, serialize':
-    topic: ->
-        modelFromEmtpy = new Model()
-        modelFromEmtpy.name = ko.observable 'dan'
-        modelFromEmtpy.description = ko.observable 'person'
-        JSON.stringify modelFromEmtpy
-    'the JSON does not contain the new observables': (topic) ->
-        assert.equal topic, '{}'
-'create empty, add attributes, serialize':
-    topic: reporter ->
-        modelFromEmpty = new Model()
-        modelFromEmpty.set 'name', 'dan'
-        modelFromEmpty.set 'description', 'person'
-        JSON.stringify modelFromEmpty
-    'the JSON contains the added attributes': (topic) ->
-        assert.equal topic, '{"name":"dan","description":"person"}'
-        */
+test 'create from JSON, modify, serialize', ->
+    modelFromObject = new Model(basicObject)
+    modelFromObject.set 'name', 'mathematics class'
+    serialized = JSON.stringify modelFromObject
+    strictEqual serialized, '{"name":"mathematics class","room":"1A"}', 'the JSON changes as expected'
+
+test 'create from JSON, modify without Model::set, serialize', ->
+    modelFromObject = new Model(basicObject)
+    modelFromObject.name 'mathematics class'
+    serialized = JSON.stringify modelFromObject
+    strictEqual serialized, '{"name":"mathematics class","room":"1A"}', 'the JSON changes as expected'
+
+test 'create empty, add observables to the instance, serialize', ->
+    modelFromEmtpy = new Model()
+    modelFromEmtpy.name = ko.observable 'dan'
+    modelFromEmtpy.description = ko.observable 'person'
+    serialized = JSON.stringify modelFromEmtpy
+    strictEqual serialized, '{}', 'the JSON does not contain the new observables'
+
+test 'create empty, add attributes, serialize', ->
+    modelFromEmpty = new Model()
+    modelFromEmpty.set 'name', 'dan'
+    modelFromEmpty.set 'description', 'person'
+    serialized = JSON.stringify modelFromEmpty
+    strictEqual serialized, '{"name":"dan","description":"person"}', 'the JSON contains the added attributes'
 
 class Person extends Model
     defaults: ->
@@ -90,7 +71,8 @@ mathClassData =
         *   name : "Maria"
             age  : 17
 
-
 bareModel = new Model()
-bareJSON = '{"name":"math class","room":"1A","teacher":{"name":"Mr. Jones","age":42},"students":[{"name":"Alex"},{"name":"Maria","age":17}]}'
-bareObject = JSON.parse bareJSON
+basicJSON = '{"name":"math class","room":"1A"}'
+basicObject = JSON.parse basicJSON
+complexJSON = '{"name":"math class","room":"1A","teacher":{"name":"Mr. Jones","age":42},"students":[{"name":"Alex"},{"name":"Maria","age":17}]}'
+complexObject = JSON.parse complexJSON
