@@ -40,7 +40,7 @@ development:
         - colorbrewer.mod
         - showdown.mod.min
         - jade.runtime.min
-        # - moment.mod.min
+        - moment.mod
         - d3.v2
         
         # - livecss
