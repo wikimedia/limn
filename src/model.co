@@ -50,7 +50,7 @@ class exports.Model extends EventEmitter
     (attributes={}) ->
         @__id__     = generateId()
         attributes  = _.merge @defaults(), attributes
-        @attributes = @generateAttributes attributes, @attributeTypes
+        @attributes = @generateAttributes attributes, @attributeTypes or= {}
         _.defaults this, @attributes
         this
     
