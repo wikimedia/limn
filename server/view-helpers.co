@@ -10,7 +10,7 @@ WWW      = exports.WWW      = "#BASE/www"
 VAR      = exports.VAR      = "#BASE/var"
 STATIC   = exports.STATIC   = "#BASE/static"
 TEMPLATE = exports.TEMPLATE = "#BASE/src/template"
-TESTS    = exports.TESTS    = "#VAR/test"
+TEST     = exports.TEST     = "#BASE/test"
 
 VERSION = 'HEAD'
 try VERSION = require '../version' catch e
@@ -51,9 +51,8 @@ sources = exports.sources = (node_env=SOURCES_ENV, modulesFile="#WWW/modules.yam
     _.flatten modlist.map ({suffix or '', paths}) -> joinTree('', paths).map -> it+suffix
 
 tests = exports.tests = ->
-    return fs.readdirSync(TESTS)
-        .filter (compiled) -> compiled.indexOf("mod.js") < 0
-        .map (compiledBare) -> "/test/#compiledBare"
+    return glob.sync "#TEST/*.co"
+        .map (f) -> '/test/' + path.basename(f).replace /\.co$/, '.js'
 
 joinTree = exports.joinTree = function joinTree(root, tree)
     return ["#root/#tree"] if typeof tree is 'string'

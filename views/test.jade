@@ -1,3 +1,5 @@
+include mixins/helpers
+
 !!! html
 html
     head
@@ -5,7 +7,7 @@ html
         link(type="image/x-icon", rel="shortcut icon", href="/favicon.ico")
         
         title Limn Unit Tests
-        link(rel="stylesheet", href="/qunit.css")
+        link(rel="stylesheet", href="/test/qunit.css")
     
     body
         block body
@@ -30,10 +32,12 @@ html
                         var limn = require('limn');
                 block main-scripts
             
-            script(src="/qunit.js")
+        
+        .tests
+            script(src="/test/qunit.js")
             script
                 // any general qunit customizations
-        
-        <!-- add suites of tests in the /test/ directory -->
-        for test in tests()
-            script(src=test+"?"+version)
+            
+            block tests
+                for test in tests()
+                    script(src=path.join(mount, test)+"?"+version)

@@ -257,10 +257,10 @@ application = limn.application =
             {varDir, staticMaxAge} = @set 'limn options'
             maxAge = staticMaxAge[NODE_ENV] ? staticMaxAge.default
             
-            @use express.static varDir, {maxAge}
-            @use express.static TEST,   {maxAge}
-            @use express.static WWW,    {maxAge}
-            @use express.static STATIC, {maxAge}
+            @use            express.static varDir, {maxAge}
+            @use '/test',   express.static TEST,   {maxAge}
+            @use            express.static WWW,    {maxAge}
+            @use            express.static STATIC, {maxAge}
             
             @use @router
         
