@@ -25,15 +25,14 @@ exports.typedExtender = ko.addExtender 'typed', (obs, ModelType) ->
         read  : obs
         write : (value) ->
             if _.isArray value
-                newValue = _.map value, coerce
+                # don't map, or we lose object identity with the backing array
+                _.each value, (val, i) ->
+                    value[i] = coerce val
             else
-                newValue = coerce value
-            obs newValue
+                value = coerce value
+            obs value
     
     if _.isArray current
-        # Copy over observableArray methods that don't have ko.dependentObservable overrides
-        _.defaults wrapper, ko.observableArray.fn
-        
         # Wrap additive `ko.observableArray` methods to transform new data
         _.each <[ push unshift splice replace ]>, (methodName) ->
             origMethod = obs[methodName]
@@ -47,7 +46,9 @@ exports.typedExtender = ko.addExtender 'typed', (obs, ModelType) ->
             default
                 obs[methodName] = (arg) ->
                     origMethod.apply this, _.map(arguments, coerce)
-        
+    
+    # Copy over observable and observableArray methods
+    _.defaults wrapper, obs
     
     # Update with starting value
     wrapper current

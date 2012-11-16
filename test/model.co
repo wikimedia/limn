@@ -62,25 +62,42 @@ test 'create from object with non-default values', ->
 
 
 /******** Typed Model ********/
-test 'create empty', ->
+module 'Inheriting Model: Typed Attributes'
+
+test 'typed property', ->
     classroom = new Classroom()
     strictEqual classroom.teacher(), null, 'complex property not initialized'
     
-    classroom.teacher(new Person())
-    strictEqual classroom.teacher().age(), 18, 'property typed correctly and defaults set'
-    strictEqual classroom.get('teacher').get('age'), 18, 'getters work the same as copies on object'
+    ok classroom.teacher({}), 'typed property accepts plain object'
+    ok classroom.teacher() instanceof Person, 'typed property casts plain object to model type'
+    strictEqual classroom.teacher().age(), 18, 'typed property cast from plain object has correct defaults'
+    strictEqual classroom.get('teacher').get('age'), 18, 'typed property cast from plain object getters identical to attrs'
     
-    classroom.get('students').push(new Person())
-    strictEqual classroom.get('students')[0].age(), 18, 'array item typed correctly and defaults set'
-    
-    # TODO: this throws an error: classroom.students.push(new Person())
-    classroom.students().push(new Person())
-    strictEqual classroom.students()[1].age(), 18, 'array item typed correctly and defaults set - through copied property'
+    ok classroom.teacher(teacher = new Person()), 'typed property accepts new model instance'
+    strictEqual classroom.teacher(), teacher, 'typed property given new model instance retains identity'
 
-test 'create empty with array default', ->
+test 'typed array', ->
+    classroom = new Classroom()
+    ok Array.isArray classroom.students(), 'typed array initialized with array'
+    
+    ok i = classroom.students.push({}), 'typed array accepts plain object'
+    ok classroom.get('students')[i-1] instanceof Person, 'typed array casts plain object to model type'
+    
+    ok i = classroom.students.push(student = new Person()), 'typed array accepts new model instance'
+    strictEqual classroom.get('students')[i-1], student, 'typed array given new model instance retains identity'
+    
+    ok i = classroom.students.push({ age:16 }), 'typed array accepts plain object with properties'
+    strictEqual classroom.students()[i-1].age(), 16, 'typed array retains plain object properties'
+    
+    ok classroom.students(students = [{age:42}]), 'typed array can be re-initialized with new array'
+    strictEqual classroom.students(), students, 'typed array re-initialized with new array retains array identity'
+    ok classroom.students()[0] instanceof Person, 're-initialized typed array contents cast to model type'
+    strictEqual classroom.students()[0].age(), 42, 're-initialized typed array contents retain properties'
+
+test 'typed array with default', ->
     classroom = new TypicalClassroom()
-    strictEqual classroom.students()[0].name(), 'Goody Two-Shoe', 'array item default typed correctly'
-    strictEqual classroom.get('students')[0].name(), 'Goody Two-Shoe', 'getters work the same as copies on object'
+    ok classroom.students()[0] instanceof Person, 'array item default typed correctly'
+    strictEqual classroom.get('students')[0].name(), 'Goody Two-Shoes', 'getters work the same as copies on object'
 
 
 test 'create from complex object', ->
@@ -122,7 +139,7 @@ class TypicalClassroom extends Model
         room     : null
         name     : ''
         teacher  : null
-        students : [new Person({name:'Goody Two-Shoe'})]
+        students : [ {name:'Goody Two-Shoes'} ]
     attributeTypes :
         teacher  : Person
         students : Person
