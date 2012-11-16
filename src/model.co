@@ -17,8 +17,6 @@ unwrap = ko.utils.unwrapObservable
  * @mixes Resource
  */
 class exports.Model extends EventEmitter
-    # Apply Resource mixin
-    Resource.mix this
     
     /**
      * Unique identifier for this object. Uniqueness is only guaranteed for this

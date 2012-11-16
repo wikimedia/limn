@@ -1,10 +1,10 @@
 _ = require 'underscore'
 ko = require 'knockout'
 
-{ Model,
-} = require '../model'
+{ StoredModel,
+} = require '../stored-model'
 
-class exports.Graph extends Model
+class exports.Graph extends StoredModel
     
     /**
      * @constructor
