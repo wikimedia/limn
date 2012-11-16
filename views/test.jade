@@ -13,7 +13,6 @@ html
         #qunit
         
         .scripts
-            script(src="/qunit.js")
             block scripts
                 - var limn_config = { 'mount':mount, 'rev':version, 'env':NODE_ENV };
                 script
@@ -30,6 +29,10 @@ html
                     script
                         var limn = require('limn');
                 block main-scripts
+            
+            script(src="/qunit.js")
+            script
+                // any general qunit customizations
         
         <!-- add suites of tests in the /test/ directory -->
         for test in tests()

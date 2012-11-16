@@ -70,8 +70,12 @@ test 'create empty', ->
     strictEqual classroom.teacher().age(), 18, 'property typed correctly and defaults set'
     strictEqual classroom.get('teacher').get('age'), 18, 'getters work the same as copies on object'
     
+    classroom.get('students').push(new Person())
+    strictEqual classroom.get('students')[0].age(), 18, 'array item typed correctly and defaults set'
+    
     classroom.students.push(new Person())
-    strictEqual classroom.students()[0].age(), 18, 'array item typed correctly and defaults set'
+    strictEqual classroom.students()[1].age(), 18, 'array item typed correctly and defaults set - through copied property'
+    
 
 class Person extends Model
     defaults: ->
