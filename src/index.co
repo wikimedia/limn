@@ -1,7 +1,7 @@
 limn = exports
 
-limn.{ _, op, emitters, generateId, guidFor,
-} =  { _, op, emitters, generateId, guidFor, root,
+limn.{ _, op, emitters, generateId, guidFor, root, Mixin,
+} =  { _, op, emitters, generateId, guidFor, root, Mixin,
 } = limn.util = require './util'
 
 # Decorate root limn namespace object with EventEmitter methods
@@ -13,10 +13,8 @@ limn.mount = (path) ->
     mnt = limn.config?.mount or '/'
     (if mnt is not '/' then mnt else '') + path
 
-# limn.Mixin    = Mixin    = require './mixin'    .Mixin
 # limn.Resource = Resource = require './resource' .Resource
 # limn.Model    = Model    = require './model'    .Model
-limn import require './mixin'
 limn import require './resource'
 limn import require './model'
 

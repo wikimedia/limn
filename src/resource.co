@@ -4,12 +4,10 @@
  * TODO: In-flight request tracking; squelch double-requests; ModelCache.
  */
 
-{ _, op, root, generateId, guidFor,
+{ _, op, root, generateId, guidFor, Mixin,
 } = require './util'
 { EventEmitter,
 } = require 'emitters'
-{ Mixin,
-} = require './mixin'
 
 
 ### Helpers & Constants
