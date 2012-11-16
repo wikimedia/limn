@@ -1,0 +1,13 @@
+util = limn.util
+
+/******** Async Computed ********/
+module 'Async Computed', do
+    setup: ->
+    teardown: ->
+
+asyncTest 'create computed async', ->
+    emptyModel = ko.asyncComputed -> $.get('/need_not_be_real_should_fetch_default_route')
+    emptyModel.promise.done ->
+        ok(emptyModel().length > 0, 'and make sure it computes the result')
+        start()
+

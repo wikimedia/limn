@@ -1,4 +1,5 @@
 add_extender     = require './add-extender'
 typed_observable = require './typed-observable'
+async_computed_observable = require './async-computed-observable'
 
-exports import add_extender import typed_observable
+exports import add_extender import typed_observable import async_computed_observable
