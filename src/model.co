@@ -239,6 +239,19 @@ class exports.Model extends EventEmitter
     this import EventEmitter::
     
     
+    
+    /**
+     * Decorates a method when attached to a class prototype so that it
+     * becomes a computed property when the class is instantiated.
+     * 
+     * @static
+     * @param {Function} method Method to decorate.
+     * @returns {Function} Decorated method.
+     */
+    @computed = (method) ->
+        method.__computed__ = true
+        method
+    
     /**
      * When Model is extended, copy over all class methods to the Subclass (including this).
      */

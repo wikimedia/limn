@@ -10,6 +10,10 @@ Parsers = exports.Parsers =
     parseBoolean: (v) ->
         op.toBool v
     
+    parseNumber: (v) ->
+        r = Number v
+        unless isNaN r then r else null
+    
     parseInteger: (v) ->
         r = op.toInt v
         unless isNaN r then r else null
@@ -35,11 +39,8 @@ Parsers = exports.Parsers =
     
     parseFunction: (v) ->
         if v and _.startswith String(v), 'function'
-            try eval "(#v)" catch err then null
+            try eval "(#v)" catch then null
         else
             null
     
-
-# Aliases
-Parsers.parseNumber = Parsers.parseFloat
 
