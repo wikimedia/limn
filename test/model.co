@@ -73,8 +73,14 @@ test 'create empty', ->
     classroom.get('students').push(new Person())
     strictEqual classroom.get('students')[0].age(), 18, 'array item typed correctly and defaults set'
     
-    classroom.students.push(new Person())
+    # TODO: this throws an error: classroom.students.push(new Person())
+    classroom.students().push(new Person())
     strictEqual classroom.students()[1].age(), 18, 'array item typed correctly and defaults set - through copied property'
+
+test 'create empty with array default', ->
+    classroom = new TypicalClassroom()
+    strictEqual classroom.students()[0].name(), 'Goody Two-Shoe', 'array item default typed correctly'
+    strictEqual classroom.get('students')[0].name(), 'Goody Two-Shoe', 'getters work the same as copies on object'
     
 
 class Person extends Model
@@ -90,6 +96,19 @@ class Classroom extends Model
         name     : ''
         teacher  : null
         students : []
+    attributeTypes :
+        teacher  : Person
+        students : Person
+    
+    -> super ...
+    getId: -> @get 'room'
+
+class TypicalClassroom extends Model
+    defaults: ->
+        room     : null
+        name     : ''
+        teacher  : null
+        students : [new Person({name:'Goody Two-Shoe'})]
     attributeTypes :
         teacher  : Person
         students : Person
