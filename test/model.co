@@ -81,7 +81,21 @@ test 'create empty with array default', ->
     classroom = new TypicalClassroom()
     strictEqual classroom.students()[0].name(), 'Goody Two-Shoe', 'array item default typed correctly'
     strictEqual classroom.get('students')[0].name(), 'Goody Two-Shoe', 'getters work the same as copies on object'
+
+
+test 'create from complex object', ->
+    mathClass = new Classroom(mathClassData)
     
+    strictEqual mathClass.room(), '1A', 'default overriden'
+    strictEqual mathClass.teacher().name(), 'Mr. Jones', 'property typed and default overriden'
+    strictEqual mathClass.students()[1].name(), 'Maria', 'array item typed and default overriden'
+
+/* setup data and classes for tests */
+bareModel = new Model()
+basicJSON = '{"name":"math class","room":"1A"}'
+basicObject = JSON.parse basicJSON
+complexJSON = '{"name":"math class","room":"1A","teacher":{"name":"Mr. Jones","age":42},"students":[{"name":"Alex"},{"name":"Maria","age":17}]}'
+complexObject = JSON.parse complexJSON
 
 class Person extends Model
     defaults: ->
@@ -126,9 +140,3 @@ mathClassData =
         *   name : "Alex"
         *   name : "Maria"
             age  : 17
-
-bareModel = new Model()
-basicJSON = '{"name":"math class","room":"1A"}'
-basicObject = JSON.parse basicJSON
-complexJSON = '{"name":"math class","room":"1A","teacher":{"name":"Mr. Jones","age":42},"students":[{"name":"Alex"},{"name":"Maria","age":17}]}'
-complexObject = JSON.parse complexJSON
