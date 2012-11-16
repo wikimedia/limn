@@ -7,12 +7,12 @@ html
         link(type="image/x-icon", rel="shortcut icon", href="/favicon.ico")
         
         title Limn Unit Tests
-        link(rel="stylesheet", href="/test/qunit.css")
+        link(rel="stylesheet", href="/test/qunit/themes/qunit.css")
+        link(rel="stylesheet", href="/test/qunit/theme-picker.css")
     
     body
         block body
-        
-        #qunit
+            #qunit
         
         .scripts
             block scripts
@@ -34,7 +34,8 @@ html
             
         
         .tests
-            script(src="/test/qunit.js")
+            script(src="/test/qunit/qunit.js")
+            script(src="/test/qunit/theme-picker.js")
             script
                 // any general qunit customizations
             
