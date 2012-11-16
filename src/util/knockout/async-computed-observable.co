@@ -1,0 +1,63 @@
+ko = require 'knockout'
+require './add-extender'
+
+/**
+ * `asyncDependentObservable` functions similar to `ko.dependentObservable`,
+ * except that the function invoked to compute a new value for the observable may
+ * instead return a Promise, indicating asynchronous computation is still pending.
+ * The value will not be set, and instead the `asyncDependentObservable` will await
+ * Promise resolution, setting the value with the eventual result.
+ * 
+ * The returned observable provides a number of properties for accessing the 
+ * asynchronous task's state:
+ * - {ko.observable} inProgress Observable property indicating whether an update is
+ *  active and pending.
+ * - {Promise} promise Promise for the current in-flight task, available when `inProgress`.
+ * - {Function} task The task function.
+ * 
+ * @param {Function} task Function invoked to recalculate the value of the underlying
+ * @param {Object} [owner=this] Object used as context when invoking `task`.
+ * @param {Array} [args=[]] Arguments used when invoking `task`.
+ * @param {Class<Model>} ModelType Model type to ensure.
+ * @returns {ko.observable} Value-bearing observable.
+ */
+exports.asyncDependentObservable = exports.asyncComputed = \
+asyncDependentObservable = (task, owner=this, args=[]) ->
+    if typeof task != 'function'
+        throw new Error 'ko.asyncDependentObservable requires a task function!'
+    
+    deferred          = null
+    result            = ko.observable()
+    result.task       = task
+    result.inProgress = ko.observable false # Expose whether we're waiting for a result
+    
+    result.updater = ko.computed ->
+        # Abort any in-flight evaluation to ensure we only notify with the latest value
+        deferred.reject() if deferred
+        val = task.call owner
+        
+        # Promise?
+        if typeof val?.done == "function"
+            result.inProgress true
+            
+            deferred := $.Deferred()
+                .always ->
+                    delete result.promise
+                    result.inProgress false
+                .done (data) ->
+                    result data
+            
+            val.done deferred.resolve
+            result.promise = deferred.promise()
+            
+        # Result?
+        else
+            result val
+    
+    result
+
+# Add `async` extender.
+ko.addExtender 'async', asyncDependentObservable
+
+# Add `ko.asyncDependentObservable()` and `ko.asyncComputed()`.
+ko import exports

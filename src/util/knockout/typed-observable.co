@@ -1,5 +1,7 @@
 _  = require 'underscore'
 ko = require 'knockout'
+require './add-extender'
+
 
 /**
  * Coerce input to this observable to the supplied Model. If a `ko.observableArray`,

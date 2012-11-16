@@ -1,0 +1,15 @@
+/**
+ * @fileOverview Observable utilities.
+ */
+
+
+/**
+ * Log all changes to the given observable.
+ */
+observeChanges = exports.observeChanges = (obs, key='') ->
+    oldValue = obs.peek()
+    obs.subscribe (newValue) ->
+        console.log "#key:", oldValue, '-->', newValue
+        oldValue := newValue
+
+
