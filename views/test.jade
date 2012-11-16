@@ -1,0 +1,36 @@
+!!! html
+html
+    head
+        link(type="image/ico", rel="icon", href="/favicon.ico")
+        link(type="image/x-icon", rel="shortcut icon", href="/favicon.ico")
+        
+        title Limn Unit Tests
+        link(rel="stylesheet", href="/qunit.css")
+    
+    body
+        block body
+        
+        #qunit
+        
+        .scripts
+            script(src="/qunit.js")
+            block scripts
+                - var limn_config = { 'mount':mount, 'rev':version, 'env':NODE_ENV };
+                script
+                    var VERSION = !{ JSON.stringify(version)  };
+                    var ENV     = !{ JSON.stringify(NODE_ENV) };
+                    var IS_DEV = ENV === 'development', IS_PROD = ENV === 'production';
+                    var limn_config = !{ JSON.stringify(limn_config) };
+                
+                block lib-scripts
+                    for src in sources()
+                        script(src=path.join(mount, src)+"?"+version)
+                
+                block page-scripts
+                    script
+                        var limn = require('limn');
+                block main-scripts
+        
+        <!-- add suites of tests in the /test/ directory -->
+        for test in tests()
+            script(src=test+"?"+version)

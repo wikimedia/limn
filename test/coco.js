@@ -1,1 +1,0 @@
-var Coco = require("coco");

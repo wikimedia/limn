@@ -329,6 +329,9 @@ application = limn.application =
             else
                 next()
         
+        @get '/test', (req, res) ->
+            res.render 'test'
+        
         # All other non-controller, non-static endpoints mapped to default view
         # for client-side routing
         @get '/*', (req, res) ->

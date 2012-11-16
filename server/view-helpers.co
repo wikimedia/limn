@@ -10,6 +10,7 @@ WWW      = exports.WWW      = "#BASE/www"
 VAR      = exports.VAR      = "#BASE/var"
 STATIC   = exports.STATIC   = "#BASE/static"
 TEMPLATE = exports.TEMPLATE = "#BASE/src/template"
+TESTS    = exports.TESTS    = "#VAR/test"
 
 VERSION = 'HEAD'
 try VERSION = require '../version' catch e
@@ -42,11 +43,17 @@ SOURCES_ENV = if process.env.LIMN_FORCE_BUNDLES then 'production' else NODE_ENV
 
 /**
  * Reify a modules.yaml file
+ * FIXME: this executes many times when loading the website
  */
 sources = exports.sources = (node_env=SOURCES_ENV, modulesFile="#WWW/modules.yaml") ->
     mods = yaml.load fs.readFileSync modulesFile, 'utf8'
     modlist = (mods.all or []).concat (mods[node_env] or [])
     _.flatten modlist.map ({suffix or '', paths}) -> joinTree('', paths).map -> it+suffix
+
+tests = exports.tests = ->
+    return fs.readdirSync(TESTS)
+        .filter (compiled) -> compiled.indexOf("mod.js") < 0
+        .map (compiledBare) -> "/test/#compiledBare"
 
 joinTree = exports.joinTree = function joinTree(root, tree)
     return ["#root/#tree"] if typeof tree is 'string'
