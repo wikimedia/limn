@@ -917,6 +917,7 @@ require.define('/node_modules/moment.js', function(require, module, exports, __d
 
 
     moment.fn = Moment.prototype = {
+        constructor : Moment,
 
         clone : function () {
             return moment(this);
@@ -1138,6 +1139,8 @@ require.define('/node_modules/moment.js', function(require, module, exports, __d
 
 
     moment.duration.fn = Duration.prototype = {
+        constructor : Duration,
+
         weeks : function () {
             return absRound(this.days() / 7);
         },
@@ -1193,7 +1196,8 @@ require.define('/node_modules/moment.js', function(require, module, exports, __d
     /************************************
         Exposing Moment
     ************************************/
-
+    moment.Moment   = Moment;
+    moment.Duration = Duration;
 
     // CommonJS module is defined
     if (hasModule) {
