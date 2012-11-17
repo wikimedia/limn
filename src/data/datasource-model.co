@@ -36,6 +36,8 @@ class exports.Column extends Model
 
 class exports.DataSource extends StoredModel
     
+    resource: '/data/datasources/'
+    getId: -> @id()
     defaults: ->
         id            : null
         url           : ''
@@ -71,7 +73,31 @@ class exports.DataSource extends StoredModel
     (attributes={}) ->
         attributes = @canonicalize attributes
         super attributes
+        
+        unless @id() in @__promiseCache__
+            promise = @fetchEasy ->
+            # TODO check performance with and without:
+            promise.always ~> delete @__promiseCache__[@id()]
+            @__promiseCache__[@id()] = promise
+        @loading = @__promiseCache__[@id()]
+        @loading.done (data) ~> @initialize.call this, data
+        this
     
+    /**
+     * FIXME: hack because normal fetch isn't working
+     */
+    fetchEasy: (success) -> $.get @url(), success
+    
+    /**
+     * shared among all instances of DataSource to prevent double-fetching of the same resource
+     */
+    __promiseCache__: {}
+    
+    /**
+     * @param {string} data json from the server
+     */
+    initialize: (yaml) ->
+        @data = yaml # TODO: obviously process this data
     
     /**
      * Enforces backwards compatibility at runtime by converting a DataSource from
@@ -81,7 +107,7 @@ class exports.DataSource extends StoredModel
      * @param {Object} data Raw DataSource attributes to canonicalize.
      * @returns {Object} Converted raw data.
      */
-    canonicalize: (data) ->
+    canonicalize: (data) -> data
     
     
     
