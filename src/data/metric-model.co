@@ -1,4 +1,5 @@
 _  = require 'underscore'
+op = require 'operator'
 ko = require 'knockout'
 
 { Model,
@@ -11,10 +12,14 @@ class exports.Metric extends Model
     ParserMixin.mix this
     
     defaults: ->
-        source_id  : null
-        source_col : null
-        type       : 'int'
-        timespan   : { start:null, end:null, step:null }
+        source_id  : null       # String
+        source_col : null       # String|Number
+        type       : 'int'      # String
+        timespan : 
+            start  : null       # String -> Date
+            end    : null       # String -> Date
+            step   : null       # String -> moment.Duration
+    
     
     /**
      * Data source of the Metric.

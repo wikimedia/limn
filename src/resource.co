@@ -9,10 +9,10 @@
 { EventEmitter,
 } = require 'emitters'
 
+Deferred = jQuery.Deferred
+
 
 ### Helpers & Constants
-
-urlError = -> throw new Error "A 'url' property or function must be specified!"
 
 ACTION_TO_METHOD =
     create : 'POST'
@@ -138,7 +138,7 @@ class exports.Resource extends Mixin
             @constructor.trigger?   syncEvent,          model, payload, xhr, options
             Resource.trigger        syncEvent,          model, payload, xhr, options
             
-            deferred = new jQuery.Deferred()
+            deferred = new Deferred()
             deferred.done ~>
                 syncEvent = 'sync'
                 @trigger                'destroy',          model, payload, xhr, options
@@ -197,8 +197,12 @@ class exports.Resource extends Mixin
         options = _.extend {}, DEFAULT_OPTIONS, options
         
         # Ensure that we have a URL.
-        unless options.url
-            params.url = _.result(model, 'url') or urlError()
+        params.url = options.url or _.result(model, 'url')
+        unless params.url
+            throw new Error "A 'url' property or function must be specified!"
+        
+        # Store in-flight requests
+        loading = @loading or= {}
         
         # Ensure that we have the appropriate request data.
         if not options.data and model and (action is 'create' or action is 'update')
@@ -220,8 +224,14 @@ class exports.Resource extends Mixin
         if params.type is not 'GET' and not options.emulateJSON
             params.processData = false
         
+        # Check for existing promise
+        xhr = loading[action] unless action is 'read'
+        
         # Start the request, allowing the user to override any Ajax options.
-        xhr = Resource.ajax _.extend(params, options)
+        params = _.extend params, options
+        xhr or= loading[action] = Resource.ajax params
+        requestId = guidFor xhr
+        
         xhr.setRequestHeader 'X-HTTP-Method-Override', type if setOverride
         
         # Trigger an event on: the model, the model's class, Resource
@@ -236,13 +246,14 @@ class exports.Resource extends Mixin
         
         # Trigger events on completion.
         xhr.always ->
+            delete loading[action] if requestId is guidFor xhr
             if arguments[1] is 'success'
-                [result, status, xhr] = arguments
+                [result, status, _xhr] = arguments
                 resultEvent = event
                 syncEvent   = "sync"
             else
-                [xhr, status, result] = arguments
-                resultEvent = "#event-error"
+                [_xhr, status, result] = arguments
+                resultEvent = "#{event}-error"
                 syncEvent   = "sync-error"
             triggerAll    resultEvent, syncEvent, result
             triggerAll    null, "sync-complete", result

@@ -82,5 +82,6 @@ development:
             - resource
             - model
             - stored-model
+            - model-cache
             - index
 

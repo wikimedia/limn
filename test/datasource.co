@@ -7,7 +7,7 @@ module 'Async Computed', do
     teardown: ->
 
 asyncTest 'create two DataSources', ->
-    sameAttributes = id: 'rc_edits_count.yaml'
+    sameAttributes = id: 'rc_edits_count'
     datasource1 = new DataSource sameAttributes
     datasource2 = new DataSource sameAttributes
     

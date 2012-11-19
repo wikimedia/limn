@@ -2,12 +2,16 @@ _       = require 'underscore'
 op      = require 'operator'
 ko      = require 'knockout'
 Seq     = require 'seq'
-#yaml    = require 'js-yaml'
+
+{ ReadyEmitter,
+} = require 'emitters'
 
 { Model,
 } = require '../model'
 { StoredModel,
 } = require '../stored-model'
+{ ModelCache,
+} = require '../model-cache'
 { ParserMixin,
 } = require '../util/parser-mixin'
 
@@ -75,7 +79,21 @@ class exports.DataSource extends StoredModel
     (attributes={}) ->
         attributes = @canonicalize attributes
         super attributes
-        
+    
+    
+    /**
+     * Enforces backwards compatibility at runtime by converting a DataSource from
+     * one of many of the historical "formats" we've used to whatever the modern
+     * format looks like.
+     * 
+     * @param {Object} data Raw DataSource attributes to canonicalize.
+     * @returns {Object} Converted raw data.
+     */
+    canonicalize: (data) ->
+        data
+    
+    
+    _fetch : ->
         @fetching = $.Deferred()
         @loading = $.Deferred()
         Seq()
@@ -90,7 +108,7 @@ class exports.DataSource extends StoredModel
             
             .seq (data) ~>
                 @setData data
-            
+        
         this
     
     
@@ -157,18 +175,34 @@ class exports.DataSource extends StoredModel
     initialize: (yaml) ->
         @data = yaml # TODO: obviously process this data
     
-    /**
-     * Enforces backwards compatibility at runtime by converting a DataSource from
-     * one of many of the historical "formats" we've used to whatever the modern
-     * format looks like.
-     * 
-     * @param {Object} data Raw DataSource attributes to canonicalize.
-     * @returns {Object} Converted raw data.
-     */
-    canonicalize: (data) -> data
     
     
     
-    
+
+
+### DataSource Cache
+
+# ReadyEmitter.decorate DataSource
+for k of <[ __ready_event__ ready emit trigger on off addListener removeListener removeAllListeners once listeners ]>
+    DataSource[k] = ReadyEmitter::[k]
+
+ALL_SOURCES = {}
+DataSourceCache = exports.DataSourceCache = new ModelCache DataSource, {-ready, cache:ALL_SOURCES}
+
+# Fetch all DataSources
+DataSource.fetchAll = ->
+    limn = require '../index'
+    $.getJSON limn.mount('/datasources/all'), (models) ->
+        _.each models, (data) ->
+            DataSourceCache.register new DataSource data
+        
+        # Trigger event when the DataSource TOC is ready
+        DataSourceCache.ready()
+        DataSource.ready()
+        # DataSource.trigger 'all-data-ready', ALL_SOURCES
+
+DataSource.getAllSources = ->
+    _.map ALL_SOURCES, op.I
+
 
 
