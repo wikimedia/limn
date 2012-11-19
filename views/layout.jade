@@ -51,7 +51,8 @@ html(lang="en", dir="ltr")
                     
                     block lib-scripts
                         for src in sources()
-                            script(src=path.join(mount, src)+"?"+version)
+                            //- script(src=path.join(mount, src)+"?"+version)
+                            script(src=path.join(mount, src))
                     
                     block page-scripts
                         script
