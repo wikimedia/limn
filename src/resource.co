@@ -81,31 +81,33 @@ class exports.Resource extends Mixin
      * 
      * Fires a "before-fetch" event prior to execution, and a "fetch" event upon completion.
      * 
-     * @param {Function} [successFn] Called on fetch success: successFn(model, response, status, xhr)
+     * @param {Function} [cb] Called on fetch success: `cb(model)`
      * @param {Object} [options={}] Options passed to `sync()`.
-     * @returns {XMLHTTPRequest}
+     * @returns {Promise} Promise for the result of the Ajax request. Note that callbacks can
+     *  still be attached with no chance of missing events.
      */
-    fetch: (successFn, options={}) ->
-        unless typeof successFn is 'function'
-            [options, successFn] = [successFn, null]
-        options.success = [successFn, options.success]
-        @sync 'read', 'fetch', options
+    fetch: (cb, options={}) ->
+        [options, cb] = [cb, null] unless typeof cb is 'function'
+        promise = @sync 'read', 'fetch', options
+        if cb then promise.done ~> cb ...
+        promise
     
     /**
      * Save the model to the server.
      * 
      * Fires a "before-save" event prior to execution, and a "save" event upon completion.
      * 
-     * @param {Function} [successFn] Called on save success: `successFn(model, response, status, xhr)`
+     * @param {Function} [cb] Called on save success: `cb(model)`
      * @param {Object} [options={}] Options passed to `sync()`.
-     * @returns {XMLHTTPRequest}
+     * @returns {Promise} Promise for the Ajax request. Note that callbacks can
+     *  still be attached with no chance of missing events.
      */
-    save: (successFn, options={}) ->
-        unless typeof successFn is 'function'
-            [options, successFn] = [successFn, null]
-        action = if @isNew() then 'create' else 'update'
-        options.success = [successFn, options.success]
-        @sync action, 'save', options
+    save: (cb, options={}) ->
+        [options, cb] = [cb, null] unless typeof cb is 'function'
+        action  = if @isNew() then 'create' else 'update'
+        promise = @sync action, 'save', options
+        if cb then promise.done ~> cb ...
+        promise
     
     /**
      * Destroy the model.
@@ -116,35 +118,77 @@ class exports.Resource extends Mixin
      * the `before-destroy` and `destroy` events will still fire (additionally passing `false`
      * as the second parameter to the callback) -- `sync` events will not.
      * 
-     * @param {Function} [successFn] Called on save success: `successFn(model, response, status, xhr)`
+     * @param {Function} [cb] Called on save success: `cb(model)`
      * @param {Object} [options={}] Options passed to `sync()`.
-     * @returns {XMLHTTPRequest}
+     * @returns {Promise} Promise for the Ajax request. Note that callbacks can
+     *  still be attached with no chance of missing events.
      */
-    destroy: (successFn, options={}) ->
-        unless typeof successFn is 'function'
-            [options, successFn] = [successFn, null]
-        options.success = [successFn, options.success]
+    destroy: (cb, options={}) ->
+        [options, cb] = [cb, null] unless typeof cb is 'function'
         
         # Don't issue request if the server doesn't know about the model
         if @isNew()
-            @trigger 'before-destroy', this, false
-            for cb of options.success then cb?(this, false)
-            @trigger 'destroy', this, false
-            return false
+            model     = this
+            payload   = null
+            xhr       = false
+            
+            syncEvent = 'before-sync'
+            @trigger                'before-destroy',   model, payload, xhr, options
+            @trigger                syncEvent,          model, payload, xhr, options
+            @constructor.trigger?   syncEvent,          model, payload, xhr, options
+            Resource.trigger        syncEvent,          model, payload, xhr, options
+            
+            deferred = new jQuery.Deferred()
+            deferred.done ~>
+                syncEvent = 'sync'
+                @trigger                'destroy',          model, payload, xhr, options
+                @trigger                syncEvent,          model, payload, xhr, options
+                @constructor.trigger?   syncEvent,          model, payload, xhr, options
+                Resource.trigger        syncEvent,          model, payload, xhr, options
+            
+            if cb then deferred.done ~> cb ...
+            _.defer -> deferred.resolve(model, payload, xhr, options)
+            
+            return deferred.promise()
         
-        @sync 'delete', 'destroy', options
+        promise = @sync 'delete', 'destroy', options
+        if cb then promise.done ~> cb ...
+        promise
     
     
     
     /**
-     * Execute a resource request. Adapted from `Backbone.sync`. Fires multiple events
-     * during the request lifecycle:
-     *  - `sync` 
-     *  - `sync-#{action}`
+     * Executes the ajax call to perform a REST action.
      * 
-     * TODO: Actually doc the events.
+     * This method fires a large number of events from both the originating object
+     * and several central places, so that responding to persistence actions does not
+     * require wrapping the methods or subclassing model objects.
      * 
-     * @returns {XMLHTTPRequest}
+     * `sync()` fires events from three places (in this order):
+     * - The model instance
+     * - The model's class object
+     * - The Resource class object
+     * 
+     * The events fired are:
+     * - `before-sync`: This is always fired, and fires from all locations.
+     * - One of `fetch`, `save`, `destroy`, depending on the method that triggered this
+     *  `sync` call. This is only fired from the model instance, and only on success.
+     * - One of `fetch-error`, `save-error`, `destroy-error`, depending on the method
+     *  that triggered this `sync` call. This is only fired from the model instance,
+     *  and only on failure.
+     * - `sync`: Fired on success from all locations.
+     * - `sync-error`: Fired on failure from all locations.
+     * 
+     * All events fire with the arguments `cb(model, result, xhr, options)` where
+     * result is either the data response or the error thrown.
+     * 
+     * @protected
+     * @param {String} action REST action to be applied.
+     * @param {String} event Event to fire on success ("-error" appended on failure).
+     * @param {Object} [options=DEFAULT_OPTIONS] Options passed to the ajax call,
+     *  overriding what `sync` would set in the case of conflict.
+     * @returns {Promise} Promise for the Ajax request. Note that callbacks can
+     *  still be attached with no chance of missing events.
      */
     sync: (action, event, options={}) ->
         model   = this
@@ -172,40 +216,49 @@ class exports.Resource extends Mixin
             params.type         = 'POST'
             params.data._method = type if options.emulateJSON
         
-        beforeSendFn = options.beforeSend
-        options.beforeSend  = (xhr) ->
-            xhr.setRequestHeader 'X-HTTP-Method-Override', type if setOverride
-            beforeSendFn? ...
-            model.constructor.trigger?('before-sync', model, xhr, options)
-        
-        
         # Don't process data on a non-GET request.
         if params.type is not 'GET' and not options.emulateJSON
             params.processData = false
         
-        successFns = options.success
-        successFns = [successFns] unless _.isArray successFns
-        options.success = (response, status, xhr) ->
-            for cb of successFns
-                cb?(model, response, status, xhr)
-            model.trigger("sync-#action", model, response, options)
-            model.trigger("sync", model, response, options)
-            model.trigger(event, model)
-            model.constructor.trigger?("sync", model, response, options)
+        # Start the request, allowing the user to override any Ajax options.
+        xhr = Resource.ajax _.extend(params, options)
+        xhr.setRequestHeader 'X-HTTP-Method-Override', type if setOverride
         
-        errorFn = options.error
-        options.error = (xhr, status, errorThrown) ->
-            errorFn?(model, errorThrown, status, xhr, options)
-            model.trigger("sync-error-#action", model, xhr, options)
-            model.trigger("sync-error", model, xhr, options)
-            model.trigger("#event-error", model)
-            model.constructor.trigger?("sync-error", model, xhr, options)
+        # Trigger an event on: the model, the model's class, Resource
+        triggerAll = (modelEvent, syncEvent, payload) ->
+            model.trigger               modelEvent, model, payload, xhr, options if modelEvent
+            model.trigger               syncEvent,  model, payload, xhr, options
+            model.constructor.trigger?  syncEvent,  model, payload, xhr, options
+            Resource.trigger            syncEvent,  model, payload, xhr, options
         
         # Trigger the `before` event.
-        model.trigger("before-#event", model)
+        triggerAll  "before-#event", "before-sync", xhr
         
-        # Make the request, allowing the user to override any Ajax options.
-        Resource.ajax _.extend(params, options)
+        # Trigger events on completion.
+        xhr.always ->
+            if arguments[1] is 'success'
+                [result, status, xhr] = arguments
+                resultEvent = event
+                syncEvent   = "sync"
+            else
+                [xhr, status, result] = arguments
+                resultEvent = "#event-error"
+                syncEvent   = "sync-error"
+            triggerAll    resultEvent, syncEvent, result
+            triggerAll    null, "sync-complete", result
+        
+        # Create a filter on the xhr-promise to inject the model
+        promise = xhr.pipe do
+            # success callback
+            (result, status, xhr) -> [model, result, xhr, options]
+            # error callback
+            (xhr, status, result) -> [model, result, xhr, options]
+        
+        # Attach the original xhr
+        promise.xhr = xhr
+        
+        # Return the filtered xhr object to be used as a promise, etc
+        promise
     
     
     
