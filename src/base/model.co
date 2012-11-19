@@ -1,5 +1,5 @@
 { _, op, root, generateId, guidFor,
-} = require './util'
+} = require '../util'
 { EventEmitter, ReadyEmitter,
 } = require 'emitters'
 { Resource,

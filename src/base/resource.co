@@ -5,7 +5,7 @@
  */
 
 { _, op, root, generateId, guidFor, Mixin,
-} = require './util'
+} = require '../util'
 { EventEmitter,
 } = require 'emitters'
 

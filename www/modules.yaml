@@ -71,6 +71,12 @@ development:
                 - hashset
                 - formatters
                 - index
+            - base:
+                - model
+                - stored-model
+                - model-cache
+                - resource
+                - index
             - graph:
                 - graph-model
                 - graph-node-data
@@ -79,9 +85,5 @@ development:
                 - metric-model
                 - datasource-model
                 - index
-            - resource
-            - model
-            - stored-model
-            - model-cache
             - index
 

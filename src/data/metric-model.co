@@ -2,8 +2,8 @@ _  = require 'underscore'
 op = require 'operator'
 ko = require 'knockout'
 
-{ Model,
-} = require '../model'
+{ Model, StoredModel, ModelCache,
+} = require '../base'
 { ParserMixin,
 } = require '../util/parser-mixin'
 
@@ -11,7 +11,7 @@ ko = require 'knockout'
 class exports.Metric extends Model
     ParserMixin.mix this
     
-    defaults: ->
+    defaults : ->
         source_id  : null       # String
         source_col : null       # String|Number
         type       : 'int'      # String

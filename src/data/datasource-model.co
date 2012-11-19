@@ -6,12 +6,8 @@ Seq     = require 'seq'
 { ReadyEmitter,
 } = require 'emitters'
 
-{ Model,
-} = require '../model'
-{ StoredModel,
-} = require '../stored-model'
-{ ModelCache,
-} = require '../model-cache'
+{ Model, StoredModel, ModelCache,
+} = require '../base'
 { ParserMixin,
 } = require '../util/parser-mixin'
 
@@ -41,10 +37,10 @@ class exports.Column extends Model
 
 
 class exports.DataSource extends StoredModel
+    resource : 'datasources'
+    getId    : -> @get 'id'
     
-    resource: 'datasources'
-    getId: -> @id()
-    defaults: ->
+    defaults : ->
         id            : null
         url           : ''
         format        : 'json'

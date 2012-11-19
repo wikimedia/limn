@@ -4,7 +4,7 @@ ko = require 'knockout'
 { generateId, guidFor,
 } = require '../util'
 { Model,
-} = require '../model'
+} = require '../base'
 { Metric,
 } = require '../data/metric-model'
 

@@ -2,7 +2,7 @@ _ = require 'underscore'
 ko = require 'knockout'
 
 { StoredModel,
-} = require '../stored-model'
+} = require '../base'
 
 class exports.Graph extends StoredModel
     

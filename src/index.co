@@ -15,11 +15,7 @@ limn.mount = (path='') ->
     mnt  .= slice(0, -1) if '/' == mnt[mnt.length-1]
     "#mnt/#path"
 
-limn import require './resource'
-limn import require './model'
-limn import require './model-cache'
-limn import require './stored-model'
-
+limn.base = require './base'
 limn.data = require './data'
 
 # { ChartElement, ChartElementData,
