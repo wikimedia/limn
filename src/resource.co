@@ -57,13 +57,14 @@ class exports.Resource extends Mixin
     
     /**
      * Root prepended to all resource requests
-     * @type String
+     * @type {String|Function}
      */
-    urlRoot : ''
+    urlRoot : ->
+        require('limn').mount()
     
     /**
      * The name of the resource -- by convention, resources are named with plural nouns.
-     * @type String
+     * @type {String|Function}
      */
     resource : ''
     
@@ -72,6 +73,7 @@ class exports.Resource extends Mixin
         throw new Error "No Resource name found! (@resource=#{@resource}, model=#this)" unless @resource
         root = _.result this, 'urlRoot'
         id = encodeURIComponent(@getId() or '')
+        id += '.json' if id
         _.compact [ root, @resource, id ]
             .map -> _.rtrim it, '/'
             .join '/'
@@ -215,7 +217,6 @@ class exports.Resource extends Mixin
             params.data        = if params.data then { model:that } else {}
         
         # For older servers, emulate HTTP by mimicking the HTTP method with `_method`
-        # And an `X-HTTP-Method-Override` header.
         if setOverride = options.emulateHTTP and (type is 'PUT' or type is 'DELETE')
             params.type         = 'POST'
             params.data._method = type if options.emulateJSON
@@ -224,29 +225,41 @@ class exports.Resource extends Mixin
         if params.type is not 'GET' and not options.emulateJSON
             params.processData = false
         
-        # Check for existing promise
-        xhr = loading[action] unless action is 'read'
-        
-        # Start the request, allowing the user to override any Ajax options.
+        # Finally, allowing the user to override any Ajax options.
         params = _.extend params, options
-        xhr or= loading[action] = Resource.ajax params
+        
+        
+        # Start the request!
+        xhr = Resource.ajax params
         requestId = guidFor xhr
         
+        # Set `X-HTTP-Method-Override` header for older servers.
         xhr.setRequestHeader 'X-HTTP-Method-Override', type if setOverride
+        
+        # Create a filter on the xhr-promise to inject the model.
+        deferred = new Deferred()
+        xhr.then do
+            # trigger success callback
+            (result, status, _xhr)  ~> deferred.resolveWith model, [model, result, xhr, params]
+            # trigger error callback
+            (_xhr, status, result)  ~> deferred.rejectWith  model, [model, result, xhr, params]
+            # trigger progress callbacks
+            (...args)               ~> deferred.notifyWith  model, [model].concat args
         
         # Trigger an event on: the model, the model's class, Resource
         triggerAll = (modelEvent, syncEvent, payload) ->
-            model.trigger               modelEvent, model, payload, xhr, options if modelEvent
-            model.trigger               syncEvent,  model, payload, xhr, options
-            model.constructor.trigger?  syncEvent,  model, payload, xhr, options
-            Resource.trigger            syncEvent,  model, payload, xhr, options
+            model.trigger               modelEvent, model, payload, xhr, params if modelEvent
+            model.trigger               syncEvent,  model, payload, xhr, params
+            model.constructor.trigger?  syncEvent,  model, payload, xhr, params
+            Resource.trigger            syncEvent,  model, payload, xhr, params
         
         # Trigger the `before` event.
         triggerAll  "before-#event", "before-sync", xhr
         
         # Trigger events on completion.
         xhr.always ->
-            delete loading[action] if requestId is guidFor xhr
+            # XXX: No throttling enforced in `sync` atm.
+            # delete loading[action] if requestId is guidFor xhr
             if arguments[1] is 'success'
                 [result, status, _xhr] = arguments
                 resultEvent = event
@@ -258,18 +271,11 @@ class exports.Resource extends Mixin
             triggerAll    resultEvent, syncEvent, result
             triggerAll    null, "sync-complete", result
         
-        # Create a filter on the xhr-promise to inject the model
-        promise = xhr.pipe do
-            # success callback
-            (result, status, xhr) -> [model, result, xhr, options]
-            # error callback
-            (xhr, status, result) -> [model, result, xhr, options]
-        
         # Attach the original xhr
-        promise.xhr = xhr
+        deferred.xhr = xhr
         
         # Return the filtered xhr object to be used as a promise, etc
-        promise
+        deferred
     
     
     

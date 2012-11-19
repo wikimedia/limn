@@ -42,7 +42,7 @@ class exports.Column extends Model
 
 class exports.DataSource extends StoredModel
     
-    resource: '/data/datasources/'
+    resource: 'datasources'
     getId: -> @id()
     defaults: ->
         id            : null

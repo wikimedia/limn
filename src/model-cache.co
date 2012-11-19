@@ -60,7 +60,7 @@ class exports.ModelCache extends ReadyEmitter
      * @private
      * @type Object
      */
-    loader : null
+    promises : null
     
     
     
@@ -84,7 +84,7 @@ class exports.ModelCache extends ReadyEmitter
             [options, ModelType] = [ModelType or {}, null]
         @options = {...@DEFAULT_OPTIONS, ...options}
         
-        @loader = {}
+        @promises = {}
         @cache = @options.cache or {}
         
         @ModelType = ModelType or @options.ModelType
@@ -118,7 +118,7 @@ class exports.ModelCache extends ReadyEmitter
      * known to the cache.
      *
      * @param {String|Array<String>} id Model ID to lookup.
-     * @param {Function} cb Callback of the form `(err, model)`,
+     * @param {Function} [cb] Callback of the form `(err, model)`,
      *  where `err` will be null on success and `model` will be the
      *  model object.
      * @param {Object} [cxt=this] Callback context.
@@ -126,20 +126,35 @@ class exports.ModelCache extends ReadyEmitter
      */
     lookup: (id, cb, cxt) ->
         throw new Error "A model ID must be specified!" unless id
-        throw new Error "A callback must be specified!" unless typeof cb is 'function'
+        model = @get id
         
-        cb .= bind cxt if cxt
-        deferred = @loader[id] or= new Deferred()
-        unless @cache[id]
-            model = @register @createModel id
-            xhr = model.fetch()
-            xhr.pipe deferred
+        # Cache hit? Return its extant promise.
+        if model
+            
+            # The cache can be populated via `register()` calls not originating in `lookup()`,
+            # resulting in cache entries without promises. If so, we need to both create
+            # the promise and resolve it before handing things back.
+            deferred = @promises[id] or= new Deferred().resolveWith(model, model)
+            
+        # Cache miss? Create a new promise and a new request.
+        else
+            deferred = @promises[id] = new Deferred()
+            model    = @register @createModel id
+            xhr      = model.fetch()
+            
+            deferred.xhr = xhr.xhr
+            xhr.then do
+                -> deferred.resolveWith this, arguments
+                -> deferred.rejectWith  this, arguments
         
-        # Defer so we don't trigger the callback prior to returning
-        _.defer ~> deferred.done cb
+        # optional callback: `cb(err, model)`
+        if typeof cb is 'function'
+            _.defer ~> deferred.then do
+                (model)       ~> cb.call(cxt or this, null, model)
+                (model, err)  ~> cb.call(cxt or this, err,  model)
         
-        # Return a promise, not the actual deferred
-        deferred.promise()
+        # Return a promise for the loaded model
+        deferred
     
     /**
      * Registers a model with the cache. If a model by this ID already exists

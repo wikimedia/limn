@@ -9,9 +9,9 @@ emitter = limn.__emitter__ = new emitters.ReadyEmitter()
 for k of <[ on addListener off removeListener emit trigger once removeAllListeners ]>
     limn[k] = emitter[k].bind emitter
 
-limn.mount = (path) ->
+limn.mount = (path='') ->
     mnt = limn.config?.mount or '/'
-    (if mnt is not '/' then mnt else '') + path
+    mnt + path
 
 limn import require './resource'
 limn import require './model'
@@ -26,7 +26,7 @@ limn.data = require './data'
 # } = limn.graph      = require './graph'
 # { DashboardView, Dashboard,
 # } = limn.dashboard  = require './dashboard'
-# limn.data           = require './data'
+
 
 /**
  * @class Sets up root application, automatically attaching to an existing element
