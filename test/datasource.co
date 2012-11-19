@@ -1,0 +1,16 @@
+DataSource = limn.DataSource
+util = limn.util
+
+/******** Async Computed ********/
+module 'Async Computed', do
+    setup: ->
+    teardown: ->
+
+asyncTest 'create two DataSources', ->
+    sameAttributes = id: 'rc_edits_count.yaml'
+    datasource1 = new DataSource sameAttributes
+    datasource2 = new DataSource sameAttributes
+    
+    datasource2.loading.done ->
+        ok true, 'second datasource loads'
+        start()

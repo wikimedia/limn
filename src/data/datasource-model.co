@@ -1,6 +1,8 @@
-_  = require 'underscore'
-op = require 'operator'
-ko = require 'knockout'
+_       = require 'underscore'
+op      = require 'operator'
+ko      = require 'knockout'
+Seq     = require 'seq'
+#yaml    = require 'js-yaml'
 
 { Model,
 } = require '../model'
@@ -36,6 +38,8 @@ class exports.Column extends Model
 
 class exports.DataSource extends StoredModel
     
+    resource: '/data/datasources/'
+    getId: -> @id()
     defaults: ->
         id            : null
         url           : ''
@@ -71,7 +75,87 @@ class exports.DataSource extends StoredModel
     (attributes={}) ->
         attributes = @canonicalize attributes
         super attributes
+        
+        @fetching = $.Deferred()
+        @loading = $.Deferred()
+        Seq()
+            .seq_ (next) ~>
+                @fetching.done (attributes) ~> next.ok attributes
+                @keepUniquePromise 'fetching', @fetchEasy, @fetching
+            
+            .seq_ (next, attributes) ~>
+                @setAttributes attributes
+                @loading.done (data) ~> next.ok data
+                @keepUniquePromise 'loading', @loadCSV, @loading
+            
+            .seq (data) ~>
+                @setData data
+            
+        this
     
+    
+    /**
+     * FIXME: hack because normal fetch isn't working
+     * Fetches the datasource metadata
+     * @returns {jQuery.Deferred} a promise to fetch the metadata
+     */
+    fetchEasy: -> $.get @url()
+    
+    /**
+     * Called after fetching, sets this instance's attributes
+     * @param {string} attributes the properties of the datasource fetched from the server
+     */
+    setAttributes: (attributes) ->
+        # TODO: parse attributes: v = yaml.load attributes
+    
+    /**
+     * Loads the csv this datasource points to
+     * @returns {jQuery.Deferred} a promise to load the csv
+     */
+    loadCSV: ->
+        p = $.Deferred()
+        p.resolve("hello CSV world, #{@id()} is here")
+        p
+    
+    /**
+     * Called after loading, sets the column data
+     * @param {string} data the csv data loaded
+     */
+    setData: (data) ->
+        # TODO: parse data
+        # switch @format()
+        # case 'json' then @data = new TimeSeriesData data
+        # case 'csv'  then @data = new CSVData data
+    
+    /**
+     * Shared among all instances of DataSource to prevent double-promises
+     */
+    __cache__: {}
+    __cacheKey__: (type, id) -> "#type-#id"
+    
+    /**
+     * Uses the __cache__ to make sure only one promise of the `type` passed in is made at a time
+     * @param {string} type can be 'fetching', 'loading', or any type of promise that should be unique accross all DataSource with the same id
+     * @param {function} task is a function that returns a promise when called.  NOTE: only the task passed in by the first concurrent call is used
+     * @param {jQuery.Deferred} keptPromise is the promise to synchronize with the unique promise
+     */
+    keepUniquePromise: (type, task, keptPromise) ->
+        key = @__cacheKey__ type, @id()
+        
+        unless key in @__cache__
+            promise = task.call this
+            promise.always ~> delete @__cache__[key]
+            @__cache__[key] = promise
+        
+        @__cache__[key]
+            .done (args) ~> keptPromise.resolve(args)
+            .fail (args) ~> keptPromise.reject(args)
+    
+    /**
+     * @param {string} data json from the server
+     */
+    initialize: (yaml) ->
+        @data = yaml # TODO: obviously process this data
     
     /**
      * Enforces backwards compatibility at runtime by converting a DataSource from
@@ -81,7 +165,7 @@ class exports.DataSource extends StoredModel
      * @param {Object} data Raw DataSource attributes to canonicalize.
      * @returns {Object} Converted raw data.
      */
-    canonicalize: (data) ->
+    canonicalize: (data) -> data
     
     
     
