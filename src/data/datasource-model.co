@@ -192,7 +192,7 @@ DataSourceCache = exports.DataSourceCache = new ModelCache DataSource, {-ready, 
 # Fetch all DataSources
 DataSource.fetchAll = ->
     limn = require '../index'
-    $.getJSON limn.mount('/datasources/all'), (models) ->
+    $.getJSON limn.mount('datasources/all'), (models) ->
         _.each models, (data) ->
             DataSourceCache.register new DataSource data
         

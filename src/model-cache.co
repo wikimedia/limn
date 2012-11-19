@@ -134,7 +134,7 @@ class exports.ModelCache extends ReadyEmitter
             # The cache can be populated via `register()` calls not originating in `lookup()`,
             # resulting in cache entries without promises. If so, we need to both create
             # the promise and resolve it before handing things back.
-            deferred = @promises[id] or= new Deferred().resolveWith(model, model)
+            deferred = @promises[id] or= new Deferred().resolve(model)
             
         # Cache miss? Create a new promise and a new request.
         else

@@ -10,8 +10,10 @@ for k of <[ on addListener off removeListener emit trigger once removeAllListene
     limn[k] = emitter[k].bind emitter
 
 limn.mount = (path='') ->
-    mnt = limn.config?.mount or '/'
-    mnt + path
+    mnt   = limn.config?.mount or '/'
+    path .= slice(1)     if '/' == path[0]
+    mnt  .= slice(0, -1) if '/' == mnt[mnt.length-1]
+    "#mnt/#path"
 
 limn import require './resource'
 limn import require './model'
