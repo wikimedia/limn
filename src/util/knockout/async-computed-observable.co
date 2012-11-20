@@ -57,12 +57,16 @@ asyncDependentObservable = (task, options={}) ->
         else
             result val
     
+    evaluated = false
     # `ko.computed` wrapper around result so `deferEvaluation` can be used with `asyncComputed`.
     # Without this, the first read to the return observable won't trigger computation, because
     # `result` itself cannot depend on `task` without creating a loop. The computed fixes this.
     lazyResult = result.lazy = ko.computed _.extend {}, options, read: ->
-        # don't depend on whatever happens inside the task -- we only want to run when result changes
-        ko.dependencyDetection.ignore -> updater.peek()
+        # only force recomputation once
+        unless evaluated
+            evaluated := true
+            # don't depend on whatever happens inside the task -- we only want to run when result changes
+            ko.dependencyDetection.ignore -> updater.peek()
         # depend on result
         result()
     
