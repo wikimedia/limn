@@ -60,9 +60,6 @@ class Query
     # }}}
     
     
-    /**
-     * @constructor
-     */
     ->
         return new Query() unless this instanceof Query
         @options = _.extend {}, DEFAULT_OPTIONS
@@ -93,6 +90,13 @@ class Query
     apply: (rows) ->
         @_process new IndexIterator rows
     
+    /**
+     * Executes the query on an iterator stream.
+     * 
+     * @private
+     * @param {Iterator} iter Data iterator, formatting all items like rows.
+     * @returns {Array<Array>} Processed data.
+     */
     _process: (iter) ->
         opts = _.extend {}, @options
         

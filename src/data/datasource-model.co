@@ -141,10 +141,6 @@ class exports.DataSource extends StoredModel
         data
     
     
-    
-    
-    
-    
 
 
 ### DataSource Cache
@@ -167,6 +163,3 @@ DataSource.fetchAll = ->
 
 DataSource.getAllSources = ->
     _.map ALL_SOURCES, op.I
-
-
-

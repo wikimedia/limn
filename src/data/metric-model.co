@@ -10,6 +10,8 @@ ko = require 'knockout'
 
 class exports.Metric extends Model
     ParserMixin.mix this
+    
+    
     (attributes) -> super ...
     
     
