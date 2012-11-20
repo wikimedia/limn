@@ -5,7 +5,7 @@ Seq     = require 'seq'
 { StoredModel,
 } = require '../base'
 { Graph,
-} = require './graph-model'
+} = require '../graph/graph-model'
 { DashboardTab,
 } = require './dashboard-tab-model'
 

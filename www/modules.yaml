@@ -79,9 +79,11 @@ development:
                 - model-cache
                 - resource
                 - index
-            - graph:
+            - dashboard:
                 - dashboard-model
                 - dashboard-tab-model
+                - index
+            - graph:
                 - graph-model
                 - graph-node-data
                 - index

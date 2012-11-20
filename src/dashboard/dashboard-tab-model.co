@@ -4,7 +4,7 @@ ko = require 'knockout'
 { Model,
 } = require '../base'
 { Graph,
-} = require './graph-model'
+} = require '../graph/graph-model'
 
 class exports.DashboardTab extends Model
     
@@ -13,12 +13,12 @@ class exports.DashboardTab extends Model
      */
     (attributes) ->
         super ...
+        @graphs = ko.observableArray()
     
     
     defaults: ->
         name        : ''
         graph_ids   : []
-        graphs      : []
     
     attributeTypes:
         graphs      : Graph
