@@ -156,6 +156,7 @@ class exports.ModelCache extends ReadyEmitter
         # Return a promise for the loaded model
         deferred
     
+    
     /**
      * Registers a model with the cache. If a model by this ID already exists
      * in the cache, it will be removed and this one will take its place.
@@ -180,6 +181,26 @@ class exports.ModelCache extends ReadyEmitter
     
     
     /**
+     * Invalidate a model, removing it from the cache.
+     * 
+     * @param {String} id ID of the model to invalidate.
+     * @returns {this}
+     */
+    invalidate: (id) ->
+        return this unless id?
+        delete @cache[id]
+        delete @promises[id]
+        this
+    
+    /**
+     * Invalidates all cache entries.
+     * @returns {this}
+     */
+    purge: ->
+        _.each @cache, @invalidate, this
+        this
+    
+    /**
      * Decorate an object with the cache methods:
      *  - register
      *  - get
@@ -194,7 +215,7 @@ class exports.ModelCache extends ReadyEmitter
     decorate: (obj) ->
         obj.__cache__ = this
         # Bind the ModelCache methods to the class
-        for m of <[ get lookup ]>
+        for m of <[ get lookup invalidate purge ]>
             obj[m] = @[m].bind this
         obj
     

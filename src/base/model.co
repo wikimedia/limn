@@ -65,9 +65,25 @@ class exports.Model extends EventEmitter
         @attributes        = {}
         @attributeTypes  or= {}
         
+        # Resolve attributes
         attributes  = @canonicalize _.merge @defaults(), attributes
         @attributes = @generateAttributes attributes, @attributeTypes
         _.defaults this, @attributes
+        
+        # Build observables and computed property instances
+        for name, fn in this
+            continue unless typeof fn is 'function'
+            continue if fn is @attributes[name]
+            
+            if fn.__computed__
+                this[name] = ko.computed(fn)
+            else if ko.isObservable fn
+                val = fn.peek()
+                if _.isArray val
+                    obs = ko.observableArray val
+                else
+                    obs = ko.observable val
+                this[name] = obs
         
         this
     
@@ -82,7 +98,7 @@ class exports.Model extends EventEmitter
      * 
      * @returns {Object} Hash of default attribute values.
      */
-    defaults: -> 
+    defaults: ->
         {}
     
     /**
@@ -96,7 +112,7 @@ class exports.Model extends EventEmitter
      * @returns {Boolean} Whether the model has been saved to the server.
      */
     isNew: ->
-        if @_isNew? then @_isNew else @getId()?
+        if typeof @_isNew is 'boolean' then @_isNew else @getId()?
     
     /**
      * Clone this model.
@@ -312,9 +328,16 @@ class exports.Model extends EventEmitter
     this import EventEmitter::
     
     
+    /**
+     * @static
+     * @returns {Function} Factory function that creates new instances of this Model.
+     */
+    @getFactory = ->
+        ModelType = this
+        return (attributes) -> new ModelType attributes
     
     /**
-     * Decorates a method when attached to a class prototype so that it
+     * Decorates a method when attached to the class prototype so that it
      * becomes a computed property when the class is instantiated.
      * 
      * @static
@@ -325,9 +348,23 @@ class exports.Model extends EventEmitter
         method.__computed__ = true
         method
     
+    /**
+     * Decorates a method when attached to the class prototype so that it
+     * becomes an async computed property when the class is instantiated.
+     * 
+     * @static
+     * @param {Function} method Method to decorate.
+     * @returns {Function} Decorated method.
+     */
+    @asyncComputed = (method) ->
+        method.__async_computed__ = true
+        method
+    
     
     /**
-     * When Model is extended, copy over all class methods to the Subclass (including this).
+     * Invoked when Model is extended; copies over all class methods to the Subclass (including this).
+     * @protected
+     * @static
      */
     @extended = (SubClass) ->
         SuperClass = this

@@ -2,14 +2,30 @@
  * @fileOverview Observable utilities.
  */
 
+ko = require 'knockout'
+
+
+/**
+ * Creates a `ko.observableArray` if appropriate for the type of the input,
+ * and a `ko.observable` otherwise.
+ * 
+ * @param {*} val Value to wrap.
+ * @returns {ko.observable|ko.observableArray} The observable.
+ */
+makeObservable = exports.makeObservable = (val) ->
+    if _.isArray val
+        ko.observableArray val
+    else
+        ko.observable val
 
 /**
  * Log all changes to the given observable.
  */
-observeChanges = exports.observeChanges = (obs, key='') ->
+logObservedChanges = exports.logObservedChanges = (obs, key='') ->
     oldValue = obs.peek()
     obs.subscribe (newValue) ->
         console.log "#key:", oldValue, '-->', newValue
         oldValue := newValue
 
 
+ko.utils import exports

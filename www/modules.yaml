@@ -59,6 +59,7 @@ development:
                     - index
                 - knockout:
                     - add-extender
+                    - observables
                     - async-computed-observable
                     - typed-observable
                     - index
