@@ -23,19 +23,34 @@ class exports.Model extends EventEmitter
      * pageload session; this value is safe to use in circumstances requiring numeric identity
      * (such as calculating a hashkey for a Map, or for DOM id attributes) but not when
      * global uniqueness is required.
+     * 
+     * @protected
      * @type String
      */
     __id__ : null
     
     /**
+     * When set, this overrides the result of `isNew()`, allowing formerly saved
+     * models to become new again.
+     * 
+     * @protected
+     * @type Boolean
+     */
+    _isNew : null
+    
+    /**
      * Attribute data of the model. Individual properties are also aliased 
      * onto the model object itself if no property already exists.
+     * 
+     * @protected
      * @type Map<Key, ko.observable>
      */
     attributes : null
     
     /**
      * Maps attribute keys to sub-models.
+     * 
+     * @protected
      * @type Map<Key, ModelClass>
      */
     attributeTypes : null
@@ -46,10 +61,14 @@ class exports.Model extends EventEmitter
      * @constructor
      */
     (attributes={}) ->
-        @__id__     = generateId()
+        @__id__            = generateId()
+        @attributes        = {}
+        @attributeTypes  or= {}
+        
         attributes  = _.merge @defaults(), attributes
-        @attributes = @generateAttributes attributes, @attributeTypes or= {}
+        @attributes = @generateAttributes attributes, @attributeTypes
         _.defaults this, @attributes
+        
         this
     
     
@@ -77,7 +96,7 @@ class exports.Model extends EventEmitter
      * @returns {Boolean} Whether the model has been saved to the server.
      */
     isNew: ->
-        @getId()?
+        if @_isNew? then @_isNew else @getId()?
     
     /**
      * Clone this model.
@@ -95,6 +114,8 @@ class exports.Model extends EventEmitter
     
     /**
      * Gets the attribute value at `key`.
+     * 
+     * @param {String} key Key to get.
      * @returns {*} Value at `key`.
      */
     get: (key) ->
@@ -102,6 +123,8 @@ class exports.Model extends EventEmitter
     
     /**
      * Gets the attribute value at `key`, circumventing dependency tracking.
+     * 
+     * @param {String} key Key to peek.
      * @returns {*} Value at `key`.
      */
     peek: (key) ->
@@ -114,15 +137,16 @@ class exports.Model extends EventEmitter
      * Puts a single attribute value to `key`.
      * 
      * @protected
-     * @param {String} key The key to set.
+     * @param {String} key Key to set.
      * @param {*} val Value to set at `key`.
      * @returns {this}
      */
     _set: (key, val) ->
-        return this unless key? and val is not void
+        return this unless key?
         throw new Error "Attributes hash does not exist!" unless @attributes?
         unless ko.isObservable obs = @attributes[key]
-            @attributes[key] = @generateAttribute val, @attributeTypes[key]
+            obs = @attributes[key] = @generateAttribute val, @attributeTypes[key]
+            @[key] ?= obs
         else
             obs val
         this
@@ -145,18 +169,59 @@ class exports.Model extends EventEmitter
         this
     
     /**
-     * Sets the attribute value at `key` to `null`.
+     * Sets the attribute value at `key` to `undefined`.
+     * 
+     * @param {String} key Key to unset.
      * @returns {this}
      */
     unset: (key) ->
+        @_set key, undefined
+    
+    /**
+     * Sets the attribute value at `key` to `undefined`, and then removes
+     * the observable from both the attributes hash and the instance (if attached).
+     * 
+     * @param {String} key Key to remove.
+     * @returns {this}
+     */
+    remove: (key) ->
         return this unless key?
         throw new Error "Attributes hash does not exist!" unless @attributes?
         
-        unless ko.isObservable obs = @attributes[key]
-            @attributes[key] = @generateAttribute null, @attributeTypes[key]
-        else
-            obs null
+        if ko.isObservable obs = @attributes[key]
+            obs undefined
+            obs.dispose?()
+            delete @[key] if obs is @[key]
+        
+        delete @attributes[key]
         this
+    
+    /**
+     * Updates model with new data such that it will only contain keys
+     * found in the new attributes (and existing attributes will be unset).
+     * 
+     * @param {Object} values Key-value pairs to update.
+     * @returns {this}
+     */
+    update: (values) ->
+        throw new Error "Attributes hash does not exist!" unless @attributes?
+        
+        # Update the given attributes
+        @set values
+        
+        # Then remove all missing keys
+        for k of _.keys(@attributes)
+            continue if k in values
+            @remove k
+        
+        this
+    
+    /**
+     * Delete all attributes from the model.
+     * @returns {this}
+     */
+    clear: ->
+        @update {}
     
     # }}}
     
