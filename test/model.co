@@ -1,4 +1,4 @@
-Model = limn.Model
+Model = limn.base.Model
 
 /******** Model ********/
 module 'Model', do

@@ -1,16 +1,25 @@
-DataSource = limn.DataSource
+DataSource = limn.data.DataSource
 util = limn.util
 
-/******** Async Computed ********/
-module 'Async Computed', do
+/******** DataSource cache ********/
+module 'DataSource cache', do
     setup: ->
     teardown: ->
 
 asyncTest 'create two DataSources', ->
-    sameAttributes = id: 'rc_edits_count'
-    datasource1 = new DataSource sameAttributes
-    datasource2 = new DataSource sameAttributes
+    sameId = id: 'rc_edits_count'
+    fetching1 = DataSource.lookup sameId
+    fetching2 = DataSource.lookup sameId
     
-    datasource2.loading.done ->
-        ok true, 'second datasource loads'
-        start()
+    ds1 = DataSource.get sameId
+    ds2 = DataSource.get sameId
+    
+    strictEqual ds1, ds2, 'only one DataSource will get created per id if using lookup'
+    strictEqual fetching1, fetching2, 'only one promise to fetch will get created by lookup'
+    
+    fetching2.done ->
+        ok true, 'second datasource is fetched'
+        
+        fetching1.done ->
+            ok ds1.name?()? == "", 'model attributes get loaded'
+            start()
