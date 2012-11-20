@@ -1,6 +1,4 @@
-dashboard_model     = require './dashboard-model'
-dashboard_tab_model = require './dashboard-tab-model'
 graph_model         = require './graph-model'
 graph_node_data     = require './graph-node-data'
 
-exports import graph_model import graph_node_data import dashboard_model import dashboard_tab_model
+exports import graph_model import graph_node_data

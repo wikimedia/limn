@@ -1,0 +1,4 @@
+dashboard_model     = require './dashboard-model'
+dashboard_tab_model = require './dashboard-tab-model'
+
+exports import dashboard_model import dashboard_tab_model
