@@ -7,6 +7,15 @@ moment = require 'moment'
 { Query,
 } = limn.util
 
+# XXX: Hear ye.
+# 
+# If we don't purge the cache between tests, accidentally re-using DataSource IDs in
+# different tests will cause random things to hang or fail -- the object is already
+# in-cache, which means (for example) negative existence tests fail and `subscribe`
+# callbacks often won't fire due to a cache hit on first retrieval (so it never
+# changes).
+# 
+# Fun times. That only took an hour to figure out.
 QUnit.module 'Metric', do
     subs     : []
     setup    : -> DataSource.__cache__.purge()

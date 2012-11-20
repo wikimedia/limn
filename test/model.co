@@ -1,7 +1,7 @@
 Model = limn.base.Model
 
 /******** Model ********/
-module 'Model', do
+QUnit.module 'Model', do
     setup: ->
     teardown: ->
 
@@ -43,7 +43,7 @@ test 'create empty, add attributes, serialize', ->
 
 
 /******** Inheriting Model ********/
-module 'Inheriting Model', do
+QUnit.module 'Inheriting Model', do
     setup: ->
     teardown: ->
 
@@ -62,7 +62,7 @@ test 'create from object with non-default values', ->
 
 
 /******** Typed Model ********/
-module 'Inheriting Model: Typed Attributes'
+QUnit.module 'Inheriting Model: Typed Attributes'
 
 test 'typed property', ->
     classroom = new Classroom()
