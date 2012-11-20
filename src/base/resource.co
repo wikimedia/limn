@@ -90,7 +90,13 @@ class exports.Resource extends Mixin
      */
     fetch: (cb, options={}) ->
         [options, cb] = [cb, null] unless typeof cb is 'function'
+        
+        # Fetch data from the server...
         promise = @sync 'read', 'fetch', options
+        
+        # ...And update the model with the result, overriding any local changes
+        promise.done (model, data) ~> @update data
+        
         if cb then promise.done ~> cb ...
         promise
     
@@ -153,7 +159,12 @@ class exports.Resource extends Mixin
             
             return deferred.promise()
         
+        # Inform the server to destroy the model
         promise = @sync 'delete', 'destroy', options
+        
+        # Override the new status of this model, reflecting that it no longer exists on the server
+        promise.done ~> @_isNew = true
+        
         if cb then promise.done ~> cb ...
         promise
     
