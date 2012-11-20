@@ -6,6 +6,8 @@ ko = require 'knockout'
 } = require '../base'
 { Query, ParserMixin,
 } = require '../util'
+{ DataSource,
+} = require './datasource-model'
 
 
 class exports.Metric extends Model
