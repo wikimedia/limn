@@ -5,6 +5,8 @@ ko = require 'knockout'
 } = require '../base'
 
 class exports.Graph extends StoredModel
+    resource : 'graphs'
+    getId    : -> @get 'id'
     
     /**
      * @constructor
