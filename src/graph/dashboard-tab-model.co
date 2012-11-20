@@ -1,0 +1,24 @@
+_ = require 'underscore'
+ko = require 'knockout'
+
+{ Model,
+} = require '../base'
+{ Graph,
+} = require './graph-model'
+
+class exports.DashboardTab extends Model
+    
+    /**
+     * @constructor
+     */
+    (attributes) ->
+        super ...
+    
+    
+    defaults: ->
+        name        : ''
+        graph_ids   : []
+        graphs      : []
+    
+    attributeTypes:
+        graphs      : Graph

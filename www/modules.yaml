@@ -79,6 +79,8 @@ development:
                 - resource
                 - index
             - graph:
+                - dashboard-model
+                - dashboard-tab-model
                 - graph-model
                 - graph-node-data
                 - index

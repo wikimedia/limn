@@ -1,0 +1,46 @@
+_       = require 'underscore'
+ko      = require 'knockout'
+Seq     = require 'seq'
+
+{ StoredModel,
+} = require '../base'
+{ Graph,
+} = require './graph-model'
+{ DashboardTab,
+} = require './dashboard-tab-model'
+
+class exports.Dashboard extends StoredModel
+    resource : 'dashboards'
+    getId    : -> @get 'id'
+    
+    /**
+     * @constructor
+     */
+    (attributes) ->
+        super ...
+        
+    
+    defaults: ->
+        id          : null
+        headline    : ''
+        subhead     : ''
+        tabs        : []
+    
+    attributeTypes:
+        tabs        : DashboardTab
+    
+    fetchGraphs: ->
+        promise = $.Deferred()
+        Seq(@tabs())
+            .parEach_ (next, tab) ->
+                Seq(tab.graph_ids())
+                    .parEach_ (next, graph_id) ->
+                        graph = new Graph id: graph_id
+                        graph.fetch ->
+                            tab.graphs.push(graph)
+                            next.ok()
+                    .seq ->
+                        next.ok()
+            .seq ->
+                promise.resolve()
+        promise

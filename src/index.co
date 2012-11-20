@@ -17,6 +17,7 @@ limn.mount = (path='') ->
 
 limn.base = require './base'
 limn.data = require './data'
+limn.graph = require './graph'
 
 # { ChartElement, ChartElementData,
 # } = limn.chart      = require './chart'
