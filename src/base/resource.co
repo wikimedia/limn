@@ -95,7 +95,7 @@ class exports.Resource extends Mixin
         promise = @sync 'read', 'fetch', options
         
         # ...And update the model with the result, overriding any local changes
-        promise.done (model, data) ~> @update data
+        promise.done (model, data) ~> @update @canonicalize data
         
         if cb then promise.done ~> cb ...
         promise

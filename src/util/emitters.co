@@ -1,0 +1,18 @@
+{ EventEmitter, ReadyEmitter, WaitingEmitter,
+} = emitters = require 'emitters'
+
+EventEmitter.decorate = (target, methods=[]) ->
+    EmitterClass = this
+    methods .= concat <[ emit trigger on off addListener removeListener removeAllListeners once listeners ]>
+    for k of methods
+        target[k] = EmitterClass::[k]
+    target
+
+ReadyEmitter.decorate = (target) ->
+    EventEmitter.decorate.call ReadyEmitter, target, <[ __ready_event__ ready ]>
+
+WaitingEmitter.decorate = (target) ->
+    EventEmitter.decorate.call WaitingEmitter, target, <[ waitingOn wait unwait unwaitAnd ]>
+
+module.exports = emitters
+

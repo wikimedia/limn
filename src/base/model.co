@@ -65,7 +65,7 @@ class exports.Model extends EventEmitter
         @attributes        = {}
         @attributeTypes  or= {}
         
-        attributes  = _.merge @defaults(), attributes
+        attributes  = @canonicalize _.merge @defaults(), attributes
         @attributes = @generateAttributes attributes, @attributeTypes
         _.defaults this, @attributes
         
@@ -227,6 +227,16 @@ class exports.Model extends EventEmitter
     
     
     /**
+     * Invoked to transform raw attribute data into its "proper" form for
+     * this model, whatever that might be.
+     * 
+     * @param {Object} data Raw attributes to canonicalize.
+     * @returns {Object} Converted raw data.
+     */
+    canonicalize: (data) ->
+        data
+    
+    /**
      * Wraps the properties found in the `attributes` map with observables,
      * applying types as specified in `attrTypes`.
      * 
@@ -314,6 +324,7 @@ class exports.Model extends EventEmitter
     @computed = (method) ->
         method.__computed__ = true
         method
+    
     
     /**
      * When Model is extended, copy over all class methods to the Subclass (including this).
