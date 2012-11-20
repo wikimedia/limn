@@ -51,8 +51,12 @@ sources = exports.sources = (node_env=SOURCES_ENV, modulesFile="#WWW/modules.yam
     _.flatten modlist.map ({suffix or '', paths}) -> joinTree('', paths).map -> it+suffix
 
 tests = exports.tests = ->
-    return glob.sync "#TEST/*.co"
-        .map (f) -> '/test/' + path.basename(f).replace /\.co$/, '.js'
+    return glob.sync "#TEST/**/*.co"
+        .filter (f) ->
+            not _.startsWith f, "#TEST/qunit"
+        .map (f) ->
+            p = path.join path.dirname(f), path.basename(f).replace /\.co$/, '.js'
+            p.slice BASE.length+1
 
 joinTree = exports.joinTree = function joinTree(root, tree)
     return ["#root/#tree"] if typeof tree is 'string'

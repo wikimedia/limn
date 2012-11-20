@@ -1,0 +1,72 @@
+_      = require 'underscore'
+ko     = require 'knockout'
+moment = require 'moment'
+
+{ DataSource, Metric,
+} = limn.data
+{ Query,
+} = limn.util
+
+QUnit.module 'Metric', do
+    subs     : []
+    setup    : -> DataSource.__cache__.purge()
+    teardown : ->
+        DataSource.__cache__.purge()
+        _.invoke @subs, 'dispose'
+
+
+asyncTest 'Empty Metric', ->
+    expect 29
+    start()
+    
+    metric = new Metric()
+    
+    equal metric.source_id(), null, 'source_id is null (but no error)'
+    equal metric.source(),    null, 'source is null (but no error)'
+    
+    ok timespan = metric.timespan(), 'metric has timespan object'
+    ok ko.isObservable(timespan.start), 'metric timespan properties exist and are observable'
+    equal timespan.start(), null, 'metric timespan properties are empty'
+    
+    source_col = 2
+    equal metric.source_col(), null, 'source_col is null (but no error)'
+    equal metric.query(), null, 'metric query empty until source_col is set'
+    ok metric.source_col(source_col), 'source_col set without error'
+    strictEqual metric.source_col(), source_col, 'source_col set correctly'
+    ok query = metric.query(), 'metric query object now exists'
+    ok query instanceof Query, 'metric query instanceof Query'
+    
+    timeStart = moment('2009-08-14').toDate()
+    timeEnd   = moment('2010-02-14').toDate()
+    ok timespan.start(timeStart), 'metric timespan start set without error'
+    strictEqual metric.query().timespan()[0], timeStart, 'metric timespan start changes propagate to query'
+    ok timespan.end(timeEnd), 'metric timespan end property set without error'
+    strictEqual metric.query().timespan()[1], timeEnd, 'metric timespan end changes propagate to query'
+    
+    source_id = 'rc_page_requests'
+    ok metric.source_id(source_id), 'source_id set without error'
+    ok metric.source.inProgress(), 'source is now loading'
+    ok DataSource.get(source_id), 'source for id appears in DataSource cache'
+    equal metric.source(), null, 'source is still null (as load has not completed)'
+    
+    stop()
+    @subs.push metric.source.subscribe ~>
+        start()
+        
+        ok source = metric.source(), 'DataSource object now exists'
+        ok source instanceof DataSource, 'source instanceof DataSource'
+        ok source.isValid(), 'source object is valid'
+        
+        equal source.data(), null, 'source.data is null'
+        equal source.data.inProgress(), true, 'source.data now loading'
+        
+        stop()
+        @subs.push source.data.subscribe ~>
+            start()
+            
+            ok source.data(), 'source.data now exists'
+            ok data = metric.data(), 'metric.data now exists'
+            ok timeStart <= data[0][0] <= timeEnd, 'metric.data bounded correctly by query'
+            strictEqual data.length, 6, 'metric.data is correct length'
+            strictEqual data[0].length, 2, 'metric.data has correct number of columns'
+    

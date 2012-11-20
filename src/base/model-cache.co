@@ -197,7 +197,7 @@ class exports.ModelCache extends ReadyEmitter
      * @returns {this}
      */
     purge: ->
-        _.each @cache, @invalidate, this
+        _.each _.keys(@cache), @invalidate, this
         this
     
     /**

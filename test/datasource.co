@@ -7,10 +7,13 @@ util = limn.util
 
 /******** DataSource cache ********/
 module 'DataSource', do
-    setup: ->
-    teardown: ->
+    setup    : -> DataSource.__cache__.purge()
+    teardown : -> DataSource.__cache__.purge()
 
 asyncTest 'create two DataSources', ->
+    expect 5
+    start()
+    
     sameId = 'rc_edits_count'
     fetching1 = DataSource.lookup sameId
     fetching2 = DataSource.lookup sameId
@@ -21,9 +24,12 @@ asyncTest 'create two DataSources', ->
     strictEqual ds1, ds2, 'only one DataSource will get created per id if using lookup'
     strictEqual fetching1, fetching2, 'only one promise to fetch will get created by lookup'
     
+    stop()
     fetching2.done ->
+        start()
         ok true, 'second datasource is fetched'
         
+        stop()
         fetching1.done ->
             start()
             ok ds1.name() != undefined, 'model attributes get loaded'
@@ -31,18 +37,23 @@ asyncTest 'create two DataSources', ->
 
 
 asyncTest 'lazy-load DataSource data', ->
+    expect 8
+    
     id = 'rc_page_requests'
     DataSource.lookup id, (err, ds) ->
         start()
+        
         equal err, null, "No errors on DataSource.lookup()."
         ok not ds.isNew(), "DataSource has been loaded from server."
         ok ds.get('url'), "DataSource has been loaded and has a valid data URL."
         strictEqual ds.data.inProgress(), false, "DataSource.data.inProgress is false at first."
         equal ds.data(), null, "DataSource.data() is undefined at first (this check triggers loading)"
         strictEqual ds.data.inProgress(), true, "DataSource.data.inProgress is true now that we're loading."
+        
         stop()
         ds.data.subscribe ->
             start()
+            
             ok ds.data(), "DataSource.data() now defined"
             ok ds.data() instanceof CSVData, "DataSource.data() instanceof CSVData"
 

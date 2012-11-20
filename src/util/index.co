@@ -57,6 +57,12 @@ mixin     = exports.mixin     = require './mixin'
 exports import mixin
 
 parser    = exports.parser    = require './parser-mixin'
+exports import parser
+
+iterator  = exports.iterator  = require './iterator'
+exports import iterator
+
+Query     = exports.Query     = require './query'
 AliasDict = exports.AliasDict = require './aliasdict'
 Cascade   = exports.Cascade   = require './cascade'
 

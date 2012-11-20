@@ -40,8 +40,7 @@ class HashSet
      * @returns {String} Id for this value.
      */
     _getId : (v) ->
-        id = guidFor v
-    
+        guidFor v
     
     
     /**
@@ -126,14 +125,6 @@ class HashSet
         id = @_getId v
         delete @_byId[id]
         return v
-    
-    
-    /**
-     * Returns but does not remove the an element from the set.
-     * @returns {Any} An element from the set.
-     */
-    element : ->
-        @_o[0]
     
     
     /**
@@ -261,6 +252,12 @@ class HashSet
      */
     values : ->
         @_o.slice()
+    
+    /**
+     * @returns {Array<Array<Key, Value>>} Key-value pairs of set contents.
+     */
+    items: ->
+        _.map @_o, ~> [@_getId(it), it]
     
     
     
