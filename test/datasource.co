@@ -21,5 +21,6 @@ asyncTest 'create two DataSources', ->
         ok true, 'second datasource is fetched'
         
         fetching1.done ->
-            ok ds1.name?()? == "", 'model attributes get loaded'
+            ok ds1.name() != undefined, 'model attributes get loaded'
+            ok ds1.name() != "", 'model attributes get loaded'
             start()
