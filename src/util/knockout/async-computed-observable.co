@@ -1,6 +1,8 @@
 ko = require 'knockout'
 require './add-extender'
 
+_ = require 'underscore'
+
 /**
  * `asyncDependentObservable` functions similar to `ko.dependentObservable`,
  * except that the function invoked to compute a new value for the observable may
@@ -22,42 +24,59 @@ require './add-extender'
  * @returns {ko.observable} Value-bearing observable.
  */
 exports.asyncDependentObservable = exports.asyncComputed = \
-asyncDependentObservable = (task, owner=this, args=[]) ->
+asyncDependentObservable = (task, options={}) ->
     if typeof task != 'function'
         throw new Error 'ko.asyncDependentObservable requires a task function!'
     
-    deferred          = null
-    result            = ko.observable()
-    result.task       = task
-    result.inProgress = ko.observable false # Expose whether we're waiting for a result
+    deferred   = null
+    result     = ko.observable()
+    inProgress = ko.observable false
     
-    result.updater = ko.computed ->
+    updater = ko.computed _.extend {}, options, read: ->
         # Abort any in-flight evaluation to ensure we only notify with the latest value
         deferred.reject() if deferred
-        val = task.call owner
+        val = task.call options.owner
         
         # Promise?
         if typeof val?.done == "function"
-            result.inProgress true
+            inProgress true
             
             deferred := $.Deferred()
                 .always ->
                     delete result.promise
-                    result.inProgress false
+                    delete result.lazy?.promise
+                    inProgress false
                 .done (data) ->
                     result data
             
             val.done deferred.resolve
             result.promise = deferred.promise()
+            result.lazy?.promise = result.promise
             
         # Result?
         else
             result val
     
-    result
+    # `ko.computed` wrapper around result so `deferEvaluation` can be used with `asyncComputed`.
+    # Without this, the first read to the return observable won't trigger computation, because
+    # `result` itself cannot depend on `task` without creating a loop. The computed fixes this.
+    lazyResult = result.lazy = ko.computed _.extend {}, options, read: ->
+        # don't depend on whatever happens inside the task -- we only want to run when result changes
+        ko.dependencyDetection.ignore -> updater.peek()
+        # depend on result
+        result()
+    
+    result.lazy.promise   = result.promise
+    lazyResult.task       = task
+    lazyResult.inProgress = inProgress # Expose whether we're waiting for a result
+    
+    lazyResult
+
+isAsyncComputed = exports.isAsyncComputed = (obs) ->
+    !! obs and ko.isObservable(obs) and ko.isObservable(obs.inProgress)
 
 # Add `async` extender.
 ko.addExtender 'async', asyncDependentObservable
 
-# Add `ko.asyncDependentObservable()` and `ko.asyncComputed()`.
+# Add `ko.asyncDependentObservable()`, `ko.asyncComputed()`, `ko.isAsyncComputed()`.
 ko import exports

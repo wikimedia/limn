@@ -76,14 +76,13 @@ class exports.Model extends EventEmitter
             continue if fn is @attributes[name]
             
             if fn.__computed__
-                this[name] = ko.computed(fn)
+                options = { read:fn, owner:this } import fn.__computed_options__
+                this[name] = ko.computed(options)
+            if fn.__async_computed__
+                options = { read:fn, owner:this } import fn.__async_computed_options__
+                this[name] = ko.computed(options).async({} import options)
             else if ko.isObservable fn
-                val = fn.peek()
-                if _.isArray val
-                    obs = ko.observableArray val
-                else
-                    obs = ko.observable val
-                this[name] = obs
+                this[name] = ko.utils.makeObservable fn.peek()
         
         this
     
@@ -112,7 +111,7 @@ class exports.Model extends EventEmitter
      * @returns {Boolean} Whether the model has been saved to the server.
      */
     isNew: ->
-        if typeof @_isNew is 'boolean' then @_isNew else @getId()?
+        if typeof @_isNew is 'boolean' then @_isNew else not @getId()?
     
     /**
      * Clone this model.
@@ -341,11 +340,14 @@ class exports.Model extends EventEmitter
      * becomes a computed property when the class is instantiated.
      * 
      * @static
+     * @param {Object} [options] Options to pass to `ko.computed`.
      * @param {Function} method Method to decorate.
      * @returns {Function} Decorated method.
      */
-    @computed = (method) ->
+    @computed = (options, method) ->
+        [method, options] = [options, {}] if typeof options is 'function'
         method.__computed__ = true
+        method.__computed_options__ = options
         method
     
     /**
@@ -356,8 +358,10 @@ class exports.Model extends EventEmitter
      * @param {Function} method Method to decorate.
      * @returns {Function} Decorated method.
      */
-    @asyncComputed = (method) ->
+    @asyncComputed = (options, method) ->
+        [method, options] = [options, {}] if typeof options is 'function'
         method.__async_computed__ = true
+        method.__async_computed_options__ = options
         method
     
     

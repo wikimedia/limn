@@ -5,6 +5,8 @@ Seq     = require 'seq'
 
 { ReadyEmitter,
 } = require 'emitters'
+{ TimeSeriesData, CSVData,
+} = require 'timeseries'
 
 { Model, StoredModel, ModelCache,
 } = require '../base'
@@ -62,12 +64,6 @@ class exports.DataSource extends StoredModel
     attributeTypes :
         columns : Column
     
-    /**
-     * The reified dataset associated with this DataSource.
-     * @type ko.computed<DataSet>
-     */
-    data : null
-    
     
     
     /**
@@ -75,6 +71,29 @@ class exports.DataSource extends StoredModel
      */
     (attributes={}) ->
         super attributes
+    
+    
+    /**
+     * The reified dataset associated with this DataSource.
+     * @type ko.asyncComputed
+     */
+    data : @asyncComputed { +deferEvaluation }, ->
+        format       = @get 'format'
+        DataFileType = if format is 'csv' then CSVData else TimeSeriesData
+        
+        xhr = $.ajax do
+            url      : @get 'url'
+            dataType : if format is 'csv' then 'text' else 'json'
+        
+        promise = xhr.pipe (data) -> new DataFileType data
+        promise.then do
+            (data) ~> @trigger 'data-load',  this, data
+            (err)  ~> @trigger 'data-error', this
+        promise.xhr = xhr
+        
+        promise
+    
+    
     
     
     /**
