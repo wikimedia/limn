@@ -7,7 +7,7 @@ module 'DataSource cache', do
     teardown: ->
 
 asyncTest 'create two DataSources', ->
-    sameId = id: 'rc_edits_count'
+    sameId = 'rc_edits_count'
     fetching1 = DataSource.lookup sameId
     fetching2 = DataSource.lookup sameId
     
@@ -21,6 +21,6 @@ asyncTest 'create two DataSources', ->
         ok true, 'second datasource is fetched'
         
         fetching1.done ->
+            start()
             ok ds1.name() != undefined, 'model attributes get loaded'
             ok ds1.name() != "", 'model attributes get loaded'
-            start()
