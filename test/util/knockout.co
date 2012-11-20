@@ -1,7 +1,7 @@
 util = limn.util
 
 /******** Async Computed ********/
-QUnit.module 'Async Computed', do
+QUnit.module '[util] Async Computed', do
     setup: ->
     teardown: ->
 

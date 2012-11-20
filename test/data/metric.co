@@ -16,7 +16,7 @@ moment = require 'moment'
 # changes).
 # 
 # Fun times. That only took an hour to figure out.
-QUnit.module 'Metric', do
+QUnit.module '[data] Metric', do
     subs     : []
     setup    : -> DataSource.__cache__.purge()
     teardown : ->

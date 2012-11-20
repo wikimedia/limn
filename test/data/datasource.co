@@ -14,7 +14,7 @@ util = limn.util
 # changes).
 # 
 # Fun times. That only took an hour to figure out.
-QUnit.module 'DataSource', do
+QUnit.module '[data] DataSource', do
     setup    : -> DataSource.__cache__.purge()
     teardown : -> DataSource.__cache__.purge()
 
