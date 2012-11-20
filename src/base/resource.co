@@ -1,7 +1,5 @@
 /**
  * @fileOverview RESTful Resource Mixin. Mostly adapted from Backbone.
- * 
- * TODO: In-flight request tracking; squelch double-requests; ModelCache.
  */
 
 { _, op, root, generateId, guidFor, Mixin,
