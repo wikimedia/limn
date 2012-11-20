@@ -64,6 +64,7 @@ development:
                     - index
                 - guid
                 - mixin
+                - emitters
                 - parser
                 - parser-mixin
                 - aliasdict

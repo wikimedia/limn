@@ -50,7 +50,7 @@ root.jQuery?.fn.invoke = (method, ...args) ->
         jQuery(el)[method] ...args
 
 
-emitters  = exports.emitters  = require 'emitters'
+emitters  = exports.emitters  = require './emitters'
 exports import emitters
 
 mixin     = exports.mixin     = require './mixin'
