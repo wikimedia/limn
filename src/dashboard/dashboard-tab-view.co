@@ -1,0 +1,14 @@
+{ View,
+} = require '../base/view'
+{ GraphView,
+} = require '../graph/graph-view'
+
+class exports.DashboardTabView extends View
+    template: 'dashboard-tab'
+    
+    (tab) ->
+        @model = ko.observable tab
+        @graphs = ko.observableArray()
+        for graph of @model().graphs()
+            graphView = new GraphView tab
+            @graphs.push graphView

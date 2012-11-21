@@ -6,6 +6,10 @@
 class exports.GraphView extends View
     template: 'graph'
     
-    (id, action) ->
-        @model = ko.observable new Graph id: id
-        @model().fetch()
+    (idOrTab, action) ->
+        @model = ko.observable()
+        if idOrTab instanceof Graph
+            @model idOrTab
+        else
+            @model new Graph id: id
+            @model().fetch()

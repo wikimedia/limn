@@ -2,10 +2,16 @@
 } = require '../base/view'
 { Dashboard,
 } = require './dashboard-model'
+{ DashboardTabView,
+} = require './dashboard-tab-view'
 
 class exports.DashboardView extends View
     template: 'dashboard'
     
     (id, action) ->
         @model = ko.observable new Dashboard id: id
-        @model().fetch()
+        @tabs = ko.observableArray()
+        @model().fetch().done ~>
+            for tab of @model().tabs()
+                tabView = new DashboardTabView tab
+                @tabs.push tabView

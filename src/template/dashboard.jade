@@ -1,8 +1,10 @@
-<!-- ko with: model() -->
+// ko with: model()
 section.dashboard
     h2(data-bind="text: headline")
     h3(data-bind="text: subhead")
     
+    // ko with: $parent
     ol(data-bind="foreach: tabs")
         li(data-bind="subview: $data")
-<!-- /ko -->
+    // /ko
+// /ko

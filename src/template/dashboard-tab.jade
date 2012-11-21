@@ -1,6 +1,9 @@
-<!-- ko with: model() -->
+// ko with: model()
 section.dashboard-tab
     h3(data-bind="text: name")
+    
+    // ko with: $parent
     ol(data-bind="foreach: graphs")
         li(data-bind="subview: $data")
-<!-- /ko -->
+    // /ko
+// /ko
