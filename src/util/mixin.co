@@ -43,7 +43,7 @@ class exports.Mixin
             TargetClass = target
             _.defaults TargetClass::, MixinClass::
             for k, v in MixinClass
-                continue if TargetClass[k] or _.contains <[ mix extended ]>, k
+                continue if TargetClass[k]? or _.contains <[ mix extended ]>, k
                 TargetClass[k] = v
         else
             target = new MixinClass() import target

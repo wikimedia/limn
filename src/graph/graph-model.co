@@ -1,8 +1,10 @@
-_ = require 'underscore'
+_  = require 'underscore'
 ko = require 'knockout'
 
 { StoredModel,
 } = require '../base'
+
+
 
 class exports.Graph extends StoredModel
     resource : 'graphs'

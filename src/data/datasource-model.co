@@ -88,6 +88,7 @@ class exports.DataSource extends StoredModel
     /**
      * The reified dataset associated with this DataSource.
      * @type ko.asyncComputed<TimeSeriesData|CSVData>
+     * @depends url, format
      */
     data : @asyncComputed ->
         return unless @isValid()
