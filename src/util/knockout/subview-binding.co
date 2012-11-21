@@ -2,12 +2,11 @@ ko = require 'knockout'
 
 ko.bindingHandlers.subview = do
     init: (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) ->
-        new Subview(element, valueAccessor())
+        controlDescendantBindings: true
+    
     update: (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) ->
-        new Subview(element, valueAccessor())
-
-class Subview
-    (element, value) ->
-        value = ko.utils.unwrapObservable value
-        return unless value?.template and element
-        $(element).html $("##{value.template}").html()
+        unwrapped = ko.utils.unwrapObservable valueAccessor()
+        if unwrapped?.template and element
+            $(element).html $("##{unwrapped.template}").html()
+            childContext = bindingContext.createChildContext unwrapped
+            ko.applyBindingsToDescendants childContext, element
