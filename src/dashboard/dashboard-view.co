@@ -14,6 +14,6 @@ class exports.DashboardView extends View
         @tabs = ko.observableArray()
         @model().fetch().done ~>
             @model().fetchGraphs().done ~>
-                for tab of @model().tabs().slice(0,1)
+                for tab of @model().tabs()
                     tabView = new DashboardTabView tab
                     @tabs.push tabView
