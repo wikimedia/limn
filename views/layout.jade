@@ -24,13 +24,7 @@ html(lang="en", dir="ltr")
     
     body
         block body
-            
-            section#content
-                .inner
-                    block content
-            
-            footer
-                block footer
+            section.page(data-bind="subview: currentView")
             
             .templates
                 block jade-templates

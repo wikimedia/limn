@@ -1,0 +1,13 @@
+ko = require 'knockout'
+
+ko.bindingHandlers.subview = do
+    init: (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) ->
+        new Subview(element, valueAccessor())
+    update: (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) ->
+        new Subview(element, valueAccessor())
+
+class Subview
+    (element, value) ->
+        value = ko.utils.unwrapObservable value
+        return unless value?.template and element
+        $(element).html $("##{value.template}").html()

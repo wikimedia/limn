@@ -42,6 +42,7 @@ development:
         - jade.runtime.min
         - moment.mod
         - d3.v2
+        - page
         
         # - livecss
 
@@ -61,6 +62,7 @@ development:
                     - add-extender
                     - observables
                     - async-computed-observable
+                    - subview-binding
                     - typed-observable
                     - index
                 - guid
@@ -78,6 +80,7 @@ development:
                 - stored-model
                 - model-cache
                 - resource
+                - view
                 - index
             - dashboard:
                 - dashboard-model

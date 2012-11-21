@@ -2,5 +2,6 @@ add_extender              = require './add-extender'
 async_computed_observable = require './async-computed-observable'
 observables               = require './observables'
 typed_observable          = require './typed-observable'
+subview_binding           = require './subview-binding'
 
-exports import add_extender import async_computed_observable import observables import typed_observable
+exports import add_extender import async_computed_observable import observables import typed_observable import subview_binding

@@ -20,6 +20,7 @@ moduleShim = (name, mod) ->
 
 try require 'd3'        catch ex then moduleShim 'd3',       root.d3
 try require 'knockout'  catch ex then moduleShim 'knockout', root.ko
+try require 'page'      catch ex then moduleShim 'page',     root.page
 
 # Load Knockout Plugins
 exports.knockout = require './knockout'

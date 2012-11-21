@@ -15,143 +15,39 @@ limn.mount = (path='') ->
     mnt  .= slice(0, -1) if '/' == mnt[mnt.length-1]
     "#mnt/#path"
 
-limn.base = require './base'
-limn.data = require './data'
-limn.graph = require './graph'
-limn.dashboard = require './dashboard'
+limn.base       = require './base'
+limn.data       = require './data'
+limn.graph      = require './graph'
+limn.dashboard  = require './dashboard'
 
-# { ChartElement, ChartElementData,
-# } = limn.chart      = require './chart'
-# { Graph, GraphList, GraphDisplayView, GraphEditView, GraphListView,
-# } = limn.graph      = require './graph'
-# { DashboardView, Dashboard,
-# } = limn.dashboard  = require './dashboard'
-
+page = require 'page'
 
 /**
  * @class Sets up root application, automatically attaching to an existing element
  *  found at `appSelector` and delegating to the appropriate view.
  */
 class limn.LimnApp # {{{
-    appSelector : '#content .inner'
-    
-    routes:
-        'graphs/(new|edit)'         : 'newGraph'
-        'graphs/:graphId/edit'      : 'editGraph'
-        'graphs/:graphId'           : 'showGraph'
-        'graphs'                    : 'listGraphs'
-        
-        'dashboards/(new|edit)'     : 'newDashboard'
-        'dashboards/:dashId/edit'   : 'editDashboard'
-        'dashboards/:dashId'        : 'showDashboard'
-        'dashboards'                : 'listDashboards'
-    
-    
+    views:
+        'dashboards'    : limn.dashboard.DashboardView
+        'graphs'        : limn.graph.GraphView
+        '404'           : limn.base.NotFoundView
+        'loading'       : limn.base.LoadingView
     
     /**
      * @constructor
      */
-    (@config={}) ->
-        @appSelector = that if config.appSelector
-        @el  = config.el or= jQuery @appSelector .0
-        @$el = jQuery @el
-        jQuery ~> @setup()
-        this
-    
-    setup: ->
-        console.log "#this.setup!"
-        # infuser.defaults.templateUrl = @config.mount + 'template'
-        # Add / route for Homepage
-        # @route /^(?:[\?].*)?$/, 'home'
-        # Start observing history changes
-        # Backbone.history.start { +pushState, root:@config.mount }
-    
-    # Helper for setting up models
-    processData: (id, data={}) ->
-        ### If we got querystring args, apply them as overrides to the data
-        # loc = String root.location
-        # if loc.split '?' .1
-        #     data = _.uncollapseObject _.fromKV that.replace('#', '%23')
-        #     data.parents = JSON.parse that if data.parents
-        #     data.options = _.synthesize do
-        #         data.options or {}
-        #         (v, k) -> [ k, dyglib.parseOption(k,v) ]
-        unless id and _ <[ edit new ]> .contains id
-            data.id = data.slug = id
-        data
-    
-    
-    
-    /* * * *  Routes  * * * */
-    
-    
-    home: ->
-        # console.log "#this.home!"
-        @showDashboard 'reportcard'
-    
-    
-    ### Graphs
-    
-    createGraphModel: (id) ->
-        data = @processData id
-        graph = new Graph data, {+parse}
-    
-    newGraph: ->
-        @editGraph()
-    
-    editGraph: (id) ->
-        @model = @createGraphModel id
-        @view = new GraphEditView {@model} .attach @el
-    
-    showGraph: (id) ->
-        return @editGraph id if _ <[ new edit ]> .contains id
-        @model = @createGraphModel id
-        @view  = new GraphDisplayView {@model} .attach @el
-    
-    listGraphs: ->
-        @collection = new GraphList()
-        @view = new GraphListView {@collection} .attach @el
-    
-    
-    ### Dashboards
-    
-    createDashboardModel: (id) ->
-        data = @processData id
-        dashboard = new Dashboard data, {+parse}
-    
-    newDashboard: ->
-        console.error 'newDashboard!?'
-    
-    editDashboard: (id) ->
-        console.error 'editDashboard!?'
-    
-    showDashboard: (id) ->
-        return @editDashboard id if _ <[ new edit ]> .contains id
-        @model = @createDashboardModel id
-        @view  = new DashboardView {@model} .attach @el
-        @model.once 'ready', @updateDashboardTitle, this
-    
-    listDashboards: ->
-        console.error 'listDashboards!?'
-    
-    updateDashboardTitle: ->
-        return this unless dashName = @model.getName()
-        root.document?.title = dashName
-        if sub = @model.get 'subhead'
-            head = @model.get 'headline'
-            @$ '.page-header h1' .html "#head <small>#sub</small>"
-        this
-    
-    
-    ### Misc
-    
-    $: -> @$el.find.apply @$el, arguments
-    
-    getClassName: ->
-        "#{@..name or @..displayName}"
-    
-    toString: ->
-        "#{@getClassName()}()"
+    (config) ->
+        @currentView = ko.observable new limn.base.LoadingView()
+        ko.applyBindings this
+        
+        page '/:view/:id/:action?', (view, id, action) ~>
+            if ViewType = @views[view]
+                @currentView new ViewType id, action
+            else
+                page '/404'
+        page '*', ~>
+            @currentView new @views['404']()
+        page()
 # }}}
 
 
