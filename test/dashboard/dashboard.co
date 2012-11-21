@@ -2,7 +2,7 @@ Dashboard = limn.dashboard.Dashboard
 DashboardTab = limn.dashboard.DashboardTab
 
 /******** Dashboard ********/
-module 'Dashboard', do
+QUnit.module '[dashboard] Dashboard', do
     setup: ->
     teardown: ->
 

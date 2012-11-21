@@ -1,14 +1,11 @@
 _ = require 'underscore'
 
+{ guidFor,
+} = require './guid'
+
 
 /**
- * A Set class, implemented using the `__id__` property on non-primitive objects it is passed. 
- * Arrays are hashed based on their contents. If an object lacks `__id__`, an exception will be
- * thrown. This class does not keep values in sorted order.
- * 
- * Underscore provides an easy way to generate unique IDs with the (surprise!) `_.uniqueId()`
- * function.
- * @see http://documentcloud.github.com/underscore/#uniqueId
+ * A Set class, implemented using `guid.guidFor()`. Does not keep values in sorted order.
  * 
  * @class
  */
@@ -25,12 +22,6 @@ class HashSet
      */
     _o : []
     
-    /**
-     * Number of elements in the set.
-     * @property {Number}
-     */
-    length : 0
-    
     
     /**
      * Accepts any number of collections to be added to the set.
@@ -44,36 +35,12 @@ class HashSet
     
     
     /**
-     * Determine unique identifier for the given value.
-     * @private
-     * @returns {String} Id for this value.
-     */
-    _getIdSafe : (v) ->
-        t  = typeof v
-        
-        switch t
-        case 'undefined'
-            return 'u'
-        case 'boolean' 'string' 'number'
-            return "#{t.charAt 0}:#v"
-        if v is null
-            return 'n'
-        if '__id__' in v
-            return 'o:' + v.__id__
-        if _.isArray v
-            return 'a:' + v.map @_getIdSafe, this .join ','
-    
-    /**
      * Determine unique identifier for the given value, throwing an exception otherwise.
-     * @private
+     * @protected
      * @returns {String} Id for this value.
      */
     _getId : (v) ->
-        id = @_getIdSafe v
-        unless id?
-            throw new Error "HashSet elements must be hashable (#v)"
-        id
-    
+        guidFor v
     
     
     /**
@@ -82,7 +49,7 @@ class HashSet
      * @returns {Boolean} Whether HashSet contains value.
      */
     contains : (v) ->
-        @_getIdSafe(v) in @_byId
+        @_getId(v) in @_byId
     
     
     /**
@@ -91,11 +58,16 @@ class HashSet
      */
     _addOne : (v) ->
         id = @_getId v
-        unless id in @_byId
-            @_byId[id] = v
-            @_o.push(v)
-            @length = @_o.length
+        return this if id in @_byId
+        @_byId[id] = v
+        @_o.push v
         this
+    
+    /**
+     * @returns {Number} Number of elements in the set.
+     */
+    size: ->
+        @_o.length
     
     
     /**
@@ -114,10 +86,9 @@ class HashSet
      */
     _removeOne : (v) ->
         id = @_getId v
-        if id in @_byId
-            delete @_byId[id]
-            @_o.splice @_o.indexOf(v), 1
-            @length = @_o.length
+        return this unless id in @_byId
+        delete @_byId[id]
+        @_o.splice @_o.indexOf(v), 1
         this
     
     
@@ -151,17 +122,9 @@ class HashSet
     pop : ->
         return unless @_o.length
         v  = @_o.shift()
-        id = @_getIdSafe v
+        id = @_getId v
         delete @_byId[id]
         return v
-    
-    
-    /**
-     * Returns but does not remove the an element from the set.
-     * @returns {Any} An element from the set.
-     */
-    element : ->
-        @_o[0]
     
     
     /**
@@ -180,7 +143,6 @@ class HashSet
     clear: ->
         @_byId  = {}
         @_o     = []
-        @length = 0
         this
     
     
@@ -290,6 +252,12 @@ class HashSet
      */
     values : ->
         @_o.slice()
+    
+    /**
+     * @returns {Array<Array<Key, Value>>} Key-value pairs of set contents.
+     */
+    items: ->
+        _.map @_o, ~> [@_getId(it), it]
     
     
     

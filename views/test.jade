@@ -7,8 +7,8 @@ html
         link(type="image/x-icon", rel="shortcut icon", href="/favicon.ico")
         
         title Limn Unit Tests
-        link(rel="stylesheet", href="/test/qunit/themes/qunit.css")
-        link(rel="stylesheet", href="/test/qunit/theme-picker.css")
+        link(rel="stylesheet", href="/vendor/qunit/themes/qunit.css")
+        link(rel="stylesheet", href="/vendor/qunit/theme-picker.css")
     
     body
         block body
@@ -34,11 +34,12 @@ html
             
         
         .tests
-            script(src="/test/qunit/qunit.js")
-            script(src="/test/qunit/theme-picker.js")
-            script
-                // any general qunit customizations
-            
             block tests
+                script(src="/vendor/qunit/qunit.js")
+                script(src="/vendor/qunit/theme-picker.js")
+                
                 for test in tests()
                     script(src=path.join(mount, test))
+                
+                script
+                    limn.test = require('limn/test');

@@ -4,12 +4,18 @@ ko = require 'knockout'
 
 { Model, StoredModel, ModelCache,
 } = require '../base'
-{ ParserMixin,
-} = require '../util/parser-mixin'
+{ Query, ParserMixin,
+} = require '../util'
+{ DataSource,
+} = require './datasource-model'
 
 
 class exports.Metric extends Model
     ParserMixin.mix this
+    
+    
+    (attributes) -> super ...
+    
     
     defaults : ->
         source_id  : null       # String
@@ -26,30 +32,84 @@ class exports.Metric extends Model
      * @type ko.computed<DataSource>
      * @depends source_id
      */
-    source : null
+    source : @asyncComputed ->
+        DataSource.lookup id if id = @get 'source_id'
+    
     
     /**
-     * The reified dates for the dataset associated with this Metric.
-     * @type ko.computed<Array>
-     * @depends source, source_col
+     * Query object for the parameters of this Metric.
+     * @type ko.computed<Query>
+     * @depends source_col, timespan
      */
-    dates : null
+    query : @computed ->
+        source_col = @get 'source_col'
+        timespan   = @get 'timespan'
+        return unless source_col? and timespan
+        Query()
+            .step       timespan.step()
+            .timespan   timespan.start(), timespan.end()
+            .columns    0, source_col
+    
     
     /**
      * The reified dataset associated with this Metric.
      * @type ko.computed<Array>
-     * @depends source, source_col
+     * @depends source, query
      */
-    data : null
-    
-    
+    data : @computed ->
+        return unless query = @query()
+        return unless csv   = @source()?.data()
+        query.apply csv.getData()
     
     
     /**
-     * @constructor
+     * The reified dates for the dataset associated with this Metric.
+     * @type ko.computed<Array>
+     * @depends source, query
      */
-    (attributes, @source) ->
-        super ...
+    dates : @computed ->
+        return unless query = @query()
+        return unless csv   = @source()?.data()
+        query
+            .rows false
+            .columns null
+            .call csv.getDateColumn()
+    
+    
+    /**
+     * The reified dataset associated with this Metric.
+     * @type ko.computed<Array>
+     * @depends source, query, source_col
+     */
+    values : @computed ->
+        source_col = @get 'source_col'
+        return unless source_col?
+        return unless query = @query()
+        return unless csv   = @source()?.data()
+        query
+            .rows false
+            .columns source_col
+            .apply csv.getData()
+    
+    
+    /**
+     * The reified dataset associated with this Metric.
+     * @type ko.computed<ColumnDef>
+     * @depends source, source_col
+     */
+    columnDef : @computed ->
+        source_col = @get 'source_col'
+        return unless source_col?
+        @source()?.columns()?[source_col]
+    
+    
+    /**
+     * The reified dataset associated with this Metric.
+     * @type ko.computed<String>
+     * @depends columnDefinition
+     */
+    defaultLabel : @computed ->
+        @columnDef()?.get 'label'
     
     
 

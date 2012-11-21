@@ -1,0 +1,197 @@
+_      = require 'underscore'
+op     = require 'operator'
+
+
+STOP_ITERATION = exports.STOP_ITERATION = {}
+
+/**
+ * @class A stream Iterator, implementing the typical iteration interface (`hasNext`, `next`).
+ */
+class exports.Iterator
+    @STOP_ITERATION = STOP_ITERATION
+    
+    /**
+     * Number of values returned.
+     * @type Number
+     */
+    count : 0
+    
+    
+    /**
+     * @constructor
+     */
+    ->
+        @count = 0
+    
+    
+    /**
+     * Called to advance the iterator and fetch the next value.
+     * @abstract
+     * @protected
+     * @returns {*}
+     */
+    getNext : -> ...
+    
+    
+    /**
+     * Called to check whether the iterator is exhausted. Calls should not
+     * mutate the iterator's state.
+     * 
+     * @abstract
+     * @returns {Boolean}
+     */
+    hasNext : -> ...
+    
+    
+    /**
+     * @abstract
+     * @returns {Iterator} A copy of this iterator, with independent state.
+     */
+    clone: ->
+        ...
+    
+    
+    /**
+     * Advance the iterator and return either `Iterator.STOP_ITERATION`
+     * or the next value.
+     * 
+     * @returns {*|Iterator.STOP_ITERATION}
+     */
+    next: ->
+        return STOP_ITERATION unless @hasNext()
+        @count++
+        @getNext()
+    
+    
+    /**
+     * Wrap this iterator in a `PipeIterator`, filtering and/or transforming each value with
+     * the given `transform` function before it is returned.
+     * 
+     * @param {Function} [transform] Function invoked to transform values.
+     * @param {Function} [filter] Function invoked to filter values.
+     * @returns {PipeIterator} Wrap this iterator in a `PipeIterator`,
+     *  transforming each value before it is returned.
+     */
+    pipe : (transform, filter) ->
+        new PipeIterator this, {transform, filter}
+    
+    
+    /**
+     * Exhausts the Iterator from its current position, returning an array of its values.
+     * @returns {Array} The values.
+     */
+    toArray : ->
+        out = []
+        while @hasNext()
+            val = @next()
+            break if val is STOP_ITERATION
+            out.push val
+        out
+
+
+/**
+ * @class Iterator which sequentially walks an Indexable -- an object with numeric
+ * properties and a `length` attribute -- including Arrays, but also Array-likes 
+ * such as the Arguments object, or HTML NodeLists.
+ * @extends Iterator
+ */
+class exports.IndexIterator extends Iterator
+    (@data) ->
+        @index = 0
+        super ...
+    
+    /**
+     * Advances the iterator's index.
+     * @returns {Number} Current index.
+     */
+    nextIndex : -> @index++
+    
+    /**
+     * @returns {Number} Iterator's length normalized to index iteration.
+     */
+    size      : -> @data.length
+    
+    getNext   : -> @data[ @nextIndex() ]
+    hasNext   : -> @index < _.result this, 'size'
+    
+    clone : ->
+        IteratorClass = @constructor
+        it = new IteratorClass @data
+        it.index = @index
+        it.count = @count
+        it
+
+
+/**
+ * @class IndexIterator that takes an array of many columns and zips
+ * together the same index from each column to produce each value.
+ * @extends IndexIterator
+ */
+class exports.ZipIterator extends IndexIterator
+    
+    (@data) ->
+        @size = _.max _.pluck @data, 'length'
+        super ...
+    
+    getNext : -> _.pluck @data, @nextIndex()
+
+
+/**
+ * @class Iterator which wraps another, transforming each value with
+ * the given `transform` function before it is returned.
+ * @extends Iterator
+ */
+class exports.PipeIterator extends Iterator
+    
+    (@iter, opts={}) ->
+        {transform, filter} = opts
+        @transform = transform if typeof transform is 'function'
+        @filter    = filter    if typeof filter    is 'function'
+        super ...
+    
+    /**
+     * Override to transform values before they are returned; this function
+     * will be passed both `STOP_ITERATION` responses and normal values as
+     * they occur. It may return whatever it pleases.
+     * 
+     * @param {*|STOP_ITERATION} val Value provided by `getNext()`.
+     * @param {Boolean} nextCheck `true` when invoked as part of `hasNext()`.
+     * @returns {*|STOP_ITERATION} Transformed value, including
+     *  `STOP_ITERATION` when appropriate.
+     */
+    transform: (val, nextCheck) ->
+        val
+    
+    /**
+     * Invoked prior to transform to test whether a value should be
+     * transformed and then included in the output stream.
+     * 
+     * @param {*|STOP_ITERATION} val Value provided by `getNext()`.
+     * @returns {Boolean} Whether to include the value in the stream.
+     */
+    filter: (val) ->
+        true
+    
+    getNext: ->
+        val = STOP_ITERATION
+        # Loop until we either find in acceptable value, or run out.
+        while @iter.hasNext()
+            val = @iter.getNext()
+            break if val is STOP_ITERATION or @filter val
+            val = STOP_ITERATION
+        val = @transform val, false if val is not STOP_ITERATION
+        val
+    
+    hasNext: ->
+        @iter.hasNext()
+    
+    clone: ->
+        IteratorClass = @constructor
+        it = new IteratorClass @iter, @transform, @filter
+        it.count = @count
+        it
+    
+
+
+
+

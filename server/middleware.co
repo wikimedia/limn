@@ -216,10 +216,10 @@ application = limn.application =
                 log_level : LOG_LEVEL
             
             # Support dynamic resources in tests
-            @use '/test', compiler do
+            @use '/js/limn/test', compiler do
                 enabled : <[ coco stylus jade-browser jade ]>
                 src     : TEST
-                dest    : "#varDir/test"
+                dest    : "#varDir/js/limn/test"
                 options : stylus : { +nib, include:"#WWW/css" }
                 allowed_methods : <[ GET HEAD ]>
                 log_level : LOG_LEVEL
@@ -258,7 +258,7 @@ application = limn.application =
             maxAge = staticMaxAge[NODE_ENV] ? staticMaxAge.default
             
             @use            express.static varDir, {maxAge}
-            @use '/test',   express.static TEST,   {maxAge}
+            @use '/js/limn/test', express.static TEST, {maxAge}
             @use            express.static WWW,    {maxAge}
             @use            express.static STATIC, {maxAge}
             

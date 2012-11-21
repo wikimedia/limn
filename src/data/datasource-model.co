@@ -16,7 +16,10 @@ Seq     = require 'seq'
 
 
 
-class exports.Column extends Model
+/**
+ * @class Encapsulates the definition of a column in a DataSource.
+ */
+class exports.ColumnDef extends Model
     ParserMixin.mix this
     
     (attributes, @source) -> super ...
@@ -38,7 +41,16 @@ class exports.Column extends Model
         @parseValue value, @get 'type'
 
 
+/**
+ * @class Metadata representing a source of data, such as a CSV file or
+ * a web service endpoint.
+ */
 class exports.DataSource extends StoredModel
+    VALID_FORMATS : <[ json csv ]>
+    
+    (attributes={}) -> super attributes
+    
+    
     resource : 'datasources'
     getId    : -> @get 'id'
     
@@ -57,27 +69,29 @@ class exports.DataSource extends StoredModel
         timespan      : { start:null, end:null, step:'1mo' }
         
         /**
-         * @type Column[]
+         * @type ColumnDef[]
          */
         columns       : []
     
     attributeTypes :
-        columns : Column
-    
+        columns : ColumnDef
     
     
     /**
-     * @constructor
+     * Whether this 
+     * @type ko.computed<Boolean>
      */
-    (attributes={}) ->
-        super attributes
+    isValid : @computed ->
+        !! @get('url') and _.contains @VALID_FORMATS, @get('format')
     
     
     /**
      * The reified dataset associated with this DataSource.
-     * @type ko.asyncComputed
+     * @type ko.asyncComputed<TimeSeriesData|CSVData>
      */
-    data : @asyncComputed { +deferEvaluation }, ->
+    data : @asyncComputed ->
+        return unless @isValid()
+        
         format       = @get 'format'
         DataFileType = if format is 'csv' then CSVData else TimeSeriesData
         
@@ -104,7 +118,7 @@ class exports.DataSource extends StoredModel
      * @param {Object} data Raw DataSource attributes to canonicalize.
      * @returns {Object} Converted raw data.
      */
-    canonicalize: (data) ->
+    canonicalize : (data) ->
         data.shortName    or= data.name
         data.title        or= data.name
         data.subtitle     or= ''
@@ -125,10 +139,6 @@ class exports.DataSource extends StoredModel
                 type = cols.types[idx] or 'int'
                 {id, idx, label, type}
         data
-    
-    
-    
-    
     
     
 
@@ -153,6 +163,3 @@ DataSource.fetchAll = ->
 
 DataSource.getAllSources = ->
     _.map ALL_SOURCES, op.I
-
-
-

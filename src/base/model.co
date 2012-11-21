@@ -70,21 +70,34 @@ class exports.Model extends EventEmitter
         @attributes = @generateAttributes attributes, @attributeTypes
         _.defaults this, @attributes
         
-        # Build observables and computed property instances
+        # Build observables and computed property instances.
+        @_reifyObservables()
+        
+        this
+    
+    /**
+     * Build observables and computed property instances.
+     * @protected
+     */
+    _reifyObservables: ->
+        owner = this
         for name, fn in this
             continue unless typeof fn is 'function'
             continue if fn is @attributes[name]
             
+            read = fn
             if fn.__computed__
-                options = { read:fn, owner:this } import fn.__computed_options__
+                options = { read, owner } import fn.__computed_options__
                 this[name] = ko.computed(options)
             if fn.__async_computed__
-                options = { read:fn, owner:this } import fn.__async_computed_options__
+                options = { read, owner } import fn.__async_computed_options__
                 this[name] = ko.computed(options).async({} import options)
             else if ko.isObservable fn
                 this[name] = ko.utils.makeObservable fn.peek()
-        
         this
+    
+    
+    
     
     
     /**
@@ -99,6 +112,9 @@ class exports.Model extends EventEmitter
      */
     defaults: ->
         {}
+    
+    
+    
     
     /**
      * Gets the value of the id attribute for this model.
@@ -123,6 +139,7 @@ class exports.Model extends EventEmitter
         json = @toJS @attributes
         ModelClass = @constructor
         new ModelClass json
+    
     
     
     /* * * *  Knockout-Aware Accessors  * * * {{{ */
@@ -347,7 +364,7 @@ class exports.Model extends EventEmitter
     @computed = (options, method) ->
         [method, options] = [options, {}] if typeof options is 'function'
         method.__computed__ = true
-        method.__computed_options__ = options
+        method.__computed_options__ = {+deferEvaluation} import options
         method
     
     /**
@@ -361,7 +378,7 @@ class exports.Model extends EventEmitter
     @asyncComputed = (options, method) ->
         [method, options] = [options, {}] if typeof options is 'function'
         method.__async_computed__ = true
-        method.__async_computed_options__ = options
+        method.__async_computed_options__ = {+deferEvaluation} import options
         method
     
     

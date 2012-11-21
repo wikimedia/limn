@@ -1,0 +1,3 @@
+model = require './model'
+
+exports import model
