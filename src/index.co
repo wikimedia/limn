@@ -40,11 +40,15 @@ class limn.LimnApp # {{{
         @currentView = ko.observable new limn.base.LoadingView()
         ko.applyBindings this
         
-        page '/:view/:id/:action?', (view, id, action) ~>
+        page '/:view/:id?/:action?', (context, next) ~>
+            view    = context.params.view
+            id      = context.params.id
+            action  = context.params.action
+            
             if ViewType = @views[view]
                 @currentView new ViewType id, action
             else
-                page '/404'
+                next()
         page '*', ~>
             @currentView new @views['404']()
         page()
