@@ -12,6 +12,7 @@ class exports.DashboardView extends View
         @model = ko.observable new Dashboard id: id
         @tabs = ko.observableArray()
         @model().fetch().done ~>
-            for tab of @model().tabs()
-                tabView = new DashboardTabView tab
-                @tabs.push tabView
+            @model().fetchGraphs().done ~>
+                for tab of @model().tabs()
+                    tabView = new DashboardTabView tab
+                    @tabs.push tabView

@@ -11,5 +11,5 @@ class exports.GraphView extends View
         if idOrTab instanceof Graph
             @model idOrTab
         else
-            @model new Graph id: id
+            @model new Graph id: idOrTab
             @model().fetch()

@@ -9,6 +9,7 @@ class exports.DashboardTabView extends View
     (tab) ->
         @model = ko.observable tab
         @graphs = ko.observableArray()
+        # FIXME: a common pattern is synchronizing two observable arrays, and this isn't clean:
         for graph of @model().graphs()
-            graphView = new GraphView tab
+            graphView = new GraphView graph
             @graphs.push graphView
