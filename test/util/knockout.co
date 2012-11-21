@@ -11,3 +11,23 @@ asyncTest 'create computed async', ->
         start()
         ok(emptyModel().length > 0, 'and make sure it computes the result')
 
+
+/******** Subview Binding ********/
+QUnit.module '[util] Subview Binding', do
+    setup: ->
+        $('body').append '<div id="subviewBindingTest" data-bind="subview: subviewProperty" style="display: none"></div>'
+        $('body').append '<script id="subviewTestTemplate" type="text/html"><p data-bind="text: checkThisBinds"></p></script>'
+    teardown: ->
+        $('#subviewBindingTest').remove()
+        $('#subviewTestTemplate').remove()
+
+test 'apply bindings', ->
+    viewModel =
+        subviewProperty: ko.observable()
+    ko.applyBindings viewModel, $('#subviewBindingTest')[0]
+    
+    viewModel.subviewProperty(
+        template: 'subviewTestTemplate'
+        checkThisBinds: 'check value'
+    )
+    strictEqual $('#subviewBindingTest p').text(), viewModel.subviewProperty().checkThisBinds, 'subview template rendered and bindings applied'

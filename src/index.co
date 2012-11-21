@@ -45,6 +45,11 @@ class limn.LimnApp # {{{
             id      = context.params.id
             action  = context.params.action
             
+            # default to the reportcard dashboard
+            unless view
+                view = 'dashboards'
+                id = 'reportcard'
+            
             if ViewType = @views[view]
                 @currentView new ViewType id, action
             else

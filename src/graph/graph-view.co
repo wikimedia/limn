@@ -1,0 +1,11 @@
+{ View,
+} = require '../base/view'
+{ Graph,
+} = require './graph-model'
+
+class exports.GraphView extends View
+    template: 'graph'
+    
+    (id, action) ->
+        @model = ko.observable new Graph id: id
+        @model().fetch()

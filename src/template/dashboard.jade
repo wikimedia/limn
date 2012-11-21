@@ -1,0 +1,8 @@
+<!-- ko with: model() -->
+section.dashboard
+    h2(data-bind="text: headline")
+    h3(data-bind="text: subhead")
+    
+    ol(data-bind="foreach: tabs")
+        li(data-bind="subview: $data")
+<!-- /ko -->

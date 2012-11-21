@@ -1,0 +1,11 @@
+{ View,
+} = require '../base/view'
+{ Dashboard,
+} = require './dashboard-model'
+
+class exports.DashboardView extends View
+    template: 'dashboard'
+    
+    (id, action) ->
+        @model = ko.observable new Dashboard id: id
+        @model().fetch()

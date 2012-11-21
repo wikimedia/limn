@@ -1,4 +1,5 @@
 graph_model         = require './graph-model'
 graph_node_data     = require './graph-node-data'
+graph_view          = require './graph-view'
 
-exports import graph_model import graph_node_data
+exports import graph_model import graph_node_data import graph_view

@@ -87,10 +87,13 @@ development:
             - dashboard:
                 - dashboard-model
                 - dashboard-tab-model
+                - dashboard-tab-view
+                - dashboard-view
                 - index
             - graph:
                 - graph-model
                 - graph-node-data
+                - graph-view
                 - index
             - data:
                 - metric-model
