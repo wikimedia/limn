@@ -2,6 +2,8 @@ ko = require 'knockout'
 
 class exports.View
     template: ''
+    ->
+        @model = ko.observable()
 
 
 class exports.NotFoundView extends exports.View
