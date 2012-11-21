@@ -1,5 +1,6 @@
 ko = require 'knockout'
 
+subviewDomDataKey = '__ko_subviewBindingData'
 /**
  * Custom binding that is used as follows:
  * `<section data-bind="subview: observableProperty"></section>`
@@ -10,11 +11,11 @@ ko = require 'knockout'
  */
 ko.bindingHandlers.subview = do
     init: (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) ->
-        controlDescendantBindings: true
+        controlsDescendantBindings: true
     
     update: (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) ->
         unwrapped = ko.utils.unwrapObservable valueAccessor()
-        if unwrapped?.template and element
-            $(element).html $("##{unwrapped.template}").html()
-            childContext = bindingContext.createChildContext unwrapped
-            ko.applyBindingsToDescendants childContext, element
+
+        $(element).html $("##{unwrapped.template}").html()
+        childContext = bindingContext.createChildContext unwrapped
+        ko.applyBindingsToDescendants childContext, element
