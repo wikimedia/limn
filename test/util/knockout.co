@@ -31,3 +31,24 @@ test 'apply bindings', ->
         checkThisBinds: 'check value'
     )
     strictEqual $('#subviewBindingTest p').text(), viewModel.subviewProperty().checkThisBinds, 'subview template rendered and bindings applied'
+
+test 'apply nested bindings', ->
+    viewModel =
+        subviewProperty: ko.observable()
+    ko.applyBindings viewModel, $('#subviewBindingTest')[0]
+    
+    viewModel.subviewProperty(
+        template: 'subviewTestTemplate'
+        checkThisBinds: 'check value'
+        nestedSubview: ko.observable()
+    )
+    $('#subviewBindingTest').append('<div id="nested" data-bind="subview: nestedSubview"></div>')
+    
+    # the next line wouldn't normally be needed because bindings wouldn't be added dynamically
+    ko.applyBindings viewModel.subviewProperty(), $('#nested')[0]
+    
+    viewModel.subviewProperty().nestedSubview(
+        template: 'subviewTestTemplate'
+        checkThisBinds: 'check value nested'
+    )
+    strictEqual $('#subviewBindingTest div p').text(), viewModel.subviewProperty().nestedSubview().checkThisBinds, 'nested subview template ok'
