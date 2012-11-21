@@ -24,8 +24,8 @@ html(lang="en", dir="ltr")
     
     body
         block body
-            section.page(data-bind="subview: currentView")
             
+        block defs
             .templates
                 block jade-templates
                     for f in glob.sync(TEMPLATE+'/**/*.@(jade|html)')

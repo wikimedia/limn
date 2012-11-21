@@ -3,12 +3,11 @@ ko = require 'knockout'
 class exports.View
     template: ''
 
-class exports.NotFoundView extends View
+
+class exports.NotFoundView extends exports.View
     template: 'notFound'
     message: ko.observable 'This does not exist'
-    ->
-        if arguments?.length > 0
-            @message "This does not exist: #{arguments.join(', ')}"
 
-class exports.LoadingView extends View
+
+class exports.LoadingView extends exports.View
     template: 'loading'

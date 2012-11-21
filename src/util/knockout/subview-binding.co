@@ -1,5 +1,13 @@
 ko = require 'knockout'
 
+/**
+ * Custom binding that is used as follows:
+ * `<section data-bind="subview: observableProperty"></section>`
+ * And works as follows:
+ *   In the example above, observableProperty is a ko.observable whose value is an object that has a `template` property
+ *   The binding finds the template with id `observableProperty().template` and fills it as the innerHTML of the section element
+ *   The binding then sets the context for the section's child elements as the observableProperty (like with: observableProperty)
+ */
 ko.bindingHandlers.subview = do
     init: (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) ->
         controlDescendantBindings: true

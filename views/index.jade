@@ -3,7 +3,8 @@ extends layout
 block title
     title Limn
 
-block addenda
+block body
+    section.page(data-bind="subview: currentView")
 
 append styles
     //-
@@ -37,5 +38,5 @@ append main-scripts
             op       = limn.op;
             guidFor  = limn.guidFor;
             emitters = limn.emitters;
-        
-    
+
+block addenda
