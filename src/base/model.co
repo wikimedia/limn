@@ -1,20 +1,17 @@
-{ _, op, root, generateId, guidFor,
-} = require '../util'
-{ EventEmitter, ReadyEmitter,
-} = require 'emitters'
-{ Resource,
-} = require './resource'
-
 ko     = require 'knockout'
 unwrap = ko.utils.unwrapObservable
 
+{ EventEmitter, ReadyEmitter,
+} = require 'emitters'
+
+{ _, op, root, generateId, guidFor,
+} = require '../util'
 
 
 
 /**
  * @class Root-class for all Models.
  * @extends EventEmitter
- * @mixes Resource
  */
 class exports.Model extends EventEmitter
     
@@ -28,15 +25,6 @@ class exports.Model extends EventEmitter
      * @type String
      */
     __id__ : null
-    
-    /**
-     * When set, this overrides the result of `isNew()`, allowing formerly saved
-     * models to become new again.
-     * 
-     * @protected
-     * @type Boolean
-     */
-    _isNew : null
     
     /**
      * Attribute data of the model. Individual properties are also aliased 
@@ -75,29 +63,14 @@ class exports.Model extends EventEmitter
         
         this
     
+    
+    
     /**
-     * Build observables and computed property instances.
-     * @protected
+     * Gets the value of the id attribute for this model.
+     * @returns {String} Instance's id.
      */
-    _reifyObservables: ->
-        owner = this
-        for name, fn in this
-            continue unless typeof fn is 'function'
-            continue if fn is @attributes[name]
-            
-            read = fn
-            if fn.__computed__
-                options = { read, owner } import fn.__computed_options__
-                this[name] = ko.computed(options)
-            if fn.__async_computed__
-                options = { read, owner } import fn.__async_computed_options__
-                this[name] = ko.computed(options).async({} import options)
-            else if ko.isObservable fn
-                this[name] = ko.utils.makeObservable fn.peek()
-        this
-    
-    
-    
+    getId: ->
+        @__id__
     
     
     /**
@@ -114,35 +87,20 @@ class exports.Model extends EventEmitter
         {}
     
     
-    
-    
     /**
-     * Gets the value of the id attribute for this model.
-     * @returns {String} Instance's id.
-     */
-    getId: ->
-        @__id__
-    
-    /**
-     * @returns {Boolean} Whether the model has been saved to the server.
-     */
-    isNew: ->
-        if typeof @_isNew is 'boolean' then @_isNew else not @getId()?
-    
-    /**
-     * Clone this model.
+     * Invoked to transform raw attribute data into its "proper" form for
+     * this model, whatever that might be.
      * 
-     * @returns {Model} A new instance of this model, bearing the same attributes.
+     * @param {Object} data Raw attributes to canonicalize.
+     * @returns {Object} Converted raw data.
      */
-    clone: ->
-        # TODO: @attributes might contain objects or models that need recursive cloning?
-        json = @toJS @attributes
-        ModelClass = @constructor
-        new ModelClass json
+    canonicalize: (data) ->
+        data
     
     
     
     /* * * *  Knockout-Aware Accessors  * * * {{{ */
+    
     
     /**
      * Gets the attribute value at `key`.
@@ -152,6 +110,7 @@ class exports.Model extends EventEmitter
      */
     get: (key) ->
         unwrap @attributes?[key]
+    
     
     /**
      * Gets the attribute value at `key`, circumventing dependency tracking.
@@ -164,6 +123,7 @@ class exports.Model extends EventEmitter
             val.peek()
         else
             val
+    
     
     /**
      * Puts a single attribute value to `key`.
@@ -183,11 +143,15 @@ class exports.Model extends EventEmitter
             obs val
         this
     
+    
     /**
-     * Sets attribute values, taking either a single (key, value)-pair, or a map of them.
+     * Sets attribute values, taking either a single (key, value)-pair, or
+     * a map of them.
      * 
-     * @param {String|Object} key The key to set. If an object is supplied here, each key will be set with its value on the target object.
-     * @param {*} [value] Value to set at `key`. Omit this if an object of KV-pairs was passed as `key`.
+     * @param {String|Object} key The key to set. If an object is supplied here,
+     *  each key will be set with its value on the target object.
+     * @param {*} [value] Value to set at `key`. Omit this if an object of
+     *  KV-pairs was passed as `key`.
      * @returns {this}
      */
     set: (key, val) ->
@@ -200,6 +164,7 @@ class exports.Model extends EventEmitter
             @_set key, value
         this
     
+    
     /**
      * Sets the attribute value at `key` to `undefined`.
      * 
@@ -208,6 +173,7 @@ class exports.Model extends EventEmitter
      */
     unset: (key) ->
         @_set key, undefined
+    
     
     /**
      * Sets the attribute value at `key` to `undefined`, and then removes
@@ -227,6 +193,7 @@ class exports.Model extends EventEmitter
         
         delete @attributes[key]
         this
+    
     
     /**
      * Updates model with new data such that it will only contain keys
@@ -248,6 +215,7 @@ class exports.Model extends EventEmitter
         
         this
     
+    
     /**
      * Delete all attributes from the model.
      * @returns {this}
@@ -255,58 +223,26 @@ class exports.Model extends EventEmitter
     clear: ->
         @update {}
     
+    
+    /**
+     * Clone this model.
+     * @returns {Model} A new instance of this model, bearing the same attributes.
+     */
+    clone: ->
+        # TODO: @attributes might contain objects or models that need recursive cloning?
+        json = @toJS @attributes
+        ModelClass = @constructor
+        new ModelClass json
+    
+    
     # }}}
+    /* * * *  Serialization  * * * {{{ */
     
-    
-    /**
-     * Invoked to transform raw attribute data into its "proper" form for
-     * this model, whatever that might be.
-     * 
-     * @param {Object} data Raw attributes to canonicalize.
-     * @returns {Object} Converted raw data.
-     */
-    canonicalize: (data) ->
-        data
-    
-    /**
-     * Wraps the properties found in the `attributes` map with observables,
-     * applying types as specified in `attrTypes`.
-     * 
-     * @param {Map} data Hash of nascent attributes.
-     * @param {Map<Key, ModelClass>} [attrTypes={}] Model type to ensure.
-     * @param {Object} [target={}] Hash to which nascent attributes shall be attached.
-     * @returns {Object} The transformed attributes map.
-     */
-    generateAttributes: (data, attrTypes={}, target={}) ->
-        return target unless data
-        return _.reduce do
-            data
-            (attributes, val, key) ~>
-                attributes[key] = @generateAttribute val, attrTypes[key]
-                attributes
-            target
-    
-    /**
-     * Wraps a single attribute value with the appropriate observable machinery,
-     * auto-coercing incoming data to `ModelType` if provided.
-     * 
-     * @param {*} val Initial value.
-     * @param {Class<Model>} [ModelType] Model type to ensure.
-     * @returns {ko.observable} The new observable attribute. You should assign
-     *  this to the right place on `attributes`, bro.
-     */
-    generateAttribute: (val, ModelType) ->
-        if _.isArray val
-            obs = ko.observableArray val
-        else
-            if typeof ModelType is not 'function' and _.isPlainObject(val)
-                val = @generateAttributes val, ModelType
-            obs = ko.observable val
-        obs = obs.typed ModelType if ModelType
-        obs
     
     /**
      * Recursively unwrap any observables in the given attributes hash.
+     * Called by `toJSON()`.
+     * 
      * @returns {Object} A plain JS object, suitable for serialization.
      */
     toJS: (attributes=@attributes) ->
@@ -325,8 +261,82 @@ class exports.Model extends EventEmitter
                 json
             {}
     
+    
     toJSON: ->
         @toJS @attributes
+    
+    
+    
+    # }}}
+    /* * * *  Helpers  * * * {{{ */
+    
+    
+    /**
+     * Build observables and computed property instances.
+     * @protected
+     * @returns {this}
+     */
+    _reifyObservables: ->
+        owner = this
+        for name, fn in this
+            continue unless typeof fn is 'function'
+            continue if fn is @attributes[name]
+            
+            read = fn
+            if fn.__computed__
+                options = { read, owner } import fn.__computed_options__
+                this[name] = ko.computed(options)
+            if fn.__async_computed__
+                options = { read, owner } import fn.__async_computed_options__
+                this[name] = ko.computed(options).async({} import options)
+            else if ko.isObservable fn
+                this[name] = ko.utils.makeObservable fn.peek()
+        this
+    
+    
+    /**
+     * Wraps the properties found in the `attributes` map with observables,
+     * applying types as specified in `attrTypes`.
+     * 
+     * @protected
+     * @param {Map} data Hash of nascent attributes.
+     * @param {Map<Key, ModelClass>} [attrTypes={}] Model type to ensure.
+     * @param {Object} [target={}] Hash to which nascent attributes shall be attached.
+     * @returns {Object} The transformed attributes map.
+     */
+    generateAttributes: (data, attrTypes={}, target={}) ->
+        return target unless data
+        return _.reduce do
+            data
+            (attributes, val, key) ~>
+                attributes[key] = @generateAttribute val, attrTypes[key]
+                attributes
+            target
+    
+    
+    /**
+     * Wraps a single attribute value with the appropriate observable machinery,
+     * auto-coercing incoming data to `ModelType` if provided.
+     * 
+     * @protected
+     * @param {*} val Initial value.
+     * @param {Class<Model>} [ModelType] Model type to ensure.
+     * @returns {ko.observable} The new observable attribute. You should assign
+     *  this to the right place on `attributes`, bro.
+     */
+    generateAttribute: (val, ModelType) ->
+        if _.isArray val
+            obs = ko.observableArray val
+        else
+            if typeof ModelType is not 'function' and _.isPlainObject(val)
+                val = @generateAttributes val, ModelType
+            obs = ko.observable val
+        obs = obs.typed ModelType if ModelType
+        obs
+    
+    
+    
+    # }}}
     
     
     toString: ->
@@ -335,6 +345,7 @@ class exports.Model extends EventEmitter
         Class     = @constructor
         className = Class.displayName or Class.name
         "#className(cid=#cid, id=#id)"
+    
     
     
     
@@ -392,6 +403,7 @@ class exports.Model extends EventEmitter
         for own k, v in SuperClass
             SubClass[k] = v unless SubClass[k]
             # SubClass[k] = v unless _.contains <[ apply call constructor toString ]>, k
+        SubClass.__id__    = generateId()
         SubClass.__super__ = SuperClass::
         SubClass
     
