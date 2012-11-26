@@ -53,13 +53,11 @@ class exports.Model extends EventEmitter
         @attributes        = {}
         @attributeTypes  or= {}
         
-        # Resolve attributes
-        attributes  = @canonicalize _.merge @defaults(), attributes
-        @attributes = @generateAttributes attributes, @attributeTypes
-        _.defaults this, @attributes
+        # Build and type attribute observers.
+        @_setupAttributes attributes, @attributeTypes
         
-        # Build observables and computed property instances.
-        @_reifyObservables()
+        # Build non-attribute observables and computed property instances.
+        @_setupObservables()
         
         this
     
@@ -137,7 +135,7 @@ class exports.Model extends EventEmitter
         return this unless key?
         throw new Error "Attributes hash does not exist!" unless @attributes?
         unless ko.isObservable obs = @attributes[key]
-            obs = @attributes[key] = @generateAttribute val, @attributeTypes[key]
+            obs = @attributes[key] = @_generateAttribute val, @attributeTypes[key]
             @[key] ?= obs
         else
             obs val
@@ -274,32 +272,69 @@ class exports.Model extends EventEmitter
     /**
      * Build observables and computed property instances.
      * @protected
-     * @returns {this}
+     * @param {Object} [target=this] Target object for processed properties.
+     * @param {Object} [source=this] Source object to process.
+     * @returns {Object} Target object.
      */
-    _reifyObservables: ->
-        owner = this
-        for name, fn in this
+    _setupObservables: (target=this, source=this) ->
+        for name, fn in source
+            # We only care about functions
             continue unless typeof fn is 'function'
+            
+            # Preserve attribute-observers
             continue if fn is @attributes[name]
             
-            read = fn
-            if fn.__computed__
-                options = { read, owner } import fn.__computed_options__
-                this[name] = ko.computed(options)
-            if fn.__async_computed__
-                options = { read, owner } import fn.__async_computed_options__
-                this[name] = ko.computed(options).async({} import options)
-            else if ko.isObservable fn
-                val = fn.peek()
-                if typeof val?.clone is 'function'
-                    val = val.clone()
-                else if _.isArray val
-                    val .= slice()
-                else if _.isObject val
-                    val = _.merge {}, val
-                this[name] = ko.utils.makeObservable val
-        this
+            # Build observables/computed properties
+            target[name] = @_setupObservable fn, name, target
+        target
     
+    
+    /**
+     * Build observable or computed property instance for a
+     * given (methodName, method) pair.
+     * 
+     * @protected
+     * @param {*} method Value at `name`.
+     * @param {String} methodName Property name.
+     * @param {Object} [owner=this] Owner-object for `ko.computed`.
+     * @returns {*} New property value.
+     */
+    _setupObservable: (fn, name, owner=this) ->
+        return fn unless typeof fn is 'function'
+        
+        # Preserve attribute-observers
+        return fn if fn is @attributes[name]
+        
+        read = fn
+        # Annotated to become a computed observer
+        if fn.__computed__
+            options = { read, owner } import fn.__computed_options__
+            return ko.computed(options)
+            
+        # Annotated to become an async computed observer
+        else if fn.__async_computed__
+            options = { read, owner } import fn.__async_computed_options__
+            return ko.computed(options).async({} import options)
+            
+        # Re-wrap non-attribute observables and copy objects so neither causes shared state
+        else if ko.isObservable fn
+            val = fn.peek()
+            if typeof val?.clone is 'function'
+                val = val.clone()
+            else if _.isArray val
+                val .= slice()
+            else if _.isObject val
+                val = _.merge {}, val
+            return ko.utils.makeObservable val
+        
+        fn
+    
+    
+    _setupAttributes: (attributes, attrTypes=@attributeTypes) ->
+        attributes  = @canonicalize _.merge @defaults(), attributes
+        @attributes = @_generateAttributes attributes, attrTypes
+        _.defaults this, @attributes
+        @attributes
     
     /**
      * Wraps the properties found in the `attributes` map with observables,
@@ -311,12 +346,12 @@ class exports.Model extends EventEmitter
      * @param {Object} [target={}] Hash to which nascent attributes shall be attached.
      * @returns {Object} The transformed attributes map.
      */
-    generateAttributes: (data, attrTypes={}, target={}) ->
+    _generateAttributes: (data, attrTypes={}, target={}) ->
         return target unless data
         return _.reduce do
             data
             (attributes, val, key) ~>
-                attributes[key] = @generateAttribute val, attrTypes[key]
+                attributes[key] = @_generateAttribute val, attrTypes[key]
                 attributes
             target
     
@@ -331,12 +366,12 @@ class exports.Model extends EventEmitter
      * @returns {ko.observable} The new observable attribute. You should assign
      *  this to the right place on `attributes`, bro.
      */
-    generateAttribute: (val, ModelType) ->
+    _generateAttribute: (val, ModelType) ->
         if _.isArray val
             obs = ko.observableArray val
         else
             if typeof ModelType is not 'function' and _.isPlainObject(val)
-                val = @generateAttributes val, ModelType
+                val = @_generateAttributes val, ModelType
             obs = ko.observable val
         obs = obs.typed ModelType if ModelType
         obs
