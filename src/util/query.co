@@ -40,7 +40,7 @@ class Query
             this
     
     @option 'rows'
-    @option 'columns', (...idxes) -> idxes
+    @option 'columns', (...indexes) -> indexes
     
     @option 'timeCol'
     @option 'step', 'timeStep'
