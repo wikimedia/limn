@@ -1,10 +1,10 @@
 ko = require 'knockout'
 
-{ Model,
-} = require './model'
+{ Base,
+} = require './base'
 
 
-class exports.View extends Model
+class exports.View extends Base
     
     /**
      * @type ko.observable<Model>
