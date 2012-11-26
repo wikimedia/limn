@@ -16,19 +16,16 @@ define ['elements/Base', 'Storage'], (BaseElement, Storage) ->
             
             @chart.metrics.push(this)
             
-            @sel.selectAll 'path.metricLine'
-                .data [@column()]
-                .enter().append 'path'
-                    .attr 'd', @chart.lineGenerator
-                    .classed 'metricLine', true
-                    .attr 'data-metricIndex', @columnHeader()
-                    .style 'stroke', @chart.colorScale
-                    .style 'stroke-width', 5
-                    .style 'fill', 'none'
-                    .attr 'vector-effect', 'non-scaling-stroke'
+            @sel.append 'path'
+                .classed 'metricLine', true
+                .style 'stroke-width', 5
+                .style 'fill', 'none'
+                .attr 'vector-effect', 'non-scaling-stroke'
         
         renderLine: ->
             @sel.selectAll 'path.metricLine'
+                .attr 'data-metricIndex', @columnHeader()
+                .style 'stroke', ~> @chart.colorScale @columnHeader()
                 .data [@column()]
                 .transition()
-                .attr 'd', @chart.lineGenerator
+                    .attr 'd', @chart.lineGenerator

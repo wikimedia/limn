@@ -1,0 +1,7 @@
+ko.bindingHandlers.ready = {
+  init: function(element, valueAccessor, allBindingsAccessor, bindingContext){
+    var readyHandler;
+    readyHandler = ko.utils.unwrapObservable(valueAccessor());
+    return readyHandler != null ? readyHandler.call(bindingContext, $(element)) : void 8;
+  }
+};

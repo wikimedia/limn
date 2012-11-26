@@ -39,3 +39,37 @@ define ['elements/Base'], (BaseElement) ->
             @yScale().range [0, @el.innerHeight()]
             
             @renderChildren @sel
+        
+        height: -> @el.innerHeight()
+        width: -> @el.innerWidth()
+        
+        
+        /* HELPER FUNCTIONS */
+        
+        /**
+         * @public
+         * Formats a number as Thousands, Millions, Billions, etc.
+         * @param {number} n
+         * @returns {string} string representation of n
+         */
+        numberFormatter: (n) ->
+            numberFormats = [
+                { ge: 1000000000000,    f: 'T' },
+                { ge: 1000000000,       f: 'B' },
+                { ge: 1000000,          f: 'M' },
+                { ge: 1000,             f: 'K' },
+            ]
+            for format of numberFormats
+                if n >= format.ge
+                    trimmed = n/format.ge
+                    trimmed = trimmed.toFixed(1) unless trimmed == Math.round(trimmed)
+                    return trimmed + format.f
+            return n
+
+        /**
+         * @public
+         * Default standard date formatter
+         * @param {Date}
+         * returns {string} the date formatted as [abrev. month] [YYYY]
+         */
+        dateFormatter: d3.time.format("%b %Y")

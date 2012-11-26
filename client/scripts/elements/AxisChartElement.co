@@ -1,4 +1,26 @@
 define ['elements/Base'], (BaseElement) ->
     class AxisChartElement extends BaseElement
+        dimension: -> @options.dimension()
+        orient: -> @options.orient()
+        
         build: (parentElement) ->
+            @sel = parentElement.append 'g'
+                .classed "#{@dimension()}Axis", true
             
+            # make sure we can receive updates before we broadcast the metric
+            @chart.scales.subscribe (updated) ~>
+                @renderAxis.call this if updated
+            
+            
+        renderAxis: ->
+            @axis = null
+            switch @dimension()
+                case 'x'
+                    @axis = d3.svg.axis().scale(@chart.xScale()).ticks(d3.time.months, 4).tickFormat(@chart.dateFormatter)
+                    @sel.attr transform: "translate(0, #{@chart.height()})"
+                case 'y'
+                    @axis = d3.svg.axis().scale(@chart.yScale()).tickFormat(@chart.numberFormatter)
+            
+            @axis.orient @orient()
+            
+            @sel.call @axis
