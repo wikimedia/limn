@@ -1,4 +1,43 @@
 define ['elements/Base'], (BaseElement) ->
     class GridChartElement extends BaseElement
+        dimension: -> @options.dimension()
+        
         build: (parentElement) ->
+            @sel = parentElement.append 'g'
+                .classed "#{@dimension()}Grid", true
             
+            # make sure we can receive updates before we broadcast the metric
+            @chart.scales.subscribe (updated) ~>
+                @renderGrid.call this if updated
+        
+        
+        renderGrid: ->
+            switch @dimension()
+                case 'x'
+                    ticks = @chart.xScale().ticks(20)
+                    scale = @chart.xScale()
+                    enter =
+                        y1: 0
+                        y2: @chart.height()
+                    transition =
+                        x1: @chart.xScale()
+                        x2: @chart.xScale()
+                
+                case 'y'
+                    ticks = @chart.yScale().ticks()
+                    scale = @chart.yScale()
+                    enter =
+                        x1: 0
+                        x2: @chart.width()
+                    transition =
+                        y1: @chart.yScale()
+                        y2: @chart.yScale()
+            
+            gridLinesData = @sel.selectAll 'line'
+                .data ticks
+            gridLinesData.enter().append 'line'
+                .attr 'vector-effect': 'non-scaling-stroke'
+                .attr enter
+            gridLinesData.transition()
+                .attr transition
+            gridLinesData.exit().remove()

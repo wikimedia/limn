@@ -1,2 +1,3 @@
 div.visualization > fieldset { vertical-align: top; display: inline-block; width: 20%; }
 div.visualization > svg { vertical-align: top; display: inline-block; width: 75%; height: 420px; }
+div.visualization > svg line { stroke: #cacaca; }
