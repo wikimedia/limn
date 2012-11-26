@@ -290,7 +290,14 @@ class exports.Model extends EventEmitter
                 options = { read, owner } import fn.__async_computed_options__
                 this[name] = ko.computed(options).async({} import options)
             else if ko.isObservable fn
-                this[name] = ko.utils.makeObservable fn.peek()
+                val = fn.peek()
+                if typeof val?.clone is 'function'
+                    val = val.clone()
+                else if _.isArray val
+                    val .= slice()
+                else if _.isObject val
+                    val = _.merge {}, val
+                this[name] = ko.utils.makeObservable val
         this
     
     
