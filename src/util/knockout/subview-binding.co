@@ -16,6 +16,7 @@ ko.bindingHandlers.subview = do
     update: (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) ->
         unwrapped = ko.utils.unwrapObservable valueAccessor()
 
-        $(element).html $("##{unwrapped.template}").html()
-        childContext = bindingContext.createChildContext unwrapped
-        ko.applyBindingsToDescendants childContext, element
+        if unwrapped?.template
+            $(element).html $("##{unwrapped.template}").html()
+            childContext = bindingContext.createChildContext unwrapped
+            ko.applyBindingsToDescendants childContext, element
