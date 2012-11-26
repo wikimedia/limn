@@ -54,19 +54,41 @@ class exports.Resource extends Mixin
     /* * * *  Instance Methods  * * * {{{ */
     
     /**
-     * Root prepended to all resource requests
-     * @type {String|Function}
-     */
-    urlRoot : ->
-        require('limn').mount()
-    
-    /**
      * The name of the resource -- by convention, resources are named with plural nouns.
      * @type {String|Function}
      */
     resource : ''
     
     
+    /**
+     * When set, this overrides the result of `isNew()`, allowing formerly saved
+     * models to become new again.
+     * 
+     * @protected
+     * @type Boolean
+     */
+    _isNew : null
+    
+    
+    
+    /**
+     * @returns {Boolean} Whether the resource has been saved to the server.
+     */
+    isNew: ->
+        if typeof @_isNew is 'boolean' then @_isNew else not @getId()?
+    
+    
+    /**
+     * Root prepended to all resource requests
+     * @type {String|Function}
+     */
+    urlRoot : ->
+        '/'
+    
+    
+    /**
+     * @returns {String} URL to this resource.
+     */
     url: ->
         throw new Error "No Resource name found! (@resource=#{@resource}, model=#this)" unless @resource
         root = _.result this, 'urlRoot'
@@ -75,6 +97,7 @@ class exports.Resource extends Mixin
         _.compact [ root, @resource, id ]
             .map -> _.rtrim it, '/'
             .join '/'
+    
     
     /**
      * Fetch the model from the server.
@@ -98,6 +121,7 @@ class exports.Resource extends Mixin
         if cb then promise.done ~> cb ...
         promise
     
+    
     /**
      * Save the model to the server.
      * 
@@ -114,6 +138,7 @@ class exports.Resource extends Mixin
         promise = @sync action, 'save', options
         if cb then promise.done ~> cb ...
         promise
+    
     
     /**
      * Destroy the model.
@@ -165,7 +190,6 @@ class exports.Resource extends Mixin
         
         if cb then promise.done ~> cb ...
         promise
-    
     
     
     /**

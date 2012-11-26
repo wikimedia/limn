@@ -9,11 +9,22 @@
  * @mixes Resource
  */
 class exports.StoredModel extends Model
+    
     # Apply Resource mixin
     Resource.mix this
+    
     
     /**
      * @constructor
      */
-    (attributes) ->
-        super ...
+    -> super ...
+    
+    
+    /**
+     * Root prepended to all resource requests
+     * @type {String|Function}
+     */
+    urlRoot : ->
+        require('limn').mount()
+    
+
