@@ -2,6 +2,8 @@
 } = require '../base/view'
 { Graph,
 } = require './graph-model'
+{ EditView,
+} = require '../edit/edit-view'
 
 class exports.GraphView extends View
     template: 'graph'
@@ -13,3 +15,7 @@ class exports.GraphView extends View
         else
             @model new Graph id: idOrModel
             @model().fetch()
+        
+        # temporary - just testing out generic edit view
+        @editView = ko.observable()
+        @model().fetch().done ~> @editView new EditView(@model())

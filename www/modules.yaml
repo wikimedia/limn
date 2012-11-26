@@ -90,6 +90,9 @@ development:
                 - dashboard-tab-view
                 - dashboard-view
                 - index
+            - edit:
+                - edit-view
+                - index
             - graph:
                 - graph-model
                 - graph-node-data

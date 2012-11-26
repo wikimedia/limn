@@ -1,0 +1,12 @@
+{ View,
+} = require '../base/view'
+
+class exports.EditView extends View
+    template: 'edit'
+    
+    (model) ->
+        super()
+        @model model
+        @editable = []
+        for k, v in @model().attributes
+            @editable.push text: k, value: v
