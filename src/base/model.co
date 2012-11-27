@@ -8,4 +8,16 @@
  * @extends Base
  */
 class exports.Model extends Base
+    -> super ...
+    
+    
+    /**
+     * @static
+     * @returns {Function} Factory function that creates new instances of this Model.
+     */
+    @factory = ->
+        ClassType = this
+        return (attributes) -> new ClassType attributes
+    
+    
 

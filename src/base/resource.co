@@ -79,7 +79,7 @@ class exports.Resource extends Mixin
     
     
     /**
-     * Root prepended to all resource requests
+     * Root prepended to all resource requests.
      * @type {String|Function}
      */
     urlRoot : ->
@@ -113,9 +113,9 @@ class exports.Resource extends Mixin
         [options, cb] = [cb, null] unless typeof cb is 'function'
         
         # Fetch data from the server...
-        promise = @sync 'read', 'fetch', options
+        promise = @fetch.promise = @sync 'read', 'fetch', options
         
-        # ...And update the model with the result, overriding any local changes
+        # ...Update the model with the result, overriding any local changes
         promise.done (model, data) ~> @update @canonicalize data
         
         if cb then promise.done ~> cb ...
@@ -135,7 +135,7 @@ class exports.Resource extends Mixin
     save: (cb, options={}) ->
         [options, cb] = [cb, null] unless typeof cb is 'function'
         action  = if @isNew() then 'create' else 'update'
-        promise = @sync action, 'save', options
+        promise = @save.promise = @sync action, 'save', options
         if cb then promise.done ~> cb ...
         promise
     
@@ -180,10 +180,10 @@ class exports.Resource extends Mixin
             if cb then deferred.done ~> cb ...
             _.defer -> deferred.resolve(model, payload, xhr, options)
             
-            return deferred.promise()
+            return @destroy.promise = deferred.promise()
         
         # Inform the server to destroy the model
-        promise = @sync 'delete', 'destroy', options
+        promise = @destroy.promise = @sync 'delete', 'destroy', options
         
         # Override the new status of this model, reflecting that it no longer exists on the server
         promise.done ~> @_isNew = true

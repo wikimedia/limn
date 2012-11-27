@@ -54,7 +54,8 @@ class exports.Base extends EventEmitter
         @attributeTypes  or= {}
         
         # Build and type attribute observers.
-        @_setupAttributes attributes, @attributeTypes
+        @attributes = @_setupAttributes attributes, @attributeTypes
+        _.defaults this, @attributes
         
         # Build non-attribute observables and computed property instances.
         @_setupObservables()
@@ -224,7 +225,7 @@ class exports.Base extends EventEmitter
     
     /**
      * Clone this object.
-     * @returns {Base} A new instance of this object, bearing the same attributes.
+     * @returns {? extends Base} A new instance of this object, bearing the same attributes.
      */
     clone: ->
         # TODO: @attributes might contain objects that need recursive cloning?
@@ -330,11 +331,9 @@ class exports.Base extends EventEmitter
         fn
     
     
-    _setupAttributes: (attributes, attrTypes=@attributeTypes) ->
-        attributes  = @canonicalize _.merge @defaults(), attributes
-        @attributes = @_generateAttributes attributes, attrTypes
-        _.defaults this, @attributes
-        @attributes
+    _setupAttributes: (attributes, attrTypes={}) ->
+        attributes = @canonicalize _.merge @defaults(), attributes
+        @_generateAttributes attributes, attrTypes
     
     /**
      * Wraps the properties found in the `attributes` map with observables,
@@ -390,20 +389,34 @@ class exports.Base extends EventEmitter
     
     
     
-    
-    /* * * *  Class Methods  * * * {{{ */
-    
-    # Make the class-object itself an event emitter, so it can fire global events
-    this import EventEmitter::
-    
-    
+    /* * * *  Class Definition Helpers  * * * {{{ */
     /**
-     * @static
-     * @returns {Function} Factory function that creates new instances of this Class.
+     * @section Class Definition Helpers
+     * 
+     * Knockout was not designed for a declarative, class-oriented programming style.
+     * Observers are objects; this means attaching an observer to a class's prototype
+     * results in that observer being shared among all instances of the class!
+     * 
+     * Base provides several class methods (for convenience with `@`) to avoid this,
+     * for use when declaring instance methods on a new class. Instead of wrapping the
+     * method as a computed property immediately, they annotate it for processing later,
+     * when a new instance of the class is created. This allows us to declare observers
+     * and computed properties almost exactly as we would normally, but avoid sharing 
+     * state.
+     * 
+     * @example
+     *  class Person extends Base
+     *      defaults : ->
+     *          firstName : 'Bob'
+     *          lastName  : 'Smith'
+     *      
+     *      fullName : @computed ->
+     *          @firstName() + ' ' + @lastName()
+     *      
+     *      -> super ...
+     * 
      */
-    @factory = ->
-        ClassType = this
-        return (attributes) -> new ClassType attributes
+    
     
     /**
      * Decorates a method when attached to the class prototype so that it
@@ -420,6 +433,7 @@ class exports.Base extends EventEmitter
         method.__computed_options__ = {+deferEvaluation} import options
         method
     
+    
     /**
      * Decorates a method when attached to the class prototype so that it
      * becomes an async computed property when the class is instantiated.
@@ -433,6 +447,33 @@ class exports.Base extends EventEmitter
         method.__async_computed__ = true
         method.__async_computed_options__ = {+deferEvaluation} import options
         method
+    
+    
+    
+    # }}}
+    /* * * *  Class Methods  * * * {{{ */
+    
+    # Make the class-object itself an event emitter, so it can fire global events
+    this import EventEmitter::
+    
+    
+    /**
+     * @static
+     * @param {Object} [attributes] Starting attribute values.
+     * @returns {? extends Base} A new instance of this class.
+     */
+    @create = (attributes) ->
+        ClassType = this
+        new ClassType attributes
+    
+    
+    /**
+     * @static
+     * @returns {Function} A factory function that creates new instances of this Model
+     *  without requiring the accursed `new` keyword.
+     */
+    @factory = ->
+        @create.bind this
     
     
     /**
@@ -449,7 +490,7 @@ class exports.Base extends EventEmitter
         SubClass.__class__      = SubClass
         SubClass.__super__      = SuperClass::
         SubClass.__superclass__ = SuperClass
-        SuperClass.trigger? 'subclass', SubClass, SuperClass
+        SuperClass.trigger? 'extended', SubClass, SuperClass
         SubClass
     
     # }}}
