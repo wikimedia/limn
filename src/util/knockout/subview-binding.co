@@ -20,3 +20,6 @@ ko.bindingHandlers.subview = do
             $(element).html $("##{unwrapped.template}").html()
             childContext = bindingContext.createChildContext unwrapped
             ko.applyBindingsToDescendants childContext, element
+            
+            if typeof unwrapped.afterRender is 'function'
+                unwrapped.afterRender.call unwrapped, element

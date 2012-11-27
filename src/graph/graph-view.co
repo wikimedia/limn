@@ -13,16 +13,19 @@ class exports.GraphView extends View
     template: 'graph'
     
     /**
-     * Children of this node.
-     * @type Array<GraphNode>
+     * root to the tree of GraphNode(s)
+     * @type GraphNode
      */
-    children : null
+    rootNode : null
     
     
     defaults: ->
         model    : null
         parent   : null
-        children : []
+        rootNode : null
+    
+    attributeTypes: ->
+        rootNode : GraphNode
     
     
     /**
@@ -33,33 +36,12 @@ class exports.GraphView extends View
         super()
         
         @model Graph.load model
+    
+    afterRender: (element) ->
+        rootElement = $(element).find('.graph-canvas')[0]
         
-        # temporary - just testing out generic edit view
-        @editView = ko.observable()
-        @model().fetch().done ~> @editView new EditView(@model())
-    
-    
-    /**
-     * Performs a depth-first walk across the tree of GraphNodes, invoking an
-     * iteration function much like  `Array.reduce`, passing a custom "accumulator"
-     * value along with the current node: 
-     * 
-     *  `newAcc = fn.call(context, currentAcc, node)`
-     * 
-     * The iterator's return becomes the new accumulator. If not specified, the
-     * iterator will be invoked with the node as the context.
-     * 
-     * @param {*} acc Starting accumulator value.
-     * @param {Object} [context=this] Execution context for the iteration function.
-     * @param {Function} fn Iteration function.
-     * @returns {*} Final accumulator value.
-     */
-    walk: (acc, cxt, fn) ->
-        [fn, cxt] = [cxt, null] unless typeof fn is 'function'
-        acc = fn.call(cxt or this, acc, this)
-        for child of @children().slice()
-            acc = child.walk acc, cxt, fn
-        acc
+        @populate()
+        # when populate is done, start by calling build on rootNode with rootElement
     
     
     /**
