@@ -1,23 +1,25 @@
-_  = require 'underscore'
 ko = require 'knockout'
+_  = require '../underscore'
+require './observables'
 require './add-extender'
+
+makeObs = ko.utils.makeObservable
 
 
 /**
- * Coerce input to this observable to the supplied Model. If a `ko.observableArray`,
- * coercion will apply to the contents, wrapping .
+ * Coerces input to this observable using the supplied function before it the
+ * value is set, implying subscribers will only see the converted values. If the
+ * underlying observable is a `ko.observableArray`, coercion will be applied to
+ * each element before being added.
  * 
- * @param {ko.observable} obs Property to decorate.
- * @param {Class<Model>} ModelType Model type to ensure.
+ * @param {ko.observable} obs Observable to decorate.
+ * @param {Function} coerce Function invoked to coerce values before they are
+ *  written to the underlying observable.
  * @returns {ko.dependentObservable} Wrapped observable.
  */
-exports.typedExtender = ko.addExtender 'typed', (obs, ModelType) ->
-    coerce = (value) ->
-        # XXX: accept arbitrary transform function instead of assuming Model constructor?
-        return value if value instanceof ModelType
-        # Do not wrap undefined or nulls
-        return value unless value?
-        new ModelType value
+exports.typedExtender = ko.addExtender 'typed', (obs, coerce) ->
+    unless typeof coerce is 'function'
+        throw new Error "ko.typedObservable requires a coercion function! Got a #{typeof coerce} instead: #coerce"
     
     # current = obs() # peek?
     current = obs.peek()
@@ -63,11 +65,65 @@ exports.typedExtender = ko.addExtender 'typed', (obs, ModelType) ->
  * Convenience for wrapping a value in both an observable and the type coercion wrapper.
  * @returns {ko.dependentObservable}
  */
-exports.typedObservable = ko.typedObservable = (ModelType, val) ->
-    if _.isArray val
-        obs = ko.observableArray val
+exports.typedObservable = ko.typedObservable = (coerce, val) ->
+    makeObs val .typed coerce
+
+
+
+/**
+ * Coerces input to this observable using the supplied Model before it the
+ * value is set, implying subscribers will only see the converted values. If the
+ * underlying observable is a `ko.observableArray`, coercion will be applied to
+ * each element before being added.
+ * 
+ * @param {ko.observable} obs Property to decorate.
+ * @param {Class<Model>} ModelType Model to ensure.
+ * @returns {ko.dependentObservable} Wrapped observable.
+ */
+exports.modelExtender = ko.addExtender 'model', (obs, ModelType) ->
+    coerce = (value) ->
+        return value if value instanceof ModelType
+        # Do not wrap undefined or nulls
+        return value unless value?
+        new ModelType value
+    
+    obs.typed coerce
+
+
+/**
+ * Convenience for wrapping a value in both an observable and the model coercion wrapper.
+ * @returns {ko.dependentObservable}
+ */
+exports.modelObservable = ko.modelObservable = (ModelType, val) ->
+    makeObs val .model ModelType
+
+
+
+/**
+ * Coerces input to this observable using the supplied function before it the
+ * value is set, implying subscribers will only see the converted values. If the
+ * underlying observable is a `ko.observableArray`, coercion will be applied to
+ * each element before being added.
+ * 
+ * @param {ko.observable} obs Property to decorate.
+ * @param {Function|Class} coerce Function invoked to coerce incoming data into
+ *  the appropriate type. If the function appears to be a class constructor, it will
+ *  be wrapped to perform an instanceof check to prevent double-wrapping, and otherwise
+ *  invoke the class with `new`.
+ * @returns {ko.dependentObservable} Wrapped observable.
+ */
+exports.coerciveExtender = ko.addExtender 'coerce', (obs, coerce) ->
+    if _.isClass coerce
+        obs.model coerce
     else
-        obs = ko.observable val
-    obs.typed ModelType
+        obs.typed coerce
+
+
+/**
+ * Convenience for wrapping a value in both an observable and the "smart" coercion wrapper.
+ * @returns {ko.dependentObservable}
+ */
+exports.coerciveObservable = ko.coerciveObservable = (coerce, val) ->
+    makeObs val .coerce coerce
 
 
