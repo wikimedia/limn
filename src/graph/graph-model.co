@@ -3,21 +3,19 @@ ko = require 'knockout'
 
 { StoredModel,
 } = require '../base'
+{ GraphNodeData,
+} = require './node/graph-node-data'
 
 
 
 class exports.Graph extends StoredModel
     resource : 'graphs'
-    getId    : -> @get 'id'
     
-    /**
-     * @constructor
-     */
-    (attributes) ->
-        super ...
+    -> super ...
     
+    getId : -> @get 'id'
     
-    defaults: ->
+    defaults : ->
         id        : null
         slug      : ''
         
@@ -30,6 +28,12 @@ class exports.Graph extends StoredModel
         height    : 320
         
         children : []
+    
+    attributeTypes :
+        children : GraphNodeData
+    
+    
+    
     
 
 

@@ -1,0 +1,41 @@
+
+/**
+ * @class Describes values of `GraphNode::traits` utilized elsewhere in Limn.
+ */
+class exports.NodeTraits
+    
+    /**
+     * Node participates in visualizing data.
+     */
+    VIS_ELEMENT : 'visualization-element'
+    
+    /**
+     * Node serves some purpose other than visualizing data.
+     */
+    META_ELEMENT : 'meta-element'
+    
+    
+    /**
+     * Node cannot have children.
+     */
+    LEAF : 'leaf'
+    
+    
+    /**
+     * Node has an associated edit UI.
+     */
+    EDITABLE : 'editable'
+    
+    
+    /**
+     * Associated GraphNodeData must define a valid Metric as a prerequisite to render.
+     */
+    REQUIRES_METRIC : 'requires-metric'
+    
+    /**
+     * Associated GraphNodeData must define a valid timeseries Metric as a prerequisite to render.
+     */
+    REQUIRES_TIMESERIES_METRIC : 'timeseries'
+    
+    
+

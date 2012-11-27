@@ -1,0 +1,22 @@
+_  = require 'underscore'
+ko = require 'knockout'
+
+{ GraphNode,
+} = require '../graph-node'
+
+
+/**
+ * @class
+ * @extends GraphNode
+ */
+class exports.TimeseriesNode extends GraphNode
+    typeName : 'timeseries'
+    @registerType()
+    
+    -> super ...
+    init: ->
+        
+    
+    build: (parentElement) ->
+        
+    

@@ -2,54 +2,19 @@ _  = require 'underscore'
 ko = require 'knockout'
 
 { generateId, guidFor, Mixin,
-} = require '../util'
+} = require '../../util'
 { Model,
-} = require '../base'
+} = require '../../base'
 { Metric,
-} = require '../data/metric-model'
-
-
-
-class exports.GraphNodeMixin extends Mixin
-    
-    defaults: ->
-        disabled       : false
-        options        : {}
-        children       : []
-    
-    attributeTypes :
-        children : GraphNodeData
-    
-    
-    # Decorate certain methods and properties to combine the mixin's with the target's
-    @on 'mix', (target, MixinClass) ->
-        if typeof target is 'function'
-            TargetClass = target
-            target = TargetClass::
-        else
-            TargetClass = target.constructor
-        
-        targetDefaults = target.defaults
-        target.defaults = ->
-            _.extend MixinClass::defaults(), targetDefaults()
-        
-        target.attributeTypes = _.extend {}, MixinClass::attributeTypes, target.attributeTypes
+} = require '../../data/metric-model'
 
 
 
 class exports.GraphNodeData extends Model
-    GraphNodeMixin.mix this
-    
-    /**
-     * @constructor
-     */
-    (attributes={}) ->
-        attributes.id ?= generateId()
-        super attributes
-    
+    -> super ...
     
     defaults: ->
-        elementType    : null # Typename of the GraphNode which renders this element.
+        nodeType       : null # Typename of the GraphNode which renders this element.
         
         label          : ''
         disabled       : false
@@ -60,6 +25,8 @@ class exports.GraphNodeData extends Model
     attributeTypes :
         metric   : Metric
         children : GraphNodeData
+    
+    
     
     
 
