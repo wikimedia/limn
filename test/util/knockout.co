@@ -52,3 +52,14 @@ test 'apply nested bindings', ->
         checkThisBinds: 'check value nested'
     )
     strictEqual $('#subviewBindingTest div p').text(), viewModel.subviewProperty().nestedSubview().checkThisBinds, 'nested subview template ok'
+
+asyncTest 'define a subview with an afterRender function', ->
+    viewModel =
+        subviewProperty: ko.observable(
+            template: 'subviewTestTemplate'
+            checkThisBinds: 'should be bound in afterRender'
+            afterRender: (element) ->
+                start()
+                ok $(element).find('p').text(), viewModel.subviewProperty().checkThisBinds, 'the afterRender was called with the correct HTML element'
+        )
+    ko.applyBindings viewModel, $('#subviewBindingTest')[0]
