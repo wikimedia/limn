@@ -265,6 +265,14 @@ class exports.Base extends EventEmitter
         @toJS @attributes
     
     
+    toString: ->
+        cid       = @__id__
+        id        = @peek(@idAttribute or 'id')
+        Class     = @constructor
+        className = Class.displayName or Class.name
+        "#className(cid=#cid, id=#id)"
+    
+    
     
     # }}}
     /* * * *  Helpers  * * * {{{ */
@@ -295,10 +303,10 @@ class exports.Base extends EventEmitter
      * given (methodName, method) pair.
      * 
      * @protected
-     * @param {*} method Value at `name`.
-     * @param {String} methodName Property name.
+     * @param {Function|T} fn Value at `name`, though we ignore non-functions.
+     * @param {String} name Property name.
      * @param {Object} [owner=this] Owner-object for `ko.computed`.
-     * @returns {*} New property value.
+     * @returns {ko.computed|ko.observable|T} New property value.
      */
     _setupObservable: (fn, name, owner=this) ->
         return fn unless typeof fn is 'function'
@@ -306,19 +314,21 @@ class exports.Base extends EventEmitter
         # Preserve attribute-observers
         return fn if fn is @attributes[name]
         
+        # Apply observer annotations
         read = fn
-        # Annotated to become a computed observer
-        if fn.__computed__
-            options = { read, owner } import fn.__computed_options__
-            return ko.computed(options)
+        for annotation of [ '', 'async', 'typed', 'coercive', ]
+            key       = _.compact [ annotation, 'computed' ] .join '_'
+            flagKey   = "__#{key}__"
+            optsKey   = "__#{key}_options__"
             
-        # Annotated to become an async computed observer
-        else if fn.__async_computed__
-            options = { read, owner } import fn.__async_computed_options__
-            return ko.computed(options).async({} import options)
-            
+            if extender = fn[flagKey]
+                options = { read, owner } import fn[optsKey]
+                obs = ko.computed options
+                obs = obs[extender](options) if typeof obs[extender] is 'function'
+                return obs
+        
         # Re-wrap non-attribute observables and copy objects so neither causes shared state
-        else if ko.isObservable fn
+        if ko.isObservable fn
             val = fn.peek()
             if typeof val?.clone is 'function'
                 val = val.clone()
@@ -329,7 +339,6 @@ class exports.Base extends EventEmitter
             return ko.utils.makeObservable val
         
         fn
-    
     
     
     /**
@@ -393,17 +402,6 @@ class exports.Base extends EventEmitter
     
     
     # }}}
-    
-    
-    toString: ->
-        cid       = @__id__
-        id        = @peek(@idAttribute or 'id')
-        Class     = @constructor
-        className = Class.displayName or Class.name
-        "#className(cid=#cid, id=#id)"
-    
-    
-    
     /* * * *  Class Definition Helpers  * * * {{{ */
     /**
      * @section Class Definition Helpers
@@ -438,9 +436,10 @@ class exports.Base extends EventEmitter
      * @private
      * @static
      */
-    @computedDecorator = (decoratorName) ->
+    @computedDecorator = (decoratorName, extender) ->
         Class     = this
-        eagerName = 'eager' + decoratorName.charAt(0).toUpperCase() + decoratorName.slice(1)
+        extender ?= decoratorName.replace(/Computed$/i, '') or true
+        eagerName = _.camelize "eager_#decoratorName"
         
         # if Class[decoratorName] or Class[eagerName]
         #     throw new Error "Class #{Class.displayName or Class.name} already has a property at #decoratorName or #eagerName!"
@@ -451,7 +450,7 @@ class exports.Base extends EventEmitter
         
         Class[decoratorName] = (options, method) ->
             [method, options] = [options, {}] if typeof options is 'function'
-            method[key] = true
+            method[flagKey] = extender
             method[optsKey] = {+deferEvaluation} import options
             method
         Class[eagerName] = (options, method) ->
@@ -460,78 +459,41 @@ class exports.Base extends EventEmitter
         
         Class
     
+    # @computedDecorator() produces methods with this pair of signatures:
     
     /**
      * Decorates a method when attached to the class prototype so that it
-     * becomes a computed property when the class is instantiated. By default,
-     * such properties are lazy, deferring evaluation until first read.
+     * becomes a computed property of the right type when the class is
+     * instantiated. By default, such properties are lazy, deferring evaluation
+     * until first read.
      * 
      * @static
-     * @param {Object} [options] Options to pass to `ko.computed`.
+     * @name computed
+     * @param {Object} [options] Options to pass to the `ko.computed` type.
      * @param {Boolean} [options.deferEvaluation=true] Whether to defer
      *  calculation until first read.
      * @param {Function} method Method to decorate.
      * @returns {Function} Decorated method.
      */
-    @computed = (options, method) ->
-        [method, options] = [options, {}] if typeof options is 'function'
-        method.__computed__ = true
-        method.__computed_options__ = {+deferEvaluation} import options
-        method
-    
-    
-    /**
-     * Decorates a method when attached to the class prototype so that it
-     * becomes an async computed property when the class is instantiated.
-     * By default, such properties are lazy, deferring evaluation until
-     * first read.
-     * 
-     * @static
-     * @param {Object} [options] Options to pass to `ko.asyncComputed`.
-     * @param {Boolean} [options.deferEvaluation=true] Whether to defer
-     *  calculation until first read.
-     * @param {Function} method Method to decorate.
-     * @returns {Function} Decorated method.
-     */
-    @asyncComputed = (options, method) ->
-        [method, options] = [options, {}] if typeof options is 'function'
-        method.__async_computed__ = true
-        method.__async_computed_options__ = {+deferEvaluation} import options
-        method
-    
-    
     /**
      * Identical to `@computed`, excepting that the property's value is
      * immediately calculated upon instantiation (most likely in the class
      * constructor).
      * 
      * @static
-     * @param {Object} [options] Options to pass to `ko.computed`.
+     * @name eagerComputed
+     * @param {Object} [options] Options to pass to the `ko.computed` type.
      * @param {Boolean} [options.deferEvaluation=false] Whether to defer
      *  calculation until first read.
      * @param {Function} method Method to decorate.
      * @returns {Function} Decorated method.
+     * @see Base.computed()
      */
-    @eagerComputed = (options, method) ->
-        [method, options] = [options, {}] if typeof options is 'function'
-        @computed {-deferEvaluation} import options, method
     
-    
-    /**
-     * Identical to `@asyncComputed`, excepting that the property's value is
-     * immediately calculated upon instantiation (most likely in the class
-     * constructor).
-     * 
-     * @static
-     * @param {Object} [options] Options to pass to `ko.asyncComputed`.
-     * @param {Boolean} [options.deferEvaluation=false] Whether to defer
-     *  calculation until first read.
-     * @param {Function} method Method to decorate.
-     * @returns {Function} Decorated method.
-     */
-    @eagerAsyncComputed = (options, method) ->
-        [method, options] = [options, {}] if typeof options is 'function'
-        @asyncComputed {-deferEvaluation} import options, method
+    @computedDecorator 'computed'
+    @computedDecorator 'asyncComputed'
+    @computedDecorator 'typedComputed'
+    @computedDecorator 'coerciveComputed', 'coerce'
     
     
     

@@ -22,7 +22,7 @@ _cls =
      * @returns {Cls} New instance of the given class, created without running its constructor.
      */
     fabricate: (Cls) ->
-        function AnonymousInnerClass then
+        AnonymousInnerClass = ->
         AnonymousInnerClass:: = Cls::
         instance = new AnonymousInnerClass()
         instance.constructor = Cls
