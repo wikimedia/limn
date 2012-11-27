@@ -1,4 +1,3 @@
-_  = require './underscore'
 op = require 'operator'
 
 
@@ -38,7 +37,7 @@ Parsers = exports.Parsers =
         if v then op.toObject v else null
     
     parseFunction: (v) ->
-        if v and _.startswith String(v), 'function'
+        if v and String(v).slice(0, 8) is 'function'
             try eval "(#v)" catch then null
         else
             null

@@ -1,15 +1,38 @@
 ko = require 'knockout'
 
-class exports.View
-    template: ''
+{ Base,
+} = require './base'
+
+
+class exports.View extends Base
+    
+    /**
+     * @type ko.observable<Model>
+     */
+    model : null
+    
+    /**
+     * Identifier of the template.
+     * @type String
+     */
+    template : ''
+    
+    /**
+     * @constructor
+     */
     ->
         @model = ko.observable()
+    
+    defaults: ->
+        model : null
+    
+    
 
 
-class exports.NotFoundView extends exports.View
+class exports.NotFoundView extends View
     template: 'notFound'
     message: ko.observable 'This does not exist'
 
 
-class exports.LoadingView extends exports.View
+class exports.LoadingView extends View
     template: 'loading'

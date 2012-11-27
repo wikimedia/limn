@@ -1,6 +1,9 @@
 _ = require 'underscore'
 { EventEmitter,
 } = require 'emitters'
+{ generateId, guidFor,
+} = require './guid'
+
 
 /**
  * @class Base mixin class. Extend this to create a new mixin, attaching the
@@ -21,6 +24,8 @@ _ = require 'underscore'
  *  
  */
 class exports.Mixin
+    @__class__ = this
+    
     # Make all Mixin class-objects event emitters
     this import EventEmitter::
     
@@ -42,8 +47,8 @@ class exports.Mixin
         if typeof target is 'function'
             TargetClass = target
             _.defaults TargetClass::, MixinClass::
-            for k, v in MixinClass
-                continue if TargetClass[k]? or _.contains <[ mix extended ]>, k
+            for own k, v in MixinClass
+                continue if TargetClass[k]? or EventEmitter::[k] is v or _.contains <[ mix extended ]>, k
                 TargetClass[k] = v
         else
             target = new MixinClass() import target
@@ -63,5 +68,12 @@ class exports.Mixin
         SuperClass = this
         for own k, v in SuperClass
             SubClass[k] = v unless SubClass[k]
+            # SubClass[k] = v unless _.contains <[ apply call constructor toString ]>, k
+        SubClass.__id__         = generateId()
+        SubClass.__class__      = SubClass
+        SubClass.__super__      = SuperClass::
+        SubClass.__superclass__ = SuperClass
+        SuperClass.trigger? 'extended', SubClass, SuperClass
         SubClass
+    
 

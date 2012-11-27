@@ -78,7 +78,7 @@ class exports.DataSource extends StoredModel
     
     
     /**
-     * Whether this 
+     * Whether this DataSource is valid, and thus ready to load data.
      * @type ko.computed<Boolean>
      */
     isValid : @computed ->
@@ -156,7 +156,7 @@ DataSource.fetchAll = ->
     limn = require '../index'
     $.getJSON limn.mount('datasources/all'), (models) ->
         _.each models, (data) ->
-            DataSourceCache.register new DataSource data
+            DataSourceCache.add new DataSource data
         
         # Trigger event when the DataSource TOC is ready
         DataSourceCache.ready true

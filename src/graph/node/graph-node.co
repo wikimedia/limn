@@ -1,0 +1,266 @@
+_  = require 'underscore'
+ko = require 'knockout'
+
+{ Base,
+} = require '../../base/base'
+
+
+/**
+ * Name of the property for a node subclass's type-name.
+ * @constant
+ * @type String
+ */
+NODE_TYPENAME_KEY = exports.NODE_TYPENAME_KEY = 'typeName'
+
+/**
+ * Map of known GraphNode types, keyed by type-name.
+ * @type Map<String, Class<GraphNode>>
+ */
+NODE_TYPES = exports.NODE_TYPES = {}
+
+
+/**
+ * @class Handles the presentation of a specific type of visualization element in a Graph.
+ * @extends Base
+ */
+class exports.GraphNode extends Base
+    
+    /* * * *  Class Properties  * * * {{{ */
+    # Properties shared across all instances by virtue of the prototype;
+    # it is expected instances will not [need to] modify these values.
+    
+    /**
+     * Unique id for this GraphNode type, as referenced by `GraphNodeData::nodeType`.
+     * 
+     * Required to be set by all subclasses; afterward, notify the GraphNode registry
+     * to provide the type for rendering:
+     * 
+     *  class AnotherGraphNode extends GraphNode
+     *      nodeType : 'another'
+     *      @registerType()
+     *      -> ...
+     * 
+     * @type String
+     */
+    typeName : null
+    
+    
+    /**
+     * Characteristics of this node-type; utilized by the Graph's Display and Edit views
+     * to customize default behavior of nodes, as well as filter, group, and order their
+     * DOM nodes.
+     * 
+     * @see limn.graph.NodeTraits
+     * @type Array<String>
+     */
+    traits : <[  ]>
+    
+    
+    # }}}
+    
+    
+    /* * * *  Instance Properties  * * * {{{ */
+    
+    /**
+     * The graph for this node tree.
+     * @type Graph
+     */
+    graph : null
+    
+    /**
+     * Observable properties and their defaults.
+     * 
+     * Recall these properties are attached directly to the instance so long
+     * as there is no conflict; the fact that they are also stored
+     * in `@attributes` is not important to GraphNode.
+     */
+    defaults: ->
+        el       : null
+        model    : null
+        parent   : null
+        children : []
+    
+    /**
+     * Model data for this node.
+     * @type ko.observable<GraphNodeData>
+     */
+    model : null
+    
+    /**
+     * Parent of this node.
+     * @type ko.observable<GraphNode>
+     */
+    parent : null
+    
+    /**
+     * Children of this node.
+     * @type ko.observableArray<GraphNode>
+     */
+    children : null
+    
+    /**
+     * DOM Element at the root of this Node. jQuery objects and d3 Selections
+     * will be automatically stripped of their wrappers.
+     * @type ko.observable<Element>
+     */
+    el : @eagerCoerciveComputed (el) ->
+        @$el = @sel = null
+        el = el[0]      if el instanceof jQuery
+        el = el.node()  if el instanceof d3.selection
+        return el       unless _.isElement el
+        @$el = $ el
+        @sel = d3.select el
+        el
+    
+    /**
+     * jQuery-wrapped root element.
+     * @type jQuery
+     */
+    $el : null
+    
+    /**
+     * Selection of the element for this view, used by @select() and @selectAll().
+     * Defaults to `d3.select(this.el)`.
+     * @type d3.selection
+     */
+    sel : null
+    
+    
+    # }}}
+    
+    
+    
+    
+    /**
+     * @constructor
+     */
+    (@graph, model, parent) ->
+        super { model, parent }
+        @graphId = 'graph-' + @graph.__id__
+        @nodeId  = 'graph-node-' + @__id__
+        
+        # Add the model's attributes to this node (where they don't overlap)
+        _.defaults this, model.attributes
+        
+        
+    
+    
+    
+    /* * * *  GraphNode API  * * * {{{ */
+    
+    /**
+     * Optional hook to initialize the node once construction is complete.
+     * @abstract
+     * @returns {this}
+     */
+    init: ->
+        this
+    
+    /**
+     * Implement to completely customize the process of building the DOM nodes
+     * for the presentation of this GraphNode.
+     * 
+     * @param {Element} parentElement Parent DOM element (and can be either
+     *  an HTML or an SVG element).
+     * @returns {Element} Newly constructed root element for this GraphNode.
+     */
+    build: (parentElement) ->
+        
+    
+    
+    buildElement: ->
+        @createElement @tagName, { class:@cssClasses }
+    
+    
+    /**
+     * Performs a depth-first walk across the tree of GraphNodes, invoking an
+     * iteration function much like  `Array.reduce`, passing a custom "accumulator"
+     * value along with the current node: 
+     * 
+     *  `newAcc = fn.call(context, currentAcc, node)`
+     * 
+     * The iterator's return becomes the new accumulator. If not specified, the
+     * iterator will be invoked with the node as the context.
+     * 
+     * @param {*} acc Starting accumulator value.
+     * @param {Object} [context=this] Execution context for the iteration function.
+     * @param {Function} fn Iteration function.
+     * @returns {*} Final accumulator value.
+     */
+    walk: (acc, cxt, fn) ->
+        [fn, cxt] = [cxt, null] unless typeof fn is 'function'
+        acc = fn.call(cxt or this, acc, this)
+        for child of @children().slice()
+            acc = child.walk acc, cxt, fn
+        acc
+    
+    
+    # }}}
+    /* * * *  Property Cascading  * * * {{{ */
+    
+    # TODO
+    
+    # }}}
+    ### DOM Helpers {{{
+    
+    $: ->
+        @$el?.find.apply @$el, arguments
+    
+    
+    select: (selector) ->
+        @sel?.select selector
+    
+    
+    selectAll: (selector) ->
+        @sel?.selectAll selector
+    
+    
+    /**
+     * Creates elements with the correct namespace for both HTML and SVG tags.
+     */
+    createElement : (tagName, attributes) ->
+        range = document.createRange()
+        range.selectNode document.body
+        el = range.createContextualFragment("<#tagName/>").childNodes[0]
+        $(el).attr attributes if attributes
+        el
+    
+    
+    # }}}
+    /* * * *  Class Methods  * * * {{{ */
+    
+    
+    /**
+     * Register a new chart type. Subclasses should only call this
+     * method *after* setting their `nodeType`:
+     * 
+     *  class AnotherGraphNode extends GraphNode
+     *      nodeType : 'another'
+     *      @registerType()
+     *      
+     *      -> ...
+     * 
+     * @static
+     * @protected
+     */
+    @registerType = (Subclass=this) ->
+        # console.log "GraphNode.registerType(#Subclass)"
+        unless Subclass?::?.hasOwnProperty(NODE_TYPENAME_KEY) and typeName = Subclass::[NODE_TYPENAME_KEY]
+            throw new Error "GraphNode sub-types must declare a new, unique typeName on the prototype! (got #{Subclass?::?[NODE_TYPENAME_KEY]})"
+        if NODE_TYPES[typeName]
+            throw new Error "Duplicate GraphNode typeName! (got #typeName)"
+        NODE_TYPES[typeName] = Subclass
+    
+    
+    /**
+     * Look up a `GraphNode` by `typeName`.
+     * @static
+     */
+    @lookupType = (typeName) ->
+        typeName = _.get typeName, NODE_TYPENAME_KEY unless typeof typeName is 'string'
+        NODE_TYPES[typeName]
+    
+    
+    # }}}
+    
+

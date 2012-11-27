@@ -205,11 +205,31 @@ task \clean 'Clean up environment and artifacts' ->
 
 
 
-task \source_list 'Print a list of the source file paths.' ->
-    {sources} = require './src/server/view-helpers'
+task \list_all 'Print a list of all source-file paths.' ->
+    {sources} = require './server/view-helpers'
     say do
         sources 'development', 'www/modules.yaml'
             .map -> it.slice 1
             .join '\n'
+
+task \list_sources 'Print a list of limn source-file paths.' ->
+    {sources} = require './server/view-helpers'
+    say do
+        sources 'development', 'www/modules.yaml'
+            .filter -> it.slice(0, 3) is '/js'
+            .map -> it.slice 1
+            .join '\n'
+
+task \list_vendor 'Print a list of vendor source-file paths.' ->
+    {sources} = require './server/view-helpers'
+    say do
+        sources 'development', 'www/modules.yaml'
+            .filter -> it.slice(0, 7) is '/vendor'
+            .map -> it.slice 1
+            .join '\n'
+
+# backwards compat
+task \source_list 'Print a list of all source file paths.' ->
+    invoke \list_all
 
 

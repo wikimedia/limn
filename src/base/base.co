@@ -1,0 +1,545 @@
+ko     = require 'knockout'
+unwrap = ko.utils.unwrapObservable
+
+{ EventEmitter, ReadyEmitter,
+} = require 'emitters'
+
+{ _, op, root, generateId, guidFor,
+} = require '../util'
+
+
+
+/**
+ * @class Root-class for classes using .
+ * @extends EventEmitter
+ */
+class exports.Base extends EventEmitter
+    
+    /**
+     * Unique identifier for this object. Uniqueness is only guaranteed for this
+     * pageload session; this value is safe to use in circumstances requiring numeric identity
+     * (such as calculating a hashkey for a Map, or for DOM id attributes) but not when
+     * global uniqueness is required.
+     * 
+     * @protected
+     * @type String
+     */
+    __id__ : null
+    
+    /**
+     * Attribute data-members of the class. Individual properties are also aliased
+     * onto the instance itself if no property already exists.
+     * 
+     * @protected
+     * @type Map<Key, ko.observable>
+     */
+    attributes : null
+    
+    /**
+     * Maps attribute keys to sub-objects.
+     * 
+     * @protected
+     * @type Map<Key, Class>
+     */
+    attributeTypes : null
+    
+    
+    
+    /**
+     * @constructor
+     */
+    (attributes={}) ->
+        @__id__            = generateId()
+        @attributes        = {}
+        @attributeTypes  or= {}
+        
+        # Build and type attribute observers.
+        @attributes = @_setupAttributes attributes, @attributeTypes
+        _.defaults this, @attributes
+        
+        # Build non-attribute observables and computed property instances.
+        @_setupObservables()
+        
+        this
+    
+    
+    
+    /**
+     * Gets the value of the id attribute.
+     * @returns {String} Instance's id.
+     */
+    getId: ->
+        @__id__
+    
+    
+    /**
+     * Invoked to acquire default attribute values.
+     * 
+     * Note that *all* known attributes of the Class should be included -- even
+     * if simply as `null` keys (even the `id` attribute, if the object has a concept
+     * of server-side global uniqueness!) -- so we can create the observables
+     * fields.
+     * 
+     * @returns {Object} Hash of default attribute values.
+     */
+    defaults: ->
+        {}
+    
+    
+    /**
+     * Invoked to transform raw attribute data into its "proper" form for
+     * this object, whatever that might be.
+     * 
+     * @param {Object} data Raw attributes to canonicalize.
+     * @returns {Object} Converted raw data.
+     */
+    canonicalize: (data) ->
+        data
+    
+    
+    
+    /* * * *  Knockout-Aware Accessors  * * * {{{ */
+    
+    
+    /**
+     * Gets the attribute value at `key`.
+     * 
+     * @param {String} key Key to get.
+     * @returns {*} Value at `key`.
+     */
+    get: (key) ->
+        unwrap @attributes?[key]
+    
+    
+    /**
+     * Gets the attribute value at `key`, circumventing dependency tracking.
+     * 
+     * @param {String} key Key to peek.
+     * @returns {*} Value at `key`.
+     */
+    peek: (key) ->
+        if ko.isObservable val = @attributes?[key]
+            val.peek()
+        else
+            val
+    
+    
+    /**
+     * Puts a single attribute value to `key`.
+     * 
+     * @protected
+     * @param {String} key Key to set.
+     * @param {*} val Value to set at `key`.
+     * @returns {this}
+     */
+    _set: (key, val) ->
+        return this unless key?
+        throw new Error "Attributes hash does not exist!" unless @attributes?
+        unless ko.isObservable obs = @attributes[key]
+            obs = @attributes[key] = @_generateAttribute val, @attributeTypes[key]
+            @[key] ?= obs
+        else
+            obs val
+        this
+    
+    
+    /**
+     * Sets attribute values, taking either a single (key, value)-pair, or
+     * a map of them.
+     * 
+     * @param {String|Object} key The key to set. If an object is supplied here,
+     *  each key will be set with its value on the target object.
+     * @param {*} [value] Value to set at `key`. Omit this if an object of
+     *  KV-pairs was passed as `key`.
+     * @returns {this}
+     */
+    set: (key, val) ->
+        return this unless key?
+        if key and _.isObject(key)
+            values = key
+        else
+            values = { "#key": val }
+        for key, value in values
+            @_set key, value
+        this
+    
+    
+    /**
+     * Sets the attribute value at `key` to `undefined`.
+     * 
+     * @param {String} key Key to unset.
+     * @returns {this}
+     */
+    unset: (key) ->
+        @_set key, undefined
+    
+    
+    /**
+     * Sets the attribute value at `key` to `undefined`, and then removes
+     * the observable from both the attributes hash and the instance (if attached).
+     * 
+     * @param {String} key Key to remove.
+     * @returns {this}
+     */
+    remove: (key) ->
+        return this unless key?
+        throw new Error "Attributes hash does not exist!" unless @attributes?
+        
+        if ko.isObservable obs = @attributes[key]
+            obs undefined
+            obs.dispose?()
+            delete @[key] if obs is @[key]
+        
+        delete @attributes[key]
+        this
+    
+    
+    /**
+     * Updates object with new data such that it will only contain keys
+     * found in the new attributes (and existing attributes will be unset).
+     * 
+     * @param {Object} values Key-value pairs to update.
+     * @returns {this}
+     */
+    update: (values) ->
+        throw new Error "Attributes hash does not exist!" unless @attributes?
+        
+        # Update the given attributes
+        @set values
+        
+        # Then remove all missing keys
+        for k of _.keys(@attributes)
+            continue if k in values
+            @remove k
+        
+        this
+    
+    
+    /**
+     * Delete all attributes from the object.
+     * @returns {this}
+     */
+    clear: ->
+        @update {}
+    
+    
+    /**
+     * Clone this object.
+     * @returns {? extends Base} A new instance of this object, bearing the same attributes.
+     */
+    clone: ->
+        # TODO: @attributes might contain objects that need recursive cloning?
+        json = @toJS @attributes
+        Class = @constructor
+        new Class json
+    
+    
+    # }}}
+    /* * * *  Serialization  * * * {{{ */
+    
+    
+    /**
+     * Recursively unwrap any observables in the given attributes hash.
+     * Called by `toJSON()`.
+     * 
+     * @returns {Object} A plain JS object, suitable for serialization.
+     */
+    toJS: (attributes=@attributes) ->
+        # console.log "#{this}.toJS()", arguments
+        _.reduce do
+            attributes
+            (json, obs, key) ~>
+                val = if ko.isObservable obs then obs.peek() else obs
+                if typeof val?.toJS is 'function'
+                    val = val.toJS() ? val
+                else if typeof val?.toJSON is 'function'
+                    val = val.toJSON() ? val
+                else if _.isPlainObject val
+                    val = @toJS val
+                json[key] = val if val?
+                json
+            {}
+    
+    
+    toJSON: ->
+        @toJS @attributes
+    
+    
+    toString: ->
+        cid       = @__id__
+        id        = @peek(@idAttribute or 'id')
+        Class     = @constructor
+        className = Class.displayName or Class.name
+        "#className(cid=#cid, id=#id)"
+    
+    
+    
+    # }}}
+    /* * * *  Helpers  * * * {{{ */
+    
+    
+    /**
+     * Build observables and computed property instances.
+     * @protected
+     * @param {Object} [target=this] Target object for processed properties.
+     * @param {Object} [source=this] Source object to process.
+     * @returns {Object} Target object.
+     */
+    _setupObservables: (target=this, source=this) ->
+        for name, fn in source
+            # We only care about functions
+            continue unless typeof fn is 'function'
+            
+            # Preserve attribute-observers
+            continue if fn is @attributes[name]
+            
+            # Build observables/computed properties
+            target[name] = @_setupObservable fn, name, target
+        target
+    
+    
+    /**
+     * Build observable or computed property instance for a
+     * given (methodName, method) pair.
+     * 
+     * @protected
+     * @param {Function|T} fn Value at `name`, though we ignore non-functions.
+     * @param {String} name Property name.
+     * @param {Object} [owner=this] Owner-object for `ko.computed`.
+     * @returns {ko.computed|ko.observable|T} New property value.
+     */
+    _setupObservable: (fn, name, owner=this) ->
+        return fn unless typeof fn is 'function'
+        
+        # Preserve attribute-observers
+        return fn if fn is @attributes[name]
+        
+        # Apply observer annotations
+        read = fn
+        for annotation of [ '', 'async', 'typed', 'coercive', ]
+            key       = _.compact [ annotation, 'computed' ] .join '_'
+            flagKey   = "__#{key}__"
+            optsKey   = "__#{key}_options__"
+            
+            if extender = fn[flagKey]
+                options = { read, owner } import fn[optsKey]
+                obs = ko.computed options
+                obs = obs[extender](options) if typeof obs[extender] is 'function'
+                return obs
+        
+        # Re-wrap non-attribute observables and copy objects so neither causes shared state
+        if ko.isObservable fn
+            val = fn.peek()
+            if typeof val?.clone is 'function'
+                val = val.clone()
+            else if _.isArray val
+                val .= slice()
+            else if _.isObject val
+                val = _.merge {}, val
+            return ko.utils.makeObservable val
+        
+        fn
+    
+    
+    /**
+     * Sets up attributes, obeying class defaults and customizations. This means:
+     * 
+     * - Merge the supplied attribute data with the class defaults
+     * - Canonicalize the resulting data
+     * - Wrap the properties from the data with observables...
+     * - ...And apply type coercion as specified by the class.
+     * 
+     * @protected
+     * @param {Map} [attributes={}] Hash of nascent attributes.
+     * @param {Map<String, Class|Function>} [attrTypes={}] Types coercion functions by key.
+     * @returns {Map<String, ko.observable} Map from attribute names to observables.
+     */
+    _setupAttributes: (attributes={}, attrTypes={}) ->
+        attributes = @canonicalize _.merge @defaults(), attributes
+        @_generateAttributes attributes, attrTypes
+    
+    
+    /**
+     * Wraps the properties found in the `attributes` map with observables,
+     * applying types as specified in `attrTypes`.
+     * 
+     * @protected
+     * @param {Map} data Hash of nascent attributes.
+     * @param {Map<String, Class|Function>} [attrTypes={}] Types coercion functions by key.
+     * @param {Object} [target={}] Hash to which nascent attributes shall be attached.
+     * @returns {Object} The transformed attributes map.
+     */
+    _generateAttributes: (data, attrTypes={}, target={}) ->
+        return target unless data
+        return _.reduce do
+            data
+            (attributes, val, key) ~>
+                attributes[key] = @_generateAttribute val, attrTypes[key]
+                attributes
+            target
+    
+    
+    /**
+     * Wraps a single attribute value with the appropriate observable machinery,
+     * auto-coercing incoming data to `ClassType` if provided.
+     * 
+     * @protected
+     * @param {*} val Initial value.
+     * @param {Class<Base>} [ClassType] Type to ensure.
+     * @returns {ko.observable} The new observable attribute. You should assign
+     *  this to the right place on `attributes`, bro.
+     */
+    _generateAttribute: (val, ClassType) ->
+        if _.isArray val
+            obs = ko.observableArray val
+        else
+            if typeof ClassType is not 'function' and _.isPlainObject(val)
+                val = @_generateAttributes val, ClassType
+            obs = ko.observable val
+        obs = obs.coerce ClassType if ClassType
+        obs
+    
+    
+    
+    # }}}
+    /* * * *  Class Definition Helpers  * * * {{{ */
+    /**
+     * @section Class Definition Helpers
+     * 
+     * Knockout was not designed for a declarative, class-oriented programming style.
+     * Observers are objects; this means attaching an observer to a class's prototype
+     * results in that observer being shared among all instances of the class!
+     * 
+     * Base provides several class methods (for convenience with `@`) to avoid this,
+     * for use when declaring instance methods on a new class. Instead of wrapping the
+     * method as a computed property immediately, they annotate it for processing later,
+     * when a new instance of the class is created. This allows us to declare observers
+     * and computed properties almost exactly as we would normally, but avoid sharing 
+     * state.
+     * 
+     * @example
+     *  class Person extends Base
+     *      defaults : ->
+     *          firstName : 'Bob'
+     *          lastName  : 'Smith'
+     *      
+     *      fullName : @computed ->
+     *          @firstName() + ' ' + @lastName()
+     *      
+     *      -> super ...
+     * 
+     */
+    
+    
+    /**
+     * Create a computed decorator function.
+     * @private
+     * @static
+     */
+    @computedDecorator = (decoratorName, extender) ->
+        Class     = this
+        extender ?= decoratorName.replace(/Computed$/i, '') or true
+        eagerName = _.camelize "eager_#decoratorName"
+        
+        # if Class[decoratorName] or Class[eagerName]
+        #     throw new Error "Class #{Class.displayName or Class.name} already has a property at #decoratorName or #eagerName!"
+        
+        key       = _.underscored decoratorName
+        flagKey   = "__#{key}__"
+        optsKey   = "__#{key}_options__"
+        
+        Class[decoratorName] = (options, method) ->
+            [method, options] = [options, {}] if typeof options is 'function'
+            method[flagKey] = extender
+            method[optsKey] = {+deferEvaluation} import options
+            method
+        Class[eagerName] = (options, method) ->
+            [method, options] = [options, {}] if typeof options is 'function'
+            @[decoratorName] {-deferEvaluation} import options, method
+        
+        Class
+    
+    # @computedDecorator() produces methods with this pair of signatures:
+    
+    /**
+     * Decorates a method when attached to the class prototype so that it
+     * becomes a computed property of the right type when the class is
+     * instantiated. By default, such properties are lazy, deferring evaluation
+     * until first read.
+     * 
+     * @static
+     * @name computed
+     * @param {Object} [options] Options to pass to the `ko.computed` type.
+     * @param {Boolean} [options.deferEvaluation=true] Whether to defer
+     *  calculation until first read.
+     * @param {Function} method Method to decorate.
+     * @returns {Function} Decorated method.
+     */
+    /**
+     * Identical to `@computed`, excepting that the property's value is
+     * immediately calculated upon instantiation (most likely in the class
+     * constructor).
+     * 
+     * @static
+     * @name eagerComputed
+     * @param {Object} [options] Options to pass to the `ko.computed` type.
+     * @param {Boolean} [options.deferEvaluation=false] Whether to defer
+     *  calculation until first read.
+     * @param {Function} method Method to decorate.
+     * @returns {Function} Decorated method.
+     * @see Base.computed()
+     */
+    
+    @computedDecorator 'computed'
+    @computedDecorator 'asyncComputed'
+    @computedDecorator 'typedComputed'
+    @computedDecorator 'coerciveComputed', 'coerce'
+    
+    
+    
+    # }}}
+    /* * * *  Class Methods  * * * {{{ */
+    
+    # Make the class-object itself an event emitter, so it can fire global events
+    this import EventEmitter::
+    
+    
+    /**
+     * @static
+     * @param {Object} [attributes] Starting attribute values.
+     * @returns {? extends Base} A new instance of this class.
+     */
+    @create = (attributes) ->
+        ClassType = this
+        new ClassType attributes
+    
+    
+    /**
+     * @static
+     * @returns {Function} A factory function that creates new instances of this Model
+     *  without requiring the accursed `new` keyword.
+     */
+    @factory = ->
+        @create.bind this
+    
+    
+    /**
+     * Invoked when Base is extended; copies over all class methods to the Subclass (including this).
+     * @protected
+     * @static
+     */
+    @extended = (SubClass) ->
+        SuperClass = this
+        for own k, v in SuperClass
+            SubClass[k] = v unless SubClass[k]
+            # SubClass[k] = v unless _.contains <[ apply call constructor toString ]>, k
+        SubClass.__id__         = generateId()
+        SubClass.__class__      = SubClass
+        SubClass.__super__      = SuperClass::
+        SubClass.__superclass__ = SuperClass
+        SuperClass.trigger? 'extended', SubClass, SuperClass
+        SubClass
+    
+    # }}}
+
+

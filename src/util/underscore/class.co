@@ -1,7 +1,46 @@
 _ = require 'underscore'
 
 
+
 _cls =
+    
+    /**
+     * @returns {Boolean} Whether the given function is a class constructor.
+     */
+    isClass: (fn) ->
+        return true if fn is Object
+        typeof fn is 'function'     and
+        _.isObject( proto = fn:: )  and do
+            fn.__class__ is fn   or
+            not _.isEmpty(proto) or
+            not _.isPlainObject(proto)
+    
+    /**
+     * Creates a new instance of the given class without running its constructor.
+     * 
+     * @param {Class} Cls Class to instantiate.
+     * @returns {Cls} New instance of the given class, created without running its constructor.
+     */
+    fabricate: (Cls) ->
+        AnonymousInnerClass = ->
+        AnonymousInnerClass:: = Cls::
+        instance = new AnonymousInnerClass()
+        instance.constructor = Cls
+        instance
+    
+    
+    /**
+     * Creates a new instance of the given class, applying the given arguments Array to the constructor.
+     * 
+     * @param {Class} Cls Class to instantiate.
+     * @param {Array} [args=[]] Arguments to pass to the class constructor.
+     * @returns {Cls} New instance of the given class.
+     */
+    instantiate: (Cls, args=[]) ->
+        instance = _cls.fabricate Cls
+        Cls.apply instance, args
+        instance
+    
     
     /**
      * @returns {Array<Class>} The list of all superclasses for this class
@@ -20,6 +59,7 @@ _cls =
         unless superclass then []
         else [superclass].concat getSuperClasses superclass
     
+    
     /**
      * Looks up an attribute on the prototype of each class in the class
      * hierarchy. Values from Object or Function are not typically included --
@@ -35,6 +75,7 @@ _cls =
             .pluck 'prototype'
             .pluck prop 
             .value()
+    
     
     /**
      * As `.pluckSuper()` but includes value of `prop` on passed `obj`. Values

@@ -1,7 +1,7 @@
 limn = exports
 
-limn.{ _, op, emitters, generateId, guidFor, root, Mixin,
-} =  { _, op, emitters, generateId, guidFor, root, Mixin,
+limn.{ _, op, emitters, generateId, guidFor, root, Mixin, Query,
+} =  { _, op, emitters, generateId, guidFor, root, Mixin, Query,
 } = limn.util = require './util'
 
 # Decorate root limn namespace object with EventEmitter methods

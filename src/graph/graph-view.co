@@ -2,20 +2,67 @@
 } = require '../base/view'
 { Graph,
 } = require './graph-model'
+{ GraphNodeData,
+} = require './node/graph-node-data'
+{ GraphNode,
+} = require './node/graph-node'
 { EditView,
 } = require '../edit/edit-view'
 
 class exports.GraphView extends View
     template: 'graph'
     
-    (idOrModel, action) ->
+    /**
+     * Children of this node.
+     * @type Array<GraphNode>
+     */
+    children : null
+    
+    
+    defaults: ->
+        model    : null
+        parent   : null
+        children : []
+    
+    
+    /**
+     * @constructor
+     */
+    (model) ->
+        @graph = this
         super()
-        if idOrModel instanceof Graph
-            @model idOrModel
-        else
-            @model new Graph id: idOrModel
-            @model().fetch()
+        
+        @model Graph.load model
         
         # temporary - just testing out generic edit view
         @editView = ko.observable()
         @model().fetch().done ~> @editView new EditView(@model())
+    
+    
+    /**
+     * Performs a depth-first walk across the tree of GraphNodes, invoking an
+     * iteration function much like  `Array.reduce`, passing a custom "accumulator"
+     * value along with the current node: 
+     * 
+     *  `newAcc = fn.call(context, currentAcc, node)`
+     * 
+     * The iterator's return becomes the new accumulator. If not specified, the
+     * iterator will be invoked with the node as the context.
+     * 
+     * @param {*} acc Starting accumulator value.
+     * @param {Object} [context=this] Execution context for the iteration function.
+     * @param {Function} fn Iteration function.
+     * @returns {*} Final accumulator value.
+     */
+    walk: (acc, cxt, fn) ->
+        [fn, cxt] = [cxt, null] unless typeof fn is 'function'
+        acc = fn.call(cxt or this, acc, this)
+        for child of @children().slice()
+            acc = child.walk acc, cxt, fn
+        acc
+    
+    
+    /**
+     * Populate the GraphNode tree from the model's GraphNodeData objects.
+     */
+    populate: ->

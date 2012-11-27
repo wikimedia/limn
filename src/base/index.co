@@ -1,7 +1,8 @@
+base         = require './base'
 model        = require './model'
 model_cache  = require './model-cache'
 resource     = require './resource'
 stored_model = require './stored-model'
 view         = require './view'
 
-exports import model import model_cache import resource import stored_model import view
+exports import base import model import model_cache import resource import stored_model import view

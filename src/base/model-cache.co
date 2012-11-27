@@ -131,7 +131,7 @@ class exports.ModelCache extends ReadyEmitter
         # Cache hit? Return its extant promise.
         if model
             
-            # The cache can be populated via `register()` calls not originating in `lookup()`,
+            # The cache can be populated via `add()` calls not originating in `lookup()`,
             # resulting in cache entries without promises. If so, we need to both create
             # the promise and resolve it before handing things back.
             deferred = @promises[id] or= new Deferred().resolve(model)
@@ -139,7 +139,7 @@ class exports.ModelCache extends ReadyEmitter
         # Cache miss? Create a new promise and a new request.
         else
             deferred = @promises[id] = new Deferred()
-            model    = @register @createModel id
+            model    = @add @createModel id
             xhr      = model.fetch()
             
             deferred.xhr = xhr.xhr
@@ -166,7 +166,7 @@ class exports.ModelCache extends ReadyEmitter
      * @param {Model} model The model.
      * @returns {Model} The model.
      */
-    register: (model) ->
+    add: (model) ->
         throw new Error "You must supply a model! (model=#model)" unless model
         
         id = model.getId()
@@ -202,10 +202,10 @@ class exports.ModelCache extends ReadyEmitter
     
     /**
      * Decorate an object with the cache methods:
-     *  - register
      *  - get
      *  - lookup
-     *  - lookupAll
+     *  - invalidate
+     *  - purge
      * 
      * This is automatically called on `ModelType` if supplied.
      * 
