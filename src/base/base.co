@@ -331,9 +331,24 @@ class exports.Base extends EventEmitter
         fn
     
     
-    _setupAttributes: (attributes, attrTypes={}) ->
+    
+    /**
+     * Sets up attributes, obeying class defaults and customizations. This means:
+     * 
+     * - Merge the supplied attribute data with the class defaults
+     * - Canonicalize the resulting data
+     * - Wrap the properties from the data with observables...
+     * - ...And apply type coercion as specified by the class.
+     * 
+     * @protected
+     * @param {Map} [attributes={}] Hash of nascent attributes.
+     * @param {Map<String, Class|Function>} [attrTypes={}] Types coercion functions by key.
+     * @returns {Map<String, ko.observable} Map from attribute names to observables.
+     */
+    _setupAttributes: (attributes={}, attrTypes={}) ->
         attributes = @canonicalize _.merge @defaults(), attributes
         @_generateAttributes attributes, attrTypes
+    
     
     /**
      * Wraps the properties found in the `attributes` map with observables,
@@ -341,7 +356,7 @@ class exports.Base extends EventEmitter
      * 
      * @protected
      * @param {Map} data Hash of nascent attributes.
-     * @param {Map<Key, Class>} [attrTypes={}] Type to ensure.
+     * @param {Map<String, Class|Function>} [attrTypes={}] Types coercion functions by key.
      * @param {Object} [target={}] Hash to which nascent attributes shall be attached.
      * @returns {Object} The transformed attributes map.
      */
@@ -372,7 +387,7 @@ class exports.Base extends EventEmitter
             if typeof ClassType is not 'function' and _.isPlainObject(val)
                 val = @_generateAttributes val, ClassType
             obs = ko.observable val
-        obs = obs.typed ClassType if ClassType
+        obs = obs.coerce ClassType if ClassType
         obs
     
     
@@ -419,11 +434,42 @@ class exports.Base extends EventEmitter
     
     
     /**
+     * Create a computed decorator function.
+     * @private
+     * @static
+     */
+    @computedDecorator = (decoratorName) ->
+        Class     = this
+        eagerName = 'eager' + decoratorName.charAt(0).toUpperCase() + decoratorName.slice(1)
+        
+        # if Class[decoratorName] or Class[eagerName]
+        #     throw new Error "Class #{Class.displayName or Class.name} already has a property at #decoratorName or #eagerName!"
+        
+        key       = _.underscored decoratorName
+        flagKey   = "__#{key}__"
+        optsKey   = "__#{key}_options__"
+        
+        Class[decoratorName] = (options, method) ->
+            [method, options] = [options, {}] if typeof options is 'function'
+            method[key] = true
+            method[optsKey] = {+deferEvaluation} import options
+            method
+        Class[eagerName] = (options, method) ->
+            [method, options] = [options, {}] if typeof options is 'function'
+            @[decoratorName] {-deferEvaluation} import options, method
+        
+        Class
+    
+    
+    /**
      * Decorates a method when attached to the class prototype so that it
-     * becomes a computed property when the class is instantiated.
+     * becomes a computed property when the class is instantiated. By default,
+     * such properties are lazy, deferring evaluation until first read.
      * 
      * @static
      * @param {Object} [options] Options to pass to `ko.computed`.
+     * @param {Boolean} [options.deferEvaluation=true] Whether to defer
+     *  calculation until first read.
      * @param {Function} method Method to decorate.
      * @returns {Function} Decorated method.
      */
@@ -437,8 +483,13 @@ class exports.Base extends EventEmitter
     /**
      * Decorates a method when attached to the class prototype so that it
      * becomes an async computed property when the class is instantiated.
+     * By default, such properties are lazy, deferring evaluation until
+     * first read.
      * 
      * @static
+     * @param {Object} [options] Options to pass to `ko.asyncComputed`.
+     * @param {Boolean} [options.deferEvaluation=true] Whether to defer
+     *  calculation until first read.
      * @param {Function} method Method to decorate.
      * @returns {Function} Decorated method.
      */
@@ -447,6 +498,40 @@ class exports.Base extends EventEmitter
         method.__async_computed__ = true
         method.__async_computed_options__ = {+deferEvaluation} import options
         method
+    
+    
+    /**
+     * Identical to `@computed`, excepting that the property's value is
+     * immediately calculated upon instantiation (most likely in the class
+     * constructor).
+     * 
+     * @static
+     * @param {Object} [options] Options to pass to `ko.computed`.
+     * @param {Boolean} [options.deferEvaluation=false] Whether to defer
+     *  calculation until first read.
+     * @param {Function} method Method to decorate.
+     * @returns {Function} Decorated method.
+     */
+    @eagerComputed = (options, method) ->
+        [method, options] = [options, {}] if typeof options is 'function'
+        @computed {-deferEvaluation} import options, method
+    
+    
+    /**
+     * Identical to `@asyncComputed`, excepting that the property's value is
+     * immediately calculated upon instantiation (most likely in the class
+     * constructor).
+     * 
+     * @static
+     * @param {Object} [options] Options to pass to `ko.asyncComputed`.
+     * @param {Boolean} [options.deferEvaluation=false] Whether to defer
+     *  calculation until first read.
+     * @param {Function} method Method to decorate.
+     * @returns {Function} Decorated method.
+     */
+    @eagerAsyncComputed = (options, method) ->
+        [method, options] = [options, {}] if typeof options is 'function'
+        @asyncComputed {-deferEvaluation} import options, method
     
     
     
