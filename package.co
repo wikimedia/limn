@@ -2,7 +2,7 @@ name                            : 'limn'
 version                         : '0.1.0'
 description                     : 'A GUI Visualization Toolkit'
 homepage                        : 'https://github.com/wikimedia/limn'
-keywords                        : <[ visualization graph gui d3 ]>
+keywords                        : <[ visualization graph dashboard data gui d3 ]>
 author                          : 'David Schoonover <dsc@wikimedia.org> (http://less.ly)'
 contributors                    :
                                 'Dan Andreescu <dandreescu@wikimedia.org>'
@@ -50,7 +50,7 @@ devDependencies                 :
     'connect-compiler-extras'   : 'https://github.com/dsc/connect-compiler-extras/tarball/master'
     'knockout'                  : 'https://github.com/dsc/node-knockout/archive/2.2.0.tar.gz'
     'browserify'                : '== 1.9.4'
-    'uglify-js'                 : '== 1.2.6'
+    'uglify-js'                 : '>= 1.2.x'
     'vows'                      : '>= 0.6.4'
 
 scripts                         : test:'vows test/coco.js test/*'

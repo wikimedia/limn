@@ -62,8 +62,8 @@ development:
                     - add-extender
                     - observables
                     - async-computed-observable
-                    - subview-binding
                     - typed-observable
+                    - subview-binding
                     - index
                 - guid
                 - mixin
@@ -78,26 +78,30 @@ development:
                 - formatters
                 - index
             - base:
+                - base
                 - model
                 - stored-model
                 - model-cache
                 - resource
                 - view
                 - index
+            - data:
+                - metric-model
+                - datasource-model
+                - index
+            - graph:
+                - node:
+                    - graph-node
+                    - graph-node-data
+                    - index
+                - graph-model
+                - graph-view
+                - index
             - dashboard:
                 - dashboard-model
                 - dashboard-tab-model
                 - dashboard-tab-view
                 - dashboard-view
-                - index
-            - graph:
-                - graph-model
-                - graph-node-data
-                - graph-view
-                - index
-            - data:
-                - metric-model
-                - datasource-model
                 - index
             - index
 
