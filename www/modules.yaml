@@ -42,7 +42,7 @@ development:
         - jade.runtime.min
         - moment.mod
         - d3.v2
-        - page
+        - page.mod
         
         # - livecss
 
