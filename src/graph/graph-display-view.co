@@ -1,0 +1,5 @@
+{ View,
+} = require '../base/view'
+
+class exports.GraphDisplayView extends View
+    template: 'graph-display'
