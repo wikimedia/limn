@@ -44,9 +44,21 @@ html(lang="en", dir="ltr")
                         var limn_config = !{ JSON.stringify(limn_config) };
                     
                     block lib-scripts
-                        for src in sources()
-                            //- script(src=path.join(mount, src)+"?"+version)
-                            script(src=path.join(mount, src))
+                        if IS_DEV
+                            //-
+                                FIXME:  grr! Can't get rid of modules.yaml because it has pointers to magic files like /vendor/browserify.js
+                                        that can't be easily introspected. Worse, loading order matters with vendor files.
+                            for src in sources()
+                                if _.startsWith(src, '/vendor')
+                                    script(src=path.join(mount, src))
+                            
+                            //- Discover all .co files in ./src and include them
+                            for src in findSources('src')
+                                script(src=path.join(mount, 'js/limn', src))
+                        else
+                            for src in sources()
+                                script(src=path.join(mount, src))
+                        
                     
                     block page-scripts
                         script

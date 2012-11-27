@@ -4,7 +4,7 @@ fs    = exports.fs   = require 'fs'
 path  = exports.path = require 'path'
 glob  = exports.glob = require 'glob'
 
-{dirname} = path
+{dirname, basename} = path
 BASE     = exports.BASE     = dirname __dirname
 WWW      = exports.WWW      = "#BASE/www"
 VAR      = exports.VAR      = "#BASE/var"
@@ -20,7 +20,7 @@ _     = exports._ = require 'underscore'
 _.str = require 'underscore.string'
 _.mixin _.str.exports()
 
-
+op   = exports.op   = require 'operator'
 yaml = exports.yaml = require 'js-yaml'
 jade = exports.jade = require 'jade'
 
@@ -50,13 +50,54 @@ sources = exports.sources = (node_env=SOURCES_ENV, modulesFile="#WWW/modules.yam
     modlist = (mods.all or []).concat (mods[node_env] or [])
     _.flatten modlist.map ({suffix or '', paths}) -> joinTree('', paths).map -> it+suffix
 
+
+/**
+ * Search for source files in listed directories.
+ * 
+ * @param {String|Array<String>} [srcDirs=<[ src ]>] Source directories to search.
+ * @param {Object} [opts={}] Options.
+ * @param {Boolean} [opts.dropSrcDir=true] Do not include the directory-prefix we searched.
+ * @param {Boolean} [opts.ext='.mod.js'] Replace .co with this extension.
+ * @returns {Array<String>} List of paths to source files.
+ */
+findSources = exports.findSources = (srcDirs=<[ src ]>, opts={}) ->
+    srcDirs = [ srcDirs ] unless _.isArray srcDirs
+    opts    = { +dropSrcDir, ext:'.mod.js', ...opts }
+    return _ srcDirs .chain()
+        .map (srcDir) ->
+            srcDir = _.str.rtrim srcDir, '/'
+            pat = "#srcDir/**/*.co"
+            cwd = process.cwd()
+            if opts.dropSrcDir
+                pat = '**/*.co'
+                cwd = path.join cwd, srcDir
+            glob.sync pat, { +nosort, cwd }
+        .flatten()
+        .map (f) -> f.replace /\.co$/, opts.ext
+        .sort indexSorter
+        .value()
+
+/**
+ * Sort index files to the end of their directory.
+ */
+indexSorter = exports.indexSorter = (p1, p2) ->
+    return that if op.cmp dirname(p1), dirname(p2)
+    f1 = basename p1
+    f2 = basename p2
+    return that if op.cmp _.startsWith(f1, 'index.'), _.startsWith(f2, 'index.')
+    return op.cmp f1, f2
+
+
+/**
+ * Search for tests.
+ */
 tests = exports.tests = ->
     return glob.sync "#TEST/**/*.co"
         .filter (f) ->
             f is not "#TEST/index.co" and not _.startsWith(f, "#TEST/qunit")
         .concat [ "#TEST/index.co" ]
         .map (f) ->
-            p = path.join path.dirname(f), path.basename(f).replace /\.co$/, '.mod.js'
+            p = path.join dirname(f), basename(f).replace /\.co$/, '.mod.js'
             '/js/limn/' + p.slice BASE.length+1
 
 joinTree = exports.joinTree = function joinTree(root, tree)
