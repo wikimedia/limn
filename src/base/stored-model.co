@@ -27,4 +27,31 @@ class exports.StoredModel extends Model
     urlRoot : ->
         require('limn').mount()
     
+    
+    /**
+     * Create a new instance of the model with the given id, and then instruct
+     * it to fetch itself from the server.
+     * 
+     * @param {String|Object} id Id of the model to create and load. May be
+     *  omitted in favor of passing an attributes object containing `id`.
+     * @param {Object} [attributes] Attribute values to instantiate the model
+     *  with prior to fetch.
+     * @param {Function} [cb] Callback to be invoked when the model is done
+     *  loading.
+     * @returns {StoredModel} The new model instance.
+     */
+    @load = (id, attrs={}, cb) ->
+        ModelClass = this
+        if _.isObject id
+            [cb, attrs, id] = [attrs, id, null]
+        if typeof attrs is 'function' and typeof cb is not 'function'
+            [cb, attrs] = [attrs, {}]
+        
+        attrs = {id} import attrs
+        throw new Error "Cannot load a StoredModel without an id!" unless attrs.id?
+        
+        model = new ModelClass attrs
+        model.fetch cb
+        model
+    
 
