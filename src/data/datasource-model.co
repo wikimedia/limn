@@ -78,7 +78,7 @@ class exports.DataSource extends StoredModel
     
     
     /**
-     * Whether this 
+     * Whether this DataSource is valid, and thus ready to load data.
      * @type ko.computed<Boolean>
      */
     isValid : @computed ->

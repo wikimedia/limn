@@ -1,5 +1,4 @@
 _  = require 'underscore'
-op = require 'operator'
 ko = require 'knockout'
 
 { Model, StoredModel, ModelCache,
