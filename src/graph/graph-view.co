@@ -35,7 +35,13 @@ class exports.GraphView extends View
         @graph = this
         super()
         
-        @model Graph.load model
+        # this is ideal but not working right now: @model Graph.load model
+        
+        unless model instanceof Graph
+            model = new Graph id: model
+        
+        @model model
+        @model().fetch()
     
     afterRender: (element) ->
         rootElement = $(element).find('.graph-canvas')[0]
