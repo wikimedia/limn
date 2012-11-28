@@ -10,7 +10,7 @@ ko = require 'knockout'
  * @extends GraphNode
  */
 class exports.TimeseriesNode extends GraphNode
-    typeName : 'timeseries'
+    nodeType : 'timeseries'
     @registerType()
     
     -> super ...

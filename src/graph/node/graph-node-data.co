@@ -14,10 +14,10 @@ class exports.GraphNodeData extends Model
     -> super ...
     
     defaults: ->
-        nodeType       : null
+        nodeType       : 'group'
         label          : null
         disabled       : false
-        metric         : {}
+        metric         : null
         options        : {}
         children       : []
     
@@ -25,5 +25,5 @@ class exports.GraphNodeData extends Model
         metric   : Metric
         children : GraphNodeData
     
-    
+
 

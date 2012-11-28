@@ -316,16 +316,20 @@ class exports.Base extends EventEmitter
         return fn if fn is @attributes[name]
         
         # Apply observer annotations
-        read = fn
         for annotation of [ '', 'async', 'typed', 'coercive', ]
             key       = _.compact [ annotation, 'computed' ] .join '_'
             flagKey   = "__#{key}__"
             optsKey   = "__#{key}_options__"
             
             if extender = fn[flagKey]
-                options = { read, owner } import fn[optsKey]
-                obs = ko.computed options
-                obs = obs[extender](options) if typeof obs[extender] is 'function'
+                options = { read:fn, owner } import fn[optsKey]
+                obs = ko.computed _.clone options
+                return obs unless typeof obs[extender] is 'function'
+                
+                if _ <[ typed coercive ]> .contains annotation
+                    obs = obs[extender](fn, owner, options)
+                else
+                    obs = obs[extender](options)
                 return obs
         
         # Re-wrap non-attribute observables and copy objects so neither causes shared state

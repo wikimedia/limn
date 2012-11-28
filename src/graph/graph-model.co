@@ -13,24 +13,21 @@ class exports.Graph extends StoredModel
     
     -> super ...
     
-    getId : -> @get 'id'
-    
+    getId    : -> @get 'id'
     defaults : ->
         id        : null
         slug      : ''
-        
         name      : ''
         shortName : ''
         desc      : ''
         notes     : ''
-        
-        width     : 'auto'
-        height    : 320
-        
-        children : []
+        root      :
+            nodeType : 'canvas'
+            width    : 750
+            height   : 500
     
     attributeTypes :
-        children : GraphNodeData
+        root : GraphNodeData
     
     
     

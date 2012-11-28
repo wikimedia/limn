@@ -12,7 +12,7 @@ unwrap = ko.utils.unwrapObservable
  * @constant
  * @type String
  */
-NODE_TYPENAME_KEY = exports.NODE_TYPENAME_KEY = 'typeName'
+NODE_TYPENAME_KEY = exports.NODE_TYPENAME_KEY = 'nodeType'
 
 /**
  * Map of known GraphNode types, keyed by type-name.
@@ -46,7 +46,7 @@ class exports.GraphNode extends Base
      * 
      * @type String
      */
-    typeName : null
+    nodeType : null
     
     
     /**
@@ -84,7 +84,7 @@ class exports.GraphNode extends Base
     
     attributeTypes:
         children : (nodeData, parent=this) ->
-            GraphNode.fromNodeData parent, nodeData
+            GraphNode.fromNodeData nodeData, parent
     
     /**
      * Model data for this node.
@@ -102,16 +102,16 @@ class exports.GraphNode extends Base
      * Children of this node.
      * @type ko.observableArray<GraphNode>
      */
-    childModels : @eagerComputed ->
-        ...
-        # FIXME in progress
-        
-        @model().children()
-        parent = this
-        
-        for nodeData of @model().children().slice()
-            children.push childNode = GraphNode.fromNodeData parent, nodeData
-        
+    # childModels : @eagerComputed ->
+    #     ...
+    #     # FIXME in progress
+    #     
+    #     @model().children()
+    #     parent = this
+    #     
+    #     for nodeData of @model().children().slice()
+    #         children.push childNode = GraphNode.fromNodeData parent, nodeData
+    #     
     
     /**
      * DOM Element at the root of this Node. jQuery objects and d3 Selections
@@ -148,11 +148,11 @@ class exports.GraphNode extends Base
     
     /**
      * @constructor
-     * @param {GraphNode} parent
      * @param {GraphNodeData} model
+     * @param {GraphNode} parent
      * @param {GraphView} [graph=parent.graph]
      */
-    (parent, model, graph) ->
+    (model, parent, graph) ->
         unless @graph = graph or parent?.graph
             throw new Error "GraphNode has 'Graph' in it for a reason. Supply one, clown! (got #{@graph})"
         
@@ -278,21 +278,21 @@ class exports.GraphNode extends Base
      */
     @registerType = (Subclass=this) ->
         # console.log "GraphNode.registerType(#Subclass)"
-        unless Subclass?::?.hasOwnProperty(NODE_TYPENAME_KEY) and typeName = Subclass::[NODE_TYPENAME_KEY]
-            throw new Error "GraphNode sub-types must declare a new, unique typeName on the prototype! (got #{Subclass?::?[NODE_TYPENAME_KEY]})"
-        if NODE_TYPES[typeName]
-            throw new Error "Duplicate GraphNode typeName! (got #typeName)"
-        NODE_TYPES[typeName] = Subclass
+        unless Subclass?::?.hasOwnProperty(NODE_TYPENAME_KEY) and nodeType = Subclass::[NODE_TYPENAME_KEY]
+            throw new Error "GraphNode sub-types must declare a new, unique nodeType on the prototype! (got #{Subclass?::?[NODE_TYPENAME_KEY]})"
+        if NODE_TYPES[nodeType]
+            throw new Error "Duplicate GraphNode nodeType! (got #nodeType)"
+        NODE_TYPES[nodeType] = Subclass
     
     
     /**
-     * Look up a `GraphNode` by `typeName`.
+     * Look up a `GraphNode` by `nodeType`.
      * @static
      */
-    @lookupType = (typeName) ->
-        typeName = unwrap _.get typeName, NODE_TYPENAME_KEY unless typeof typeName is 'string'
-        unless GraphNodeType = NODE_TYPES[typeName]
-            throw new Error "Unknown GraphNode type '#typeName'!"
+    @lookupType = (nodeType) ->
+        nodeType = unwrap _.result nodeType, NODE_TYPENAME_KEY unless typeof nodeType is 'string'
+        unless GraphNodeType = NODE_TYPES[nodeType]
+            throw new Error "Unknown GraphNode type '#nodeType'!"
         GraphNodeType
     
     
@@ -309,9 +309,9 @@ class exports.GraphNode extends Base
      * @param {GraphView} [graph=parent.graph]
      * @returns {? extends GraphNode} A new GraphNode instance.
      */
-    @create = (parent, model, graph) ->
+    @create = (model, parent, graph) ->
         GraphNodeType = this
-        new GraphNodeType parent, model, graph
+        new GraphNodeType model, parent, graph
     
     
     /**
@@ -320,14 +320,16 @@ class exports.GraphNode extends Base
      * be inherited from the parent node.
      * 
      * @static
-     * @param {GraphNode} parent 
      * @param {GraphNodeData} model 
+     * @param {GraphNode} parent 
      * @param {GraphView} [graph=parent.graph]
-     * @returns {? extends GraphNode} A new GraphNode instance.
+     * @returns {? extends GraphNode} The GraphNode instance.
      */
-    @fromNodeData = (parent, model, graph) ->
+    @fromNodeData = (model, parent, graph) ->
+        return null  unless model?
+        return model if model instanceof GraphNode
         GraphNodeType = GraphNode.lookupType model
-        new GraphNodeType parent, model, graph
+        new GraphNodeType model, parent, graph
     
     
     # }}}

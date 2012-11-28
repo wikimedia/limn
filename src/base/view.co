@@ -17,14 +17,15 @@ class exports.View extends Base
      */
     template : ''
     
+    defaults: ->
+        model : null
+    
     /**
      * @constructor
      */
-    ->
-        @model = ko.observable()
-    
-    defaults: ->
-        model : null
+    (model) ->
+        super()
+        @model model
     
     
 

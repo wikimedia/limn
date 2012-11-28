@@ -11,7 +11,7 @@ d3 = require 'd3'
  * @extends TimeseriesNode
  */
 class exports.LineNode extends TimeseriesNode
-    typeName : 'line'
+    nodeType : 'line'
     @registerType()
     
     -> super ...

@@ -16,33 +16,34 @@ class exports.GraphView extends View
      * root to the tree of GraphNode(s)
      * @type GraphNode
      */
-    rootNode : null
-    
+    rootNode : @eagerComputed ->
+        return null unless graph = @model()
+        GraphNode.fromNodeData graph.root(), null, graph
     
     defaults: ->
-        model    : null
-        parent   : null
-        rootNode : null
-    
-    attributeTypes: ->
-        rootNode : GraphNode
+        model : null
     
     
     /**
      * @constructor
+     * @param {Graph} model Graph model for this view.
      */
     (model) ->
-        @graph = this
         super()
         
-        # this is ideal but not working right now: @model Graph.load model
-        
-        unless model instanceof Graph
-            model = new Graph id: model
+        if model instanceof Graph
+            model.fetch()
+        else if typeof model is 'string'
+            model = Graph.load { id:model }
+        else
+            model = new Graph model
         
         @model model
-        @model().fetch()
     
+    
+    /**
+     * Called by Knockout once the Graph template has finished rendering.
+     */
     afterRender: (element) ->
         rootElement = $(element).find('.graph-canvas')[0]
         
@@ -54,3 +55,4 @@ class exports.GraphView extends View
      * Populate the GraphNode tree from the model's GraphNodeData objects.
      */
     populate: ->
+        

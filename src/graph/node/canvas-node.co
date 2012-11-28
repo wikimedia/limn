@@ -1,0 +1,29 @@
+ko = require 'knockout'
+
+{ GraphNode,
+} = require './graph-node'
+
+
+/**
+ * @class
+ * @extends GraphNode
+ */
+class exports.CanvasNode extends GraphNode
+    nodeType : 'canvas'
+    @registerType()
+    
+    
+    /**
+     * @constructor
+     * @param {GraphNode} parent
+     * @param {GraphNodeData} model
+     * @param {GraphView} [graph=parent.graph]
+     */
+    (parent, model, graph) ->
+        super ...
+    
+    
+    build: (parentElement) ->
+        ...
+    
+
