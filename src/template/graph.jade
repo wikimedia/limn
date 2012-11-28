@@ -1,4 +1,14 @@
 section.graph
     h4(data-bind="text: model().name")
     
+    p(data-bind="text: model().desc")
+    
     div.graph-canvas
+    
+    p(data-bind="text: model().notes")
+    
+//-
+    ul(data-bind="foreach: model().tags")
+        li
+            span(data-bind="text: data")
+            button (remove)
