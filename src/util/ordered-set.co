@@ -5,11 +5,11 @@ _ = require 'underscore'
 
 
 /**
- * A Set class, implemented using `guid.guidFor()`. Does not keep values in sorted order.
+ * A Set class, implemented using `guid.guidFor()`, which keeps values in insertion order.
  * 
  * @class
  */
-class HashSet
+class OrderedSet
     /**
      * Class guid.
      * @type String
@@ -24,24 +24,25 @@ class HashSet
     
     /**
      * Map from Id to Objects in the set.
-     * @private
+     * @protected
      * @type Map<Id, *>
      */
     _byId : null
     
     /**
      * Set contents.
-     * @private
+     * @protected
      * @type Array
      */
     _items : null
+    
     
     
     /**
      * Accepts any number of collections to be added to the set.
      * @constructor
      */
-    ->
+    (vs) ->
         @__id__ = guidFor this
         @_byId  = {}
         @_items = []
@@ -59,26 +60,6 @@ class HashSet
     
     
     /**
-     * Aliases: HashSet#has
-     * @param {Any} v Value to test.
-     * @returns {Boolean} Whether HashSet contains value.
-     */
-    contains : (v) ->
-        @_getId(v) in @_byId
-    
-    
-    /**
-     * @private
-     * @returns {this}
-     */
-    _addOne : (v) ->
-        id = @_getId v
-        return this if id in @_byId
-        @_byId[id] = v
-        @_items.push v
-        this
-    
-    /**
      * @returns {Number} Number of elements in the set.
      */
     size: ->
@@ -86,30 +67,94 @@ class HashSet
     
     
     /**
-     * Add values to the HashSet.
-     * Aliases: HashSet#push HashSet#unshift
+     * @return {Boolean}
+     */
+    isEmpty: ->
+        @_items.length is 0
+    
+    
+    /**
+     * Aliases: OrderedSet#contains
+     * @param {Any} v Value to test.
+     * @returns {Boolean} Whether OrderedSet contains value.
+     */
+    has : (v) ->
+        @_getId(v) in @_byId
+    
+    
+    /**
+     * @protected
+     * @returns {this}
+     */
+    _appendOne : (v) ->
+        id = @_getId v
+        return this if id in @_byId
+        @_byId[id] = v
+        @_items.push v
+        this
+    
+    
+    /**
+     * @protected
+     * @returns {this}
+     */
+    _prependOne : (v) ->
+        id = @_getId v
+        return this if id in @_byId
+        @_byId[id] = v
+        @_items.unshift v
+        this
+    
+    
+    /**
+     * Add values to the OrderedSet.
+     * Aliases: OrderedSet#push
      * @param {Any} values... Values to add.
      * @returns {this}
      */
     add : (...values) ->
-        _.each arguments, @_addOne, this
+        _.each arguments, @_appendOne, this
         this
     
+    
     /**
-     * @private
+     * Add values to the beginning of the OrderedSet.
+     * Aliases: OrderedSet#unshift
+     * @param {Any} values... Values to add.
      * @returns {this}
      */
-    _removeOne : (v) ->
-        id = @_getId v
-        return this unless id in @_byId
-        delete @_byId[id]
-        @_items.splice @_items.indexOf(v), 1
+    prepend : (...values) ->
+        _.each arguments, @_appendOne, this
         this
     
     
     /**
-     * Remove values from the HashSet.
-     * Aliases: HashSet#without
+     * @protected
+     * @param {*} v Value to remove.
+     * @param {Number} [idx] Index of value. If omitted, it will be looked up.
+     * @returns {Boolean} Whether the value was removed.
+     */
+    _removeOne : (v, idx) ->
+        id = @_getId v
+        return false unless id in @_byId
+        delete @_byId[id]
+        idx ?= @_items.indexOf v
+        @_items.splice idx, 1 if -1 < idx < @_items.length
+        true
+    
+    
+    /**
+     * @protected
+     * @param {Number} idx
+     * @returns {Boolean} Whether the value at that index was removed.
+     */
+    _removeIndex : (idx) ->
+        return false if 0 > idx >= @_items.length
+        @_removeOne @_items[idx], idx
+    
+    
+    /**
+     * Remove values from the OrderedSet.
      * @param {Any} values... Values to remove.
      * @returns {this}
      */
@@ -119,43 +164,42 @@ class HashSet
     
     
     /**
-     * Update this HashSet (in-place) with other collections.
-     * Aliases: HashSet#concat
+     * @returns {*} Removes and returns the last (most recently added) element in the set.
+     */
+    pop : ->
+        return unless @_items.length
+        v  = @_items.pop()
+        id = @_getId v
+        delete @_byId[id]
+        v
+    
+    
+    /**
+     * @returns {*} Removes and returns the first element in the set.
+     */
+    shift : ->
+        return unless @_items.length
+        v  = @_items.shift()
+        id = @_getId v
+        delete @_byId[id]
+        v
+    
+    
+    /**
+     * Update this OrderedSet (in-place) with other collections.
      * @param {Array|Object} it... Collection to add.
      * @returns {this}
      */
     update : (vs) ->
         _.each do
             arguments
-            -> _.each it, @_addOne, this
+            -> _.each it, @_appendOne, this
             this
         this
     
     
     /**
-     * Remove and return an element from the set.
-     * Aliases: HashSet#shift
-     * @returns {Any} An element from the set.
-     */
-    pop : ->
-        return unless @_items.length
-        v  = @_items.shift()
-        id = @_getId v
-        delete @_byId[id]
-        return v
-    
-    
-    /**
-     * Clones the set, returning a new object.
-     * @returns {HashSet}
-     */
-    clone : ->
-        new HashSet @_items
-    
-    
-    /**
      * Removes all elements from the set.
-     * Aliases: HashSet#empty
      * @returns {this}
      */
     clear: ->
@@ -164,80 +208,41 @@ class HashSet
         this
     
     
+    /**
+     * Clones the set, returning a new object.
+     * @returns {OrderedSet}
+     */
+    clone : ->
+        new OrderedSet @_items
     
-    ### Collection Operations
+    
+    
+    /* * * *  Iteration/Collection Methods  * * * {{{ */
+    
+    # Synthesized from Underscore: map, filter, reject, some, every, find
     
     /**
      * Transforms the collection into a single value, front-to-back.
-     * Aliases: HashSet#inject HashSet#fold HashSet#foldl HashSet#foldr
+     * Aliases: OrderedSet#inject OrderedSet#fold OrderedSet#foldl OrderedSet#foldr
      * @param {Function} fn Reducer function.
      * @param {Any} [acc] Starting accumulator value.
-     * @param {Object} [cxt=this] Context; defaults to this HashSet.
+     * @param {Object} [cxt=this] Context; defaults to this OrderedSet.
      * @see https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Array/reduce
      * @returns {Any}
      */
-    reduce: (fn, acc, cxt) ->
-        _.reduce @_items, fn, acc, cxt or this
+    reduce: (fn, acc, cxt=this) ->
+        _.reduce @_items, fn, acc, cxt
+    
     
     /**
      * Applies a function to each element.
-     * Aliases: HashSet#each
+     * Aliases: OrderedSet#each
      * @see https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Array/forEach
      * @returns {this}
      */
-    forEach: (fn, cxt) ->
-        _.forEach @_items, fn, cxt or this
+    forEach: (fn, cxt=this) ->
+        _.forEach @_items, fn, cxt
         this
-    
-    /**
-     * @see https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Array/map
-     * @return {HashSet} A new HashSet of elements produced by applying the transform across each element.
-     */
-    map: (fn, cxt) ->
-        new HashSet _.map @_items, fn, cxt or this
-    
-    
-    /**
-     * Aliases: HashSet#select
-     * @see https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Array/filter
-     * @return {HashSet} A new HashSet of only the elements passing the filter.
-     */
-    filter: (fn, cxt) ->
-        new HashSet _.filter @_items, fn, cxt or this
-    
-    /**
-     * Like `HashSet.filter()`, but instead keeps values for which the filter returns false.
-     * @see HashSet#filter
-     * @return {HashSet} A new HashSet of only the elements for which the filter returns false.
-     */
-    reject: (fn, cxt) ->
-        new HashSet _.reject @_items, fn, cxt or this
-    
-    
-    /**
-     * Aliases: HashSet#any
-     * @see https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Array/some
-     * @return {Boolean}
-     */
-    some: (fn, cxt) ->
-        _.some @_items, fn, cxt or this
-    
-    /**
-     * Aliases: HashSet#all
-     * @see https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Array/every
-     * @return {Boolean}
-     */
-    every: (fn, cxt) ->
-        _.every @_items, fn, cxt or this
-    
-    
-    /**
-     * Iterates through the HashSet, returning the first value for which `fn` returns truth-y.
-     * Aliases: HashSet#detect
-     * @returns {Any}
-     */
-    find: (fn, cxt) ->
-        _.find @_items, fn, cxt or this
     
     
     /**
@@ -263,13 +268,15 @@ class HashSet
     keys : ->
         _.keys @_byId
     
+    
     /**
-     * Converts this HashSet to an Array.
-     * Aliases: HashSet#toArray
+     * Converts this OrderedSet to an Array.
+     * Aliases: OrderedSet#toArray
      * @returns {Array}
      */
     values : ->
         @_items.slice()
+    
     
     /**
      * @returns {Array<Array<Key, Value>>} Key-value pairs of set contents.
@@ -277,12 +284,13 @@ class HashSet
     items: ->
         _.map do
             @_items
-            -> [@_getId(it), it]
+            -> [ @_getId(it), it ]
             this
     
     
     
-    ### Comparators and HashSet Operations
+    # }}}
+    /* * * *  Comparators and Set Operations  * * * {{{ */
     
     /**
      * Tests if `a` is a Collection and has all elements in common with the set.
@@ -290,7 +298,7 @@ class HashSet
      * @param {Collection} a
      * @returns {Boolean}
      */
-    equals : (a) ->
+    isEqual : (a) ->
         return false unless a
         L = @_items.length
         return L is a.length and L is @intersect(a).length
@@ -320,7 +328,7 @@ class HashSet
     
     /**
      * Test whether every element in `a` is in the set.
-     * @param {Array|Object} a
+     * @param {Collection} a
      * @returns {Boolean}
      */
     isSuperset : (a) ->
@@ -329,79 +337,93 @@ class HashSet
     
     
     /**
-     * HashSet Intersection (A ^ B)
+     * Test whether any elements in `a` are in the set.
+     * @param {Collection} a
+     * @returns {Boolean}
+     */
+    isOverlapping: (a) ->
+        return false unless a
+        _.any a, @contains, this
+    
+    
+    /**
+     * OrderedSet Intersection (A ^ B)
      * Intersects this YArray with another collection, returning a new YArray.
      * The membership test uses _(a).contains(), so it is possible to intersect collections of different types.
      * For YArray and YObject, .contains() uses strict equality (is) via .indexOf().
      * 
      * @param {Array|Object} a Comparison collection.
-     * @returns {HashSet} A new YArray of all elements of {this} found in the supplied collection.
+     * @returns {OrderedSet} A new YArray of all elements of {this} found in the supplied collection.
      * 
      * @example
      *      foo = /foo/
      *      A = [foo, 'A', 1, 2, 3, 'C', /foo/]
      *      B = [foo, 'B', 3, 'A', 1, /foo/]
      *      ins = _(A).intersect(B)
-     *      ins.toString() is "HashSet([/foo/,A,1,3])"; # true
+     *      ins.toString() is "OrderedSet([/foo/,A,1,3])"; # true
      *      ins.get(0) is foo; # true
      */
     intersect : (a) ->
-        new HashSet _.intersect @_items, _.map arguments, _.values
+        new OrderedSet _.intersect @_items, _.map arguments, _.values
     
     
     /**
-     * HashSet Union (A v B)
-     * Aliases: HashSet#extend HashSet#concat
+     * OrderedSet Union (A v B)
+     * Aliases: OrderedSet#concat
      * @param {Array|Object} a Other collection(s).
-     * @returns {HashSet} A new HashSet of all elements of both collections, without duplicates.
+     * @returns {OrderedSet} A new OrderedSet of all elements of both collections, without duplicates.
      */
     union : (a) ->
-        _.reduce arguments, ((out, it) -> out.update it), @clone()
+        _.reduce do
+            arguments
+            (out, it) -> out.update it
+            @clone()
     
     
     /**
-     * HashSet Difference (A - B)
+     * OrderedSet Difference (A - B)
      * @param {Array|Object} a Comparison collection(s).
-     * @returns {HashSet} A new HashSet of only elements of this HashSet not in supplied collection(s).
+     * @returns {OrderedSet} A new OrderedSet of only elements of this OrderedSet not in supplied collection(s).
      */
     difference : (a) ->
-        new HashSet _.difference @_items, _.map arguments, _.values
+        new OrderedSet _.difference @_items, _.map(arguments, _.values)
     
     
     /**
      * Symmetric Difference (A - B) v (B - A)
-     * @returns {HashSet} 
+     * @returns {OrderedSet} 
      */
     xor : (a) ->
         a = _.values a
-        @difference a .union _.difference a, @_items
+        @difference a .union _.difference(a, @_items)
+    
+    
+    # }}}
     
     
     toString : ->
-        "HashSet(size=#{@_items.length})"
+        "OrderedSet(size=#{@_items.length})"
     
 
 
-### Aliases
-
-pt = HashSet::
-
-pt.push    = pt.unshift = pt.add
-pt.shift   = pt.pop
-pt.without = pt.remove
-pt.empty   = pt.clear
-pt.has     = pt.contains
-
-pt.fold    = pt.foldl = pt.reduce
-pt.each    = pt.forEach
-pt.select  = pt.filter
-pt.all     = pt.every
-pt.any     = pt.some
-
-pt.detect  = pt.find
-pt.toArray = pt.values
-pt.concat  = pt.union
+# Synthesize collection functions from Underscore
+_.each <[ map filter reject some every find ]>, (name) ->
+    OrderedSet::[name] = (fn, cxt=this) ->
+        _[name] @_items, fn, cxt
 
 
-exports = module.exports = HashSet
+
+pt.push     = pt.add
+pt.contains = pt.has
+
+pt.each     = pt.forEach
+pt.all      = pt.every
+pt.any      = pt.some
+
+pt.detect   = pt.find
+pt.toArray  = pt.values
+pt.concat   = pt.union
+
+
+exports = module.exports = OrderedSet
 
