@@ -1,6 +1,8 @@
 _  = require 'underscore'
 ko = require 'knockout'
 
+unwrap = ko.utils.unwrapObservable
+
 { Base,
 } = require '../../base/base'
 
@@ -25,9 +27,11 @@ NODE_TYPES = exports.NODE_TYPES = {}
  */
 class exports.GraphNode extends Base
     
-    /* * * *  Class Properties  * * * {{{ */
-    # Properties shared across all instances by virtue of the prototype;
-    # it is expected instances will not [need to] modify these values.
+    /**
+     * @section Class Properties
+     * Properties shared across all instances by virtue of the prototype;
+     * it is expected instances will not [need to] modify these values.
+     */
     
     /**
      * Unique id for this GraphNode type, as referenced by `GraphNodeData::nodeType`.
@@ -56,14 +60,12 @@ class exports.GraphNode extends Base
     traits : <[  ]>
     
     
-    # }}}
-    
     
     /* * * *  Instance Properties  * * * {{{ */
     
     /**
-     * The graph for this node tree.
-     * @type Graph
+     * The GraphView for this node tree.
+     * @type GraphView
      */
     graph : null
     
@@ -79,6 +81,10 @@ class exports.GraphNode extends Base
         model    : null
         parent   : null
         children : []
+    
+    attributeTypes:
+        children : (nodeData, parent=this) ->
+            GraphNode.fromNodeData parent, nodeData
     
     /**
      * Model data for this node.
@@ -96,7 +102,16 @@ class exports.GraphNode extends Base
      * Children of this node.
      * @type ko.observableArray<GraphNode>
      */
-    children : null
+    childModels : @eagerComputed ->
+        ...
+        # FIXME in progress
+        
+        @model().children()
+        parent = this
+        
+        for nodeData of @model().children().slice()
+            children.push childNode = GraphNode.fromNodeData parent, nodeData
+        
     
     /**
      * DOM Element at the root of this Node. jQuery objects and d3 Selections
@@ -133,16 +148,23 @@ class exports.GraphNode extends Base
     
     /**
      * @constructor
+     * @param {GraphNode} parent
+     * @param {GraphNodeData} model
+     * @param {GraphView} [graph=parent.graph]
      */
-    (@graph, model, parent) ->
+    (parent, model, graph) ->
+        unless @graph = graph or parent?.graph
+            throw new Error "GraphNode has 'Graph' in it for a reason. Supply one, clown! (got #{@graph})"
+        
         super { model, parent }
+        
+        # Useful for providing IDs to things that care, like text-inputs
+        # so you can use label(for=id).
         @graphId = 'graph-' + @graph.__id__
         @nodeId  = 'graph-node-' + @__id__
         
         # Add the model's attributes to this node (where they don't overlap)
         _.defaults this, model.attributes
-        
-        
     
     
     
@@ -153,8 +175,7 @@ class exports.GraphNode extends Base
      * @abstract
      * @returns {this}
      */
-    init: ->
-        this
+    init: -> this
     
     /**
      * Implement to completely customize the process of building the DOM nodes
@@ -190,9 +211,21 @@ class exports.GraphNode extends Base
     walk: (acc, cxt, fn) ->
         [fn, cxt] = [cxt, null] unless typeof fn is 'function'
         acc = fn.call(cxt or this, acc, this)
-        for child of @children().slice()
-            acc = child.walk acc, cxt, fn
+        for childNode of @children().slice()
+            acc = childNode.walk acc, cxt, fn
         acc
+    
+    
+    /**
+     * Recursively create GraphNodes for the model's GraphNodeData objects.
+     */
+    populate: ->
+        parent   = this
+        children = @children()
+        for nodeData of @model().children().slice()
+            children.push childNode = GraphNode.fromNodeData parent, nodeData
+            # childNode.populate()
+        this
     
     
     # }}}
@@ -257,8 +290,44 @@ class exports.GraphNode extends Base
      * @static
      */
     @lookupType = (typeName) ->
-        typeName = _.get typeName, NODE_TYPENAME_KEY unless typeof typeName is 'string'
-        NODE_TYPES[typeName]
+        typeName = unwrap _.get typeName, NODE_TYPENAME_KEY unless typeof typeName is 'string'
+        unless GraphNodeType = NODE_TYPES[typeName]
+            throw new Error "Unknown GraphNode type '#typeName'!"
+        GraphNodeType
+    
+    
+    /**
+     * Constructs a new `GraphNode` of this class's type without regard
+     * for the `nodeType` specified by the `GraphNodeData`.
+     * 
+     * If omitted, the `GraphView` for the new node will be inherited
+     * from the parent node.
+     * 
+     * @static
+     * @param {GraphNode} parent
+     * @param {GraphNodeData} model
+     * @param {GraphView} [graph=parent.graph]
+     * @returns {? extends GraphNode} A new GraphNode instance.
+     */
+    @create = (parent, model, graph) ->
+        GraphNodeType = this
+        new GraphNodeType parent, model, graph
+    
+    
+    /**
+     * Constructs a new `GraphNode` of the appropriate type for the
+     * given `GraphNodeData`; the `GraphView` for the new node will
+     * be inherited from the parent node.
+     * 
+     * @static
+     * @param {GraphNode} parent 
+     * @param {GraphNodeData} model 
+     * @param {GraphView} [graph=parent.graph]
+     * @returns {? extends GraphNode} A new GraphNode instance.
+     */
+    @fromNodeData = (parent, model, graph) ->
+        GraphNodeType = GraphNode.lookupType model
+        new GraphNodeType parent, model, graph
     
     
     # }}}

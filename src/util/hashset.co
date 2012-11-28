@@ -11,16 +11,30 @@ _ = require 'underscore'
  */
 class HashSet
     /**
-     * Objects by Id.
-     * @private
+     * Class guid.
+     * @type String
      */
-    _byId : {}
+    @__id__ = guidFor this
+    
+    /**
+     * Instance guid.
+     * @type String
+     */
+    __id__ : null
+    
+    /**
+     * Map from Id to Objects in the set.
+     * @private
+     * @type Map<Id, *>
+     */
+    _byId : null
     
     /**
      * Set contents.
      * @private
+     * @type Array
      */
-    _o : []
+    _items : null
     
     
     /**
@@ -28,8 +42,9 @@ class HashSet
      * @constructor
      */
     ->
-        @_byId = {}
-        @_o    = []
+        @__id__ = guidFor this
+        @_byId  = {}
+        @_items = []
         @update ...arguments if arguments.length
     
     
@@ -60,14 +75,14 @@ class HashSet
         id = @_getId v
         return this if id in @_byId
         @_byId[id] = v
-        @_o.push v
+        @_items.push v
         this
     
     /**
      * @returns {Number} Number of elements in the set.
      */
     size: ->
-        @_o.length
+        @_items.length
     
     
     /**
@@ -88,7 +103,7 @@ class HashSet
         id = @_getId v
         return this unless id in @_byId
         delete @_byId[id]
-        @_o.splice @_o.indexOf(v), 1
+        @_items.splice @_items.indexOf(v), 1
         this
     
     
@@ -105,12 +120,15 @@ class HashSet
     
     /**
      * Update this HashSet (in-place) with other collections.
-     * Aliases: HashSet#extend HashSet#concat
+     * Aliases: HashSet#concat
      * @param {Array|Object} it... Collection to add.
      * @returns {this}
      */
     update : (vs) ->
-        _.each arguments, ~> _.each it, @_addOne, this
+        _.each do
+            arguments
+            -> _.each it, @_addOne, this
+            this
         this
     
     
@@ -120,8 +138,8 @@ class HashSet
      * @returns {Any} An element from the set.
      */
     pop : ->
-        return unless @_o.length
-        v  = @_o.shift()
+        return unless @_items.length
+        v  = @_items.shift()
         id = @_getId v
         delete @_byId[id]
         return v
@@ -132,7 +150,7 @@ class HashSet
      * @returns {HashSet}
      */
     clone : ->
-        new HashSet @_o
+        new HashSet @_items
     
     
     /**
@@ -142,7 +160,7 @@ class HashSet
      */
     clear: ->
         @_byId  = {}
-        @_o     = []
+        @_items = []
         this
     
     
@@ -159,7 +177,7 @@ class HashSet
      * @returns {Any}
      */
     reduce: (fn, acc, cxt) ->
-        _.reduce @_o, fn, acc, cxt or this
+        _.reduce @_items, fn, acc, cxt or this
     
     /**
      * Applies a function to each element.
@@ -168,7 +186,7 @@ class HashSet
      * @returns {this}
      */
     forEach: (fn, cxt) ->
-        _.forEach @_o, fn, cxt or this
+        _.forEach @_items, fn, cxt or this
         this
     
     /**
@@ -176,7 +194,7 @@ class HashSet
      * @return {HashSet} A new HashSet of elements produced by applying the transform across each element.
      */
     map: (fn, cxt) ->
-        new HashSet _.map @_o, fn, cxt or this
+        new HashSet _.map @_items, fn, cxt or this
     
     
     /**
@@ -185,7 +203,7 @@ class HashSet
      * @return {HashSet} A new HashSet of only the elements passing the filter.
      */
     filter: (fn, cxt) ->
-        new HashSet _.filter @_o, fn, cxt or this
+        new HashSet _.filter @_items, fn, cxt or this
     
     /**
      * Like `HashSet.filter()`, but instead keeps values for which the filter returns false.
@@ -193,7 +211,7 @@ class HashSet
      * @return {HashSet} A new HashSet of only the elements for which the filter returns false.
      */
     reject: (fn, cxt) ->
-        new HashSet _.reject @_o, fn, cxt or this
+        new HashSet _.reject @_items, fn, cxt or this
     
     
     /**
@@ -202,7 +220,7 @@ class HashSet
      * @return {Boolean}
      */
     some: (fn, cxt) ->
-        _.some @_o, fn, cxt or this
+        _.some @_items, fn, cxt or this
     
     /**
      * Aliases: HashSet#all
@@ -210,7 +228,7 @@ class HashSet
      * @return {Boolean}
      */
     every: (fn, cxt) ->
-        _.every @_o, fn, cxt or this
+        _.every @_items, fn, cxt or this
     
     
     /**
@@ -219,14 +237,14 @@ class HashSet
      * @returns {Any}
      */
     find: (fn, cxt) ->
-        _.find @_o, fn, cxt or this
+        _.find @_items, fn, cxt or this
     
     
     /**
      * @returns {Array} List of all values at property `prop`.
      */
     pluck : (prop) ->
-        _.pluck @_o, prop
+        _.pluck @_items, prop
     
     
     /**
@@ -236,7 +254,7 @@ class HashSet
      * @returns {Array} List of results.
      */
     invoke : (methodName) ->
-        _.invoke @_o, ...arguments
+        _.invoke @_items, ...arguments
     
     
     /**
@@ -251,13 +269,16 @@ class HashSet
      * @returns {Array}
      */
     values : ->
-        @_o.slice()
+        @_items.slice()
     
     /**
      * @returns {Array<Array<Key, Value>>} Key-value pairs of set contents.
      */
     items: ->
-        _.map @_o, ~> [@_getId(it), it]
+        _.map do
+            @_items
+            -> [@_getId(it), it]
+            this
     
     
     
@@ -271,7 +292,7 @@ class HashSet
      */
     equals : (a) ->
         return false unless a
-        L = @_o.length
+        L = @_items.length
         return L is a.length and L is @intersect(a).length
     
     
@@ -325,7 +346,7 @@ class HashSet
      *      ins.get(0) is foo; # true
      */
     intersect : (a) ->
-        new HashSet _.intersect @_o, _.map arguments, _.values
+        new HashSet _.intersect @_items, _.map arguments, _.values
     
     
     /**
@@ -344,7 +365,7 @@ class HashSet
      * @returns {HashSet} A new HashSet of only elements of this HashSet not in supplied collection(s).
      */
     difference : (a) ->
-        new HashSet _.difference @_o, _.map arguments, _.values
+        new HashSet _.difference @_items, _.map arguments, _.values
     
     
     /**
@@ -353,11 +374,11 @@ class HashSet
      */
     xor : (a) ->
         a = _.values a
-        @difference a .union _.difference a, @_o
+        @difference a .union _.difference a, @_items
     
     
     toString : ->
-        "HashSet([#{@_o}])"
+        "HashSet(size=#{@_items.length})"
     
 
 
@@ -369,9 +390,9 @@ pt.push    = pt.unshift = pt.add
 pt.shift   = pt.pop
 pt.without = pt.remove
 pt.empty   = pt.clear
-pt.has     = pt.include = pt.contains
+pt.has     = pt.contains
 
-pt.fold    = pt.foldl = pt.foldr = pt.inject = pt.reduce
+pt.fold    = pt.foldl = pt.reduce
 pt.each    = pt.forEach
 pt.select  = pt.filter
 pt.all     = pt.every
@@ -379,7 +400,7 @@ pt.any     = pt.some
 
 pt.detect  = pt.find
 pt.toArray = pt.values
-pt.extend  = pt.concat = pt.union
+pt.concat  = pt.union
 
 
 exports = module.exports = HashSet
