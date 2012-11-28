@@ -40,7 +40,7 @@ _cls =
         return o.displayName or o.name or 'Class' if _.isClass o
         
         # Functions are complicated.
-        if _.isFunction o
+        # and loose if statements sink builds: FIXME if _.isFunction o
             
         
         return o.constructor
