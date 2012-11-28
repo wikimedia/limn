@@ -323,12 +323,14 @@ class exports.Base extends EventEmitter
             
             if extender = fn[flagKey]
                 options = { read:fn, owner } import fn[optsKey]
-                obs = ko.computed _.clone options
-                return obs unless typeof obs[extender] is 'function'
                 
-                if _ <[ typed coercive ]> .contains annotation
+                unless typeof ko.extenders[extender] is 'function'
+                    return ko.computed _.extend({}, options)
+                else if _ <[ typed coercive ]> .contains annotation
+                    obs = ko.observable()
                     obs = obs[extender](fn, owner, options)
                 else
+                    obs = ko.computed _.extend({}, options)
                     obs = obs[extender](options)
                 return obs
         
