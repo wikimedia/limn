@@ -234,6 +234,7 @@ class exports.Base extends EventEmitter
         new Class json
     
     
+    
     # }}}
     /* * * *  Serialization  * * * {{{ */
     
@@ -385,18 +386,22 @@ class exports.Base extends EventEmitter
      * 
      * @protected
      * @param {*} val Initial value.
-     * @param {Class<Base>} [ClassType] Type to ensure.
+     * @param {Function|Class|Object} [coerceFn] Function invoked to coerce incoming data into
+     *  the appropriate type. If the function appears to be a class constructor, it will
+     *  be wrapped to perform an instanceof check to prevent double-wrapping, and otherwise
+     *  invoke the class with `new`. If an object, it will be used for sub-lookups
+     *  of attrTypes.
      * @returns {ko.observable} The new observable attribute. You should assign
      *  this to the right place on `attributes`, bro.
      */
-    _generateAttribute: (val, ClassType) ->
+    _generateAttribute: (val, coerceFn) ->
         if _.isArray val
             obs = ko.observableArray val
         else
-            if typeof ClassType is not 'function' and _.isPlainObject(val)
-                val = @_generateAttributes val, ClassType
+            if typeof coerceFn is not 'function' and _.isPlainObject(val)
+                val = @_generateAttributes val, coerceFn
             obs = ko.observable val
-        obs = obs.coerce ClassType if ClassType
+        obs = obs.coerce coerceFn, this if typeof coerceFn is 'function'
         obs
     
     
@@ -511,6 +516,7 @@ class exports.Base extends EventEmitter
      */
     @create = (attributes) ->
         ClassType = this
+        # _.instantiate ClassType, arguments
         new ClassType attributes
     
     

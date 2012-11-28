@@ -1,3 +1,6 @@
+page = require 'page'
+
+
 limn = exports
 
 limn.{ _, op, emitters, generateId, guidFor, root, Mixin, Query,
@@ -20,18 +23,19 @@ limn.data       = require './data'
 limn.graph      = require './graph'
 limn.dashboard  = require './dashboard'
 
-page = require 'page'
+
 
 /**
  * @class Sets up root application, automatically attaching to an existing element
  *  found at `appSelector` and delegating to the appropriate view.
  */
-class limn.LimnApp # {{{
+class limn.LimnApp
     views:
         'dashboards'    : limn.dashboard.DashboardView
         'graphs'        : limn.graph.GraphView
         '404'           : limn.base.NotFoundView
         'loading'       : limn.base.LoadingView
+    
     
     /**
      * @constructor
@@ -57,22 +61,46 @@ class limn.LimnApp # {{{
         page '*', ~>
             @currentView new @views['404']()
         page()
-# }}}
-
-
-### Static Methods
-LimnApp import do
     
-    findConfig : ->
+    
+    /**
+     * @static
+     */
+    @findConfig = ->
         # TODO: fill out inferred config
         config = root.limn_config or {}
         config.mount or= "/"
         config
     
-    main : function limnMain
+    
+    /**
+     * @static
+     */
+    @main = function limnMain
         config = limn.config or= LimnApp.findConfig()
         limn.app or= new LimnApp config unless config.libOnly
         limn.emit 'main', limn.app
 
 
+
+
+/**
+ * DEBUG-ONLY!! BECAUSE DAVE IS LAZY AND HATES TYPING.
+ * (It dumps all classes, functions, and constants into the global scope.)
+ */
+limn.expose = ->
+    exposed = {}
+    for name of <[ base data graph graph.node dashboard util ]>
+        mod = _.getNested limn, name
+        for k, v in mod
+            continue unless _.isClass(v) or _.isFunction(v) or /^[A-Z_]+$/.test(k)
+            window[k] = exposed[k] = v
+    
+    exposed
+
+
+
+/**
+ * Run main() on DOMReady
+ */
 root.jQuery? LimnApp.main

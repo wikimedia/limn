@@ -64,6 +64,7 @@ iterator  = exports.iterator  = require './iterator'
 exports import iterator
 
 Query     = exports.Query     = require './query'
+HashSet   = exports.HashSet   = require './hashset'
 AliasDict = exports.AliasDict = require './aliasdict'
 Cascade   = exports.Cascade   = require './cascade'
 

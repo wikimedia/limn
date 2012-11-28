@@ -1,5 +1,15 @@
-_ = require 'underscore'
+_    = require 'underscore'
+_arr = require './array'
 
+
+objToString = {}.toString
+TYPENAME_PAT = /^\[object ([^\]]+)\]$/
+
+STR_TO_TYPENAME = _arr.synthesize do
+    <[ Boolean Number String Array Date RegExp Object Function ]>
+    (name) -> [ "[object #name]", name ]
+
+TRICKY_TYPES = { +Object, +Function }
 
 
 _cls =
@@ -14,6 +24,27 @@ _cls =
             fn.__class__ is fn   or
             not _.isEmpty(proto) or
             not _.isPlainObject(proto)
+    
+    
+    /**
+     * @returns {String} The name of the type of the thing you passed me.
+     */
+    typeName : (o) ->
+        # null, undefined
+        return String(o) unless o?
+        
+        # Primitives &co are easy ...Except the tricky ones.
+        return name unless TRICKY_TYPES[ name = objToString.call(o) ]
+        
+        # If it's a limn type, it'll help us out.
+        return o.displayName or o.name or 'Class' if _.isClass o
+        
+        # Functions are complicated.
+        if _.isFunction o
+            
+        
+        return o.constructor
+    
     
     /**
      * Creates a new instance of the given class without running its constructor.

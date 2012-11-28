@@ -15,9 +15,10 @@ makeObs = ko.utils.makeObservable
  * @param {ko.observable} obs Observable to decorate.
  * @param {Function} coerce Function invoked to coerce values before they are
  *  written to the underlying observable.
+ * @param {Object} [owner=obs] Context for calls to coerce.
  * @returns {ko.dependentObservable} Wrapped observable.
  */
-exports.typedExtender = ko.addExtender 'typed', (obs, coerce) ->
+exports.typedExtender = ko.addExtender 'typed', (obs, coerce, owner=obs) ->
     unless typeof coerce is 'function'
         throw new Error "ko.typedObservable requires a coercion function! Got a #{typeof coerce} instead: #coerce"
     
@@ -31,9 +32,9 @@ exports.typedExtender = ko.addExtender 'typed', (obs, coerce) ->
             if _.isArray value
                 # don't map, or we lose object identity with the backing array
                 _.each value, (val, i) ->
-                    value[i] = coerce val
+                    value[i] = coerce.call owner, val
             else
-                value = coerce value
+                value = coerce.call owner, value
             obs value
     
     if _.isArray current
@@ -43,13 +44,13 @@ exports.typedExtender = ko.addExtender 'typed', (obs, coerce) ->
             switch methodName
             case 'splice'
                 obs.splice = (start, drop, ...args) ->
-                    origMethod.apply this, [start, drop].concat _.map(args, coerce)
+                    origMethod.apply this, [start, drop].concat _.map(args, coerce, owner)
             case 'replace'
                 obs.replace = (oldItem, newItem) ->
-                    origMethod.call this, oldItem, coerce(newItem)
+                    origMethod.call this, oldItem, coerce.call(owner, newItem)
             default
                 obs[methodName] = (arg) ->
-                    origMethod.apply this, _.map(arguments, coerce)
+                    origMethod.apply this, _.map(arguments, coerce, owner)
     
     # Copy over observable and observableArray methods
     _.defaults wrapper, obs
@@ -65,8 +66,8 @@ exports.typedExtender = ko.addExtender 'typed', (obs, coerce) ->
  * Convenience for wrapping a value in both an observable and the type coercion wrapper.
  * @returns {ko.dependentObservable}
  */
-exports.typedObservable = ko.typedObservable = (coerce, val) ->
-    makeObs val .typed coerce
+exports.typedObservable = ko.typedObservable = (coerce, val, owner) ->
+    makeObs val .typed coerce, owner
 
 
 
@@ -112,18 +113,18 @@ exports.modelObservable = ko.modelObservable = (ModelType, val) ->
  *  invoke the class with `new`.
  * @returns {ko.dependentObservable} Wrapped observable.
  */
-exports.coerciveExtender = ko.addExtender 'coerce', (obs, coerce) ->
+exports.coerciveExtender = ko.addExtender 'coerce', (obs, coerce, owner) ->
     if _.isClass coerce
-        obs.model coerce
+        obs.model coerce, owner
     else
-        obs.typed coerce
+        obs.typed coerce, owner
 
 
 /**
  * Convenience for wrapping a value in both an observable and the "smart" coercion wrapper.
  * @returns {ko.dependentObservable}
  */
-exports.coerciveObservable = ko.coerciveObservable = (coerce, val) ->
-    makeObs val .coerce coerce
+exports.coerciveObservable = ko.coerciveObservable = (coerce, val, owner) ->
+    makeObs val .coerce coerce, owner
 
 
