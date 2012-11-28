@@ -51,7 +51,7 @@ class OrderedSet
     
     
     /**
-     * Determine unique identifier for the given value, throwing an exception otherwise.
+     * Determine a unique identifier for the given value.
      * @protected
      * @returns {String} Id for this value.
      */
@@ -164,6 +164,32 @@ class OrderedSet
     
     
     /**
+     * Retrieve the value stored at the given index.
+     * 
+     * @param {Number} idx Index to retrieve.
+     * @returns {*} The value stored at the given index.
+     */
+    at: (idx) ->
+        @_items[idx]
+    
+    
+    /**
+     * @returns {*|Array} An array of the first `n` elements if `n` was given;
+     *  otherwise just the first element of the set.
+     */
+    first: (n) ->
+        _.first @_items, n
+    
+    
+    /**
+     * @returns {*|Array} An array of the last `n` elements if `n` was given;
+     *  otherwise just the last element of the set.
+     */
+    last: (n) ->
+        _.last @_items, n
+    
+    
+    /**
      * @returns {*} Removes and returns the last (most recently added) element in the set.
      */
     pop : ->
@@ -223,7 +249,6 @@ class OrderedSet
     
     /**
      * Transforms the collection into a single value, front-to-back.
-     * Aliases: OrderedSet#inject OrderedSet#fold OrderedSet#foldl OrderedSet#foldr
      * @param {Function} fn Reducer function.
      * @param {Any} [acc] Starting accumulator value.
      * @param {Object} [cxt=this] Context; defaults to this OrderedSet.
