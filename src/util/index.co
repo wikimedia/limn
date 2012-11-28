@@ -53,18 +53,19 @@ root.jQuery?.fn.invoke = (method, ...args) ->
 
 emitters   = exports.emitters   = require './emitters'
 exports import emitters
-                    
+
 mixin      = exports.mixin      = require './mixin'
 exports import mixin
-                    
+
 parser     = exports.parser     = require './parser-mixin'
 exports import parser
-                    
+
 iterator   = exports.iterator   = require './iterator'
 exports import iterator
-                    
+
 Query      = exports.Query      = require './query'
 OrderedSet = exports.OrderedSet = require './ordered-set'
+OrderedMap = exports.OrderedMap = require './ordered-map'
 AliasDict  = exports.AliasDict  = require './aliasdict'
 Cascade    = exports.Cascade    = require './cascade'
 

@@ -102,7 +102,7 @@ class exports.Base extends EventEmitter
     
     
     /**
-     * Gets the attribute value at `key`.
+     * Retrieves the attribute value at `key`.
      * 
      * @param {String} key Key to get.
      * @returns {*} Value at `key`.
