@@ -247,6 +247,14 @@ class OrderedSet
         this
     
     
+    /**
+     * Converts this OrderedSet to an Array.
+     * @returns {Array}
+     */
+    slice : (start, stop) ->
+        @_items.slice.apply @_items, arguments
+    
+    
     
     /* * * *  Iteration/Collection Methods  * * * {{{ */
     

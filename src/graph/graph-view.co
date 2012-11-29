@@ -79,7 +79,8 @@ class exports.GraphView extends View
         
         # register for notification when the node is destroyed
         subscription = node.isDestroyed.subscribe (isDestroyed) ~>
-            @nodeCache.remove nodeData
+            currentNode = @nodeCache.get nodeData
+            @nodeCache.remove nodeData if currentNode is node
             subscription.dispose()
         
         node

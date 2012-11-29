@@ -119,15 +119,52 @@ class exports.GraphNode extends Base
      * Synchronizes model GraphNodeData children with our GraphNode children.
      * @type ko.observableArray<GraphNode>
      */
-    # syncChildren : @eagerComputed ->
-    #     parent   = this
-    #     graph    = @graph
-    #     
-    #     allNodeData = @model().children().slice()
-    #     for nodeData of allNodeData
-    #         childNode = graph.lookupNode nodeData, parent
-    #     
-    #     @children.splice 0, @children().length, ...@childNodes.values()
+    syncChildren : @eagerComputed ->
+        parent      = this
+        graph       = @graph
+        
+        childNodes = @childNodes
+        oldNodeData = @childNodeData
+        currentNodeData = @childNodeData = new OrderedSet().update @model().children()
+        
+        changes = []
+        
+        # figure out which nodes have been removed; toArray() so we can mutate the set
+        for oldIdx, data of oldNodeData.toArray()
+            node    = graph.lookupNode data, parent
+            oldNode = childNodes.find -> it.model() is data
+            
+            # Ensure the GraphNode we're working with is current for this data
+            if oldNode is not node
+                @children.remove oldNode
+            
+            # Immediately remove missing nodes
+            continue if currentNodeData.has data
+            changes.push { state:'removed', node, data, oldIdx, newIdx:-1 }
+            @children.remove node
+            # FIXME: unparent
+            # TODO: emit change events somewhere
+        
+        # now determine what needs to be added, and otherwise what needs moving
+        for newIdx, data of currentNodeData
+            node = graph.lookupNode data, parent
+            oldIdx = oldNodeData.indexOf data
+            
+            # states: unchanged, moved, new, removed
+            if oldIdx is -1
+                state = 'new'
+                # FIXME: unparent from old node, set new parent
+                # FIXME: move node.el between DOM parents? -- ...no, that should be a computed somewhere else
+            else if oldIdx is not newIdx
+                state = 'moved'
+                # FIXME: reorder node.el? -- ...no, that should be a computed somewhere else
+            else
+                state = 'unchanged'
+            
+            changes.push { state, node, data, oldIdx, newIdx }
+            # TODO: emit change events somewhere
+        
+        @children.splice 0, @children().length, ...@childNodes.values()
     
     /**
      * DOM Element at the root of this Node. jQuery objects and d3 Selections
@@ -172,8 +209,9 @@ class exports.GraphNode extends Base
         unless @graph = graph or parent?.graph
             throw new Error "GraphNode has 'Graph' in it for a reason. Supply one, clown! (got #{@graph})"
         
+        @childModels = new OrderedSet()
         @childNodeData = new OrderedSet()
-        @childNodes    = new OrderedSet()
+        @childNodes  = new OrderedSet()
         super { model, parent }
         
         # Useful for providing IDs to things that care, like text-inputs
@@ -182,7 +220,11 @@ class exports.GraphNode extends Base
         @nodeId  = 'graph-node-' + @__id__
         
         # Add the model's attributes to this node (where they don't overlap)
-        _.defaults this, model.attributes
+        _.defaults this, model.attributes if model?.attributes
+        
+        @parent.onChange (oldParent, newParent) ~>
+            
+        
     
     
     
@@ -232,6 +274,16 @@ class exports.GraphNode extends Base
         for childNode of @children().slice()
             acc = childNode.walk acc, cxt, fn
         acc
+    
+    
+    
+    
+    addChild: (childNode) ->
+        return childNode if @childNodes
+    
+    
+    removeChild: ->
+        
     
     
     /**

@@ -1,0 +1,30 @@
+ko = require 'knockout'
+
+extensions =
+    
+    /**
+     * Register a callback to recieve notifications for 
+     */
+    onChange: (callback, cxt) ->
+        target    = this
+        lastValue = null
+        
+        beforeSub = @subscribe do
+            (oldValue) -> lastValue := oldValue
+            'beforeChange'
+        changeSub = @subscribe do
+            (newValue) -> fn.call(cxt or subscription, lastValue, newValue, target)
+            'change'
+        dispose = ->
+            subs.isDisposed = true
+            beforeSub.dispose()
+            changeSub.dispose()
+        
+        subs = { target, callback, dispose, beforeSub, changeSub }
+    
+
+
+
+ko.subscribable.fn import extensions
+exports import extensions
+
