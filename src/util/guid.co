@@ -2,10 +2,10 @@
  * Generate unique IDs.
  */
 
-GUID_KEY    = '__id__'
 UUID        = 0
-numberCache = {}
-stringCache = {}
+GUID_KEY    = '__id__'
+NUMBER_CACHE = exports.NUMBER_CACHE = {}
+STRING_CACHE = exports.STRING_CACHE = {}
 
 
 generateId = exports.generateId = (prefix='limn') ->
@@ -14,24 +14,24 @@ generateId = exports.generateId = (prefix='limn') ->
 
 guidFor = exports.guidFor = (obj) ->
     # special cases where we don't want to add a key to object
-    return "(undefined)"  if obj is void
-    return "(null)"       if obj is null
+    return '(undefined)'  if obj is void
+    return '(null)'       if obj is null
     
     # Don't allow prototype changes to String etc. to change the guidFor
     switch typeof obj
     case 'number'
-        unless ret = numberCache[obj]
-            ret = numberCache[obj] = "nu#obj"
+        unless ret = NUMBER_CACHE[obj]
+            ret = NUMBER_CACHE[obj] = "nu#obj"
         return ret
-    
+        
     case 'string'
-        unless ret = stringCache[obj]
-            ret = stringCache[obj] = "st#{(UUID++)}"
+        unless ret = STRING_CACHE[obj]
+            ret = STRING_CACHE[obj] = "st#{(UUID++)}"
         return ret
-    
+        
     case 'boolean'
         return if obj then '(true)' else '(false)'
-    
+        
     default
         return obj[GUID_KEY]    if obj[GUID_KEY]
         return '(Object)'       if obj is Object

@@ -2,8 +2,7 @@ _ = require 'underscore'
 
 { guidFor,
 } = require './guid'
-{ OrderedSet,
-} = require './ordered-set'
+OrderedSet = require './ordered-set'
 
 
 /**
@@ -35,7 +34,7 @@ class OrderedMap
     /**
      * Map from key-id to their values.
      * @protected
-     * @type Map<Id, *>
+     * @type Object<Id, *>
      */
     _values : null
     
@@ -43,13 +42,10 @@ class OrderedMap
     
     /**
      * @constructor
-     * @param {Object|Array<[Key, Value]>} [pairs] Initial data; accepts any
-     * number of either arrays of `[key, value]` pairs, or plain Objects.
      */
-    (pairs) ->
+    ->
         @__id__  = guidFor this
         @clear()
-        @update ...arguments if arguments.length
     
     
     
@@ -66,7 +62,7 @@ class OrderedMap
      * Removes all elements from the set.
      * @returns {this}
      */
-    clear: ->
+    clear : ->
         @_values = {}
         @_keys   = new OrderedSet()
         
@@ -82,32 +78,41 @@ class OrderedMap
      * @returns {OrderedMap}
      */
     clone : ->
-        new OrderedMap @items()
+        @..create().update @items()
     
     
     /**
      * @returns {Number} Number of elements in the set.
      */
-    size: ->
+    size : ->
         @_keys.size()
     
     
     /**
      * @return {Boolean}
      */
-    isEmpty: ->
+    isEmpty : ->
         @_keys.size() is 0
     
     
     /**
-     * Tests whether the map contains the `key`.
-     * Aliases: OrderedMap#contains
+     * @protected
+     * @param {*} key
+     * @returns {Boolean} Whether the map contains `key`.
+     */
+    _hasOne : (key) ->
+        @_keys.has key
+    
+    
+    /**
+     * Tests whether the map contains all given keys.
+     * @aliases OrderedMap#contains
      * 
-     * @param {*} key Key to test.
-     * @returns {Boolean} Whether the map contains the `key`.
+     * @param {*} key...
+     * @returns {Boolean} Whether the map contains all given values.
      */
     has : (key) ->
-        @_keys.has(key)
+        _.all arguments, @_hasOne, this
     
     
     /**
@@ -131,13 +136,21 @@ class OrderedMap
     
     
     /**
+     * @param {String} key
+     * @returns {Number} Index of `key` if found, otherwise `-1`.
+     */
+    indexOf : (key) ->
+        @keys.indexOf key
+    
+    
+    /**
      * Retrieve the pair stored at the given index.
      * 
      * @param {Number} idx Index to retrieve.
      * @returns {[Key, Value]} An array of `[key, value]` as found at the given
      *  index.
      */
-    at: (idx) ->
+    at : (idx) ->
         @pair @_keys.at idx
     
     
@@ -147,7 +160,7 @@ class OrderedMap
      * @param {Number} idx Index to retrieve.
      * @returns {*} Key as found at the given index.
      */
-    keyAt: (idx) ->
+    keyAt : (idx) ->
         @_keys.at idx
     
     
@@ -157,7 +170,7 @@ class OrderedMap
      * @param {Number} idx Index to retrieve.
      * @returns {*} Key as found at the given index.
      */
-    valueAt: (idx) ->
+    valueAt : (idx) ->
         @get @_keys.at idx
     
     
@@ -165,7 +178,7 @@ class OrderedMap
      * @returns {*|Array} An array of the first `n` pairs if `n` was given;
      *  otherwise just the first pair in the map.
      */
-    first: (n) ->
+    first : (n) ->
         if n?
             _.map @_keys.first(n), @pair, this
         else
@@ -176,7 +189,7 @@ class OrderedMap
      * @returns {*|Array} An array of the last `n` pairs if `n` was given;
      *  otherwise just the last pair in the map.
      */
-    last: (n) ->
+    last : (n) ->
         if n?
             _.map @_keys.last(n), @pair, this
         else
@@ -253,8 +266,11 @@ class OrderedMap
     
     
     /**
-     * Update this OrderedMap (in-place) with other collections.
-     * @param {Array|Object} it... Collection to add.
+     * Update this OrderedMap with values from [any number of] other collections.
+     * Arrays are treated as a list of `[key, value]` pairs; all other objects are
+     * imported using their native keys and values.
+     * 
+     * @param {Array|Object} pairs... Collection to add.
      * @returns {this}
      */
     update : (vs) ->
@@ -268,6 +284,8 @@ class OrderedMap
     
     
     /* * * *  Iteration/Collection Methods  * * * {{{ */
+    
+    # Synthesized: map, filter, reject, some/any, every/all, find/detect
     
     
     /**
@@ -285,10 +303,10 @@ class OrderedMap
     
     
     /**
-     * Aliases: OrderedMap#pairs
+     * @aliases OrderedMap#pairs, OrderedMap#toArray
      * @returns {Array<[Key, Value]>} Ordered list of key-value pairs in the map.
      */
-    items: ->
+    items : ->
         @_keys.map @pair, this
     
     
@@ -300,7 +318,7 @@ class OrderedMap
      * @returns {*}
      * @see https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Array/reduce
      */
-    reduce: (fn, acc, cxt=this) ->
+    reduce : (fn, acc, cxt=this) ->
         @_keys.reduce do
             (acc, key) -> fn.call cxt, acc, @get(key), key, this
             acc
@@ -309,11 +327,11 @@ class OrderedMap
     
     /**
      * Applies a function to each element.
-     * Aliases: OrderedMap#each
+     * @aliases OrderedMap#each
      * @see https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Array/forEach
      * @returns {this}
      */
-    forEach: (fn, cxt=this) ->
+    forEach : (fn, cxt=this) ->
         @_keys.forEach (key) ~> fn.call cxt, @get(key), key, this
         this
     
@@ -344,6 +362,50 @@ class OrderedMap
     toString : ->
         "OrderedMap(size=#{@_keys.size()})"
     
+    
+    /* * * *  Class Methods  * * * {{{ */
+    
+    # These methods are all inherited by subclasses; the 
+    # factories all support generic subclass instantiation.
+    
+    
+    /**
+     * Map factory.
+     * @static
+     * @returns {? extends OrderedMap} A new map.
+     */
+    @create = ->
+        Class = this
+        new Class()
+    
+    
+    /**
+     * @static
+     * @returns {Function} A factory function that creates new instances
+     *  without requiring the accursed `new` keyword.
+     */
+    @factory = ->
+        @create.bind this
+    
+    
+    /**
+     * Invoked when extended; copies over all class methods to the Subclass (including this).
+     * @protected
+     * @static
+     */
+    @extended = (SubClass) ->
+        SuperClass = this
+        for own k, v in SuperClass
+            SubClass[k] = v unless SubClass[k]
+        SubClass.__id__         = guidFor SubClass
+        SubClass.__class__      = SubClass
+        SubClass.__super__      = SuperClass::
+        SubClass.__superclass__ = SuperClass
+        SubClass
+    
+    
+    # }}}
+    
 
 
 # Synthesize transformation functions from the key-set
@@ -356,6 +418,18 @@ _.each <[ map some every ]>, (methodName) ->
 _.each <[ filter reject find ]>, (methodName) ->
     OrderedMap::[methodName] = (fn, cxt=this) ->
         _[methodName] @items(), ([key, val]) ~> fn.call cxt, val, key, this
+
+
+# Alias methods to alternate names
+_.alias OrderedMap::,
+    # src   : dest
+    has     : 'contains'
+    items   : 'pairs toArray'
+    forEach : 'each'
+    every   : 'all'
+    some    : 'any'
+    find    : 'detect'
+
 
 
 exports = module.exports = OrderedMap

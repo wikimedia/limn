@@ -64,8 +64,9 @@ iterator   = exports.iterator   = require './iterator'
 exports import iterator
 
 Query      = exports.Query      = require './query'
+
 OrderedSet = exports.OrderedSet = require './ordered-set'
 OrderedMap = exports.OrderedMap = require './ordered-map'
-AliasDict  = exports.AliasDict  = require './aliasdict'
+
 Cascade    = exports.Cascade    = require './cascade'
 
