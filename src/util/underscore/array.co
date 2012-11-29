@@ -59,6 +59,17 @@ _array =
         b = _.values b
         return _.union _.difference(a,b), _.difference(b,a)
     
+    
+    /**
+     * Whitespace-friendly version of reduce, taking the iteration function last.
+     */
+    reduce_ : (it, acc, cxt, fn) ->
+        switch len = arguments.length
+        case 2  then [fn, acc] = [acc, void]
+        case 3  then [fn, cxt] = [cxt, void]
+        default then throw new Error "You must supply (at least!) a collection and an iteration function" if len < 2
+        _.reduce it, fn, acc, cxt
+    
 
 
 
