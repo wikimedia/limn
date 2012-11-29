@@ -22,13 +22,16 @@ class exports.GraphView extends View
     
     defaults: ->
         model : null
+        element: null
+        action: null
     
     
     /**
      * @constructor
      * @param {Graph} model Graph model for this view.
+     * @param {string} action the action this view was created to respond to
      */
-    (model) ->
+    (model, action) ->
         super()
         
         if model instanceof Graph
@@ -39,12 +42,18 @@ class exports.GraphView extends View
             model = new Graph model
         
         @model model
+        @action action
     
     
     /**
      * Called by Knockout once the Graph template has finished rendering.
      */
     afterRender: (element) ->
+        @element element
+        
+        if @action() is 'edit'
+            new EditView this
+        
         rootElement = $(element).find('.graph-canvas')[0]
         
         @populate()
