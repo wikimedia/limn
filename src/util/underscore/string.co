@@ -3,8 +3,6 @@ _str = require 'underscore.string'
 
 _string = do
     
-    
-    
     /**
      * As _.str.chop but from the right.
      */
@@ -29,6 +27,7 @@ _string = do
         while s and s is not starting
         s
     
+    
     ldrop : (s, ...parts) ->
         do
             starting = s
@@ -36,6 +35,7 @@ _string = do
                 s .= slice part.length if _str.startsWith s, part
         while s and s is not starting
         s
+    
     
     rdrop : (s, ...parts) ->
         do
@@ -45,14 +45,18 @@ _string = do
         while s and s is not starting
         s
     
-    # Converts to snake_case, concatenates the key-value pair (with '_'), normalizing _'s.
-    # If only a key is given, domize auto-curries and waits for a second argument.
+    
+    /**
+     * Converts to snake_case, concatenates the key-value pair (with '_'), normalizing _'s.
+     * If only a key is given, domize auto-curries and waits for a second argument.
+     */
     domize : (key='', value='') ->
         key = _str.trim _str.underscored(key), '_'
         if arguments.length <= 1
             arguments.callee.bind this, key
         else
             "#{key}_#{_str.trim _str.underscored(value), '_'}"
+    
     
     shortname: (s) ->
         return s if s.length <= 6
@@ -68,8 +72,10 @@ _string = do
         parts.shift().toLowerCase() + parts.join('')
     
 
+
+# Aliases
 _string import do
     dropLeft  : _string.ldrop
     dropRight : _string.rdrop
 
-exports import _string
+_.mixin exports import _string

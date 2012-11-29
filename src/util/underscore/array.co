@@ -3,7 +3,8 @@ _ = require 'underscore'
 I       = -> it
 defined = (o) -> o?
 
-_array = do
+_array =
+    
     /**
      * Create an array of size `n` filled with the values derived from n invocations
      * of the iterator function.
@@ -47,7 +48,7 @@ _array = do
      * @return {Object} Transformed result.
      */
     synthesize : (o, fn=I, filter=defined, context) ->
-        _array.generate _.map(o, fn, context), filter
+        _.generate _.map(o, fn, context), filter
     
     
     /**
@@ -60,4 +61,5 @@ _array = do
     
 
 
-exports import _array
+
+_.mixin exports import _array
