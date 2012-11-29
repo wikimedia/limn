@@ -5,6 +5,8 @@ unwrap = ko.utils.unwrapObservable
 
 { Base,
 } = require '../../base/base'
+{ OrderedSet,
+} = require '../../util'
 
 
 /**
@@ -77,14 +79,15 @@ class exports.GraphNode extends Base
      * in `@attributes` is not important to GraphNode.
      */
     defaults: ->
-        el       : null
-        model    : null
-        parent   : null
-        children : []
+        el          : null
+        model       : null
+        parent      : null
+        children    : []
+        isDestroyed : false
     
     attributeTypes:
         children : (nodeData, parent=this) ->
-            GraphNode.fromNodeData nodeData, parent
+            @graph.lookupNode nodeData, parent
     
     /**
      * Model data for this node.
@@ -99,19 +102,32 @@ class exports.GraphNode extends Base
     parent : null
     
     /**
-     * Children of this node.
+     * Used to synchronize model GraphNodeData children with our GraphNode children.
+     * @protected
+     * @type OrderedSet<GraphNodeData>
+     */
+    childNodeData : null
+    
+    /**
+     * Used to synchronize model GraphNodeData children with our GraphNode children.
+     * @protected
+     * @type OrderedSet<GraphNode>
+     */
+    childNodes : null
+    
+    /**
+     * Synchronizes model GraphNodeData children with our GraphNode children.
      * @type ko.observableArray<GraphNode>
      */
-    # childModels : @eagerComputed ->
-    #     ...
-    #     # FIXME in progress
+    # syncChildren : @eagerComputed ->
+    #     parent   = this
+    #     graph    = @graph
     #     
-    #     @model().children()
-    #     parent = this
+    #     allNodeData = @model().children().slice()
+    #     for nodeData of allNodeData
+    #         childNode = graph.lookupNode nodeData, parent
     #     
-    #     for nodeData of @model().children().slice()
-    #         children.push childNode = GraphNode.fromNodeData parent, nodeData
-    #     
+    #     @children.splice 0, @children().length, ...@childNodes.values()
     
     /**
      * DOM Element at the root of this Node. jQuery objects and d3 Selections
@@ -156,6 +172,8 @@ class exports.GraphNode extends Base
         unless @graph = graph or parent?.graph
             throw new Error "GraphNode has 'Graph' in it for a reason. Supply one, clown! (got #{@graph})"
         
+        @childNodeData = new OrderedSet()
+        @childNodes    = new OrderedSet()
         super { model, parent }
         
         # Useful for providing IDs to things that care, like text-inputs
@@ -226,6 +244,18 @@ class exports.GraphNode extends Base
             children.push childNode = GraphNode.fromNodeData parent, nodeData
             # childNode.populate()
         this
+    
+    
+    /**
+     * Call when disposing of this node.
+     * @returns {this}
+     */
+    destroy: ->
+        return this if @isDestroyed()
+        @isDestroyed true
+        @trigger 'destroy', this
+        this
+    
     
     
     # }}}

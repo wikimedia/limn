@@ -18,7 +18,8 @@ class exports.View extends Base
     template : ''
     
     defaults: ->
-        model : null
+        model       : null
+        isDestroyed : false
     
     /**
      * @constructor
@@ -26,6 +27,17 @@ class exports.View extends Base
     (model) ->
         super()
         @model model
+    
+    
+    /**
+     * Call when disposing of this view.
+     * @returns {this}
+     */
+    destroy: ->
+        return this if @isDestroyed()
+        @isDestroyed true
+        @trigger 'destroy', this
+        this
     
     
 

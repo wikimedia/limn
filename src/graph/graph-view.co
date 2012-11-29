@@ -1,5 +1,10 @@
+_  = require 'underscore'
+ko = require 'knockout'
+
 { View,
 } = require '../base/view'
+{ OrderedMap,
+} = require '../util'
 { Graph,
 } = require './graph-model'
 { GraphNodeData,
@@ -9,8 +14,17 @@
 { EditView,
 } = require '../edit/edit-view'
 
+
+
 class exports.GraphView extends View
     template: 'graph'
+    
+    /**
+     * The `GraphNode` cache.
+     * @protected
+     * @type OrderedMap<GraphNodeData, GraphNode>
+     */
+    nodeCache : null
     
     /**
      * root to the tree of GraphNode(s)
@@ -18,12 +32,13 @@ class exports.GraphView extends View
      */
     rootNode : @eagerComputed ->
         return null unless graph = @model()
-        GraphNode.fromNodeData graph.root(), null, graph
+        @lookupNode graph.root(), null
     
     defaults: ->
-        model : null
-        element: null
-        action: null
+        model   : null
+        element : null
+        action  : null
+    
     
     
     /**
@@ -32,6 +47,7 @@ class exports.GraphView extends View
      * @param {string} action the action this view was created to respond to
      */
     (model, action) ->
+        @nodeCache = new OrderedMap()
         super()
         
         if model instanceof Graph
@@ -43,6 +59,30 @@ class exports.GraphView extends View
         
         @model model
         @action action
+    
+    
+    
+    /**
+     * Looks up a `GraphNode` by an instance of `GraphNodeData`. On cache-miss,
+     * creates a new GraphNode for the data and registers it with the cache.
+     * 
+     * @protected
+     * @param {GraphNodeData} nodeData
+     * @param {GraphNode} [parent=null]
+     * @returns {GraphNode} The node corresponding to this data.
+     */
+    lookupNode: (nodeData, parent=null) ->
+        return that if @nodeCache.get nodeData
+        
+        node = GraphNode.fromNodeData nodeData, parent, this
+        @nodeCache.set nodeData, node
+        
+        # register for notification when the node is destroyed
+        subscription = node.isDestroyed.subscribe (isDestroyed) ~>
+            @nodeCache.remove nodeData
+            subscription.dispose()
+        
+        node
     
     
     /**
@@ -60,8 +100,3 @@ class exports.GraphView extends View
         # when populate is done, start by calling build on rootNode with rootElement
     
     
-    /**
-     * Populate the GraphNode tree from the model's GraphNodeData objects.
-     */
-    populate: ->
-        
