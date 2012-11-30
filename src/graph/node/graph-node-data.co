@@ -1,7 +1,7 @@
 _  = require 'underscore'
 ko = require 'knockout'
 
-{ generateId, guidFor, Mixin,
+{ OrderedSet,
 } = require '../../util'
 { Model,
 } = require '../../base'
@@ -12,6 +12,7 @@ ko = require 'knockout'
 
 class exports.GraphNodeData extends Model
     -> super ...
+    
     
     defaults: ->
         nodeType       : 'group'
@@ -24,6 +25,41 @@ class exports.GraphNodeData extends Model
     attributeTypes :
         metric   : Metric
         children : GraphNodeData
+    
+    
+    /**
+     * Parent of this node.
+     * @type ko.observable<GraphNodeData>
+     */
+    parent : @coerciveObservable GraphNodeData
+    
+    
+    /**
+     * Ensure children Arrays are properly updated when parent changes.
+     * 
+     * Note: Knockout ignores cycles in deps, so the circular modification
+     * trigger between `parent` and `children` is benign.
+     */
+    onParentChange : @onChange 'parent', (oldParent, newParent) ->
+        oldParent?.children.remove this
+        newParent?.children.push this
+    
+    
+    /**
+     * Ensure parents are properly set when child-nodes are added or removed.
+     * 
+     * Note: Knockout ignores cycles in deps, so the circular modification
+     * trigger between `parent` and `children` is benign.
+     */
+    onChildrenChange : @onChange 'children', (oldChildren, newChildren) ->
+        
+        # Unparent children being removed (not in the new set)
+        for child of oldChildren
+            child.parent(null) if child.parent.peek() is this and not _.contains newChildren, child
+        
+        # Set the parent of objects that are children
+        _.invoke newChildren, 'parent', this
+    
     
 
 

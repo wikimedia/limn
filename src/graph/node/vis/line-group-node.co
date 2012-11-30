@@ -1,0 +1,20 @@
+_  = require 'underscore'
+ko = require 'knockout'
+
+{ GroupNode,
+} = require '../group-node'
+
+
+/**
+ * @class
+ * @extends GroupNode
+ */
+class exports.LineGroupNode extends GroupNode
+    nodeType : 'line-group'
+    @registerType()
+    
+    
+    -> super ...
+    
+    
+

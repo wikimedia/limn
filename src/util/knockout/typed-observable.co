@@ -98,7 +98,7 @@ exports.modelExtender = ko.addExtender 'model', (obs, ModelType, owner, options)
  * Convenience for wrapping a value in both an observable and the model coercion wrapper.
  * @returns {ko.dependentObservable}
  */
-exports.modelObservable = ko.modelObservable = (ModelType, val, owner, options) ->
+exports.modeledObservable = ko.modeledObservable = (ModelType, val, owner, options) ->
     makeObs val .model ModelType, owner, options
 
 

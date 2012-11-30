@@ -49,28 +49,68 @@ _cls =
     /**
      * Creates a new instance of the given class without running its constructor.
      * 
-     * @param {Class} Cls Class to instantiate.
-     * @returns {Cls} New instance of the given class, created without running its constructor.
+     * @param {Class<T>} Class Class to instantiate.
+     * @returns {T} New instance of the given class, created without running
+     *  its constructor.
      */
-    fabricate: (Cls) ->
+    fabricate: (Class) ->
         AnonymousInnerClass = ->
-        AnonymousInnerClass:: = Cls::
+        AnonymousInnerClass:: = Class::
         instance = new AnonymousInnerClass()
-        instance.constructor = Cls
+        instance.constructor = Class
         instance
     
     
     /**
-     * Creates a new instance of the given class, applying the given arguments Array to the constructor.
+     * Creates a new instance of the given class, applying the given arguments
+     * array to the constructor.
      * 
-     * @param {Class} Cls Class to instantiate.
+     * @param {Class<T>} Class Class to instantiate.
      * @param {Array} [args=[]] Arguments to pass to the class constructor.
-     * @returns {Cls} New instance of the given class.
+     * @returns {T} New instance of the given class.
      */
-    instantiate: (Cls, args=[]) ->
-        instance = _cls.fabricate Cls
-        Cls.apply instance, args
+    instantiate: (Class, args=[]) ->
+        instance = _cls.fabricate Class
+        Class.apply instance, args
         instance
+    
+    
+    /**
+     * Create an instance of an anonymous subclass of the given class, allowing
+     * you to provide prototype overrides prior to the invocation of the constructor.
+     * 
+     * Note that this process triggers Coco's `@extended()` hook.
+     * 
+     * @param {Class<T>} Class Class to subclass.
+     * @param {Array} [args] Partial constructor arguments which will be prepended
+     *  to whatever is actually supplied to the constructor. if omitted, prototype
+     *  overrides may still be supplied.
+     * @param {Object} [overrides={}] Prototype overrides.
+     * @returns {? extends T>} An instance of the new anonymous subclass of this class.
+     */
+    subclass: (Class, args=[], overrides={}) ->
+        [overrides, args] = [args, []] unless _.isArray args
+        
+        class AnonymousInnerClass extends Class implements overrides
+            (..._args) -> super ...args.concat(_args)
+        
+        AnonymousInnerClass
+    
+    
+    /**
+     * Create an instance of an anonymous subclass of the given class, allowing
+     * you to provide prototype overrides prior to the invocation of the constructor.
+     * 
+     * Note that this process triggers Coco's `@extended()` hook.
+     * 
+     * @param {Class<T>} Class Class to subclass.
+     * @param {Array} [args] Constructor arguments; if omitted, overrides may still be supplied.
+     * @param {Object} [overrides={}] Prototype overrides.
+     * @returns {? extends T>} An instance of the new anonymous subclass of this class.
+     */
+    subclassInstance: (Class, args=[], overrides={}) ->
+        AnonymousInnerClass = _.subclass Class, args, overrides
+        new AnonymousInnerClass()
     
     
     /**

@@ -30,11 +30,19 @@ limn.dashboard  = require './dashboard'
  *  found at `appSelector` and delegating to the appropriate view.
  */
 class limn.LimnApp
-    views:
+    VIEWS :
         'dashboards'    : limn.dashboard.DashboardView
         'graphs'        : limn.graph.GraphView
         '404'           : limn.base.NotFoundView
         'loading'       : limn.base.LoadingView
+    
+    
+    /**
+     * Current view.
+     * @type ko.observable<View>
+     */
+    currentView : null
+    
     
     
     /**
@@ -45,22 +53,23 @@ class limn.LimnApp
         ko.applyBindings this
         
         page '/:view/:id?/:action?', (context, next) ~>
-            view    = context.params.view
-            id      = context.params.id
-            action  = context.params.action
+            { view, id, action } = context.params
             
             # default to the reportcard dashboard
             unless view
                 view = 'dashboards'
-                id = 'reportcard'
+                id   = 'reportcard'
             
-            if ViewType = @views[view]
+            if ViewType = @VIEWS[view]
                 @currentView new ViewType id, action
             else
                 next()
+        
         page '*', ~>
-            @currentView new @views['404']()
+            @currentView new @VIEWS['404']()
+        
         page()
+    
     
     
     /**
@@ -80,6 +89,7 @@ class limn.LimnApp
         config = limn.config or= LimnApp.findConfig()
         limn.app or= new LimnApp config unless config.libOnly
         limn.emit 'main', limn.app
+    
 
 
 

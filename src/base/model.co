@@ -20,4 +20,10 @@ class exports.Model extends Base
         return (attributes) -> new ClassType attributes
     
     
+    /**
+     * Class used to create "plain" object containers via `@plainSubclass()`.
+     * @type Class<Model>
+     * @see Base#plainSubclass
+     */
+    @PlainObjectClass = Model
 

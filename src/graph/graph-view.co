@@ -32,7 +32,7 @@ class exports.GraphView extends View
      */
     rootNode : @eagerComputed ->
         return null unless graph = @model()
-        @lookupNode graph.root(), null
+        @lookupNode graph.root()
     
     defaults: ->
         model   : null
@@ -68,17 +68,19 @@ class exports.GraphView extends View
      * 
      * @protected
      * @param {GraphNodeData} nodeData
-     * @param {GraphNode} [parent=null]
      * @returns {GraphNode} The node corresponding to this data.
      */
-    lookupNode: (nodeData, parent=null) ->
+    lookupNode: (nodeData) ->
+        return null unless nodeData?
+        return nodeData if nodeData instanceof GraphNode
         return that if @nodeCache.get nodeData
         
-        node = GraphNode.fromNodeData nodeData, parent, this
+        node = GraphNode.fromNodeData this, nodeData
         @nodeCache.set nodeData, node
         
         # register for notification when the node is destroyed
         subscription = node.isDestroyed.subscribe (isDestroyed) ~>
+            throw new Error "WTF! node.isDestroyed false for #node!" unless isDestroyed
             currentNode = @nodeCache.get nodeData
             @nodeCache.remove nodeData if currentNode is node
             subscription.dispose()
@@ -90,6 +92,7 @@ class exports.GraphView extends View
      * Called by Knockout once the Graph template has finished rendering.
      */
     afterRender: (element) ->
+        console.log "#this.afterRender()"
         @element element
         
         if @action() is 'edit'
@@ -97,7 +100,7 @@ class exports.GraphView extends View
         
         rootElement = $(element).find('.graph-canvas')[0]
         
-        @populate()
+        # @populate()
         # when populate is done, start by calling build on rootNode with rootElement
     
     

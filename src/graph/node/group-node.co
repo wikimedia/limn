@@ -1,0 +1,21 @@
+_  = require 'underscore'
+ko = require 'knockout'
+
+{ GraphNode,
+} = require './graph-node'
+
+
+/**
+ * @class
+ * @extends GraphNode
+ */
+class exports.GroupNode extends GraphNode
+    nodeType : 'group'
+    @registerType()
+    
+    -> super ...
+    
+    # init: ->
+    # build: (parentElement) ->
+    
+    

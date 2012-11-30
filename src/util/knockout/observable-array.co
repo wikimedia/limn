@@ -5,32 +5,46 @@ ko = require 'knockout'
 
 
 /**
- * @class
+ * @class Represents a mutation to an indexable collection.
  */
 class exports.Change
-    # Change States
-    UNCHANGED = @UNCHANGED = 'unchanged'
-    MOVED     = @MOVED     = 'moved'
-    ADDED     = @ADDED     = 'added'
-    REMOVED   = @REMOVED   = 'removed'
     
-    value      : null
-    collection : null
-    oldIndex   : null
-    newIndex   : null
-    state      : UNCHANGED
+    # Action Types
+    @NONE   = 'NONE'
+    @ADD    = 'ADD'
+    @REMOVE = 'REMOVE'
+    @MOVE   = 'MOVE'
     
-    (@value, @collection, @oldIndex, @newIndex=oldIndex, @state) ->
-        @state ?= if oldIndex is newIndex then UNCHANGED else MOVED
-        switch @state
-        case ADDED     then @oldIndex = -1
-        case REMOVED   then @newIndex = -1
+    (@value, @collection, @oldIndex, @newIndex=oldIndex, @action) ->
+        unless @action
+            if @oldIndex is @newIndex
+                @action = Change.NONE
+            else if @oldIndex is -1
+                @action = Change.ADD
+            else if @newIndex is -1
+                @action = Change.REMOVE
+            else
+                @action = Change.MOVE
+        
+        # Ensure things are coherent
+        switch @action
+        case Change.NONE    then @oldIndex = @newIndex
+        case Change.ADD     then @oldIndex = -1
+        case Change.REMOVE  then @newIndex = -1
     
-
 
 
 
 extensions =
+    /**
+     * Patch `valueHasMutated()` to update proxy's length property. Maybe?
+     */
+    # valueHasMutated: ->
+    #     array = @peek()
+    #     @length = array.length
+    #     @notifySubscribers(array)
+    #     void
+    
     
     /**
      * Insert `value` at `index`, shifting following elements to accommodate.
@@ -45,6 +59,7 @@ extensions =
             throw new Error "Index out of bounds"
         @splice idx, 0, value
         this
+    
     
     /**
      * Atomically moves an element from one index to another. No mutuation

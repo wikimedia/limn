@@ -71,6 +71,14 @@ class exports.GraphNode extends Base
      */
     graph : null
     
+    
+    /**
+     * Model data for this node.
+     * @type ko.observable<GraphNodeData>
+     */
+    model : null
+    
+    
     /**
      * Observable properties and their defaults.
      * 
@@ -79,21 +87,15 @@ class exports.GraphNode extends Base
      * in `@attributes` is not important to GraphNode.
      */
     defaults: ->
-        el          : null
-        model       : null
         parent      : null
+        model       : null
         children    : []
         isDestroyed : false
     
-    attributeTypes:
-        children : (nodeData, parent=this) ->
-            @graph.lookupNode nodeData, parent
+    attributeTypes :
+        parent   : (nodeData) -> @graph.lookupNode nodeData
+        children : (nodeData) -> @graph.lookupNode nodeData
     
-    /**
-     * Model data for this node.
-     * @type ko.observable<GraphNodeData>
-     */
-    model : null
     
     /**
      * Parent of this node.
@@ -101,77 +103,67 @@ class exports.GraphNode extends Base
      */
     parent : null
     
-    /**
-     * Used to synchronize model GraphNodeData children with our GraphNode children.
-     * @protected
-     * @type OrderedSet<GraphNodeData>
-     */
-    childNodeData : null
     
     /**
-     * Used to synchronize model GraphNodeData children with our GraphNode children.
-     * @protected
-     * @type OrderedSet<GraphNode>
+     * Update parent GraphNode to match when model's parent GraphNodeData
+     * changes.
      */
-    childNodes : null
+    parentFromModel : @eagerComputed ->
+        return null unless parentModel = @model()?.parent()
+        @parent @graph.lookupNode parentModel
+    
     
     /**
-     * Synchronizes model GraphNodeData children with our GraphNode children.
-     * @type ko.observableArray<GraphNode>
+     * Ensure children Arrays are properly updated when parent changes.
+     * 
+     * Note: Knockout ignores cycles in deps, so the circular modification
+     * trigger between `parent` and `children` is benign.
      */
-    syncChildren : @eagerComputed ->
-        parent      = this
-        graph       = @graph
+    onParentChange : @onChange 'parent', (oldParent, newParent) ->
+        oldParent?.children.remove? this
+        return unless newSiblings = newParent?.children()
+        newParent.children.push this unless _.contains newSiblings, this
+    
+    
+    /**
+     * Ensure parents are properly set when child-nodes are added or removed.
+     * 
+     * Note: Knockout ignores cycles in deps, so the circular modification
+     * trigger between `parent` and `children` is benign.
+     */
+    onChildrenChange : @onChange 'children', (oldChildren, newChildren) ->
         
-        childNodes = @childNodes
-        oldNodeData = @childNodeData
-        currentNodeData = @childNodeData = new OrderedSet().update @model().children()
+        # peek to avoid depending on nodes we're going to remove
+        oldChildren = @children.peek()?.slice()    or []
+        newModels   = @model().children()?.slice() or []
+        newModelSet = new OrderedSet newModels
         
-        changes = []
+        # unparent removed nodes that correspond to our children
+        for child of oldChildren
+            data = child.model.peek()
+            continue if newModelSet.contains data
+            child.parent(null) if child.parent.peek() is this
         
-        # figure out which nodes have been removed; toArray() so we can mutate the set
-        for oldIdx, data of oldNodeData.toArray()
-            node    = graph.lookupNode data, parent
-            oldNode = childNodes.find -> it.model() is data
-            
-            # Ensure the GraphNode we're working with is current for this data
-            if oldNode is not node
-                @children.remove oldNode
-            
-            # Immediately remove missing nodes
-            continue if currentNodeData.has data
-            changes.push { state:'removed', node, data, oldIdx, newIdx:-1 }
-            @children.remove node
-            # FIXME: unparent
-            # TODO: emit change events somewhere
+        # Replace @children with new nodes, letting attribute type coercion
+        # ensure the models become nodes and their parents are set.
+        @children.splice 0, oldChildren.length, ...newModels
         
-        # now determine what needs to be added, and otherwise what needs moving
-        for newIdx, data of currentNodeData
-            node = graph.lookupNode data, parent
-            oldIdx = oldNodeData.indexOf data
-            
-            # states: unchanged, moved, new, removed
-            if oldIdx is -1
-                state = 'new'
-                # FIXME: unparent from old node, set new parent
-                # FIXME: move node.el between DOM parents? -- ...no, that should be a computed somewhere else
-            else if oldIdx is not newIdx
-                state = 'moved'
-                # FIXME: reorder node.el? -- ...no, that should be a computed somewhere else
-            else
-                state = 'unchanged'
-            
-            changes.push { state, node, data, oldIdx, newIdx }
-            # TODO: emit change events somewhere
+        # Finally, cleanup: unparent any old children that aren't still
+        # children (due to the GraphNodeData's GraphNode changing?)
+        for node of oldChildren
+            node.parent(null) if node.parent.peek() is not this
         
-        @children.splice 0, @children().length, ...@childNodes.values()
+        newModels
+    
+    
+    
     
     /**
      * DOM Element at the root of this Node. jQuery objects and d3 Selections
      * will be automatically stripped of their wrappers.
      * @type ko.observable<Element>
      */
-    el : @eagerCoerciveComputed (el) ->
+    el : @eagerCoerciveObservable (el) ->
         @$el = @sel = null
         el = el[0]      if el instanceof jQuery
         el = el.node()  if el instanceof d3.selection
@@ -180,11 +172,13 @@ class exports.GraphNode extends Base
         @sel = d3.select el
         el
     
+    
     /**
      * jQuery-wrapped root element.
      * @type jQuery
      */
     $el : null
+    
     
     /**
      * Selection of the element for this view, used by @select() and @selectAll().
@@ -201,18 +195,12 @@ class exports.GraphNode extends Base
     
     /**
      * @constructor
+     * @param {GraphView} graph
      * @param {GraphNodeData} model
-     * @param {GraphNode} parent
-     * @param {GraphView} [graph=parent.graph]
      */
-    (model, parent, graph) ->
-        unless @graph = graph or parent?.graph
-            throw new Error "GraphNode has 'Graph' in it for a reason. Supply one, clown! (got #{@graph})"
-        
-        @childModels = new OrderedSet()
-        @childNodeData = new OrderedSet()
-        @childNodes  = new OrderedSet()
-        super { model, parent }
+    (@graph, model) ->
+        console.log "new GraphNode(graph=#graph, #model)"
+        super { model }
         
         # Useful for providing IDs to things that care, like text-inputs
         # so you can use label(for=id).
@@ -222,13 +210,11 @@ class exports.GraphNode extends Base
         # Add the model's attributes to this node (where they don't overlap)
         _.defaults this, model.attributes if model?.attributes
         
-        @parent.onChange (oldParent, newParent) ~>
-            
-        
     
     
     
     /* * * *  GraphNode API  * * * {{{ */
+    
     
     /**
      * Optional hook to initialize the node once construction is complete.
@@ -236,6 +222,7 @@ class exports.GraphNode extends Base
      * @returns {this}
      */
     init: -> this
+    
     
     /**
      * Implement to completely customize the process of building the DOM nodes
@@ -346,6 +333,24 @@ class exports.GraphNode extends Base
     
     
     /**
+     * Constructs a new `GraphNode` of this class's type without regard
+     * for the `nodeType` specified by the `GraphNodeData`.
+     * 
+     * If omitted, the `GraphView` for the new node will be inherited
+     * from the parent node.
+     * 
+     * @static
+     * @param {GraphNode} parent
+     * @param {GraphNodeData} model
+     * @param {GraphView} [graph=parent.graph]
+     * @returns {? extends GraphNode} A new GraphNode instance.
+     */
+    @create = (model, parent, graph) ->
+        GraphNodeType = this
+        new GraphNodeType model, parent, graph
+    
+    
+    /**
      * Register a new chart type. Subclasses should only call this
      * method *after* setting their `nodeType`:
      * 
@@ -372,28 +377,11 @@ class exports.GraphNode extends Base
      * @static
      */
     @lookupType = (nodeType) ->
-        nodeType = unwrap _.result nodeType, NODE_TYPENAME_KEY unless typeof nodeType is 'string'
+        nodeType = nodeType[NODE_TYPENAME_KEY]  unless typeof nodeType is 'string'
+        nodeType = nodeType.peek()              if ko.isObservable nodeType
         unless GraphNodeType = NODE_TYPES[nodeType]
             throw new Error "Unknown GraphNode type '#nodeType'!"
         GraphNodeType
-    
-    
-    /**
-     * Constructs a new `GraphNode` of this class's type without regard
-     * for the `nodeType` specified by the `GraphNodeData`.
-     * 
-     * If omitted, the `GraphView` for the new node will be inherited
-     * from the parent node.
-     * 
-     * @static
-     * @param {GraphNode} parent
-     * @param {GraphNodeData} model
-     * @param {GraphView} [graph=parent.graph]
-     * @returns {? extends GraphNode} A new GraphNode instance.
-     */
-    @create = (model, parent, graph) ->
-        GraphNodeType = this
-        new GraphNodeType model, parent, graph
     
     
     /**
@@ -402,16 +390,15 @@ class exports.GraphNode extends Base
      * be inherited from the parent node.
      * 
      * @static
-     * @param {GraphNodeData} model 
-     * @param {GraphNode} parent 
-     * @param {GraphView} [graph=parent.graph]
+     * @param {GraphView} graph
+     * @param {GraphNodeData} model
      * @returns {? extends GraphNode} The GraphNode instance.
      */
-    @fromNodeData = (model, parent, graph) ->
+    @fromNodeData = (graph, model) ->
         return null  unless model?
         return model if model instanceof GraphNode
         GraphNodeType = GraphNode.lookupType model
-        new GraphNodeType model, parent, graph
+        new GraphNodeType graph, model
     
     
     # }}}
