@@ -28,6 +28,14 @@ class exports.StoredModel extends Model
         require('limn').mount()
     
     
+    toString: ->
+        cid       = @__id__
+        id        = @getId()
+        Class     = @constructor
+        className = Class.displayName or Class.name
+        "#className(cid=#cid, id=#id)"
+    
+    
     /**
      * Create a new instance of the model with the given id, and then instruct
      * it to fetch itself from the server.

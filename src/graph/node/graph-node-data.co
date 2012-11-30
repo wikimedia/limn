@@ -1,7 +1,7 @@
 _  = require 'underscore'
 ko = require 'knockout'
 
-{ OrderedSet,
+{ compareIds, OrderedSet,
 } = require '../../util'
 { Model,
 } = require '../../base'
@@ -58,7 +58,7 @@ class exports.GraphNodeData extends Model
         newChildren = @children()
         
         # Unparent children being removed (not in the new set)
-        for child of oldChildren
+        _.each oldChildren, (child) ~>
             child.parent(null) if child.parent.peek() is this and not _.contains newChildren, child
         
         # Set the parent of objects that are children

@@ -284,10 +284,9 @@ class exports.Base extends EventEmitter
     
     toString: ->
         cid       = @__id__
-        id        = @peek(@idAttribute or 'id')
         Class     = @constructor
         className = Class.displayName or Class.name
-        "#className(cid=#cid, id=#id)"
+        "#className(cid=#cid)"
     
     
     

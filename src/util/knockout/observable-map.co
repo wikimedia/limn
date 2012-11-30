@@ -1,7 +1,5 @@
-{ OrderedSet,
-} = require '../ordered-set'
-{ OrderedMap,
-} = require '../ordered-map'
+OrderedSet = require '../ordered-set'
+OrderedMap = require '../ordered-map'
 
 
 /**

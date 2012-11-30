@@ -1,7 +1,6 @@
 ko = require 'knockout'
 
-{ OrderedSet,
-} = require '../ordered-set'
+OrderedSet = require '../ordered-set'
 
 
 

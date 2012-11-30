@@ -118,7 +118,7 @@ class exports.GraphNode extends Base
         oldParent?.children.remove this
         
         newParent = @parent()
-        unless newSiblings = newParent?.children()
+        if newSiblings = newParent?.children()
             newParent.children.push this unless _.contains newSiblings, this
         
         newParent
@@ -135,7 +135,7 @@ class exports.GraphNode extends Base
         childNodes  = @children()
         
         # unparent removed nodes that correspond to our children
-        for node of oldNodes
+        _.each oldNodes, (node) ~>
             node.parent(null) if node.parent.peek() is this and not _.contains childNodes, node
         
         # Set the parent of objects that are children
@@ -149,7 +149,7 @@ class exports.GraphNode extends Base
         newModels  = @model().children().slice()
         
         # unparent removed nodes that correspond to our children
-        for node of oldNodes
+        _.each oldNodes, (node) ~>
             data = node.model.peek()
             node.parent(null) if node.parent.peek() is this and not _.contains newModels, data
         
