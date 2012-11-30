@@ -3,7 +3,14 @@ ko = require 'knockout'
 extensions =
     
     /**
-     * Register a callback to recieve notifications for 
+     * Registers a callback to be notified with both the old and
+     * new value -- unlike `.subscribe()` -- when this observable changes:
+     * 
+     *  `callback.call(cxt or subscription, oldValue, newValue, observable)`
+     * 
+     * @param {Function} callback
+     * @param {Object} [cxt] Context for the callback; defaults to the subscription.
+     * @returns {Object} Subscription for this registration.
      */
     onChange: (callback, cxt) ->
         target    = this
@@ -13,7 +20,7 @@ extensions =
             (oldValue) -> lastValue := oldValue
             'beforeChange'
         changeSub = @subscribe do
-            (newValue) -> fn.call(cxt or subscription, lastValue, newValue, target)
+            (newValue) -> callback.call(cxt or subscription, lastValue, newValue, target)
             'change'
         dispose = ->
             subs.isDisposed = true
