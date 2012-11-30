@@ -74,7 +74,7 @@ extensions =
         array = @peek()
         len = array.length
         
-        return this unless \
+        return this unless do
             typeof fromIdx is 'number' and -1 < fromIdx < len and
             typeof toIdx   is 'number' and -1 < toIdx   < len and
             fromIdx is not toIdx
