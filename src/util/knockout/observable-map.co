@@ -1,0 +1,16 @@
+OrderedSet = require '../ordered-set'
+OrderedMap = require '../ordered-map'
+
+
+/**
+ * @class
+ * @extends OrderedMap
+ */
+class exports.ObservableMap extends OrderedMap
+    
+    ->
+        super ...
+        
+    
+
+

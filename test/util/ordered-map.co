@@ -1,0 +1,57 @@
+_ = require 'underscore'
+
+limn = require 'limn'
+{ OrderedMap,
+} = limn.util
+
+
+QUnit.module '[util] OrderedMap'
+
+/*
+    ## Methods ##
+    
+    clear: ->
+    clone : ->
+    
+    size: ->
+    isEmpty: ->
+    
+    has : (key) ->
+    get : (key) ->
+    pair : (key) ->
+    
+    indexOf: (key) ->
+    at: (idx) ->
+    keyAt: (idx) ->
+    valueAt: (idx) ->
+    first: (n) ->
+    last: (n) ->
+    
+    set : (key, val) ->
+    remove : (key) ->
+    pop : ->
+    shift : ->
+    update : (vs) ->
+    
+    keys : ->
+    values : ->
+    items: ->
+    
+    reduce: (fn, acc, cxt=this) ->
+    forEach: (fn, cxt=this) ->
+    map: (fn, cxt=this) ->
+    filter: (fn, cxt=this) ->
+    reject: (fn, cxt=this) ->
+    some/any: (fn, cxt=this) ->
+    every/all: (fn, cxt=this) ->
+    find/detect: (fn, cxt=this) ->
+    pluck : (prop) ->
+    invoke : (methodName) ->
+    
+*/
+
+test 'Basic Accessors', ->
+    expect 0
+    
+    map = new OrderedMap()
+

@@ -4,13 +4,14 @@
 
 UUID        = 0
 GUID_KEY    = '__id__'
-NUMBER_CACHE = exports.NUMBER_CACHE = {}
-STRING_CACHE = exports.STRING_CACHE = {}
+NUMBER_CACHE = {}
+STRING_CACHE = {}
 
 
 generateId = exports.generateId = (prefix='limn') ->
     id = UUID++
     "#prefix#id"
+
 
 guidFor = exports.guidFor = (obj) ->
     # special cases where we don't want to add a key to object
@@ -37,4 +38,8 @@ guidFor = exports.guidFor = (obj) ->
         return '(Object)'       if obj is Object
         return '(Array)'        if obj is Array
         return obj[GUID_KEY] = "limn#{(UUID++)}"
+
+
+compareIds = exports.compareIds = (a, b) ->
+    guidFor(a) is guidFor(b)
 

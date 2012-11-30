@@ -1,9 +1,13 @@
 add_extender              = require './add-extender'
 async_computed_observable = require './async-computed-observable'
 observable_array          = require './observable-array'
+observable_history        = require './observable-history'
+observable_map            = require './observable-map'
+observable_set            = require './observable-set'
 observables               = require './observables'
 subscribable              = require './subscribable'
 subview_binding           = require './subview-binding'
 typed_observable          = require './typed-observable'
 
-exports import add_extender import async_computed_observable import observable_array import observables import subscribable import subview_binding import typed_observable
+exports import add_extender import async_computed_observable import observable_array import observable_history import observable_map import observable_set import observables import subscribable import subview_binding import typed_observable
+

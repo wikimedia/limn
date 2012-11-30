@@ -1,0 +1,29 @@
+ko = require 'knockout'
+
+OrderedSet = require '../ordered-set'
+
+
+
+/**
+ * @class
+ * @extends OrderedSet
+ */
+class exports.ObservableSet extends OrderedSet
+    -> super ...
+    
+    
+    _getItems: ->
+        @_items()
+    
+    peekItems: ->
+        @_items.peek()
+    
+    clear : ->
+        @_byId  = {}
+        @_items = ko.observableArray()
+        this
+    
+    
+
+
+

@@ -284,10 +284,9 @@ class exports.Base extends EventEmitter
     
     toString: ->
         cid       = @__id__
-        id        = @peek(@idAttribute or 'id')
         Class     = @constructor
         className = Class.displayName or Class.name
-        "#className(cid=#cid, id=#id)"
+        "#className(cid=#cid)"
     
     
     
@@ -338,7 +337,7 @@ class exports.Base extends EventEmitter
      *  this to the right place on `attributes`, bro.
      */
     _generateAttribute: (val, coerceFn) ->
-        if _.isArray val
+        if isArray = _.isArray val
             obs = ko.observableArray()
         else
             obs = ko.observable()
@@ -348,7 +347,7 @@ class exports.Base extends EventEmitter
             if typeof coerceFn is not 'function' and _.isPlainObject(val)
                 coerceFn = @..plainSubclass(coerceFn or {})
         
-        obs = obs.coerce coerceFn, this if typeof coerceFn is 'function'
+        obs = obs.coerce coerceFn, this, {isArray} if typeof coerceFn is 'function'
         obs
     
     
