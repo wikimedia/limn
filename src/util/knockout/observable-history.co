@@ -1,0 +1,81 @@
+ko = require 'knockout'
+require './add-extender'
+
+_ = require 'underscore'
+
+
+/**
+ * Default options for observableHistory.
+ */
+DEFAULT_OPTIONS =
+    limit          : 1
+    includeInitial : true
+
+
+/**
+ * Tracks the history of an observable.
+ * 
+ * @param {ko.observable} obs An observable to turn into a stack.
+ * @param {Object} [options={}] Options:
+ * @param {Number} [options.limit=1] Limit to the number of previous values to keep.
+ * @param {Boolean} [options.includeInitial=true] Whether to count the initial
+ *  value in the history.
+ * @returns {ko.computed} 
+ */
+observableHistory = exports.observableHistory = (obs, options) ->
+    options = _.extend {}, DEFAULT_OPTIONS, options
+    stack   = []
+    
+    # Update with starting value
+    current = if options.includeInitial then obs.peek() else void
+    isInitialValue = true
+    
+    wrapper = ko.computed _.extend {}, options, do
+        # on change, add the most recent value to the stack
+        read : ->
+            stack.unshift current unless isInitialValue and not options.includeInitial
+            current := obs()
+            stack   .= slice 0, options.limit
+            current
+        write : obs
+    
+    # Copy over observable and observableArray methods
+    _.defaults wrapper, obs
+    
+    /**
+     * Gets the previous value; if `n` is supplied, instead return an array
+     * of the `n` most recent previous values (arranged from most-recent to
+     * oldest). Note that the current value is never returned.
+     * 
+     * @param {Number} [n]
+     * @returns {*|Array}
+     */
+    wrapper.prev = prev = (n) ->
+        _.first stack, n
+    
+    /**
+     * @returns {Number} Number of items in the history.
+     */
+    wrapper.historySize = size = ->
+        stack.length
+    
+    /**
+     * Clears the history, returning its former values.
+     * @returns {Array}
+     */
+    wrapper.clear = clear = ->
+        _stack = stack
+        stack := []
+        _stack
+    
+    compDispose = wrapper.dispose
+    dispose = wrapper.dispose = ->
+        clear()
+        compDispose()
+    
+    # Replace with decorated property
+    wrapper
+
+
+ko.addExtender 'history', observableHistory
+ko import exports

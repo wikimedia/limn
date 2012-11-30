@@ -40,7 +40,8 @@ exports.typedExtender = ko.addExtender 'typed', (obs, coerce, owner=obs, options
     }
     wrapper = ko.computed options
     
-    if _.isArray current
+    options.isArray ?= _.isArray current
+    if options.isArray
         # Wrap additive `ko.observableArray` methods to transform new data
         _.each <[ push unshift splice replace ]>, (methodName) ->
             origMethod = obs[methodName]

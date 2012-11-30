@@ -5,7 +5,7 @@ unwrap = ko.utils.unwrapObservable
 
 { Base,
 } = require '../../base/base'
-{ OrderedSet,
+{ compareIds, OrderedSet,
 } = require '../../util'
 
 
@@ -87,8 +87,8 @@ class exports.GraphNode extends Base
      * in `@attributes` is not important to GraphNode.
      */
     defaults: ->
-        parent      : null
         model       : null
+        parent      : null
         children    : []
         isDestroyed : false
     
@@ -98,19 +98,13 @@ class exports.GraphNode extends Base
     
     
     /**
-     * Parent of this node.
-     * @type ko.observable<GraphNode>
-     */
-    parent : null
-    
-    
-    /**
      * Update parent GraphNode to match when model's parent GraphNodeData
      * changes.
      */
     parentFromModel : @eagerComputed ->
         return null unless parentModel = @model()?.parent()
-        @parent @graph.lookupNode parentModel
+        @parent parentModel
+        @parent.peek()
     
     
     /**
@@ -119,10 +113,15 @@ class exports.GraphNode extends Base
      * Note: Knockout ignores cycles in deps, so the circular modification
      * trigger between `parent` and `children` is benign.
      */
-    onParentChange : @onChange 'parent', (oldParent, newParent) ->
-        oldParent?.children.remove? this
-        return unless newSiblings = newParent?.children()
-        newParent.children.push this unless _.contains newSiblings, this
+    watchParent : @computed ->
+        oldParent = @parent.prev()
+        oldParent?.children.remove this
+        
+        newParent = @parent()
+        unless newSiblings = newParent?.children()
+            newParent.children.push this unless _.contains newSiblings, this
+        
+        newParent
     
     
     /**
@@ -131,31 +130,34 @@ class exports.GraphNode extends Base
      * Note: Knockout ignores cycles in deps, so the circular modification
      * trigger between `parent` and `children` is benign.
      */
-    onChildrenChange : @onChange 'children', (oldChildren, newChildren) ->
-        
-        # peek to avoid depending on nodes we're going to remove
-        oldChildren = @children.peek()?.slice()    or []
-        newModels   = @model().children()?.slice() or []
-        newModelSet = new OrderedSet newModels
+    watchChildren : @computed ->
+        oldNodes    = @children.prev()
+        childNodes  = @children()
         
         # unparent removed nodes that correspond to our children
-        for child of oldChildren
-            data = child.model.peek()
-            continue if newModelSet.contains data
-            child.parent(null) if child.parent.peek() is this
+        for node of oldNodes
+            node.parent(null) if node.parent.peek() is this and not _.contains childNodes, node
+        
+        # Set the parent of objects that are children
+        _.invoke childNodes, 'parent', this
+        
+        childNodes
+    
+    
+    watchModelChildren : @computed ->
+        oldNodes   = @children.prev()
+        newModels  = @model().children().slice()
+        
+        # unparent removed nodes that correspond to our children
+        for node of oldNodes
+            data = node.model.peek()
+            node.parent(null) if node.parent.peek() is this and not _.contains newModels, data
         
         # Replace @children with new nodes, letting attribute type coercion
-        # ensure the models become nodes and their parents are set.
-        @children.splice 0, oldChildren.length, ...newModels
-        
-        # Finally, cleanup: unparent any old children that aren't still
-        # children (due to the GraphNodeData's GraphNode changing?)
-        for node of oldChildren
-            node.parent(null) if node.parent.peek() is not this
+        # ensure the models become nodes.
+        @children newModels
         
         newModels
-    
-    
     
     
     /**
@@ -200,7 +202,12 @@ class exports.GraphNode extends Base
      */
     (@graph, model) ->
         console.log "new GraphNode(graph=#graph, #model)"
-        super { model }
+        super()
+        
+        # Decorate properties we need to clean up with history tracking
+        @parent  .= history({ -includeInitial })
+        @children = @attributes.children = @children.history({ -includeInitial })
+        @parent.equalityComparer = @children.equalityComparer = compareIds
         
         # Useful for providing IDs to things that care, like text-inputs
         # so you can use label(for=id).
@@ -210,6 +217,13 @@ class exports.GraphNode extends Base
         # Add the model's attributes to this node (where they don't overlap)
         _.defaults this, model.attributes if model?.attributes
         
+        # Finally, kick off attribute updates
+        @set { model }
+        
+        # ...And begin watching relevant properties
+        @watchParent()
+        @watchChildren()
+        @watchModelChildren()
     
     
     

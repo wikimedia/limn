@@ -11,7 +11,6 @@ ko = require 'knockout'
 
 
 class exports.GraphNodeData extends Model
-    -> super ...
     
     
     defaults: ->
@@ -31,7 +30,7 @@ class exports.GraphNodeData extends Model
      * Parent of this node.
      * @type ko.observable<GraphNodeData>
      */
-    parent : @coerciveObservable GraphNodeData
+    parent : @eagerCoerciveObservable GraphNodeData
     
     
     /**
@@ -40,9 +39,12 @@ class exports.GraphNodeData extends Model
      * Note: Knockout ignores cycles in deps, so the circular modification
      * trigger between `parent` and `children` is benign.
      */
-    onParentChange : @onChange 'parent', (oldParent, newParent) ->
+    watchParent : @computed ->
+        oldParent = @parent.prev()
         oldParent?.children.remove this
+        newParent = @parent()
         newParent?.children.push this
+        newParent
     
     
     /**
@@ -51,7 +53,9 @@ class exports.GraphNodeData extends Model
      * Note: Knockout ignores cycles in deps, so the circular modification
      * trigger between `parent` and `children` is benign.
      */
-    onChildrenChange : @onChange 'children', (oldChildren, newChildren) ->
+    watchChildren : @computed ->
+        oldChildren = @children.prev()
+        newChildren = @children()
         
         # Unparent children being removed (not in the new set)
         for child of oldChildren
@@ -59,6 +63,27 @@ class exports.GraphNodeData extends Model
         
         # Set the parent of objects that are children
         _.invoke newChildren, 'parent', this
+        
+        newChildren
+    
+    
+    /**
+     * @constructor
+     */
+    (attributes={}) ->
+        super()
+        
+        # Decorate properties we need to clean up with history tracking
+        @parent   .= history({ -includeInitial })
+        @children  = @attributes.children = @children.history({ -includeInitial })
+        @parent.equalityComparer = @children.equalityComparer = compareIds
+        
+        # Finally, kick off attribute updates
+        @set attributes
+        
+        # ...And begin watching relevant properties
+        @watchParent()
+        @watchChildren()
     
     
 

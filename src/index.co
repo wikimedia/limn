@@ -3,8 +3,8 @@ page = require 'page'
 
 limn = exports
 
-limn.{ _, op, emitters, generateId, guidFor, root, Mixin, Query,
-} =  { _, op, emitters, generateId, guidFor, root, Mixin, Query,
+limn.{ _, op, emitters, generateId, guidFor, compareIds, root, Mixin, Query,
+} =  { _, op, emitters, generateId, guidFor, compareIds, root, Mixin, Query,
 } = limn.util = require './util'
 
 # Decorate root limn namespace object with EventEmitter methods
