@@ -40,10 +40,12 @@ class OrderedSet
     
     /**
      * @constructor
+     * Invokes `@clear()` to initialize state tracking objects.
      */
     ->
         @__id__ = guidFor this
         @clear()
+        @update ... if arguments.length
     
     
     
@@ -54,6 +56,19 @@ class OrderedSet
      */
     _getId : (v) ->
         guidFor v
+    
+    
+    /**
+     * All of OrderedSet's methods assume an Array (`_items` by default) stores
+     * the set contents. If you've changed this in a subclass by overriding
+     * `@clear()`, also override this method to wrap or transform your backing
+     * store so it is presented as an Array.
+     * 
+     * @protected
+     * @returns {Array} Array backing the set's contents.
+     */
+    _getItems: ->
+        @_items
     
     
     /**
@@ -71,21 +86,21 @@ class OrderedSet
      * @returns {OrderedSet}
      */
     clone : ->
-        @..create().update @_items
+        @..create().update @_getItems()
     
     
     /**
      * @returns {Number} Number of elements in the set.
      */
     size : ->
-        @_items.length
+        @_getItems().length
     
     
     /**
      * @return {Boolean}
      */
     isEmpty : ->
-        @_items.length is 0
+        @size() is 0
     
     
     /**
@@ -116,7 +131,7 @@ class OrderedSet
         id = @_getId v
         return this if id in @_byId
         @_byId[id] = v
-        @_items.push v
+        @_getItems().push v
         this
     
     
@@ -128,7 +143,7 @@ class OrderedSet
         id = @_getId v
         return this if id in @_byId
         @_byId[id] = v
-        @_items.unshift v
+        @_getItems().unshift v
         this
     
     
@@ -163,8 +178,8 @@ class OrderedSet
         id = @_getId v
         return false unless id in @_byId
         delete @_byId[id]
-        idx = @_items.indexOf v
-        @_items.splice idx, 1 if idx > -1
+        idx = @indexOf v
+        @_getItems().splice idx, 1 if idx > -1
         true
     
     
@@ -183,7 +198,7 @@ class OrderedSet
      * @returns {Number} Index of `value` if found, otherwise `-1`.
      */
     indexOf : (value) ->
-        _.indexOf @_items, value
+        _.indexOf @_getItems(), value
     
     
     /**
@@ -193,7 +208,7 @@ class OrderedSet
      * @returns {*} The value stored at the given index.
      */
     at : (idx) ->
-        @_items[idx]
+        @_getItems()[idx]
     
     
     /**
@@ -201,7 +216,7 @@ class OrderedSet
      *  otherwise just the first element of the set.
      */
     first : (n) ->
-        _.first @_items, n
+        _.first @_getItems(), n
     
     
     /**
@@ -209,15 +224,15 @@ class OrderedSet
      *  otherwise just the last element of the set.
      */
     last : (n) ->
-        _.last @_items, n
+        _.last @_getItems(), n
     
     
     /**
      * @returns {*} Removes and returns the last (most recently added) element in the set.
      */
     pop : ->
-        return unless @_items.length
-        v  = @_items.pop()
+        return if @isEmpty()
+        v  = @_getItems().pop()
         id = @_getId v
         delete @_byId[id]
         v
@@ -227,8 +242,8 @@ class OrderedSet
      * @returns {*} Removes and returns the first element in the set.
      */
     shift : ->
-        return unless @_items.length
-        v  = @_items.shift()
+        return if @isEmpty()
+        v  = @_getItems().shift()
         id = @_getId v
         delete @_byId[id]
         v
@@ -252,7 +267,8 @@ class OrderedSet
      * @returns {Array}
      */
     slice : (start, stop) ->
-        @_items.slice.apply @_items, arguments
+        items = @_getItems()
+        items.slice.apply items, arguments
     
     
     
@@ -274,17 +290,14 @@ class OrderedSet
      * @returns {Array}
      */
     values : ->
-        @_items.slice()
+        @_getItems().slice()
     
     
     /**
-     * @returns {Array<Array<Key, Value>>} Key-value pairs of set contents.
+     * @returns {Array<[Key, Value]>} Key-value pairs of set contents.
      */
     items : ->
-        _.map do
-            @_items
-            -> [ @_getId(it), it ]
-            this
+        _.map @_getItems(), ~> [ @_getId(it), it ]
     
     
     /**
@@ -296,7 +309,7 @@ class OrderedSet
      * @see https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Array/reduce
      */
     reduce : (fn, acc, cxt=this) ->
-        _.reduce @_items, fn, acc, cxt
+        _.reduce @_getItems(), fn, acc, cxt
     
     
     /**
@@ -306,7 +319,7 @@ class OrderedSet
      * @see https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Array/forEach
      */
     forEach : (fn, cxt=this) ->
-        _.forEach @_items, fn, cxt
+        _.forEach @_getItems(), fn, cxt
         this
     
     
@@ -314,7 +327,7 @@ class OrderedSet
      * @returns {Array} List of all values at property `prop`.
      */
     pluck : (prop) ->
-        _.pluck @_items, prop
+        _.pluck @_getItems(), prop
     
     
     /**
@@ -324,7 +337,7 @@ class OrderedSet
      * @returns {Array} List of results.
      */
     invoke : (methodName) ->
-        _.invoke @_items, ...arguments
+        _.invoke @_getItems(), ...arguments
     
     
     
@@ -339,8 +352,8 @@ class OrderedSet
      */
     isEqual : (a) ->
         return false unless a
-        L = @_items.length
-        return L is a.length and L is @intersect(a).length
+        L = @size()
+        return L is _.values(a).length and L is @intersect(a).length
     
     
     /**
@@ -351,7 +364,7 @@ class OrderedSet
      */
     isDisjoint : (a) ->
         return true unless a
-        return not _.some a, @contains, this
+        return not _.some a, @_hasOne, this
     
     
     /**
@@ -361,7 +374,7 @@ class OrderedSet
      */
     isSubset : (a) ->
         return false unless a
-        A = _ if _.isArray a then a else _.values a
+        A = _ a
         @every A.contains, A
     
     
@@ -372,7 +385,7 @@ class OrderedSet
      */
     isSuperset : (a) ->
         return false unless a
-        _.every a, @contains, this
+        _.every a, @_hasOne, this
     
     
     /**
@@ -382,7 +395,7 @@ class OrderedSet
      */
     isOverlapping : (a) ->
         return false unless a
-        _.any a, @contains, this
+        _.any a, @_hasOne, this
     
     
     /**
@@ -403,7 +416,7 @@ class OrderedSet
      *      ins.get(0) is foo; # true
      */
     intersect : (a) ->
-        @..create().update _.intersect @_items, _.map arguments, _.values
+        @..create().update _.intersect @_getItems(), _.map(arguments, _.values)
     
     
     /**
@@ -422,7 +435,7 @@ class OrderedSet
      * @returns {OrderedSet} A new set of only elements of this OrderedSet not in supplied collection(s).
      */
     difference : (a) ->
-        @..create().update _.difference @_items, _.map(arguments, _.values)
+        @..create().update _.difference @_getItems(), _.map(arguments, _.values)
     
     
     /**
@@ -431,7 +444,7 @@ class OrderedSet
      */
     xor : (a) ->
         a = _.values a
-        @difference a .union _.difference(a, @_items)
+        @difference a .union _.difference a, @_getItems()
     
     
     # }}}
@@ -440,7 +453,7 @@ class OrderedSet
     toString : ->
         Class     = @constructor
         className = Class.displayName or Class.name
-        "OrderedSet(size=#{@_items.length})"
+        "OrderedSet(size=#{@size()})"
     
     
     /* * * *  Class Methods  * * * {{{ */
@@ -491,7 +504,7 @@ class OrderedSet
 # Synthesize collection functions from Underscore
 _.each <[ map filter reject some every find ]>, (name) ->
     OrderedSet::[name] = (fn, cxt=this) ->
-        _[name] @_items, fn, cxt
+        _[name] @_getItems(), fn, cxt
 
 
 # Alias methods to alternate names
