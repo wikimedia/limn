@@ -27,7 +27,7 @@ class OrderedMap
     /**
      * Set of keys in this map.
      * @protected
-     * @type OrderedMap
+     * @type OrderedSet
      */
     _keys : null
     
@@ -46,6 +46,7 @@ class OrderedMap
     ->
         @__id__  = guidFor this
         @clear()
+        @update ... if arguments.length
     
     
     
@@ -140,7 +141,7 @@ class OrderedMap
      * @returns {Number} Index of `key` if found, otherwise `-1`.
      */
     indexOf : (key) ->
-        @keys.indexOf key
+        @_keys.indexOf key
     
     
     /**
@@ -204,7 +205,7 @@ class OrderedMap
      * @returns {this}
      */
     set : (key, val) ->
-        @keys.add key
+        @_keys.add key
         @_values[ @_getId key ] = val
         this
     
