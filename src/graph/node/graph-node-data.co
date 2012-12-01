@@ -62,7 +62,7 @@ class exports.GraphNodeData extends Model
             child.parent(null) if child.parent.peek() is this and not _.contains newChildren, child
         
         # Set the parent of objects that are children
-        _.invoke newChildren, 'parent', this
+        # FIXME causes infinite loop: _.invoke newChildren, 'parent', this
         
         newChildren
     

@@ -63,3 +63,79 @@ asyncTest 'define a subview with an afterRender function', ->
                 ok $(element).find('p').text(), viewModel.subviewProperty().checkThisBinds, 'the afterRender was called with the correct HTML element'
         )
     ko.applyBindings viewModel, $('#subviewBindingTest')[0]
+
+
+
+/******** Async Computed ********/
+QUnit.module '[util] observablesArray', do
+    setup: ->
+        @a = ko.observablesArray([1,2,3])
+    teardown: ->
+
+test 'initializing', ->
+    strictEqual @a.lastAction(), @a.actions.created, 'the created action was reported'
+    ok ko.isObservable(@a()[0]), 'the items are converted to observables'
+
+test 'adding', ->
+    i = @a.push(4)
+    strictEqual @a.lastAction(), @a.actions.add, 'the add action was reported'
+    strictEqual @a.lastChange.length, 1, 'the lastChange property is an array with only one item'
+    strictEqual @a.lastChange[0], @a()[i-1], 'the lastChange property was set correctly'
+    
+    ok ko.isObservable(@a.lastChange[0]), 'the item is converted to an observable'
+
+test 'adding observable', ->
+    i = @a.push(ko.observable(4))
+    ok (ko.isObservable(@a.lastChange[0]) and not ko.isObservable(@a.lastChange[0]())), 'does not double-wrap the observable'
+
+test 'popping', ->
+    val = @a.pop()
+    strictEqual @a.lastAction(), @a.actions.remove, 'the remove action was reported'
+    strictEqual @a.lastChange[0], val, 'the lastChange property was set correctly'
+
+test 'removing', ->
+    val = @a.remove(3)
+    strictEqual @a.lastAction(), @a.actions.remove, 'the remove action was reported'
+    strictEqual @a.lastChange[0], val[0], 'the lastChange property was set correctly'
+
+test 'changing', ->
+    @a()[0](12)
+    strictEqual @a.lastAction(), @a.actions.change, 'the change action was reported'
+    strictEqual @a.lastChange[0](), 12, 'the lastChange property was set correctly'
+
+test 'getting the index of a value', ->
+    i = @a.indexOf 2
+    strictEqual i, 1, 'works with plain values'
+    i = @a.indexOf ko.observable(2)
+    strictEqual i, 1, 'works with observables'
+
+test 'replace', ->
+    @a.replace 2, 12
+    strictEqual @a.lastAction(), @a.actions.replace, 'the replace action was reported'
+    strictEqual @a()[1](), 12, 'item replaced correctly'
+
+test 're-initialize', ->
+    @a([5,6,7])
+    strictEqual @a()[1], @a.subscriptions[1].target, 'subscriptions metadata stays in sync'
+    @a.pop()
+    @a.pop()
+    @a.pop()
+    @a([9,10,11])
+    strictEqual @a()[1], @a.subscriptions[1].target, 'subscriptions metadata stays in sync'
+
+test 'doing all operations in combination', ->
+    @a.pop()
+    @a.pop()
+    @a.pop()
+    @a.push(12)
+    @a.push(ko.observable(12))
+    @a.replace(12, 5)
+    @a.remove(12)
+    @a.remove(5)
+    @a.replace(5, 8)
+    @a.push(13)
+    # TODO: if this is useful, implement @a.destroy(13)
+    @a.push(1)
+    @a([5,6,7])
+    @a.replace(5, 99)
+    strictEqual @a()[0](), 99, 'does not cause any problems'
