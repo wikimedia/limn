@@ -145,3 +145,29 @@ test 'doing all operations in combination', ->
     @a([5,6,7])
     @a.replace(5, 99)
     strictEqual @a()[0](), 99, 'does not cause any problems'
+
+test 'subscribing', ->
+    subscriptionsFired = 0
+    
+    adding = @a.subscribe ~>
+        subscriptionsFired++
+        strictEqual @a.lastAction(), 'add', 'add action triggered the subscription'
+        strictEqual ko.utils.unwrapObservable(@a.lastChange[0]), 'added', 'add action set the lastChange property'
+    @a.push 'added'
+    adding.dispose()
+    
+    change = @a.subscribe ~>
+        subscriptionsFired++
+        strictEqual @a.lastAction(), 'change', 'change action triggered the subscription'
+        strictEqual ko.utils.unwrapObservable(@a.lastChange[0]), 'changed', 'change action set the lastChange property'
+    @a()[3] 'changed'
+    change.dispose()
+    
+    remove = @a.subscribe ~>
+        subscriptionsFired++
+        strictEqual @a.lastAction(), 'remove', 'remove action triggered the subscription'
+        strictEqual ko.utils.unwrapObservable(@a.lastChange[0]), 'changed', 'remove action set the lastChange property'
+    @a.pop()
+    remove.dispose()
+    
+    strictEqual subscriptionsFired, 3, 'all subscriptions fired as planned'

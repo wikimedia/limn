@@ -55,7 +55,10 @@ privateMethods =
      */
     '_addMetadata': (index, value) ->
         @subscriptions[index] = value.subscribe ~>
+            @valueWillMutate()
             @_reportAction @actions.change, value
+            @shouldEnforce = false
+            @valueHasMutated()
     
     /**
      * Disposes the subscription and removes the corresponding metadata array entry
