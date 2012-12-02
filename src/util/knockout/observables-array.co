@@ -36,6 +36,10 @@ ko.observablesArray = (initialValues) ->
 
 enforceStructure = (result) ->
     underlyingArray = @peek()
+    unless underlyingArray.length
+        @([underlyingArray])
+        return
+    
     for value, index of underlyingArray
         unless ko.isObservable value
             value = ko.observable value
@@ -78,9 +82,9 @@ privateMethods =
         @subscriptions ?= []
         for s of @subscriptions
             s.dispose()
-        @subscriptions ?= new Array(underlyingArray.length)
         
         underlyingArray = @peek()
+        @subscriptions = new Array(underlyingArray.length)
         for value, index of underlyingArray
             @_addMetadata index, value
         

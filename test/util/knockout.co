@@ -122,6 +122,12 @@ test 're-initialize', ->
     @a.pop()
     @a([9,10,11])
     strictEqual @a()[1], @a.subscriptions[1].target, 'subscriptions metadata stays in sync'
+    @a([12,13])
+    strictEqual @a()[1], @a.subscriptions[1].target, 'subscriptions metadata stays in sync'
+    @a([14,15,16,17])
+    strictEqual @a()[1], @a.subscriptions[1].target, 'subscriptions metadata stays in sync'
+    @a(4)
+    strictEqual @a()[0], @a.subscriptions[0].target, 'subscriptions metadata stays in sync'
 
 test 'doing all operations in combination', ->
     @a.pop()
