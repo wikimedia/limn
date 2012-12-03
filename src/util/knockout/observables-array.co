@@ -36,7 +36,7 @@ ko.observablesArray = (initialValues=[]) ->
 
 enforceStructure = ->
     underlyingArray = @peek()
-    unless underlyingArray.length
+    unless underlyingArray.length # XXX: Should be? isArray(underlyingArray)
         @([underlyingArray])
         return
     
@@ -102,7 +102,7 @@ privateMethods =
      */
     '_reportAction': (description, valueRepresentingChange) ->
         valueRepresentingChange ?= []
-        unless valueRepresentingChange?.length
+        unless valueRepresentingChange?.length # XXX: should be? isArray(valueRepresentingChange)
             valueRepresentingChange = [valueRepresentingChange]
         @lastAction ?= ko.observable()
         
