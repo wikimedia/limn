@@ -1,6 +1,6 @@
 exports = module.exports = crc32
 
-function crc32(s, last_crc=0) ->
+function crc32(s, last_crc=0)
     s = utf8Encode s
     crc = last_crc ^ (-1)
     for i til s.length
