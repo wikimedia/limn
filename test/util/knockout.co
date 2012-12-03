@@ -71,19 +71,21 @@ asyncTest 'define a subview with an afterRender function', ->
 
 
 
-/******** Async Computed ********/
+
+{ CREATED, ADD, REMOVE, CHANGE, REPLACE } = ko.observablesArray.ACTIONS
+
 QUnit.module '[util] observablesArray', do
     setup: ->
         @a = ko.observablesArray([1,2,3])
     teardown: ->
 
 test 'initializing', ->
-    strictEqual @a.lastAction(), @a.actions.created, 'the created action was reported'
+    strictEqual @a.lastAction(), CREATED, 'the created action was reported'
     ok ko.isObservable(@a()[0]), 'the items are converted to observables'
 
 test 'adding', ->
     i = @a.push(4)
-    strictEqual @a.lastAction(), @a.actions.add, 'the add action was reported'
+    strictEqual @a.lastAction(), ADD, 'the add action was reported'
     strictEqual @a.lastChange.length, 1, 'the lastChange property is an array with only one item'
     strictEqual @a.lastChange[0], @a()[i-1], 'the lastChange property was set correctly'
     
@@ -95,17 +97,17 @@ test 'adding observable', ->
 
 test 'popping', ->
     val = @a.pop()
-    strictEqual @a.lastAction(), @a.actions.remove, 'the remove action was reported'
+    strictEqual @a.lastAction(), REMOVE, 'the remove action was reported'
     strictEqual @a.lastChange[0], val, 'the lastChange property was set correctly'
 
 test 'removing', ->
     val = @a.remove(3)
-    strictEqual @a.lastAction(), @a.actions.remove, 'the remove action was reported'
+    strictEqual @a.lastAction(), REMOVE, 'the remove action was reported'
     strictEqual @a.lastChange[0], val[0], 'the lastChange property was set correctly'
 
 test 'changing', ->
     @a()[0](12)
-    strictEqual @a.lastAction(), @a.actions.change, 'the change action was reported'
+    strictEqual @a.lastAction(), CHANGE, 'the change action was reported'
     strictEqual @a.lastChange[0](), 12, 'the lastChange property was set correctly'
 
 test 'getting the index of a value', ->
@@ -116,23 +118,23 @@ test 'getting the index of a value', ->
 
 test 'replace', ->
     @a.replace 2, 12
-    strictEqual @a.lastAction(), @a.actions.replace, 'the replace action was reported'
+    strictEqual @a.lastAction(), REPLACE, 'the replace action was reported'
     strictEqual @a()[1](), 12, 'item replaced correctly'
 
 test 're-initialize', ->
     @a([5,6,7])
-    strictEqual @a()[1], @a.subscriptions[1].target, 'subscriptions metadata stays in sync'
+    strictEqual @a()[1], @a._meta[1].target, 'subscriptions metadata stays in sync'
     @a.pop()
     @a.pop()
     @a.pop()
     @a([9,10,11])
-    strictEqual @a()[1], @a.subscriptions[1].target, 'subscriptions metadata stays in sync'
+    strictEqual @a()[1], @a._meta[1].target, 'subscriptions metadata stays in sync'
     @a([12,13])
-    strictEqual @a()[1], @a.subscriptions[1].target, 'subscriptions metadata stays in sync'
+    strictEqual @a()[1], @a._meta[1].target, 'subscriptions metadata stays in sync'
     @a([14,15,16,17])
-    strictEqual @a()[1], @a.subscriptions[1].target, 'subscriptions metadata stays in sync'
+    strictEqual @a()[1], @a._meta[1].target, 'subscriptions metadata stays in sync'
     @a(4)
-    strictEqual @a()[0], @a.subscriptions[0].target, 'subscriptions metadata stays in sync'
+    strictEqual @a()[0], @a._meta[0].target, 'subscriptions metadata stays in sync'
 
 test 'doing all operations in combination', ->
     @a.pop()
@@ -153,49 +155,53 @@ test 'doing all operations in combination', ->
 
 
 test 'subscribing and observing', ->
-    #   7       (computed)
-    # + 2 * 6   (2 per add/change/remove sub, 6 times total)
-    # + 2       (check recomputed/subscriptionsFired)
-    # = 21
-    expect 21
+    expectedSubs = 10
+    expectedComp = expectedSubs + 1
+    expect expectedComp + 2*expectedSubs + 2
     
-    recomputed = 0
-    EXPECTED_ACTIONS = <[ created add add change change remove remove ]>
+    a = ko.observablesArray()
+    
+    compFired = 0
+    EXPECTED_ACTIONS = <[ CREATED ADD ADD ADD ADD CHANGE CHANGE REMOVE REMOVE REMOVE REMOVE ]>
     computedSub = ko.computed ~>
-        expectedAction = EXPECTED_ACTIONS[ recomputed ]
-        strictEqual @a.lastAction(), expectedAction, "[#recomputed] compute sees expected action '#expectedAction' for #{JSON.stringify peek @a.lastChange[0]}"
-        recomputed++
+        lastChange     = peek a.lastChange[0]
+        expectedAction = EXPECTED_ACTIONS[ compFired ]
+        strictEqual a.lastAction(), expectedAction, "[#compFired] compute sees expected action '#expectedAction' for #{JSON.stringify lastChange}"
+        compFired++
     
+    subsFired = 0
+    testSubscription = (expectedAction, changePrefix) ~>
+        ~>
+            lastAction = a.lastAction()
+            lastChange = unwrap(a.lastChange[0]).slice 0, changePrefix.length
+            strictEqual lastAction, expectedAction, "#expectedAction action triggered the subscription"
+            strictEqual lastChange, changePrefix,   "#expectedAction action set lastChange correctly"
+            subsFired++
     
-    subscriptionsFired = 0
-    
-    sub = @a.subscribe ~>
-        subscriptionsFired++
-        strictEqual @a.lastAction(), 'add', 'add action triggered the subscription'
-        ok /^added (once|twice)$/.test(unwrap(@a.lastChange[0])), 'add action set the lastChange property'
-    @a.push 'added once'
-    @a.push 'added twice'
+    sub = a.subscribe testSubscription(ADD, 'added')
+    a.push 'added first'
+    a.push 'added second'
+    a.push 'added third', 'added fourth'
     sub.dispose()
     
-    sub = @a.subscribe ~>
-        subscriptionsFired++
-        strictEqual @a.lastAction(), 'change', 'change action triggered the subscription'
-        ok /^changed (once|twice)$/.test(unwrap(@a.lastChange[0])), 'change action set the lastChange property'
-    @a()[3] 'changed once'
-    @a()[3] 'changed twice'
+    sub = a.subscribe testSubscription(CHANGE, 'changed')
+    a()[2] 'changed first'
+    a()[3] 'changed second'
     sub.dispose()
     
-    sub = @a.subscribe ~>
-        subscriptionsFired++
-        strictEqual @a.lastAction(), 'remove', 'remove action triggered the subscription'
-        ok /^changed (once|twice)$/.test(unwrap(@a.lastChange[0])), 'remove action set the lastChange property'
-    @a.pop()
-    @a.pop()
+    sub = a.subscribe testSubscription(REMOVE, 'changed')
+    a.pop()
+    a.pop()
     sub.dispose()
     
-    strictEqual recomputed, 7, 'compute called as expected'
-    strictEqual subscriptionsFired, 6, 'all subscriptions fired as planned'
+    sub = a.subscribe testSubscription(REMOVE, 'added')
+    a.remove 'added first'
+    a.remove 'added second'
+    sub.dispose()
+    
     computedSub.dispose()
+    strictEqual compFired,  expectedComp,   'Computed called as expected'
+    strictEqual subsFired,  expectedSubs,   'Subscriptions called as expected'
 
 
 

@@ -1,25 +1,77 @@
 ko = require 'knockout'
 
-indexOf = ko.utils.arrayIndexOf
-toString = {}.toString
-isArray = Array.isArray or -> '[object Array]' == toString.call it
+
+# Constants
+ACTIONS = { 'CREATED', 'ADD', 'REMOVE', 'CHANGE', 'REPLACE' }
+
+
+# Helpers
+
+{
+    toString         : objToString
+} = {}
+{
+    slice
+    lastIndexOf      : nativeLastIndexOf
+} = []
+{
+    arrayMap
+    arrayIndexOf     : indexOf
+    unwrapObservable : unwrap
+    peekObservable   : peek
+} = ko.utils
+
+kTrue   = -> true
+kFalse  = -> false
+
+isArray  = Array.isArray or -> '[object Array]' == objToString.call it
+
+isArrayLike = ->
+    isArray(it) or (('length' in it) and typeof it is not 'function')
+
+lastIndexOf = (array, item, fromIndex) ->
+    return -1 unless array
+    
+    if nativeLastIndexOf and array.lastIndexOf is nativeLastIndexOf
+        return nativeLastIndexOf.apply array, slice.call(arguments, 1)
+    
+    i = fromIndex ? array.length
+    while i--
+        return i if array[i] is item
+    -1
+
+
+toObservable = (val) ->
+    return val if ko.isObservable val
+    if isArray val
+        ko.observableArray val
+    else
+        ko.observable val
 
 
 /**
- * An array of ko.observable items.  Keeps a mirror metadata array to track subscriptions to these items
+ * An array of ko.observable items. Keeps a mirror metadata array to track subscriptions to these items.
  */
-ko.observablesArray = (initialValues=[]) ->
+observablesArray = exports.observablesArray = (initialValues=[]) ->
     unless isArray initialValues
         throw new Error "The argument passed when initializing an observable array must be an array, or null, or undefined."
     
     # create the observable and populate with private and public methods
     result = ko.observable()
-    result.actions = { 'created', 'add', 'remove', 'change', 'replace' }
-    result.shouldEnforce = true
-    ko.utils.extend(result, privateMethods)
-    ko.utils.extend(result, ko.observablesArray['fn'])
-    result._reportAction result.actions.created, initialValues
-    result
+    result import { +shouldEnforce, ACTIONS }
+    
+    ko.utils.extend result, privateMethods
+    ko.utils.extend result, ko.observablesArray.fn
+    
+    # Override valueHasMutated() to simplify skipping the enforceStructure action
+    originalValueHasMutated = result.valueHasMutated
+    result.valueHasMutated = (enforce) ->
+        result.shouldEnforce = enforce if enforce?
+        originalValueHasMutated.call result
+    
+    # Set up lastAction and lastChange, ensuring we always treat writes as
+    # changes, otherwise two adds/removes/changes in a row won't notify.
+    result._reportAction ACTIONS.CREATED, initialValues
     
     # keep the same structure if the observable is written to
     result.subscribe ->
@@ -27,226 +79,265 @@ ko.observablesArray = (initialValues=[]) ->
         # so I use this shouldEnforce hack to prevent it from firing too much
         #   result.shouldEnforce is a flag that starts as true and gets reset to true by this subscription
         #   Every time our methods mutate the value, they change shouldEnforce to false indicating they know what they're doing
-        if result.shouldEnforce
-            enforceStructure.call result
+        enforceStructure.call result if result.shouldEnforce
         result.shouldEnforce = true
     
+    # Set the initial values and enforce the structure
     result initialValues
     result
 
+
+observablesArray.ACTIONS = ACTIONS
+
 enforceStructure = ->
-    underlyingArray = @peek()
-    unless underlyingArray.length # XXX: Should be? isArray(underlyingArray)
-        @([underlyingArray])
+    values = @peek()
+    unless isArray(values)
+        @( if values? then [values] else [] )
         return
-    
-    for value, index of underlyingArray
-        unless ko.isObservable value
-            value = ko.observable value
-        underlyingArray[index] = value
-    
+    for value, index of values
+        values[index] = toObservable value
     @_refreshMetadata()
 
+
 privateMethods =
-    /**
-     * Add a mirror array to track subscriptions to each of the observables in the first array
-     * @param {number} index
-     * @param {ko.observable} value
-     */
-    '_addMetadata': (index, value) ->
-        @subscriptions[index] = value.subscribe ~>
-            @valueWillMutate()
-            @_reportAction @actions.change, value
-            @shouldEnforce = false
-            @valueHasMutated()
-    
-    /**
-     * Disposes the subscription and removes the corresponding metadata array entry
-     * @param {number} index
-     */
-    '_removeMetadata': (index) ->
-        @subscriptions[index].dispose()
-        @subscriptions.splice index, 1
-    
-    /**
-     * Changes the mirror array in place
-     * @param {number} index
-     * @param {ko.observable} value
-     */
-    '_changeMetadata': (index, value) ->
-        @subscriptions[index].dispose()
-        @subscriptions[index] = value.subscribe ~>
-            @_reportAction @actions.change, value
-    
-    /**
-     * Disposes all the old subscriptions and creates new ones for every item in the underlying array
-     */
-    '_refreshMetadata': ->
-        @subscriptions ?= []
-        for s of @subscriptions
-            s.dispose()
-        
-        underlyingArray = @peek()
-        @subscriptions = new Array(underlyingArray.length)
-        for value, index of underlyingArray
-            @_addMetadata index, value
     
     /**
      * Changes the observable `this.lastAction` and the array `this.lastChange` so subscribers can know what's going on with the array
-     * @param {string} description a string representation of the action, can be:
-     *      created     : the array was created
-     *      add         : a value is pushed or added to the array in any way
-     *      remove      : a value is popped or removed from the array in any way
-     *      change      : a value in the array has changed
+     * @param {String} action A string representation of the action, can be:
+     *      CREATED     : the array was created
+     *      ADD         : a value is pushed or added to the array in any way
+     *      REMOVE      : a value is popped or removed from the array in any way
+     *      CHANGE      : a value in the array has changed
      * @param {Array} valueRepresentingChange if a single value is passed, it will be wrapped in an array
      */
-    '_reportAction': (description, valueRepresentingChange) ->
-        valueRepresentingChange ?= []
-        unless valueRepresentingChange?.length # XXX: should be? isArray(valueRepresentingChange)
+    _reportAction: (action, valueRepresentingChange=[]) ->
+        unless isArray valueRepresentingChange
             valueRepresentingChange = [valueRepresentingChange]
-        @lastAction ?= ko.observable()
+        unless @lastAction
+            @lastAction = ko.observable()
+            # Always treat writes as changes, otherwise two adds/removes/changes in a row won't notify
+            @lastAction.equalityComparer = kFalse
         
         @lastChange = valueRepresentingChange
-        @lastAction description
-
-
-ko.observablesArray['fn'] =
-    'push': (value) ->
-        underlyingArray = @peek()
-        unless ko.isObservable value
-            value = ko.observable value
-        
-        @valueWillMutate()
-        @_reportAction @actions.add, value
-        newLength = underlyingArray.push value
-        @_addMetadata newLength - 1, value
-        @shouldEnforce = false
-        @valueHasMutated()
-        newLength
+        @lastAction action
+        this
     
-    'pop': ->
-        underlyingArray = @peek()
-        @valueWillMutate()
-        @_removeMetadata underlyingArray.length - 1
-        value = underlyingArray.pop()
-        @_reportAction @actions.remove, value
-        @shouldEnforce = false
-        @valueHasMutated()
-        value
     
-    'remove': (valueOrPredicate) ->
-        underlyingArray = @peek()
-        removedValues = []
-        if typeof valueOrPredicate == "function"
-            predicate = valueOrPredicate
-        else
-            predicate = (value) -> value() is valueOrPredicate
-        
-        i = 0
-        while i < underlyingArray.length
-            value = underlyingArray[i]
-            if predicate(value)
-                if removedValues.length is 0
-                    @valueWillMutate()
-                
-                removedValues.push value
-                underlyingArray.splice i, 1
-                @_removeMetadata i
-                i--
-            i++
-        
-        if removedValues.length
-            @_reportAction @actions.remove, removedValues
+    /**
+     * Set an entry in the internal subscriptions array.
+     * 
+     * @param {Number} index
+     * @param {ko.observable} value
+     * @returns {this}
+     */
+    _setMetadata: (index, value) ->
+        @_meta or= new Array(index + 1)
+        @_meta[index]?.dispose()
+        @_meta[index] = value.subscribe ~>
+            @valueWillMutate()
+            @_reportAction @ACTIONS.CHANGE, value
             @shouldEnforce = false
             @valueHasMutated()
+        this
+    
+    
+    /**
+     * Insert a metadata entry at `index` in the internal subscriptions array.
+     * 
+     * @param {Number} index
+     * @param {ko.observable} value
+     * @returns {this}
+     */
+    _insertMetadata: (index, value) ->
+        @_meta or= new Array(index + 1)
+        @_meta.splice index, 0, null
+        @_setMetadata index, value
+        this
+    
+    
+    /**
+     * Disposes and removes the subscription entry.
+     * 
+     * @param {Number} index
+     * @returns {this}
+     */
+    _removeMetadata: (index) ->
+        return this unless @_meta
+        @_meta[index]?.dispose()
+        @_meta.splice index, 1
+        this
+    
+    
+    /**
+     * Disposes all the old subscriptions and creates new ones for every item in the underlying array.
+     * 
+     * @returns {this}
+     */
+    _refreshMetadata: ->
+        @_meta or= []
+        for s of @_meta
+            s.dispose()
+        values = @peek()
+        @_meta = new Array(values.length)
+        for value, index of values
+            @_setMetadata index, value
+        this
+
+
+observablesArray.fn =
+    
+    /**
+     * Passthrough to Array.slice() which *does* create a dependency.
+     * @returns {Array}
+     */
+    slice: (startIndex, stopIndex) ->
+        @().slice ...arguments
+    
+    
+    indexOf: (item) ->
+        values = arrayMap @(), unwrap
+        indexOf values, unwrap(item)
+    
+    
+    lastIndexOf: (item, fromIndex) ->
+        values = arrayMap @(), unwrap
+        lastIndexOf values, unwrap(item)
+    
+    
+    /**
+     * Insert `value` at `index`.
+     * 
+     * @param {Number} index
+     * @param {*} value
+     * @returns {this}
+     */
+    insert: (index, value) ->
+        value = toObservable value
+        @valueWillMutate()
+        @_reportAction @ACTIONS.ADD, value
+        @peek().splice index, 0, value
+        @_insertMetadata index, value
+        @valueHasMutated false
+        this
+    
+    
+    push: (value) ->
+        for value of arguments
+            @insert @peek().length, value
+        @peek().length
+    
+    
+    unshift: (value) ->
+        for value of arguments
+            @insert 0, value
+        @peek().length
+    
+    
+    /**
+     * Remove the value at `index`.
+     * 
+     * @param {Number} index
+     * @returns {*} Removed value.
+     */
+    removeIndex: (index) ->
+        values = @peek()
+        return unless values.length > index
+        @valueWillMutate()
+        value = values[index]
+        values.splice index, 1
+        @_removeMetadata index
+        @_reportAction @ACTIONS.REMOVE, value
+        @valueHasMutated false
+        value
+    
+    
+    pop: ->
+        @removeIndex @peek().length - 1
+    
+    
+    shift: ->
+        @removeIndex 0
+    
+    
+    remove: (toRemove) ->
+        removedValues = []
+        values = @peek()
+        
+        if typeof toRemove == "function"
+            predicate = toRemove
+        else
+            predicate = (value, index) -> @equalityComparer value(), toRemove
+        
+        # Copy the underlying array to allow for the mutation while iterating
+        for value, index of values.slice()
+            continue unless predicate.call this, value, index
+            removedValues.push value
+            @removeIndex index
         
         removedValues
     
-    'removeAll': (arrayOfValues) ->
+    
+    removeAll: (arrayOfValues) ->
         # If you passed zero args, we remove everything
-        if arrayOfValues is undefined
-            underlyingArray = @peek()
-            allValues = underlyingArray.slice 0
-            @valueWillMutate()
-            underlyingArray.splice 0, underlyingArray.length
-            @_reportAction @actions.remove, allValues
-            @shouldEnforce = false
-            @valueHasMutated()
-            return allValues
+        return @remove kTrue if arrayOfValues is undefined
         
         # If you passed an arg, we interpret it as an array of entries to remove
-        return [] unless arrayOfValues
-        
-        @['remove'] (value) -> indexOf(arrayOfValues, value) >= 0
+        return [] unless isArray arrayOfValues
+        @remove -> indexOf(arrayOfValues, it) >= 0
     
-    'indexOf': (item) ->
-        find = ko.utils.unwrapObservable item
-        underlyingArray = @peek().map (v) -> ko.utils.unwrapObservable v
-        indexOf underlyingArray, find
     
-    'replace': (oldItem, newItem) ->
+    replace: (oldItem, newItem) ->
         index = @indexOf oldItem
-        if index >= 0
-            unless ko.isObservable newItem
-                newItem = ko.observable newItem
-            @valueWillMutate()
-            @peek()[index] = newItem
-            @_changeMetadata index, newItem
-            @_reportAction @actions.replace, newItem
-            @shouldEnforce = false
-            @valueHasMutated()
+        return this unless index >= 0
+        # newItem = toObservable newItem
+        @valueWillMutate()
+        obs = @peek()[index]
+        obs newItem
+        @_setMetadata index, obs
+        @_reportAction @ACTIONS.REPLACE, obs
+        @valueHasMutated false
+        this
     
+    
+    splice: (startIndex, numToRemove, ...values) ->
+        endIndex = startIndex + numToRemove
+        removedValues = @remove (value, index) -> startIndex >= index < endIndex
+        for value of values
+            @insert startIndex++, value
+        removedValues
+    
+    # TODO: reverse: ->
+    # TODO: sort: (cmp) ->
+
 /* TODO: destroy methods don't work ... look into why / how they are used
-    'destroy': (valueOrPredicate) ->
-        underlyingArray = @peek()
+    destroy: (valueOrPredicate) ->
+        values = @peek()
         if typeof valueOrPredicate == "function"
             predicate = valueOrPredicate
         else
             predicate = (value) -> value() is valueOrPredicate
         
         @valueWillMutate()
-        for i from underlyingArray.length - 1 to 0 by -1
-            value = underlyingArray[i]
+        
+        for i from values.length - 1 to 0 by -1
+            value = values[i]
             if predicate(value)
-                underlyingArray[i]["_destroy"] = true
+                values[i]["_destroy"] = true
                 @_removeMetadata i
         
-        @shouldEnforce = false
-        @valueHasMutated()
+        @valueHasMutated false
     
-    'destroyAll': (arrayOfValues) ->
+    destroyAll: (arrayOfValues) ->
         # If you passed zero args, we destroy everything
         if arrayOfValues is undefined
             return @['destroy'](-> true)
         
-        # If you passed an arg, we interpret it as an array of entries to destroy
+        # If you passed an arg, we interpret it as an values of entries to destroy
         return [] unless arrayOfValues
         @['destroy'] (value) ->
             indexOf(arrayOfValues, value) >= 0
 */
 
 
-# Populate ko.observablesArray.fn with read/write functions from native arrays
-# Important: Do not add any additional functions here that may reasonably be used to *read* data from the array
-# because we'll eval them without causing subscriptions, so ko.computed output could end up getting stale
-/*
-ko.utils.arrayForEach ["reverse", "shift", "sort", "splice", "unshift"], (methodName) ->
-    ko.observablesArray['fn'][methodName] = ->
-        # Use "peek" to avoid creating a subscription in any computed that we're executing in the context of
-        # (for consistency with mutating regular observables)
-        underlyingArray = @peek()
-        @valueWillMutate()
-        methodCallResult = underlyingArray[methodName].apply(underlyingArray, arguments)
-        @shouldEnforce = false
-        @valueHasMutated()
-        methodCallResult
-
-
-# Populate ko.observablesArray.fn with read-only functions from native arrays
-ko.utils.arrayForEach ["slice"], (methodName) ->
-    ko.observablesArray['fn'][methodName] = ->
-        underlyingArray = @peek()
-        underlyingArray[methodName].apply(underlyingArray, arguments)
-*/
-
+ko import exports
 ko.exportSymbol 'observablesArray', ko.observablesArray
