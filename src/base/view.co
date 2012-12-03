@@ -35,6 +35,7 @@ class exports.View extends Base
      * Inform sub-objects its safe to begin watchers.
      */
     watch : @computed ->
+        console.log "#this.watch!"
         @isWatching = true
         model = @model().watch()
     

@@ -204,7 +204,6 @@ class exports.GraphNode extends Base
      * @param {GraphNodeData} model
      */
     (@graph, model) ->
-        console.log "new #{@..displayName}(model=#model)"
         super()
         
         # Decorate properties we need to clean up with history tracking
@@ -225,7 +224,7 @@ class exports.GraphNode extends Base
         # observing updates without causing a loop.
         @set { model }
         
-        console.log "  --> #this"
+        console.log "new #this"
     
     
     
@@ -241,12 +240,14 @@ class exports.GraphNode extends Base
      *  an HTML or an SVG element).
      * @returns {Element} Newly constructed root element for this GraphNode.
      */
-    build: (parentElement) ->
-         return unless parentElement
-         cssClass = "#{@nodeType}-node graph-node"
-         @el el = @createElement 'g', { class:cssClass }
-         @unwrapElement(parentElement).appendChild el
-         _.invoke @children(), 'build', @sel
+    build: @coerciveObservable (parentElement) ->
+        return unless parentElement
+        console.log "#this.build!", parentElement
+        cssClass = "#{@nodeType}-node graph-node"
+        @el el = @createElement 'g', { class:cssClass }
+        @unwrapElement(parentElement).appendChild el
+        _.invoke @children(), 'build', @sel
+        @el()
     
     
     /**
@@ -262,6 +263,7 @@ class exports.GraphNode extends Base
      * it multiple times. (Using a `@computed` ensures this.)
      */
     watch: @computed ->
+        console.log "#this.watch!"
         @isWatching = true
         parent      = @watchParent()
         children    = @watchChildren()

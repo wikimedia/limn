@@ -16,8 +16,6 @@ class exports.LineNode extends TimeseriesNode
     
     -> super ...
     
-    build: (parentSel) ->
-        super ...
     
     onLayoutChart: ->
         # console.log "#this.onLayoutChart!"
