@@ -66,6 +66,9 @@ class exports.GraphView extends View
         node.build @$('.graph-canvas-row > .inner').0
     
     
+    /**
+     * Updates our wrappers for markdown fields when the model changes.
+     */
     updateMarkdownFields: @eagerComputed ->
         return null unless model = @model()
         @descMarkdown  = model.desc.markdown()

@@ -257,14 +257,6 @@ class exports.GraphNode extends Base
     
     
     /**
-     * Optional hook to initialize the node once construction is complete.
-     * @abstract
-     * @returns {this}
-     */
-    init: -> this
-    
-    
-    /**
      * Implement to completely customize the process of building the DOM nodes
      * for the presentation of this GraphNode.
      * 
@@ -274,10 +266,6 @@ class exports.GraphNode extends Base
      */
     build: (parentElement) ->
         
-    
-    
-    buildElement: ->
-        @createElement @tagName, { class:@cssClasses }
     
     
     /**
@@ -303,17 +291,6 @@ class exports.GraphNode extends Base
         acc
     
     
-    
-    
-    addChild: (childNode) ->
-        return childNode if @childNodes
-    
-    
-    removeChild: ->
-        
-    
-    
-    
     /**
      * Call when disposing of this node.
      * @returns {this}
@@ -330,6 +307,7 @@ class exports.GraphNode extends Base
     /* * * *  Property Cascading  * * * {{{ */
     
     # TODO
+    
     
     # }}}
     ### DOM Helpers {{{

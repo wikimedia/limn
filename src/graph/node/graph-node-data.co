@@ -68,6 +68,7 @@ class exports.GraphNodeData extends Model
         newChildren
     
     
+    
     /**
      * @constructor
      */
@@ -106,6 +107,15 @@ class exports.GraphNodeData extends Model
         _.invoke @children(), 'watch'
         
         [ parent, children ]
+    
+    
+    
+    /* * * *  Property Cascading  * * * {{{ */
+    
+    # TODO
+    
+    
+    # }}}
     
     
     toString: ->
