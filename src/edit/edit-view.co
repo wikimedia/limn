@@ -22,13 +22,13 @@ class exports.EditView
      * TODO: figure out how to not apply this class to subviews
      */
     makeEditable: ->
-        $('h4,h5,p', @view.element()).addClass @editable
+        $('h4,h5,p', @view.el()).addClass @editable
     
     /**
      * registers events in the scope of the view this is editing
      */
     registerEvents: ->
-        scope = @view.element()
+        scope = @view.el()
         $(scope).on 'click', @isEditable, (event) ~>
             event.stopPropagation()
             el = event.target
