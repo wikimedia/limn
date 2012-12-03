@@ -21,12 +21,22 @@ class exports.View extends Base
         model       : null
         isDestroyed : false
     
+    
+    
     /**
      * @constructor
      */
     (model) ->
         super()
         @model model
+    
+    
+    /**
+     * Inform sub-objects its safe to begin watchers.
+     */
+    watch : @computed ->
+        @isWatching = true
+        model = @model().watch()
     
     
     /**

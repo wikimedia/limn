@@ -9,7 +9,7 @@ module.exports = exports = render
 exports import { Markdown, Showdown }
 
 
-{ root } = require '..'
+root = do -> this or eval('this')
 root.jQuery?.fn.markdown = (s) ->
     $(this).append render s
 

@@ -1,0 +1,42 @@
+ko = require 'knockout'
+{
+    unwrapObservable : unwrap
+    peekObservable   : peek
+} = ko.utils
+
+_  = require '../underscore'
+{ observablesArray,
+} = require './observables-array'
+
+
+
+# Add underscore methods to the `observablesArray` prototype
+_.each <[ forEach map filter reject some every find ]>, (methodName) ->
+    observablesArray.fn[ methodName ] = (fn, cxt=this) ->
+        _[methodName] @(), (obs, idx) ~>
+            fn.call cxt, peek(obs), idx, this
+
+# Add special wrappers for functions with non-uniform signatures
+observablesArray.fn import do
+    
+    reduce : (fn, acc, cxt=this) ->
+        _.reduce_ @(), acc, (acc, obs, idx) ~>
+            fn.call cxt, acc, peek(obs), idx, this
+    
+    pluck : (prop) ->
+        @map -> it[prop]
+    
+    invoke : (methodName, ...args) ->
+        @map -> it[methodName] ...args
+    
+
+# Alias methods to alternate names
+_.alias observablesArray.fn,
+    # src   : dest
+    forEach : 'each'
+    every   : 'all'
+    some    : 'any'
+    find    : 'detect'
+
+
+exports.observablesArray = observablesArray

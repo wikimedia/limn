@@ -2,21 +2,25 @@ page = require 'page'
 
 
 limn = exports
+limn.require = require
 
-limn.{ _, op, emitters, generateId, guidFor, compareIds, root, Mixin, Query,
-} =  { _, op, emitters, generateId, guidFor, compareIds, root, Mixin, Query,
+limn.{ _, op, emitters, guidFor, compareIds,
+} =  { _, op, emitters, guidFor, compareIds, root,
 } = limn.util = require './util'
+
 
 # Decorate root limn namespace object with EventEmitter methods
 emitter = limn.__emitter__ = new emitters.ReadyEmitter()
 for k of <[ on addListener off removeListener emit trigger once removeAllListeners ]>
     limn[k] = emitter[k].bind emitter
 
+
 limn.mount = (path='') ->
     mnt   = limn.config?.mount or '/'
     path .= slice(1)     if '/' == path[0]
     mnt  .= slice(0, -1) if '/' == mnt[mnt.length-1]
     "#mnt/#path"
+
 
 limn.base       = require './base'
 limn.data       = require './data'

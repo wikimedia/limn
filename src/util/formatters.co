@@ -1,7 +1,5 @@
 moment = require 'moment'
-
-{ _, op,
-} = require '../util'
+_ = require './underscore'
 
 
 _fmt = do

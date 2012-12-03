@@ -1,10 +1,10 @@
 _  = require 'underscore'
 ko = require 'knockout'
 
-{ compareIds, OrderedSet,
-} = require '../../util'
 { Model,
 } = require '../../base'
+{ compareIds, OrderedSet,
+} = require '../../util'
 { Metric,
 } = require '../../data/metric-model'
 
@@ -43,7 +43,7 @@ class exports.GraphNodeData extends Model
         oldParent = @parent.prev()
         oldParent?.children.remove this
         newParent = @parent()
-        newParent?.children.push this
+        newParent?.children.push this unless _.contains newParent?.children.peek(), this
         newParent
     
     
@@ -62,7 +62,8 @@ class exports.GraphNodeData extends Model
             child.parent(null) if child.parent.peek() is this and not _.contains newChildren, child
         
         # Set the parent of objects that are children
-        # FIXME causes infinite loop: _.invoke newChildren, 'parent', this
+        # FIXME causes infinite loop:
+        _.invoke newChildren, 'parent', this
         
         newChildren
     
@@ -73,17 +74,47 @@ class exports.GraphNodeData extends Model
     (attributes={}) ->
         super()
         
-        # Decorate properties we need to clean up with history tracking
+        # Decorate observers that need history tracking for state cleanup
         @parent   .= history({ -includeInitial })
         @children  = @attributes.children = @children.history({ -includeInitial })
         @parent.equalityComparer = @children.equalityComparer = compareIds
         
-        # Finally, kick off attribute updates
+        # Set initial attributes now that we've wrapped observers.
+        # Caller still needs to call `.watch()` once we return so we can begin
+        # observing updates without causing a loop.
         @set attributes
+    
+    
+    /**
+     * Starts watching relevant properties and informs sub-objects its safe to
+     * begin their watchers.
+     * 
+     * Note that this function **must** be invoked by the object creator once
+     * construction is finished. It cannot be called automatically by the
+     * constructor without causing a loop, potentially triggering updates
+     * before anyone else can get a reference to the object.
+     * 
+     * This method must be idempotent; it should always be safe to call
+     * it multiple times.
+     */
+    watch: @computed ->
+        @isWatching = true
+        parent      = @watchParent()
+        children    = @watchChildren()
         
-        # ...And begin watching relevant properties
-        @watchParent()
-        @watchChildren()
+        # Recursively activate watch() on children
+        _.invoke @children(), 'watch'
+        
+        [ parent, children ]
+    
+    
+    toString: ->
+        id        = @__id__
+        Class     = @constructor
+        className = Class.displayName or Class.name
+        nodeType  = @peek 'nodeType'
+        nChildren = @children.peek().length
+        "#className(id=#id, nodeType=#nodeType, \#children=#nChildren)"
     
     
 

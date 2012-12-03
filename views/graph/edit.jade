@@ -18,9 +18,10 @@ append styles
 //- FIXME: temporary! for convenience while working only!
 append main-scripts
     script
-        _         = limn._;
-        op        = limn.op;
-        emitters  = limn.emitters;
-        Model     = limn.Model;
-        Resource  = limn.Resource;
+        limn.expose()
+        _.delay do
+            ->
+                window.view  = limn.app.currentView()
+                window.model = view.model()
+            250
     

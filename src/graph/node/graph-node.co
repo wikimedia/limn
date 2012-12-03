@@ -1,7 +1,10 @@
 _  = require 'underscore'
+d3 = require 'd3'
 ko = require 'knockout'
-
-unwrap = ko.utils.unwrapObservable
+{
+    unwrapObservable : unwrap
+    peekObservable   : peek
+} = ko.utils
 
 { Base,
 } = require '../../base/base'
@@ -201,7 +204,7 @@ class exports.GraphNode extends Base
      * @param {GraphNodeData} model
      */
     (@graph, model) ->
-        console.log "new GraphNode(graph=#graph, #model)"
+        console.log "new #{@..displayName}(model=#model)"
         super()
         
         # Decorate properties we need to clean up with history tracking
@@ -217,13 +220,36 @@ class exports.GraphNode extends Base
         # Add the model's attributes to this node (where they don't overlap)
         _.defaults this, model.attributes if model?.attributes
         
-        # Finally, kick off attribute updates
+        # Set initial attributes now that we've wrapped observers.
+        # Caller still needs to call `.watch()` once we return so we can begin
+        # observing updates without causing a loop.
         @set { model }
         
-        # ...And begin watching relevant properties
-        @watchParent()
-        @watchChildren()
-        @watchModelChildren()
+        console.log "  --> #this"
+    
+    
+    /**
+     * Starts watching relevant properties and informs sub-objects its safe to
+     * begin their watchers.
+     * 
+     * Note that this function **must** be invoked by the object creator once
+     * construction is finished. It cannot be called automatically by the
+     * constructor without causing a loop, potentially triggering updates
+     * before anyone else can get a reference to the object.
+     * 
+     * This method must be idempotent; it should always be safe to call
+     * it multiple times. (Using a `@computed` ensures this.)
+     */
+    watch: @computed ->
+        @isWatching = true
+        parent      = @watchParent()
+        children    = @watchChildren()
+        childModels = @watchModelChildren()
+        
+        # Recursively activate watch() on children
+        _.invoke @children(), 'watch'
+        
+        [ parent, children, childModels ]
     
     
     
@@ -287,17 +313,6 @@ class exports.GraphNode extends Base
         
     
     
-    /**
-     * Recursively create GraphNodes for the model's GraphNodeData objects.
-     */
-    populate: ->
-        parent   = this
-        children = @children()
-        for nodeData of @model().children().slice()
-            children.push childNode = GraphNode.fromNodeData parent, nodeData
-            # childNode.populate()
-        this
-    
     
     /**
      * Call when disposing of this node.
@@ -343,6 +358,17 @@ class exports.GraphNode extends Base
     
     
     # }}}
+    
+    
+    toString: ->
+        id        = @__id__
+        Class     = @constructor
+        className = Class.displayName or Class.name
+        model     = @model?.peek()
+        nChildren = @children?.peek()?.length or 0
+        "#className(id=#id, model=#model, \#children=#nChildren)"
+    
+    
     /* * * *  Class Methods  * * * {{{ */
     
     

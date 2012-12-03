@@ -1,12 +1,14 @@
 ko     = require 'knockout'
-unwrap = ko.utils.unwrapObservable
-peek   = ko.utils.peekObservable
+{
+    unwrapObservable : unwrap
+    peekObservable   : peek
+} = ko.utils
 
 
-{ EventEmitter, ReadyEmitter,
+{ EventEmitter,
 } = require 'emitters'
 
-{ _, op, root, generateId, guidFor,
+{ _, op, generateId, guidFor, compareIds,
 } = require '../util'
 
 
@@ -16,6 +18,12 @@ peek   = ko.utils.peekObservable
  * @extends EventEmitter
  */
 class exports.Base extends EventEmitter
+    /**
+     * Function used by `ko.modeledObservable` as the equality comparator.
+     * 
+     * @type Function
+     */
+    @comparator = compareIds
     
     /**
      * Unique identifier for this object. Uniqueness is only guaranteed for this
@@ -44,6 +52,12 @@ class exports.Base extends EventEmitter
      * @type Map<Key, Class>
      */
     attributeTypes : null
+    
+    /**
+     * Whether we've been signaled to start watchers.
+     * @type Boolean
+     */
+    isWatching : false
     
     
     
@@ -109,6 +123,22 @@ class exports.Base extends EventEmitter
         data
     
     
+    /**
+     * Inform sub-objects its safe to begin their watchers.
+     * 
+     * Note that this function **must** be invoked by the object creator once
+     * construction is finished. It cannot be called automatically by the
+     * constructor without causing a loop, potentially triggering updates
+     * before anyone else can get a reference to the object.
+     * 
+     * This method must be idempotent; it should always be safe to call
+     * it multiple times.
+     */
+    watch: ->
+        @isWatching = true
+        this
+    
+    
     
     /* * * *  Knockout-Aware Accessors  * * * {{{ */
     
@@ -130,10 +160,7 @@ class exports.Base extends EventEmitter
      * @returns {*} Value at `key`.
      */
     peek: (key) ->
-        if ko.isObservable val = @attributes?[key]
-            val.peek()
-        else
-            val
+        peek @attributes?[key]
     
     
     /**
@@ -262,7 +289,7 @@ class exports.Base extends EventEmitter
         _.reduce do
             attributes
             (json, obs, key) ~>
-                val = if ko.isObservable obs then obs.peek() else obs
+                val = peek obs
                 if typeof val?.toJS is 'function'
                     val = val.toJS() ? val
                 else if typeof val?.toJSON is 'function'
@@ -368,7 +395,8 @@ class exports.Base extends EventEmitter
             continue if fn is @attributes[name]
             
             # Build observables/computed properties
-            target[name] = @_setupObservable fn, name, target
+            obs = @_setupObservable fn, name, target
+            target[name] = obs if obs is not fn
         target
     
     
@@ -437,7 +465,8 @@ class exports.Base extends EventEmitter
             continue if fn is @attributes[name]
             
             # Subscribe, replacing the method with the subscription
-            target[name] = @_setupSubscription fn, name, target
+            obs = @_setupSubscription fn, name, target
+            target[name] = obs if obs is not fn
         target
     
     
@@ -576,7 +605,12 @@ class exports.Base extends EventEmitter
     # }}}
     /* * * *  Class Methods  * * * {{{ */
     
-    # Make the class-object itself an event emitter, so it can fire global events
+    /**
+     * The class-object itself is an event emitter, allowing it to publish global
+     * notifications when extended. Note that sub-classes inherit these class-methods.
+     * 
+     * @borrows EventEmitter.prototype
+     */
     this import EventEmitter::
     
     
@@ -632,7 +666,6 @@ class exports.Base extends EventEmitter
         SuperClass = this
         for own k, v in SuperClass
             SubClass[k] = v unless SubClass[k]
-            # SubClass[k] = v unless _.contains <[ apply call constructor toString ]>, k
         SubClass.__id__         = generateId()
         SubClass.__class__      = SubClass
         SubClass.__super__      = SuperClass::
@@ -640,6 +673,12 @@ class exports.Base extends EventEmitter
         SuperClass.trigger? 'extended', SubClass, SuperClass
         SubClass
     
+    
+    # Base is the root of the tree, so fill in its class metadata manually.
+    @__id__         = guidFor this
+    @__class__      = this
+    @__super__      = @::
+    @__superclass__ = EventEmitter
     
     # }}}
 

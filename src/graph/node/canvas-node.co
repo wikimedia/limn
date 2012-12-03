@@ -1,3 +1,4 @@
+d3 = require 'd3'
 ko = require 'knockout'
 
 { GraphNode,
@@ -19,11 +20,14 @@ class exports.CanvasNode extends GraphNode
      * @param {GraphNodeData} model
      * @param {GraphView} [graph=parent.graph]
      */
-    (parent, model, graph) ->
+    (graph, model) ->
         super ...
     
     
     build: (parentElement) ->
-        ...
+        sel = d3.select parentElement .append 'section'
+            .attr 'class', 'graph-canvas canvas-node graph-node'
+            .append 'svg:svg'
+            
     
 

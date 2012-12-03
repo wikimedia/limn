@@ -30,6 +30,12 @@ class exports.Graph extends StoredModel
         root : GraphNodeData
     
     
+    /**
+     * Inform sub-objects its safe to begin their watchers.
+     */
+    watch: @computed ->
+        @isWatching = true
+        @root().watch()
     
     
 

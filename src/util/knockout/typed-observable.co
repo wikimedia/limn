@@ -37,6 +37,7 @@ exports.typedExtender = ko.addExtender 'typed', (obs, coerce, owner=obs, options
             else
                 value = coerce.call owner, value
             obs value
+            value
     }
     wrapper = ko.computed options
     
@@ -57,6 +58,7 @@ exports.typedExtender = ko.addExtender 'typed', (obs, coerce, owner=obs, options
                     origMethod.apply this, _.map(arguments, coerce, owner)
     
     # Copy over observable and observableArray methods
+    delete wrapper.equalityComparer
     _.defaults wrapper, obs
     
     # Update with starting value
@@ -91,6 +93,9 @@ exports.modelExtender = ko.addExtender 'model', (obs, ModelType, owner, options)
         # Do not wrap undefined or nulls
         return value unless value?
         new ModelType value
+    
+    if typeof ModelType.comparator is 'function'
+        obs.equalityComparer = ModelType.comparator
     
     obs.typed coerce, owner, options
 

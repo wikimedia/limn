@@ -3,7 +3,7 @@
  * Action type constants.
  * @const
  */
-ACTIONS = exports.ACTIONS = { 'NONE', 'ADD', 'REMOVE', 'CHANGE', 'MOVE' }
+ACTIONS = exports.ACTIONS = { 'NONE', 'ADD', 'REMOVE', 'MOVE', 'CHANGE', }
 exports import ACTIONS
 
 

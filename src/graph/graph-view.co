@@ -19,6 +19,10 @@ ko = require 'knockout'
 class exports.GraphView extends View
     template: 'graph'
     
+    defaults: ->
+        model  : null
+        action : null
+    
     /**
      * The `GraphNode` cache.
      * @protected
@@ -34,10 +38,32 @@ class exports.GraphView extends View
         return null unless graph = @model()
         @lookupNode graph.root()
     
-    defaults: ->
-        model   : null
-        element : null
-        action  : null
+    /**
+     * DOM Element for this view. jQuery objects and d3 Selections
+     * will be automatically stripped of their wrappers.
+     * @type ko.observable<Element>
+     */
+    el : @eagerCoerciveObservable (el) ->
+        @$el = null
+        el = el[0]      if el instanceof jQuery
+        el = el.node()  if el instanceof d3.selection
+        return el       unless _.isElement el
+        @$el = $ el
+        el
+    
+    /**
+     * jQuery-wrapped root element.
+     * @type jQuery
+     */
+    $el : null
+    
+    /**
+     * 
+     */
+    watchDOM: @computed ->
+        return null unless el   = @el()
+        return null unless node = @rootNode()
+        node.build @$('.graph-canvas-container').0
     
     
     
@@ -49,6 +75,7 @@ class exports.GraphView extends View
     (model, action) ->
         @nodeCache = new OrderedMap()
         super()
+        @graphId = 'graph-' + @__id__
         
         if model instanceof Graph
             model.fetch()
@@ -57,9 +84,21 @@ class exports.GraphView extends View
         else
             model = new Graph model
         
-        @model model
         @action action
+        @model model
+        
+        @watch()
     
+    
+    /**
+     * Inform sub-objects its safe to begin their watchers.
+     */
+    watch : @computed ->
+        @isWatching = true
+        model       = @model().watch()
+        rootNode    = @rootNode().watch()
+        rootBuilt   = @watchDOM()
+        [ model, rootNode, rootBuilt ]
     
     
     /**
@@ -79,11 +118,14 @@ class exports.GraphView extends View
         @nodeCache.set nodeData, node
         
         # register for notification when the node is destroyed
-        subscription = node.isDestroyed.subscribe (isDestroyed) ~>
+        destroySub = node.isDestroyed.subscribe (isDestroyed) ~>
             throw new Error "WTF! node.isDestroyed false for #node!" unless isDestroyed
             currentNode = @nodeCache.get nodeData
             @nodeCache.remove nodeData if currentNode is node
-            subscription.dispose()
+            destroySub.dispose()
+        
+        # inform the node it can begin watching
+        node.watch() if @isWatching
         
         node
     
@@ -93,14 +135,14 @@ class exports.GraphView extends View
      */
     afterRender: (element) ->
         console.log "#this.afterRender()"
-        @element element
+        @el element
         
         if @action() is 'edit'
             new EditView this
         
-        rootElement = $(element).find('.graph-canvas')[0]
-        
-        # @populate()
-        # when populate is done, start by calling build on rootNode with rootElement
+    
+    $: ->
+        @$el?.find.apply @$el, arguments
+    
     
     
