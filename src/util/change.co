@@ -1,0 +1,51 @@
+
+/**
+ * Action type constants.
+ * @const
+ */
+ACTIONS = { 'NONE', 'ADD', 'REMOVE', 'CHANGE', 'MOVE' }
+
+
+/**
+ * @class Represents a mutation to an indexable collection.
+ */
+class Change
+    this import ACTIONS
+    
+    
+    (@value, @collection, @oldIndex, @newIndex=oldIndex, @action) ->
+        # Ensure things are coherent
+        switch @action
+        case ADD            then @oldIndex = -1
+        case REMOVE         then @newIndex = -1
+        case NONE, CHANGE   then @oldIndex = @newIndex
+        case MOVE
+            throw new Error 'Change.MOVE to the same index!' if @oldIndex is @newIndex
+    
+    
+    toString: ->
+        { action, oldIndex, newIndex, value } = this
+        switch action
+        case MOVE           then action += "[#oldIndex -> #newIndex]"
+        case ADD            then action += "[#newIndex]"
+        case REMOVE, CHANGE then action += "[#oldIndex]"
+        "Change(#action, #value)"
+    
+    
+    @fromIndices (value, collection, oldIndex, newIndex=oldIndex) ->
+        if oldIndex is newIndex
+            action = CHANGE
+        else if oldIndex is -1
+            action = ADD
+        else if newIndex is -1
+            action = REMOVE
+        else
+            action = MOVE
+        
+        ChangeClass = this
+        new ChangeClass value, collection, oldIndex, newIndex, action
+
+
+exports = module.exports = Change
+exports import { Change, ACTIONS }
+exports import ACTIONS

@@ -4,37 +4,6 @@
 ko = require 'knockout'
 
 
-/**
- * @class Represents a mutation to an indexable collection.
- */
-class exports.Change
-    
-    # Action Types
-    @NONE   = 'NONE'
-    @ADD    = 'ADD'
-    @REMOVE = 'REMOVE'
-    @MOVE   = 'MOVE'
-    
-    (@value, @collection, @oldIndex, @newIndex=oldIndex, @action) ->
-        unless @action
-            if @oldIndex is @newIndex
-                @action = Change.NONE
-            else if @oldIndex is -1
-                @action = Change.ADD
-            else if @newIndex is -1
-                @action = Change.REMOVE
-            else
-                @action = Change.MOVE
-        
-        # Ensure things are coherent
-        switch @action
-        case Change.NONE    then @oldIndex = @newIndex
-        case Change.ADD     then @oldIndex = -1
-        case Change.REMOVE  then @newIndex = -1
-    
-
-
-
 extensions =
     /**
      * Patch `valueHasMutated()` to update proxy's length property. Maybe?
