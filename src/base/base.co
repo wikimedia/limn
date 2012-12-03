@@ -415,7 +415,7 @@ class exports.Base extends EventEmitter
                 val .= slice()
             else if _.isObject val
                 val = _.merge {}, val
-            return ko.utils.makeObservable val
+            return ko.utils.toObservable val
         
         fn
     

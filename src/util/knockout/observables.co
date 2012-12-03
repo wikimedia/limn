@@ -12,7 +12,8 @@ ko = require 'knockout'
  * @param {*} val Value to wrap.
  * @returns {ko.observable|ko.observableArray} The observable.
  */
-makeObservable = exports.makeObservable = (val) ->
+toObservable = exports.toObservable = (val) ->
+    return val if ko.isObservable val
     if _.isArray val
         ko.observableArray val
     else

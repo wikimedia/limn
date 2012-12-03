@@ -3,7 +3,7 @@ _  = require '../underscore'
 require './observables'
 require './add-extender'
 
-makeObs = ko.utils.makeObservable
+toObs = ko.utils.toObservable
 
 
 /**
@@ -71,7 +71,7 @@ exports.typedExtender = ko.addExtender 'typed', (obs, coerce, owner=obs, options
  * @returns {ko.dependentObservable}
  */
 exports.typedObservable = ko.typedObservable = (coerce, val, owner, options) ->
-    makeObs val .typed coerce, owner, options
+    toObs val .typed coerce, owner, options
 
 
 
@@ -100,7 +100,7 @@ exports.modelExtender = ko.addExtender 'model', (obs, ModelType, owner, options)
  * @returns {ko.dependentObservable}
  */
 exports.modeledObservable = ko.modeledObservable = (ModelType, val, owner, options) ->
-    makeObs val .model ModelType, owner, options
+    toObs val .model ModelType, owner, options
 
 
 
@@ -129,6 +129,6 @@ exports.coerciveExtender = ko.addExtender 'coerce', (obs, coerce, owner, options
  * @returns {ko.dependentObservable}
  */
 exports.coerciveObservable = ko.coerciveObservable = (coerce, val, owner, options) ->
-    makeObs val .coerce coerce, owner, options
+    toObs val .coerce coerce, owner, options
 
 
