@@ -193,7 +193,7 @@ application = limn.application =
             # Browserify some deps
             @use browserify do
                 mount   : '/vendor/browserify.js'
-                require : <[ operator underscore underscore.nested underscore.kv underscore.deferred seq timeseries emitters events ]>
+                require : <[ operator underscore underscore.nested underscore.kv underscore.deferred showdown seq timeseries emitters events ]>
                 cache   : "#varDir/.cache/browserify/cache.json"
             
             # transparently recompile modules that have changed

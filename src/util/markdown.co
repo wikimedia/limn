@@ -1,0 +1,17 @@
+{ Showdown,
+} = require 'showdown'
+
+Markdown = new Showdown().converter()
+
+render = Markdown.render = (s) ->
+    s and Markdown.makeHtml s #s.replace(/\n/g, '\n\n')
+
+module.exports = exports = render
+exports import { Markdown, Showdown }
+
+
+{ root } = require '..'
+root.jQuery?.fn.markdown = (s) ->
+    $(this).append render s
+
+
