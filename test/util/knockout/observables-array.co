@@ -21,29 +21,28 @@ test 'initializing', ->
 test 'adding', ->
     i = @a.push(4)
     strictEqual @a.lastAction(), ADD, 'the add action was reported'
-    strictEqual @a.lastChange.length, 1, 'the lastChange property is an array with only one item'
-    strictEqual @a.lastChange[0], @a()[i-1], 'the lastChange property was set correctly'
+    strictEqual @a.lastChange, @a()[i-1](), 'the lastChange property was set correctly'
     
-    ok ko.isObservable(@a.lastChange[0]), 'the item is converted to an observable'
+    ok ko.isObservable(@a()[i-1]), 'the item is converted to an observable'
 
-test 'adding observable', ->
-    i = @a.push(ko.observable(4))
-    ok (ko.isObservable(@a.lastChange[0]) and not ko.isObservable(@a.lastChange[0]())), 'does not double-wrap the observable'
+# test 'adding observable', ->
+#     i = @a.push(ko.observable(4))
+#     ok ( ko.isObservable(@a.lastChange) and not ko.isObservable(@a.lastChange())), 'does not double-wrap the observable'
 
 test 'popping', ->
     val = @a.pop()
     strictEqual @a.lastAction(), REMOVE, 'the remove action was reported'
-    strictEqual @a.lastChange[0], val, 'the lastChange property was set correctly'
+    strictEqual @a.lastChange, val, 'the lastChange property was set correctly'
 
 test 'removing', ->
     val = @a.remove(3)
     strictEqual @a.lastAction(), REMOVE, 'the remove action was reported'
-    strictEqual @a.lastChange[0], val[0], 'the lastChange property was set correctly'
+    strictEqual @a.lastChange, val[0], 'the lastChange property was set correctly'
 
 test 'changing', ->
     @a()[0](12)
     strictEqual @a.lastAction(), CHANGE, 'the change action was reported'
-    strictEqual @a.lastChange[0](), 12, 'the lastChange property was set correctly'
+    strictEqual @a.lastChange, 12, 'the lastChange property was set correctly'
 
 test 'getting the index of a value', ->
     i = @a.indexOf 2
@@ -53,7 +52,7 @@ test 'getting the index of a value', ->
 
 test 'replace', ->
     @a.replace 2, 12
-    strictEqual @a.lastAction(), REPLACE, 'the replace action was reported'
+    strictEqual @a.lastAction(), CHANGE, 'the replace action was reported'
     strictEqual @a()[1](), 12, 'item replaced correctly'
 
 test 're-initialize', ->
@@ -99,7 +98,7 @@ test 'subscribing and observing', ->
     compFired = 0
     EXPECTED_ACTIONS = <[ CREATED ADD ADD ADD ADD CHANGE CHANGE REMOVE REMOVE REMOVE REMOVE ]>
     computedSub = ko.computed ~>
-        lastChange     = peek a.lastChange[0]
+        lastChange     = peek a.lastChange
         expectedAction = EXPECTED_ACTIONS[ compFired ]
         strictEqual a.lastAction(), expectedAction, "[#compFired] compute sees expected action '#expectedAction' for #{JSON.stringify lastChange}"
         compFired++
@@ -108,7 +107,7 @@ test 'subscribing and observing', ->
     testSubscription = (expectedAction, changePrefix) ~>
         ~>
             lastAction = a.lastAction()
-            lastChange = unwrap(a.lastChange[0]).slice 0, changePrefix.length
+            lastChange = unwrap(a.lastChange).slice 0, changePrefix.length
             strictEqual lastAction, expectedAction, "#expectedAction action triggered the subscription"
             strictEqual lastChange, changePrefix,   "#expectedAction action set lastChange correctly"
             subsFired++
