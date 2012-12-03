@@ -38,7 +38,7 @@ development:
         - underscore.string.mod
         
         - colorbrewer.mod
-        # - showdown.mod.min
+        - showdown.mod.min
         # - jade.runtime.min
         - moment.mod
         - d3.v2

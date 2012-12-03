@@ -1,7 +1,6 @@
-{ Showdown,
-} = require 'showdown'
+Showdown = require 'showdown'
 
-Markdown = new Showdown().converter()
+Markdown = new Showdown.converter()
 
 render = Markdown.render = (s) ->
     s and Markdown.makeHtml s #s.replace(/\n/g, '\n\n')
