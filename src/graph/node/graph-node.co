@@ -95,6 +95,7 @@ class exports.GraphNode extends Base
         children    : []
         isDestroyed : false
     
+    
     attributeTypes :
         parent   : (nodeData) -> @graph.lookupNode nodeData
         children : (nodeData) -> @graph.lookupNode nodeData
@@ -170,9 +171,8 @@ class exports.GraphNode extends Base
      */
     el : @eagerCoerciveObservable (el) ->
         @$el = @sel = null
-        el = el[0]      if el instanceof jQuery
-        el = el.node()  if el instanceof d3.selection
-        return el       unless _.isElement el
+        el   = @unwrapElement el
+        return el unless _.isElement el
         @$el = $ el
         @sel = d3.select el
         el
@@ -228,6 +228,27 @@ class exports.GraphNode extends Base
         console.log "  --> #this"
     
     
+    
+    /* * * *  GraphNode API  * * * {{{ */
+    
+    
+    /**
+     * Implement to completely customize the process of building the DOM nodes
+     * for the presentation of this GraphNode.
+     * 
+     * @abstract
+     * @param {Element} parentElement Parent DOM element (and can be either
+     *  an HTML or an SVG element).
+     * @returns {Element} Newly constructed root element for this GraphNode.
+     */
+    build: (parentElement) ->
+         return unless parentElement
+         cssClass = "#{@nodeType}-node graph-node"
+         @el el = @createElement 'g', { class:cssClass }
+         @unwrapElement(parentElement).appendChild el
+         _.invoke @children(), 'build', @sel
+    
+    
     /**
      * Starts watching relevant properties and informs sub-objects its safe to
      * begin their watchers.
@@ -250,22 +271,6 @@ class exports.GraphNode extends Base
         _.invoke @children(), 'watch'
         
         [ parent, children, childModels ]
-    
-    
-    
-    /* * * *  GraphNode API  * * * {{{ */
-    
-    
-    /**
-     * Implement to completely customize the process of building the DOM nodes
-     * for the presentation of this GraphNode.
-     * 
-     * @param {Element} parentElement Parent DOM element (and can be either
-     *  an HTML or an SVG element).
-     * @returns {Element} Newly constructed root element for this GraphNode.
-     */
-    build: (parentElement) ->
-        
     
     
     /**
@@ -322,6 +327,12 @@ class exports.GraphNode extends Base
     
     selectAll: (selector) ->
         @sel?.selectAll selector
+    
+    
+    unwrapElement : (el) ->
+        el = el[0]      if el instanceof jQuery
+        el = el.node()  if el instanceof d3.selection
+        el
     
     
     /**

@@ -14,9 +14,7 @@ class exports.TimeseriesNode extends GraphNode
     @registerType()
     
     -> super ...
-    init: ->
-        
     
     build: (parentElement) ->
-        
+        super ...
     

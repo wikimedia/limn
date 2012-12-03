@@ -15,7 +15,7 @@ class exports.GroupNode extends GraphNode
     
     -> super ...
     
-    # init: ->
-    # build: (parentElement) ->
+    build: (parentElement) ->
+        super ...
     
     

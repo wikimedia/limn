@@ -16,13 +16,8 @@ class exports.LineNode extends TimeseriesNode
     
     -> super ...
     
-    init: ->
-        
-    
-    build: (parentElement) ->
-        @createElement 'g', { class:'line-chart-element chart-element' }
-        d3.select parentElement
-        
+    build: (parentSel) ->
+        super ...
     
     onLayoutChart: ->
         # console.log "#this.onLayoutChart!"

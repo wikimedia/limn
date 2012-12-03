@@ -16,6 +16,94 @@ class exports.CanvasNode extends GraphNode
     template: 'canvas-node'
     
     
+    /* * * *  Viewport Sizing  * * * {{{ */
+    
+    # TODO: use a responsive algo to pick good numbers based on screen/device
+    defaultWidth  : @computed -> 750
+    defaultHeight : @computed -> 500
+    
+    fullWidth    : @computed -> @$el.innerWidth()  if @el()
+    fullHeight   : @computed -> @$el.innerHeight() if @el()
+    
+    margin : { top:30, right:60, bottom:30, left:60 }
+    
+    frameWidth : @computed ->
+        return @defaultWidth() unless model = @model()
+        width = model.width()
+        if width is 'auto'
+            width = @fullWidth() or @defaultWidth()
+        width
+    
+    frameHeight : @computed ->
+        return @defaultHeight() unless model = @model()
+        height = model.height()
+        if height is 'auto'
+            height = @fullHeight() or @defaultHeight()
+        height
+    
+    viewportWidth : @computed ->
+        @frameWidth() - @margin.left - @margin.right
+    
+    viewportHeight : @computed ->
+        @frameHeight() - @margin.top - @margin.bottom
+    
+    
+    
+    
+    
+    # }}}
+    
+    
+    /**
+     * The scale that translates x domain values into x output range values
+     * @type d3.time.scale
+     */
+    xScale : null
+    
+    /**
+     * The x domain materialized as a finite array
+     * @type Array<Number>
+     */
+    xSteps : null
+    
+    /**
+     * The x output range distance between two x domain values.
+     * Dynamically calculated to spread just enough xSteps over the x output range.
+     */
+    xStep : 0
+    
+    /**
+     * The x output range distance which is "close enough" to an xStep
+     */
+    dx : 0
+    
+    /**
+     * The scale that translates y domain values into y output range values
+     */
+    yScale: null
+    yTicks: null
+    
+    /**
+     * The domain of @see yScale needs to be kept separately so we can add padding that takes into account all metrics
+     */
+    yDomain: null
+    
+    
+    # updates the scales when metrics change
+    # scales : @computed ->
+    #     xDomain = d3.extent _.flatten @metrics().map (m) -> m.dates()
+    #     @xScale().domain xDomain
+    #     
+    #     yDomain = d3.extent _.flatten @metrics().map (m) -> m.column()
+    #     @yScale().domain yDomain.reverse()
+    #     
+    #     if @metrics?().length > 0
+    #         @xSteps @metrics()[0].dates()
+    #         true
+    #     else
+    #         false
+    
+    
     
     /**
      * @constructor
@@ -23,14 +111,32 @@ class exports.CanvasNode extends GraphNode
      * @param {GraphNodeData} model
      */
     (graph, model) ->
+        @xScale = d3.time.scale().clamp(true)
+        @yScale = d3.scale.log()
         super ...
     
     
     build: (parentElement) ->
         console.log "#this.build!", parentElement
-        # sel = d3.select parentElement .append 'section'
-        #     .attr 'class', 'graph-canvas canvas-node graph-node'
-        #     .append 'svg:svg'
-        #     
+        return unless parentElement
+        
+        $parent = $ parentElement .attr 'data-bind', 'template: { name:template, data:$data }'
+        ko.applyBindings this, parentElement
+        @el $parent.find('.canvas-node.graph-node').0
+        
+        # @svg = @sel.selectAll 'svg'
+        # @xScale.range [0, @el.innerWidth()]
+        # @yScale.range [0, @el.innerHeight()]
+        
+        _.invoke @children(), 'build', @sel
+    
+    
+    
+    
+    
+    
+    
+    
+    
     
 
