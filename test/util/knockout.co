@@ -1,5 +1,10 @@
 util = limn.util
 
+unwrap = ko.utils.unwrapObservable
+peek   = ko.utils.peekObservable
+toObs  = ko.utils.toObservable
+
+
 /******** Async Computed ********/
 QUnit.module '[util] Async Computed', do
     setup: ->
@@ -146,28 +151,51 @@ test 'doing all operations in combination', ->
     @a.replace(5, 99)
     strictEqual @a()[0](), 99, 'does not cause any problems'
 
-test 'subscribing', ->
+
+test 'subscribing and observing', ->
+    #   7       (computed)
+    # + 2 * 6   (2 per add/change/remove sub, 6 times total)
+    # + 2       (check recomputed/subscriptionsFired)
+    # = 21
+    expect 21
+    
+    recomputed = 0
+    EXPECTED_ACTIONS = <[ created add add change change remove remove ]>
+    computedSub = ko.computed ~>
+        expectedAction = EXPECTED_ACTIONS[ recomputed ]
+        strictEqual @a.lastAction(), expectedAction, "[#recomputed] compute sees expected action '#expectedAction' for #{JSON.stringify peek @a.lastChange[0]}"
+        recomputed++
+    
+    
     subscriptionsFired = 0
     
-    adding = @a.subscribe ~>
+    sub = @a.subscribe ~>
         subscriptionsFired++
         strictEqual @a.lastAction(), 'add', 'add action triggered the subscription'
-        strictEqual ko.utils.unwrapObservable(@a.lastChange[0]), 'added', 'add action set the lastChange property'
-    @a.push 'added'
-    adding.dispose()
+        ok /^added (once|twice)$/.test(unwrap(@a.lastChange[0])), 'add action set the lastChange property'
+    @a.push 'added once'
+    @a.push 'added twice'
+    sub.dispose()
     
-    change = @a.subscribe ~>
+    sub = @a.subscribe ~>
         subscriptionsFired++
         strictEqual @a.lastAction(), 'change', 'change action triggered the subscription'
-        strictEqual ko.utils.unwrapObservable(@a.lastChange[0]), 'changed', 'change action set the lastChange property'
-    @a()[3] 'changed'
-    change.dispose()
+        ok /^changed (once|twice)$/.test(unwrap(@a.lastChange[0])), 'change action set the lastChange property'
+    @a()[3] 'changed once'
+    @a()[3] 'changed twice'
+    sub.dispose()
     
-    remove = @a.subscribe ~>
+    sub = @a.subscribe ~>
         subscriptionsFired++
         strictEqual @a.lastAction(), 'remove', 'remove action triggered the subscription'
-        strictEqual ko.utils.unwrapObservable(@a.lastChange[0]), 'changed', 'remove action set the lastChange property'
+        ok /^changed (once|twice)$/.test(unwrap(@a.lastChange[0])), 'remove action set the lastChange property'
     @a.pop()
-    remove.dispose()
+    @a.pop()
+    sub.dispose()
     
-    strictEqual subscriptionsFired, 3, 'all subscriptions fired as planned'
+    strictEqual recomputed, 7, 'compute called as expected'
+    strictEqual subscriptionsFired, 6, 'all subscriptions fired as planned'
+    computedSub.dispose()
+
+
+
