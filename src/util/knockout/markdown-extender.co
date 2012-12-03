@@ -10,14 +10,14 @@ markdownExtender = exports.markdownExtender = (obs, options={}) ->
     Markdown = new Showdown.converter()
     options = { ...DEFAULT_OPTIONS, ...options }
     
-    wrapper = ko.computed do
+    wrapper = ko.computed {
         +deferEvaluation
         read : ->
             s = obs()
             s .= replace /\n/g, '\n\n' if options.doubleNL
             Markdown.makeHtml s
         write : obs
-    
+    }
     wrapper
 
 ko.addExtender 'markdown', markdownExtender

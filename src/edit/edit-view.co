@@ -7,7 +7,7 @@ class exports.EditView
      */
     (view) ->
         @view = view
-        $(@view.element()).addClass '.edit'
+        $(@view.el()).addClass '.edit'
         
         @editable = "edit-#{@__id__}"
         @isEditable = ".#{@editable}"

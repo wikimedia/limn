@@ -18,10 +18,11 @@ append styles
 //- FIXME: temporary! for convenience while working only!
 append main-scripts
     script
-        limn.expose()
-        _.delay do
-            ->
-                window.view  = limn.app.currentView()
-                window.model = view.model()
-            250
+        jQuery ->
+            limn.expose()
+            _.delay do
+                ->
+                    window.view  = limn.app.currentView()
+                    window.model = view.model()
+                250
     

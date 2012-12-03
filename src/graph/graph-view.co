@@ -63,7 +63,14 @@ class exports.GraphView extends View
     watchDOM: @computed ->
         return null unless el   = @el()
         return null unless node = @rootNode()
-        node.build @$('.graph-canvas-container').0
+        node.build @$('.graph-canvas-row > .inner').0
+    
+    
+    updateMarkdownFields: @eagerComputed ->
+        return null unless model = @model()
+        @descMarkdown  = model.desc.markdown()
+        @notesMarkdown = model.notes.markdown()
+        model
     
     
     

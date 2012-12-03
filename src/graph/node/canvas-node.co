@@ -13,21 +13,24 @@ class exports.CanvasNode extends GraphNode
     nodeType : 'canvas'
     @registerType()
     
+    template: 'canvas'
+    
+    
     
     /**
      * @constructor
-     * @param {GraphNode} parent
+     * @param {GraphView} graph
      * @param {GraphNodeData} model
-     * @param {GraphView} [graph=parent.graph]
      */
     (graph, model) ->
         super ...
     
     
     build: (parentElement) ->
-        sel = d3.select parentElement .append 'section'
-            .attr 'class', 'graph-canvas canvas-node graph-node'
-            .append 'svg:svg'
-            
+        console.log "#this.build!", parentElement
+        # sel = d3.select parentElement .append 'section'
+        #     .attr 'class', 'graph-canvas canvas-node graph-node'
+        #     .append 'svg:svg'
+        #     
     
 
