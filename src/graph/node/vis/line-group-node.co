@@ -13,8 +13,9 @@ class exports.LineGroupNode extends GroupNode
     nodeType : 'line-group'
     @registerType()
     
-    
     -> super ...
     
+    build: (parentElement) ->
+        super ...
     
 

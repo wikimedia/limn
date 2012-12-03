@@ -3,8 +3,7 @@ section.graph(data-bind="attr: { id:graphId }")
     .graph-name-row.row-fluid
         h2: a.graph-name(data-bind="text: model().name, attr: { href:model().link }")
     
-    .graph-canvas-row.row-fluid
-        .inner(data-bind='subview: rootNode')
+    .graph-canvas-row.row-fluid: .inner
     
     .graph-details-row.row
         .span7.offset3.ug.graph-desc(data-bind='html: model().descMarkdown')
