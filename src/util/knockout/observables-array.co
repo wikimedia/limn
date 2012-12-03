@@ -1,20 +1,20 @@
 ko = require 'knockout'
 
+indexOf = ko.utils.arrayIndexOf
+toString = {}.toString
+isArray = Array.isArray or -> '[object Array]' == toString.call it
+
+
 /**
  * An array of ko.observable items.  Keeps a mirror metadata array to track subscriptions to these items
  */
-ko.observablesArray = (initialValues) ->
-    if arguments.length == 0
-        # Zero-parameter constructor initializes to empty array
-        initialValues = []
-    
-    if initialValues? and not ('length' in initialValues)
+ko.observablesArray = (initialValues=[]) ->
+    unless isArray initialValues
         throw new Error "The argument passed when initializing an observable array must be an array, or null, or undefined."
     
     # create the observable and populate with private and public methods
     result = ko.observable()
-    result.actions = {}
-    result.actions import { 'created', 'add', 'remove', 'change', 'replace' }
+    result.actions = { 'created', 'add', 'remove', 'change', 'replace' }
     result.shouldEnforce = true
     ko.utils.extend(result, privateMethods)
     ko.utils.extend(result, ko.observablesArray['fn'])
@@ -34,7 +34,7 @@ ko.observablesArray = (initialValues) ->
     result initialValues
     result
 
-enforceStructure = (result) ->
+enforceStructure = ->
     underlyingArray = @peek()
     unless underlyingArray.length
         @([underlyingArray])
@@ -90,8 +90,6 @@ privateMethods =
         @subscriptions = new Array(underlyingArray.length)
         for value, index of underlyingArray
             @_addMetadata index, value
-        
-        return
     
     /**
      * Changes the observable `this.lastAction` and the array `this.lastChange` so subscribers can know what's going on with the array
@@ -177,19 +175,17 @@ ko.observablesArray['fn'] =
             return allValues
         
         # If you passed an arg, we interpret it as an array of entries to remove
-        unless arrayOfValues
-            return []
-        return @['remove']((value) ->
-            return ko.utils.arrayIndexOf(arrayOfValues, value) >= 0
-        )
+        return [] unless arrayOfValues
+        
+        @['remove'] (value) -> indexOf(arrayOfValues, value) >= 0
     
     'indexOf': (item) ->
         find = ko.utils.unwrapObservable item
         underlyingArray = @peek().map (v) -> ko.utils.unwrapObservable v
-        ko.utils.arrayIndexOf underlyingArray, find
+        indexOf underlyingArray, find
     
     'replace': (oldItem, newItem) ->
-        index = @['indexOf'](oldItem)
+        index = @indexOf oldItem
         if index >= 0
             unless ko.isObservable newItem
                 newItem = ko.observable newItem
@@ -222,20 +218,18 @@ ko.observablesArray['fn'] =
         # If you passed zero args, we destroy everything
         if arrayOfValues is undefined
             return @['destroy'](-> true)
-
+        
         # If you passed an arg, we interpret it as an array of entries to destroy
-        unless arrayOfValues
-            return []
-        return @['destroy']((value) ->
-            return ko.utils.arrayIndexOf(arrayOfValues, value) >= 0
-        )
+        return [] unless arrayOfValues
+        @['destroy'] (value) ->
+            indexOf(arrayOfValues, value) >= 0
 */
 
 
-/*
 # Populate ko.observablesArray.fn with read/write functions from native arrays
 # Important: Do not add any additional functions here that may reasonably be used to *read* data from the array
 # because we'll eval them without causing subscriptions, so ko.computed output could end up getting stale
+/*
 ko.utils.arrayForEach ["reverse", "shift", "sort", "splice", "unshift"], (methodName) ->
     ko.observablesArray['fn'][methodName] = ->
         # Use "peek" to avoid creating a subscription in any computed that we're executing in the context of
@@ -255,4 +249,4 @@ ko.utils.arrayForEach ["slice"], (methodName) ->
         underlyingArray[methodName].apply(underlyingArray, arguments)
 */
 
-ko.exportSymbol('observablesArray', ko.observablesArray)
+ko.exportSymbol 'observablesArray', ko.observablesArray
