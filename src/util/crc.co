@@ -1,5 +1,6 @@
+exports = module.exports = crc32
 
-crc32 = exports.crc32 = (s, last_crc=0) ->
+function crc32(s, last_crc=0) ->
     s = utf8Encode s
     crc = last_crc ^ (-1)
     for i til s.length
@@ -8,6 +9,7 @@ crc32 = exports.crc32 = (s, last_crc=0) ->
         crc = (crc >>> 8) ^ x
     crc ^ (-1)
 
+exports.crc32 = crc32
 
 utf8Encode = exports.utf8Encode = (s) ->
     s = s.replace /\r\n/g, '\n'
@@ -22,7 +24,7 @@ utf8Encode = exports.utf8Encode = (s) ->
         else
             u += String.fromCharCode (c >> 12) | 224
             u += String.fromCharCode ((c >> 6) & 63) | 128
-            u += String.fromCharCode (c & 63) | 128
+            u += String.fromCharCode (c & 63)  | 128
     u
 
 
