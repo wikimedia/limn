@@ -1,0 +1,6 @@
+async_computed_observable = require './async-computed-observable'
+observables_array         = require './observables-array'
+subview_binding           = require './subview-binding'
+
+exports import async_computed_observable import observables_array import subview_binding
+

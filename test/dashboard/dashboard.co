@@ -1,3 +1,4 @@
+limn = require 'limn'
 Dashboard = limn.dashboard.Dashboard
 DashboardTab = limn.dashboard.DashboardTab
 

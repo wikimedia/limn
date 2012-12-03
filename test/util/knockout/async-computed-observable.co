@@ -1,0 +1,18 @@
+ko = require 'knockout'
+
+limn = require 'limn'
+
+
+QUnit.module '[util.knockout] Async Computed', do
+    setup: ->
+    teardown: ->
+
+
+asyncTest 'create computed async', ->
+    expect 1
+    emptyModel = ko.asyncComputed -> $.get('/need_not_be_real_should_fetch_default_route')
+    emptyModel.promise.done ->
+        start()
+        ok(emptyModel().length > 0, 'and make sure it computes the result')
+
+

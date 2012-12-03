@@ -1,0 +1,57 @@
+ko = require 'knockout'
+
+limn = require 'limn'
+
+
+QUnit.module '[util.knockout] Subview Binding', do
+    setup: ->
+        $('body').append '<div id="subviewBindingTest" data-bind="subview: subviewProperty" style="display: none"></div>'
+        $('body').append '<script id="subviewTestTemplate" type="text/html"><p data-bind="text: checkThisBinds"></p></script>'
+    teardown: ->
+        $('#subviewBindingTest').remove()
+        $('#subviewTestTemplate').remove()
+
+test 'apply bindings', ->
+    viewModel =
+        subviewProperty: ko.observable()
+    ko.applyBindings viewModel, $('#subviewBindingTest')[0]
+    
+    viewModel.subviewProperty do
+        template: 'subviewTestTemplate'
+        checkThisBinds: 'check value'
+    
+    strictEqual $('#subviewBindingTest p').text(), viewModel.subviewProperty().checkThisBinds, 'subview template rendered and bindings applied'
+
+test 'apply nested bindings', ->
+    viewModel =
+        subviewProperty: ko.observable()
+    ko.applyBindings viewModel, $('#subviewBindingTest')[0]
+    
+    viewModel.subviewProperty do
+        template: 'subviewTestTemplate'
+        checkThisBinds: 'check value'
+        nestedSubview: ko.observable()
+    
+    $('#subviewBindingTest').append('<div id="nested" data-bind="subview: nestedSubview"></div>')
+    
+    # the next line wouldn't normally be needed because bindings wouldn't be added dynamically
+    ko.applyBindings viewModel.subviewProperty(), $('#nested')[0]
+    
+    viewModel.subviewProperty().nestedSubview do
+        template: 'subviewTestTemplate'
+        checkThisBinds: 'check value nested'
+    
+    strictEqual $('#subviewBindingTest div p').text(), viewModel.subviewProperty().nestedSubview().checkThisBinds, 'nested subview template ok'
+
+asyncTest 'define a subview with an afterRender function', ->
+    viewModel =
+        subviewProperty: ko.observable do
+            template: 'subviewTestTemplate'
+            checkThisBinds: 'should be bound in afterRender'
+            afterRender: (element) ->
+                start()
+                ok $(element).find('p').text(), viewModel.subviewProperty().checkThisBinds, 'the afterRender was called with the correct HTML element'
+        
+    ko.applyBindings viewModel, $('#subviewBindingTest')[0]
+
+

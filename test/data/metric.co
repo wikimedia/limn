@@ -2,6 +2,7 @@ _      = require 'underscore'
 ko     = require 'knockout'
 moment = require 'moment'
 
+limn = require 'limn'
 { DataSource, Metric,
 } = limn.data
 { Query,

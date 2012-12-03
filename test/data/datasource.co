@@ -1,5 +1,5 @@
+limn = require 'limn'
 DataSource = limn.data.DataSource
-util = limn.util
 
 { TimeSeriesData, CSVData,
 } = require 'timeseries'

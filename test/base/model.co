@@ -1,9 +1,11 @@
+limn = require 'limn'
 Model = limn.base.Model
 
-/******** Model ********/
+
 QUnit.module '[base] Model', do
     setup: ->
     teardown: ->
+
 
 test 'create empty, serialize', ->
     emptyModel = new Model()
