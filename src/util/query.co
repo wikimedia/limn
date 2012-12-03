@@ -22,7 +22,7 @@ DEFAULT_OPTIONS =
     # fillNulls   : null  # replace nulls with this value
 
 
-class Query
+class exports.Query
     /* * * *  Fluent Options  * * * {{{ */
     
     /**
@@ -123,6 +123,4 @@ class Query
         result = _.zip ...result unless opts.rows
         result
     
-
-module.exports = Query
 

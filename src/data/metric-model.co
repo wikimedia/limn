@@ -3,14 +3,14 @@ ko = require 'knockout'
 
 { Model, StoredModel, ModelCache,
 } = require '../base'
-{ Query, ParserMixin,
+{ Query, ParsingMixin,
 } = require '../util'
 { DataSource,
 } = require './datasource-model'
 
 
 class exports.Metric extends Model
-    ParserMixin.mix this
+    ParsingMixin.mix this
     
     
     (attributes) -> super ...

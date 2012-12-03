@@ -1,6 +1,6 @@
-_ = require './underscore'
+_ = require '../underscore'
 
-hasOwn = ({}).hasOwnProperty
+hasOwn = {}.hasOwnProperty
 
 /**
  * Sentinel for missing values.
@@ -16,7 +16,7 @@ TOMBSTONE = {}
 /**
  * @class A mapping of key-value pairs supporting lookup fallback across multiple objects.
  */
-class Cascade
+class exports.Cascade
     /**
      * Sentinel tombstone for deleted, non-passthrough keys.
      * @type TOMBSTONE
@@ -356,18 +356,14 @@ class Cascade
     
     
     toString: ->
-        Cls = this.constructor
+        Cls = @constructor
         "#{Cls.displayName or Cls.name}()"
 
 
 # Alias methods to alternate names
-ALIASES =
+_.alias Cascade::,
+    # src        : dest
     setTombstone : 'unset'
     toObject     : 'collapse'
     forEach      : 'each'
 
-for dest, src in ALIASES
-    Cascade::[dest] = Cascade::[src]
-
-
-module.exports = exports = Cascade

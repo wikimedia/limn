@@ -47,8 +47,7 @@ class exports.Iterator
      * @abstract
      * @returns {Iterator} A copy of this iterator, with independent state.
      */
-    clone: ->
-        ...
+    clone: -> ...
     
     
     /**
@@ -155,11 +154,11 @@ class exports.PipeIterator extends Iterator
      * they occur. It may return whatever it pleases.
      * 
      * @param {*|STOP_ITERATION} val Value provided by `getNext()`.
-     * @param {Boolean} nextCheck `true` when invoked as part of `hasNext()`.
+     * @param {Boolean} isNextCheck `true` when invoked as part of `hasNext()`.
      * @returns {*|STOP_ITERATION} Transformed value, including
      *  `STOP_ITERATION` when appropriate.
      */
-    transform: (val, nextCheck) ->
+    transform: (val, isNextCheck) ->
         val
     
     /**

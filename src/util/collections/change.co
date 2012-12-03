@@ -3,16 +3,24 @@
  * Action type constants.
  * @const
  */
-ACTIONS = { 'NONE', 'ADD', 'REMOVE', 'CHANGE', 'MOVE' }
+ACTIONS = exports.ACTIONS = { 'NONE', 'ADD', 'REMOVE', 'CHANGE', 'MOVE' }
+exports import ACTIONS
 
 
 /**
  * @class Represents a mutation to an indexable collection.
  */
-class Change
-    this import ACTIONS
+class exports.Change implements ACTIONS
     
     
+    /**
+     * @constructor
+     * @param {*} value
+     * @param {*} collection
+     * @param {Number} oldIndex
+     * @param {Number} [newIndex=oldIndex]
+     * @param {String} action
+     */
     (@value, @collection, @oldIndex, @newIndex=oldIndex, @action) ->
         # Ensure things are coherent
         switch @action
@@ -32,7 +40,16 @@ class Change
         "Change(#action, #value)"
     
     
-    @fromIndices (value, collection, oldIndex, newIndex=oldIndex) ->
+    /**
+     * Create a new Change, inferring the action from the given indices.
+     *
+     * @param {*} value
+     * @param {*} collection
+     * @param {Number} oldIndex
+     * @param {Number} [newIndex=oldIndex]
+     * @returns {Change}
+     */
+    @fromIndices = (value, collection, oldIndex, newIndex=oldIndex) ->
         if oldIndex is newIndex
             action = CHANGE
         else if oldIndex is -1
@@ -46,6 +63,3 @@ class Change
         new ChangeClass value, collection, oldIndex, newIndex, action
 
 
-exports = module.exports = Change
-exports import { Change, ACTIONS }
-exports import ACTIONS

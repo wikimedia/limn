@@ -1,22 +1,19 @@
-_ = require './underscore'
-{ Parsers,
-} = require './parser'
+_ = require '../underscore'
 { Mixin,
-} = require './mixin'
+} = require '../mixin'
 
-exports.Parsers = Parsers
+parsers = require './parsers'
+
 
 /**
  * @class Methods for a class to select parsers by type reflection.
  * @mixin
  */
-class exports.ParserMixin extends Mixin
-    this:: import Parsers
-    
-    
+class exports.ParsingMixin extends Mixin implements parsers
     
     parseValue: (v, type) ->
         @getParser(type)(v)
+    
     
     getParser: (type='String') ->
         # If this is a known type and we have a parser for it, return that
@@ -30,6 +27,7 @@ class exports.ParserMixin extends Mixin
             if type.startsWith t.toLowerCase()
                 return @["parse#t"]
         @defaultParser or @parseString
+    
     
     getParserFromExample: (v) ->
         return null unless v?

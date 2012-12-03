@@ -10,8 +10,8 @@ Seq     = require 'seq'
 
 { Model, StoredModel, ModelCache,
 } = require '../base'
-{ ParserMixin,
-} = require '../util/parser-mixin'
+{ ParsingMixin,
+} = require '../util'
 
 
 
@@ -20,7 +20,7 @@ Seq     = require 'seq'
  * @class Encapsulates the definition of a column in a DataSource.
  */
 class exports.ColumnDef extends Model
-    ParserMixin.mix this
+    ParsingMixin.mix this
     
     (attributes, @source) -> super ...
     

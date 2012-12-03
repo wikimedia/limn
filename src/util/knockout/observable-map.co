@@ -1,5 +1,8 @@
-OrderedSet = require '../ordered-set'
-OrderedMap = require '../ordered-map'
+_  = require 'underscore'
+ko = require 'knockout'
+
+{ OrderedSet, OrderedMap,
+} = require '../collections'
 
 
 /**

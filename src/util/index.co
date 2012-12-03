@@ -51,22 +51,21 @@ root.jQuery?.fn.invoke = (method, ...args) ->
         jQuery(el)[method] ...args
 
 
-emitters   = exports.emitters   = require './emitters'
+emitters    = exports.emitters    = require './emitters'
 exports import emitters
 
-mixin      = exports.mixin      = require './mixin'
+mixin       = exports.mixin       = require './mixin'
 exports import mixin
 
-parser     = exports.parser     = require './parser-mixin'
-exports import parser
-
-iterator   = exports.iterator   = require './iterator'
+iterator    = exports.iterator    = require './iterator'
 exports import iterator
 
-Query      = exports.Query      = require './query'
+query       = exports.query       = require './query'
+exports import query
 
-OrderedSet = exports.OrderedSet = require './ordered-set'
-OrderedMap = exports.OrderedMap = require './ordered-map'
+collections = exports.collections = require './collections'
+exports import collections
 
-Cascade    = exports.Cascade    = require './cascade'
+parse       = exports.parse       = require './parse'
+exports import parse
 

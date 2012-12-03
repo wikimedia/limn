@@ -4,7 +4,7 @@ op = require 'operator'
 /**
  * @namespace Parsers by type.
  */
-Parsers = exports.Parsers =
+parsers =
     
     parseBoolean: (v) ->
         op.toBool v
@@ -43,3 +43,4 @@ Parsers = exports.Parsers =
             null
     
 
+exports import parsers

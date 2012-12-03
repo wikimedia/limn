@@ -1,8 +1,8 @@
-_ = require 'underscore'
-
+_ = require '../underscore'
 { guidFor,
-} = require './guid'
-OrderedSet = require './ordered-set'
+} = require '../guid'
+{ OrderedSet,
+} = require './ordered-set'
 
 
 /**
@@ -11,7 +11,7 @@ OrderedSet = require './ordered-set'
  * 
  * @class
  */
-class OrderedMap
+class exports.OrderedMap
     /**
      * Class guid.
      * @type String
@@ -432,5 +432,3 @@ _.alias OrderedMap::,
     find    : 'detect'
 
 
-
-exports = module.exports = OrderedMap

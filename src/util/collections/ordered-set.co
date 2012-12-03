@@ -1,7 +1,6 @@
-_ = require 'underscore'
-
+_ = require '../underscore'
 { guidFor,
-} = require './guid'
+} = require '../guid'
 
 
 /**
@@ -9,7 +8,7 @@ _ = require 'underscore'
  * 
  * @class
  */
-class OrderedSet
+class exports.OrderedSet
     /**
      * Class guid.
      * @type String
@@ -400,20 +399,21 @@ class OrderedSet
     
     /**
      * OrderedSet Intersection (A ^ B)
-     * Intersects this YArray with another collection, returning a new YArray.
-     * The membership test uses _(a).contains(), so it is possible to intersect collections of different types.
-     * For YArray and YObject, .contains() uses strict equality (is) via .indexOf().
+     * Intersects the set with another collection, returning a new set. The
+     * membership test uses `_(other).contains()`, so it is possible to intersect
+     * collections of different types. Set membership is tested with `_getId()`, but
+     * membership in `other` will use strict equality via `.indexOf()`.
      * 
-     * @param {Array|Object} a Comparison collection.
-     * @returns {OrderedSet} A new YArray of all elements of {this} found in the supplied collection.
+     * @param {Array|Object} other Comparison collection.
+     * @returns {OrderedSet} A new set of all elements of `this` found in the supplied collection.
      * 
      * @example
      *      foo = /foo/
      *      A = [foo, 'A', 1, 2, 3, 'C', /foo/]
      *      B = [foo, 'B', 3, 'A', 1, /foo/]
      *      ins = _(A).intersect(B)
-     *      ins.toString() is "OrderedSet([/foo/,A,1,3])"; # true
-     *      ins.get(0) is foo; # true
+     *      ins.toString() is "OrderedSet([/foo/,A,1,3])" # true
+     *      ins.get(0) is foo # true
      */
     intersect : (a) ->
         @..create().update _.intersect @_getItems(), _.map(arguments, _.values)
@@ -521,5 +521,3 @@ _.alias OrderedSet::,
     union   : 'concat'
 
 
-
-exports = module.exports = OrderedSet

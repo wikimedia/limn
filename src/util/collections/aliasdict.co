@@ -1,9 +1,10 @@
-_ = require './underscore'
+_ = require '../underscore'
+
 
 /**
  * @class A mapping of key-value pairs supporting key-aliases.
  */
-class AliasDict
+class exports.AliasDict
     
     /**
      * Data store.
@@ -145,9 +146,8 @@ class AliasDict
     
     
     toString: ->
-        Cls = @.constructor
+        Cls = @constructor
         "#{Cls.displayName or Cls.name}()"
 
 
 
-module.exports = exports = AliasDict
