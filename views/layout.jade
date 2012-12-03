@@ -30,7 +30,7 @@ html(lang="en", dir="ltr")
                 block jade-templates
                     for f in glob.sync(TEMPLATE+'/**/*.@(jade|html)')
                         - var template = getTemplate(f)
-                        - var id = template.filename.replace(TEMPLATE+'/', '').replace(/\.[^\.]+$/, '')
+                        - var id = path.basename(template.filename.replace(TEMPLATE+'/', '').replace(/\.[^\.]+$/, ''))
                         script(id=id, data-template-name=template.name, type="text/html")
                             !{ '\n'+template.text }
             

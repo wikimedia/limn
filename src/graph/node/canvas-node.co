@@ -13,7 +13,7 @@ class exports.CanvasNode extends GraphNode
     nodeType : 'canvas'
     @registerType()
     
-    template: 'node/canvas-node'
+    template: 'canvas-node'
     
     
     
