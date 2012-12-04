@@ -70,7 +70,7 @@ _cls =
      * @returns {T} New instance of the given class.
      */
     instantiate: (Class, args=[]) ->
-        instance = _cls.fabricate Class
+        instance = _.fabricate Class
         Class.apply instance, args
         instance
     
@@ -142,7 +142,7 @@ _cls =
      */
     pluckSuper : (obj, prop) ->
         return [] unless obj
-        _ _cls.getSuperClasses(obj) .chain()
+        _ _.getSuperClasses(obj) .chain()
             .pluck 'prototype'
             .pluck prop 
             .value()
@@ -158,7 +158,7 @@ _cls =
      */
     pluckSuperAndSelf : (obj, prop) ->
         return [] unless obj
-        [ obj[prop] ].concat _cls.pluckSuper(obj, prop)
+        [ obj[prop] ].concat _.pluckSuper(obj, prop)
     
 
 
