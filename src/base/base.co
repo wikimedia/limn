@@ -602,6 +602,17 @@ class exports.Base extends EventEmitter
         method
     
     
+    /**
+     * Decorates the given method to prevent its actions from registering
+     * dependencies upward while it executes.
+     * 
+     * @param {Function} method 
+     * @returns {Function} Wrapped method.
+     */
+    @ignoreDeps = (method) ->
+        -> ko.dependencyDetection.ignore method, this, arguments
+    
+    
     
     # }}}
     /* * * *  Class Methods  * * * {{{ */
