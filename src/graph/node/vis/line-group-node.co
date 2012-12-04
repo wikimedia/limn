@@ -15,7 +15,4 @@ class exports.LineGroupNode extends GroupNode
     
     -> super ...
     
-    build: (parentElement) ->
-        super ...
-    
 

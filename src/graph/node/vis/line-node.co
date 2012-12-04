@@ -17,6 +17,14 @@ class exports.LineNode extends TimeseriesNode
     -> super ...
     
     
+    # buildElement: (parentElement) ->
+    #     
+    
+    
+    # determineParent: (node) ->
+    #     
+    
+    
     onLayoutChart: ->
         # console.log "#this.onLayoutChart!"
         # report as a metric to the chart
