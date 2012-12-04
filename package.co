@@ -44,7 +44,7 @@ dependencies                    :
     'nib'                       : '== 0.4.0'
 
 devDependencies                 : 
-    'coco'                      : '== 0.7.0'
+    'coco'                      : '== 0.9.x'
     'remove'                    : '>= 0.1.1'
     'buildtools'                : 'https://github.com/dsc/node-buildtools/tarball/master'
     'connect-compiler'          : 'https://github.com/dsc/connect-compiler/tarball/master'

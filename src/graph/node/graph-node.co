@@ -51,7 +51,7 @@ class exports.GraphNode extends Base
      * 
      * @type String
      */
-    nodeType : null
+    nodeType : 'graph'
     
     
     /**
@@ -63,6 +63,16 @@ class exports.GraphNode extends Base
      * @type Array<String>
      */
     traits : <[  ]>
+    
+    tagName : 'g'
+    
+    cssClass : ->
+        _ this .chain()
+            .pluckSuperAndSelf 'nodeType'
+            .compact()
+            .map -> "#{it}-node"
+            .value()
+            .join ' '
     
     
     
@@ -240,14 +250,26 @@ class exports.GraphNode extends Base
      *  an HTML or an SVG element).
      * @returns {Element} Newly constructed root element for this GraphNode.
      */
-    build: @coerciveObservable (parentElement) ->
-        return unless parentElement
+    build: (parentElement) ->
+        parentElement = @unwrapElement(parentElement)
         console.log "#this.build!", parentElement
-        cssClass = "#{@nodeType}-node graph-node"
-        @el el = @createElement 'g', { class:cssClass }
-        @unwrapElement(parentElement).appendChild el
-        _.invoke @children(), 'build', @sel
-        @el()
+        
+        el = @buildElement(parentElement) unless _.isElement el = @el.peek()
+        return el unless _.isElement el
+        @el parentElement.appendChild el
+        
+        for node of @children()
+            nodeParent = @determineParent(node)
+            continue unless nodeEl = @unwrapElement node.build(nodeParent)
+        el
+    
+    
+    buildElement: (parentElement) ->
+        @createElement _.result(this, 'tagName'), { class:_.result(this, 'cssClass') }
+    
+    
+    determineParent: (node) ->
+        @$el.parent() if @el() and @$el
     
     
     /**
