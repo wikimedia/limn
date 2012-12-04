@@ -4,6 +4,8 @@ ko = require 'knockout'
 { GraphNode,
 } = require './graph-node'
 
+Trait = require './graph-node-trait'
+
 
 /**
  * @class
@@ -16,5 +18,3 @@ class exports.GroupNode extends GraphNode
     -> super ...
     
     
-    determineParent: (node) ->
-        @$el if @el() and @$el

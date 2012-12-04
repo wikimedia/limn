@@ -51,8 +51,8 @@ class exports.Metric extends Model
     
     
     /**
-     * The reified dataset associated with this Metric.
-     * @type ko.computed<Array>
+     * The reified dataset (as (date, value) pairs) associated with this Metric.
+     * @type ko.computed<[Date, Value]>
      * @depends source, query
      */
     data : @computed ->
@@ -63,7 +63,7 @@ class exports.Metric extends Model
     
     /**
      * The reified dates for the dataset associated with this Metric.
-     * @type ko.computed<Array>
+     * @type ko.computed<Array<Date>>
      * @depends source, query
      */
     dates : @computed ->
@@ -76,8 +76,8 @@ class exports.Metric extends Model
     
     
     /**
-     * The reified dataset associated with this Metric.
-     * @type ko.computed<Array>
+     * The reified dataset values associated with this Metric.
+     * @type ko.computed<Array<Value>>
      * @depends source, query, source_col
      */
     values : @computed ->

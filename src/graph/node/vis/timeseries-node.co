@@ -4,6 +4,8 @@ ko = require 'knockout'
 { GraphNode,
 } = require '../graph-node'
 
+Trait = require '../graph-node-trait'
+
 
 /**
  * @class
@@ -11,6 +13,12 @@ ko = require 'knockout'
  */
 class exports.TimeseriesNode extends GraphNode
     nodeType : 'timeseries'
+    traits   : [
+        Trait.VIS_NODE
+        Trait.REQUIRES_METRIC
+        Trait.METRIC_TIMESERIES
+        Trait.LEAF
+    ]
     @registerType()
     
     -> super ...

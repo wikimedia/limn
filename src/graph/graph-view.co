@@ -7,12 +7,12 @@ ko = require 'knockout'
 } = require '../util'
 { Graph,
 } = require './graph-model'
-{ GraphNodeData,
-} = require './node/graph-node-data'
 { GraphNode,
 } = require './node/graph-node'
 { EditView,
 } = require '../edit/edit-view'
+
+Trait = require './node/graph-node-trait'
 
 
 

@@ -4,6 +4,8 @@ ko = require 'knockout'
 { GroupNode,
 } = require '../group-node'
 
+Trait = require '../graph-node-trait'
+
 
 /**
  * @class
