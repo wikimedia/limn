@@ -100,10 +100,14 @@ class exports.CanvasNode extends GraphNode
             metrics
         
         xDomain = d3.extent _.flatten _.invoke metrics, 'dates'
-        @xScale().domain xDomain
+        @xScale()
+            .domain xDomain
+            .range [0, @viewportWidth()]
         
         yDomain = d3.extent _.flatten _.invoke metrics, 'values'
-        @yScale().domain yDomain.reverse()
+        @yScale()
+            .domain yDomain
+            .range [@viewportHeight(), 0]
         
         # if metrics.length > 0
         #     @xSteps metrics.dates()
@@ -130,8 +134,9 @@ class exports.CanvasNode extends GraphNode
     
     buildElement: (parentElement) ->
         $parent = $ parentElement .attr 'data-bind', 'template: { name:template, data:$data }'
-        ko.applyBindings this, $parent.0
-        $parent.find('.canvas-node.graph-node').0
+        ko.applyBindings this, parentElement
+        @el el = $parent.find('.canvas-node.graph-node').0
+        el
     
     
     determineDOMParentForChildNode: (node) ->
@@ -141,3 +146,6 @@ class exports.CanvasNode extends GraphNode
             @$ 'section.meta' .0
         else
             @$ 'g.viewport' .0
+    
+    
+
