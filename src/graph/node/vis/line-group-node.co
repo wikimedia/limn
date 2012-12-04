@@ -14,10 +14,3 @@ class exports.LineGroupNode extends GroupNode
     @registerType()
     
     -> super ...
-    
-    buildElement: (parentElement) ->
-        $parent = $ parentElement .attr 'data-bind', 'template: { name:template, data:$data }'
-        ko.applyBindings this, $parent.0
-        $parent.find('.canvas-node.graph-node').0
-    
-
