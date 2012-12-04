@@ -90,18 +90,26 @@ class exports.CanvasNode extends GraphNode
     
     
     # updates the scales when metrics change
-    # scales : @computed ->
-    #     xDomain = d3.extent _.flatten @metrics().map (m) -> m.dates()
-    #     @xScale().domain xDomain
-    #     
-    #     yDomain = d3.extent _.flatten @metrics().map (m) -> m.column()
-    #     @yScale().domain yDomain.reverse()
-    #     
-    #     if @metrics?().length > 0
-    #         @xSteps @metrics()[0].dates()
-    #         true
-    #     else
-    #         false
+    scales : @computed ->
+        metrics = new Array()
+        @walk metrics, this, (accumulator, currentNode) ->
+            metric = currentNode.model.peek().metric.peek()
+            metrics.push metric if metric
+            metrics
+        
+        /*
+        xDomain = d3.extent _.flatten metrics.map (m) -> m.dates()
+            @xScale.peek().domain xDomain
+
+        yDomain = d3.extent _.flatten metrics.map (m) -> m.column()
+            @yScale.peek().domain yDomain.reverse()
+
+        if metrics.length > 0
+            @xSteps metrics[0]
+            true
+        else
+            false
+        */
     
     
     
@@ -129,11 +137,3 @@ class exports.CanvasNode extends GraphNode
             @$ 'section.meta' .0
         else
             @$ 'g.viewport' .0
-    
-    
-    
-    
-    
-    
-    
-

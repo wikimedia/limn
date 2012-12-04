@@ -315,7 +315,7 @@ class exports.GraphNode extends Base
      * 
      * @param {*} acc Starting accumulator value.
      * @param {Object} [context=this] Execution context for the iteration function.
-     * @param {Function} fn Iteration function.
+     * @param {Function} fn Iteration function passed the current accumulator and current GraphNode.
      * @returns {*} Final accumulator value.
      */
     walk: (acc, cxt, fn) ->
