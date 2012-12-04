@@ -84,6 +84,11 @@ class exports.GraphNode extends Base
      */
     graph : null
     
+    /**
+     * The GraphNode that is root to the GraphNode tree
+     * @type GraphNode
+     */
+    root: -> @graph.rootNode()
     
     /**
      * Model data for this node.
