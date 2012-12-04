@@ -16,3 +16,5 @@ class exports.GroupNode extends GraphNode
     -> super ...
     
     
+    determineParent: (node) ->
+        @$el if @el() and @$el

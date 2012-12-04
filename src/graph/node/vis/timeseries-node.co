@@ -14,4 +14,4 @@ class exports.TimeseriesNode extends GraphNode
     @registerType()
     
     -> super ...
-    
+    # TODO: factor out LineNode stuff into here after coding other TimeseriesNode children
