@@ -42,6 +42,9 @@ class exports.LineNode extends TimeseriesNode
         metric = model?.metric()
         data   = if metric?.data() then [that] else []
         
+        label = model.get('label') or 'lol'
+        color = model.get('options').get('color') or 'skyblue'
+        
         line = @selectAll 'path.metric-line' .data data
         line.enter()
             .append 'path'
@@ -49,7 +52,7 @@ class exports.LineNode extends TimeseriesNode
                 .attr  'vector-effect', 'non-scaling-stroke'
                 .style 'fill',          'none'
                 .style 'stroke-width',  5
-                .style 'stroke',        model.options().get('color') or 'skyblue'
+                .style 'stroke',        color
                 # .style 'stroke', ~> @chart.colorScale @columnHeader()
                 # .attr 'data-metricIndex', @columnHeader()
         
