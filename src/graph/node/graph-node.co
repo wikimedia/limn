@@ -270,7 +270,8 @@ class exports.GraphNode extends Base
     
     
     buildElement: (parentElement) ->
-        @createElement _.result(this, 'tagName'), { class:_.result(this, 'cssClass') }
+        @el el = @createElement _.result(this, 'tagName'), { class:_.result(this, 'cssClass') }
+        el
     
     
     determineParent: (node) ->
