@@ -1,41 +1,69 @@
 
 /**
- * @class Describes values of `GraphNode::traits` utilized elsewhere in Limn.
+ * @namespace Describes values of `GraphNode::traits` utilized elsewhere in Limn.
  */
-class exports.NodeTraits
+exports import do
+    
+    /**
+     * Node needs an HTML parent element.
+     * @constant
+     */
+    HTML : 'html-element'
+    
+    /**
+     * Node needs an SVG parent element.
+     * @constant
+     */
+    SVG : 'svg-element'
     
     /**
      * Node participates in visualizing data.
+     * @constant
      */
-    VIS_ELEMENT : 'visualization-element'
+    VIS_NODE : 'visualization-node'
+    
     
     /**
      * Node serves some purpose other than visualizing data.
+     * @constant
      */
-    META_ELEMENT : 'meta-element'
+    META_NODE : 'meta-node'
+    
+    
+    /**
+     * Associated GraphNodeData must define a valid Metric as a prerequisite to render.
+     * @constant
+     */
+    REQUIRES_METRIC : 'metric'
+    
+    
+    /**
+     * Metric for associated GraphNodeData is timeseries data if defined.
+     * @constant
+     */
+    METRIC_TIMESERIES : 'metric-timeseries'
     
     
     /**
      * Node cannot have children.
+     * @constant
      */
     LEAF : 'leaf'
     
     
     /**
      * Node has an associated edit UI.
+     * @constant
      */
     EDITABLE : 'editable'
     
     
     /**
-     * Associated GraphNodeData must define a valid Metric as a prerequisite to render.
+     * Node defines a viewing window for other nodes to render in.
+     * @constant
      */
-    REQUIRES_METRIC : 'requires-metric'
-    
-    /**
-     * Associated GraphNodeData must define a valid timeseries Metric as a prerequisite to render.
-     */
-    REQUIRES_TIMESERIES_METRIC : 'timeseries'
+    VIEWPORT : 'viewport'
     
     
+
 

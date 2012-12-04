@@ -1,38 +1,38 @@
 // Styling for charts and chart elements
 
-.chart
+.canvas-node
     height: 100%
     position: relative
-
-.chart-meta
-    width 18%
-    padding 10px 24px 10px 10px
-    display inline-block
-    vertical-align top
     
-    .btn.edit
-        position: absolute
-        top: 4px
-        right: 0px
-        width: 40px
-        height: 20px
-    
-    fieldset.legend
-        position: relative
-        margin: 0.5em
-        font-weight: 100
-        font-family: "Helvetica Neue", Helvetica, Arial, sans-serif
-        ul
-            list-style-type none
-            margin 0
-            li
-                display table-row
-                span
-                    display table-cell
-                span.legendItemText
-                    text-align left
-                span.legendItemValue
-                    text-align right
+    .meta
+        width 18%
+        padding 10px 24px 10px 10px
+        display inline-block
+        vertical-align top
+        
+        .btn.edit
+            position: absolute
+            top: 4px
+            right: 0px
+            width: 40px
+            height: 20px
+        
+        fieldset.legend
+            position: relative
+            margin: 0.5em
+            font-weight: 100
+            font-family: "Helvetica Neue", Helvetica, Arial, sans-serif
+            ul
+                list-style-type none
+                margin 0
+                li
+                    display table-row
+                    span
+                        display table-cell
+                    span.legendItemText
+                        text-align left
+                    span.legendItemValue
+                        text-align right
 
 svg
     width 76%
@@ -61,6 +61,6 @@ svg
             stroke #666
             stroke-width 1
     
-    g.metricVisualizations path
+    g.viewport path
         fill none
         stroke-width 5

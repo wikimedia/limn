@@ -4,6 +4,9 @@ ko = require 'knockout'
 { GraphNode,
 } = require './graph-node'
 
+Trait = require './graph-node-trait'
+
+
 
 /**
  * @class
@@ -11,6 +14,7 @@ ko = require 'knockout'
  */
 class exports.CanvasNode extends GraphNode
     nodeType : 'canvas'
+    traits   : [ Trait.META_NODE, Trait.VIEWPORT, ]
     @registerType()
     
     template: 'canvas-node'
@@ -90,18 +94,24 @@ class exports.CanvasNode extends GraphNode
     
     
     # updates the scales when metrics change
-    # scales : @computed ->
-    #     xDomain = d3.extent _.flatten @metrics().map (m) -> m.dates()
-    #     @xScale().domain xDomain
-    #     
-    #     yDomain = d3.extent _.flatten @metrics().map (m) -> m.column()
-    #     @yScale().domain yDomain.reverse()
-    #     
-    #     if @metrics?().length > 0
-    #         @xSteps @metrics()[0].dates()
-    #         true
-    #     else
-    #         false
+    metrics : @computed ->
+        metrics = @walk [], (metrics, node) ->
+            if node.hasTrait(Trait.REQUIRES_METRIC) and metric = node.model().metric()
+                metrics.push metric
+            metrics
+        
+        xDomain = d3.extent _.flatten _.invoke metrics, 'dates'
+        @xScale().domain xDomain
+        
+        yDomain = d3.extent _.flatten _.invoke metrics, 'values'
+        @yScale().domain yDomain.reverse()
+        
+        # if metrics.length > 0
+        #     @xSteps metrics.dates()
+        #     true
+        # else
+        #     false
+        metrics
     
     
     
@@ -113,6 +123,10 @@ class exports.CanvasNode extends GraphNode
     (graph, model) ->
         @xScale = d3.time.scale().clamp(true)
         @yScale = d3.scale.log()
+        @makeLine = d3.svg.line()
+            .x ([date, val], i) ~> @xScale date # TODO: assumes all metrics have the same x domain
+            .y ([date, val], i) ~> @yScale val
+            .interpolate 'linear'
         super ...
     
     
@@ -122,10 +136,10 @@ class exports.CanvasNode extends GraphNode
         $parent.find('.canvas-node.graph-node').0
     
     
-    determineParent: (node) ->
+    determineDOMParentForChildNode: (node) ->
         # TODO: better handle html vs svg
         # TODO: handle fg/bg
-        if _.all <[ meta html ]>, _.contains.bind(_, node.traits)
+        if _.all [ Trait.META_NODE, Trait.HTML ], _.contains.bind(_, node.traits)
             @$ 'section.meta' .0
         else
             @$ 'g.viewport' .0

@@ -5,6 +5,9 @@ d3 = require 'd3'
 { TimeseriesNode,
 } = require './timeseries-node'
 
+Trait = require '../graph-node-trait'
+
+
 
 /**
  * @class
@@ -12,19 +15,55 @@ d3 = require 'd3'
  */
 class exports.LineNode extends TimeseriesNode
     nodeType : 'line'
+    traits   : [
+        Trait.VIS_NODE
+        Trait.REQUIRES_METRIC
+        Trait.METRIC_TIMESERIES
+        Trait.LEAF
+    ]
     @registerType()
+    
+    
+    # buildElement: (parentElement) ->
+    #     super parentElement
+    
     
     -> super ...
     
+    buildElement: (parentElment) ->
+        el = super ...
+        @line()
+        el
     
-    buildElement: (parentElement) ->
-        super parentElement
+    line: @computed ->
+        return null unless @el() and @sel
         
-        @sel.append 'path'
-            .classed 'metricLine', true
-            .style 'stroke-width', 5
-            .style 'fill', 'none'
-            .attr 'vector-effect', 'non-scaling-stroke'
+        model  = @model()
+        metric = model?.metric()
+        data   = if metric?.data() then [that] else []
+        
+        line = @selectAll 'path.metric-line' .data data
+        line.enter()
+            .append 'path'
+                .classed 'metric-line', true
+                .attr  'vector-effect', 'non-scaling-stroke'
+                .style 'fill',          'none'
+                .style 'stroke-width',  5
+                .style 'stroke',        model.options().get('color') or 'skyblue'
+                # .style 'stroke', ~> @chart.colorScale @columnHeader()
+                # .attr 'data-metricIndex', @columnHeader()
+        
+        line.exit()
+            .remove()
+        
+        line.transition()
+            .attr 'd', @root().makeLine
+        
+        line
+    
+    
+    
+    
     
     /*
     build: (parentElement) ->
@@ -37,16 +76,9 @@ class exports.LineNode extends TimeseriesNode
         @chart.metrics.push(this)
         
         @sel.append 'path'
-            .classed 'metricLine', true
+            .classed 'metric-line', true
             .style 'stroke-width', 5
             .style 'fill', 'none'
             .attr 'vector-effect', 'non-scaling-stroke'
     
-    renderLine: ->
-        @sel.selectAll 'path.metricLine'
-            .attr 'data-metricIndex', @columnHeader()
-            .style 'stroke', ~> @chart.colorScale @columnHeader()
-            .data [@column()]
-            .transition()
-                .attr 'd', @chart.lineGenerator
     */

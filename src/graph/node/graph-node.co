@@ -11,6 +11,8 @@ ko = require 'knockout'
 { compareIds, OrderedSet,
 } = require '../../util'
 
+Trait = require './graph-node-trait'
+
 
 /**
  * Name of the property for a node subclass's type-name.
@@ -31,6 +33,7 @@ NODE_TYPES = exports.NODE_TYPES = {}
  * @extends Base
  */
 class exports.GraphNode extends Base
+    
     
     /**
      * @section Class Properties
@@ -64,8 +67,16 @@ class exports.GraphNode extends Base
      */
     traits : <[  ]>
     
-    tagName : 'g'
+    /**
+     * HTML or SVG tag name for the DOM node that represents this GraphNode.
+     * @type String
+     */
+    tagName : 'svg:g'
     
+    /**
+     * Calculates the CSS class for the DOM node that represents this GraphNode.
+     * @returns {String}
+     */
     cssClass : ->
         _ this .chain()
             .pluckSuperAndSelf 'nodeType'
@@ -88,7 +99,7 @@ class exports.GraphNode extends Base
      * The GraphNode that is root to the GraphNode tree
      * @type GraphNode
      */
-    root: -> @graph.rootNode()
+    root : -> @graph.rootNode()
     
     /**
      * Model data for this node.
@@ -247,10 +258,12 @@ class exports.GraphNode extends Base
     
     
     /**
-     * Implement to completely customize the process of building the DOM nodes
-     * for the presentation of this GraphNode.
+     * Implement to completely customize the process of building and attaching
+     * the DOM nodes for the presentation of this GraphNode.
      * 
-     * @abstract
+     * Note that overrides to this method in a subclass should be decorated
+     * with `@ignoreDeps`, or else you will probably end up crying later.
+     * 
      * @param {Element} parentElement Parent DOM element (and can be either
      *  an HTML or an SVG element).
      * @returns {Element} Newly constructed root element for this GraphNode.
@@ -259,23 +272,33 @@ class exports.GraphNode extends Base
         parentElement = @unwrapElement(parentElement)
         console.log "#this.build!", parentElement
         
-        el = @buildElement(parentElement) unless _.isElement el = @el.peek()
+        unless _.isElement el = @el.peek()
+            el = @buildElement(parentElement)
         return el unless _.isElement el
         @el parentElement.appendChild el
         
         for node of @children()
-            nodeParent = @determineParent(node)
-            continue unless nodeEl = @unwrapElement node.build(nodeParent)
+            nodeParentEl = @determineDOMParentForChildNode(node)
+            continue unless node.build nodeParentEl
         el
     
     
+    
+    /**
+     * Override to customize the process of ONLY creating the DOM element.
+     * 
+     * @param {Element} parentElement 
+     * @returns {Element} 
+     */
     buildElement: (parentElement) ->
-        @el el = @createElement _.result(this, 'tagName'), { class:_.result(this, 'cssClass') }
+        tagName  = _.result this, 'tagName'
+        cssClass = _.result this, 'cssClass'
+        @el el = @createElement tagName, cssClass
         el
     
     
-    determineParent: (node) ->
-        @$el.parent() if @el() and @$el
+    determineDOMParentForChildNode: (node) ->
+        @el()
     
     
     /**
@@ -327,6 +350,14 @@ class exports.GraphNode extends Base
     
     
     /**
+     * @param {String} trait Trait to test for membership.
+     * @returns {Boolean} Whether this node possesses the trait.
+     */
+    hasTrait: (trait) ->
+        _.contains @traits, trait
+    
+    
+    /**
      * Call when disposing of this node.
      * @returns {this}
      */
@@ -368,10 +399,21 @@ class exports.GraphNode extends Base
     /**
      * Creates elements with the correct namespace for both HTML and SVG tags.
      */
-    createElement : (tagName, attributes) ->
-        range = document.createRange()
-        range.selectNode document.body
-        el = range.createContextualFragment("<#tagName/>").childNodes[0]
+    createElement : (tagName, cssClass, attributes) ->
+        if _.isObject cssClass
+            [attributes, cssClass] = [cssClass, null]
+        if typeof cssClass is 'string'
+            (attributes or= {}).class = cssClass
+        # range = document.createRange()
+        # range.selectNode document.body
+        # el = range.createContextualFragment("<#tagName/>").childNodes[0]
+        
+        name = d3.ns.qualify(tagName)
+        if name.local
+            el = document.createElementNS name.space, name.local
+        else
+            el = document.createElement name
+        
         $(el).attr attributes if attributes
         el
     
