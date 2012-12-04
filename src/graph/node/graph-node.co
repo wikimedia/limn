@@ -312,6 +312,7 @@ class exports.GraphNode extends Base
      * 
      * This method must be idempotent; it should always be safe to call
      * it multiple times. (Using a `@computed` ensures this.)
+     * @protected
      */
     watch: @computed ->
         console.log "#this.watch!"
@@ -319,11 +320,19 @@ class exports.GraphNode extends Base
         parent      = @watchParent()
         children    = @watchChildren()
         childModels = @watchModelChildren()
+        others      = @watchOthers()
         
         # Recursively activate watch() on children
         _.invoke @children(), 'watch'
         
-        [ parent, children, childModels ]
+        [ parent, children, childModels, others ]
+    
+    
+    /**
+     * Stub to allow you to hook into @watch() without overriding everything.
+     * @abstract
+     */
+    watchOthers: ->
     
     
     /**

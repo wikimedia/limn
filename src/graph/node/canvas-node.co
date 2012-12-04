@@ -99,15 +99,13 @@ class exports.CanvasNode extends GraphNode
                 metrics.push metric
             metrics
         
-        xDomain = d3.extent _.flatten _.invoke metrics, 'dates'
-        @xScale()
-            .domain xDomain
-            .range [0, @viewportWidth()]
+        xs = _.compact _.flatten _.invoke metrics, 'dates'
+        @xScale.domain d3.extent xs if xs.length
+        @xScale.range [0, @viewportWidth()] 
         
-        yDomain = d3.extent _.flatten _.invoke metrics, 'values'
-        @yScale()
-            .domain yDomain
-            .range [@viewportHeight(), 0]
+        ys = _.compact _.flatten _.invoke metrics, 'values'
+        @yScale.domain d3.extent ys if ys.length
+        @yScale.range [@viewportHeight(), 0]
         
         # if metrics.length > 0
         #     @xSteps metrics.dates()
@@ -130,6 +128,10 @@ class exports.CanvasNode extends GraphNode
             .y ([date, val], i) ~> @yScale val
             .interpolate 'linear'
         super ...
+    
+    
+    watchOthers: ->
+        @metrics()
     
     
     buildElement: (parentElement) ->
