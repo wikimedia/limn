@@ -7,7 +7,7 @@ moment = require 'moment'
 
 Trait = require '../graph-node-trait'
 
-numberFormatter = LOLDONGS
+
 
 
 /**
@@ -65,7 +65,7 @@ class exports.CalloutNode extends GraphNode
     
     latestValue: @computed ->
         return '' unless data  = @data()?.latest
-        numberFormatter data.value, 2, false .toString()
+        @numberFormatter data.value, 2, false .toString()
     
     datesFor: (span) ->
         return '' unless data = @data()?[span]
