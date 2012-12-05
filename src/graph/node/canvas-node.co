@@ -51,6 +51,8 @@ class exports.CanvasNode extends GraphNode
     viewportHeight : @computed ->
         @frameHeight() - @margin.top - @margin.bottom
     
+    width : @computed -> @viewportWidth()
+    height : @computed -> @viewportHeight()
     
     
     
@@ -101,7 +103,7 @@ class exports.CanvasNode extends GraphNode
         
         xs = _.compact _.flatten _.invoke metrics, 'dates'
         @xScale.domain d3.extent xs if xs.length
-        @xScale.range [0, @viewportWidth()] 
+        @xScale.range [0, @viewportWidth()]
         
         ys = _.compact _.flatten _.invoke metrics, 'values'
         @yScale.domain d3.extent ys if ys.length

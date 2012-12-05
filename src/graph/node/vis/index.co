@@ -1,6 +1,7 @@
 line_group_node = require './line-group-node'
 line_node       = require './line-node'
 timeseries_node = require './timeseries-node'
+grid_node       = require './grid-node'
 
-exports import line_group_node import line_node import timeseries_node
+exports import line_group_node import line_node import timeseries_node import grid_node
 

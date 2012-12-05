@@ -1,0 +1,63 @@
+ko = require 'knockout'
+d3 = require 'd3'
+
+{ GraphNode,
+} = require '../graph-node'
+
+Trait = require '../graph-node-trait'
+
+
+
+/**
+ * @class
+ * @extends GraphNode
+ */
+class exports.GridNode extends GraphNode
+    nodeType : 'grid'
+    traits   : [
+        Trait.VIS_NODE
+        Trait.LEAF
+    ]
+    @registerType()
+    
+    
+    -> super ...
+    
+    buildElement: (parentElment) ->
+        el = super ...
+        @grid()
+        el
+    
+    grid: @computed ->
+        return null unless @el() and @sel
+        
+        @sel.classed "#{@options().dimension()}Grid", true
+        switch @options().dimension()
+            case 'x'
+                ticks = @root().xScale.ticks(20)
+                scale = @root().xScale
+                enter =
+                    y1: 0
+                    y2: @root().height()
+                transition =
+                    x1: @root().xScale
+                    x2: @root().xScale
+            
+            case 'y'
+                ticks = @root().yScale.ticks()
+                scale = @root().yScale
+                enter =
+                    x1: 0
+                    x2: @root().width()
+                transition =
+                    y1: @root().yScale
+                    y2: @root().yScale
+        
+        gridLinesData = @sel.selectAll 'line'
+            .data ticks
+        gridLinesData.enter().append 'line'
+            .attr 'vector-effect': 'non-scaling-stroke'
+            .attr enter
+        gridLinesData.transition()
+            .attr transition
+        gridLinesData.exit().remove()
