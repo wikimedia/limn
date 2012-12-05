@@ -39,9 +39,8 @@ class exports.LineNode extends TimeseriesNode
      * @type ko.computed<Array<Array<[Date, Value]>>>
      */
     timeseriesData: @computed ->
-        model   = @model()
-        metric  = model?.metric()
-        data    = if metric?.data() then [that] else []
+        metric = @model()?.metric()
+        data   = if metric?.data() then [that] else []
     
     
     /**

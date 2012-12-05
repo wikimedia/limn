@@ -153,9 +153,8 @@ class exports.CanvasNode extends GraphNode
     
     
     buildElement: (parentElement) ->
-        $parent = $ parentElement .attr 'data-bind', 'template: { name:template, data:$data }'
-        ko.applyBindings this, parentElement
-        @el el = $parent.find('.canvas-node.graph-node').0
+        @renderView parentElement
+        @el el = $(parentElement).find('.canvas-node.graph-node').0
         el
     
     

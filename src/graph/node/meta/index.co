@@ -1,4 +1,5 @@
-grid_node = require './grid-node'
+callout_node = require './callout-node'
+grid_node    = require './grid-node'
 
-exports import grid_node
+exports import callout_node import grid_node
 

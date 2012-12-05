@@ -1,9 +1,7 @@
-.callout-node.graph-node
-    .latest-metric(data-bind='text: latest')
-    .metric-change.year-over-year
-        span.dates(data-bind='text: year.dates')
-        span.value(data-bind='text: year.value, css:year.cssClass')
-    .metric-change.month-over-month
-        span.dates(data-bind='text: month.dates')
-        span.value(data-bind='text: month.value, css:month.cssClass')
-
+.latest-metric(data-bind='text: latestValue')
+.metric-change.year-over-year
+    span.dates(data-bind='text: yearDates')
+    span.value(data-bind='text: yearValue, css:yearCssClass')
+.metric-change.month-over-month
+    span.dates(data-bind='text: monthDates')
+    span.value(data-bind='text: monthValue, css:monthCssClass')

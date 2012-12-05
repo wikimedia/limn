@@ -308,6 +308,13 @@ class exports.GraphNode extends Base
         el
     
     
+    renderView: (targetEl, view=this) ->
+        el = @toElement targetEl
+        $ el .attr 'data-bind', 'template: { name:template, data:$data }'
+        ko.applyBindings view, el
+        targetEl
+    
+    
     /**
      * Override to choose the DOM node to act as the parent the given node.
      * 

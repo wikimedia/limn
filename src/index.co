@@ -53,7 +53,14 @@ class limn.LimnApp
      * @constructor
      */
     (config) ->
-        @currentView = ko.observable new limn.base.LoadingView()
+        @currentView = ko.observable()
+        
+        # Because, really, everyone hates typing when debugging
+        ko.computed ~>
+            view  = limn.view  = @currentView()
+            model = limn.model = view?.model?()
+        
+        @currentView new limn.base.LoadingView()
         ko.applyBindings this
         
         page '/:view/:id?/:action?', (context, next) ~>
@@ -104,11 +111,14 @@ class limn.LimnApp
  */
 limn.expose = ->
     exposed = {}
-    for name of <[ base data graph graph.node dashboard util ]>
-        mod = _.getNested limn, name
-        for k, v in mod
+    for name of <[ base data graph graph.node dashboard util _ op emitters ]>
+        limnMod = _.getNested limn, name
+        for k, v in limnMod
             continue unless _.isClass(v) or _.isFunction(v) or /^[A-Z_]+$/.test(k)
             window[k] = exposed[k] = v
+    
+    for mod of <[ moment seq timeseries events ]>
+        window[mod] = exposed[mod] = require mod
     
     exposed
 
