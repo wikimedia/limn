@@ -25,10 +25,6 @@ class exports.LineNode extends TimeseriesNode
     @registerType()
     
     
-    # buildElement: (parentElement) ->
-    #     super parentElement
-    
-    
     -> super ...
     
     buildElement: (parentElment) ->
@@ -39,15 +35,22 @@ class exports.LineNode extends TimeseriesNode
     
     
     /**
+     * Materialized timeseries data, Array-wrapped for d3.
+     * @type ko.computed<Array<Array<[Date, Value]>>>
+     */
+    timeseriesData: @computed ->
+        model   = @model()
+        metric  = model?.metric()
+        data    = if metric?.data() then [that] else []
+    
+    
+    /**
      * Update selection representing the SVG path element for the line.
      * @type ko.computed<d3.selection.update>
      */
     line: @computed ->
         return null unless @el() and @sel
-        
-        model   = @model()
-        metric  = model?.metric()
-        data    = if metric?.data() then [that] else []
+        data = @timeseriesData()
         
         # create selection
         line = @selectAll 'path.metric-line' .data data
@@ -56,11 +59,13 @@ class exports.LineNode extends TimeseriesNode
         line.exit().remove()
         
         return line unless data.length
+        return null unless model  = @model()
+        return null unless scales = @root().scales()
         
         label   = model.get('label') or '(no label)'
         options = model.options()
-        color   = options?.color() or 'skyblue'
-        stroke  = options?.stroke() or 5
+        color   = options?.get('color') or 'skyblue'
+        stroke  = options?.get('stroke') or 5
         
         line.enter()
             .append 'path'
@@ -69,32 +74,8 @@ class exports.LineNode extends TimeseriesNode
                 .style 'fill',          'none'
                 .style 'stroke-width',  stroke
                 .style 'stroke',        color
-                # .style 'stroke', ~> @chart.colorScale @columnHeader()
-                # .attr 'data-metricIndex', @columnHeader()
-        
         line.transition()
-            .attr 'd', @root().makeLine
-        
+            .attr 'd', scales.scaleLine
         line
     
-    
-    
-    
-    
-    /*
-    build: (parentElement) ->
-        @sel = parentElement.append 'g'
-        
-        # make sure we can receive updates before we broadcast the metric
-        @chart.scales.subscribe (updated) ~>
-            @renderLine.call this if updated
-        
-        @chart.metrics.push(this)
-        
-        @sel.append 'path'
-            .classed 'metric-line', true
-            .style 'stroke-width', 5
-            .style 'fill', 'none'
-            .attr 'vector-effect', 'non-scaling-stroke'
-    
-    */
+

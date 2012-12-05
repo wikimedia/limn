@@ -176,7 +176,7 @@ class exports.Base extends EventEmitter
         return this unless key?
         throw new Error "Attributes hash does not exist!" unless @attributes?
         unless ko.isObservable obs = @attributes[key]
-            obs = @attributes[key] = @_generateAttribute val, @attributeTypes[key]
+            obs = @attributes[key] = @_generateAttribute val, @attributeTypes[key], key
             @[key] ?= obs
         obs val
         this
@@ -346,7 +346,7 @@ class exports.Base extends EventEmitter
     _generateAttributes: (data, attrTypes={}, target={}) ->
         return target unless data
         return _.reduce_ data, target, (attributes, val, key) ~>
-            attributes[key] = @_generateAttribute val, attrTypes[key]
+            attributes[key] = @_generateAttribute val, attrTypes[key], key
             attributes
     
     
@@ -361,10 +361,11 @@ class exports.Base extends EventEmitter
      *  be wrapped to perform an instanceof check to prevent double-wrapping, and otherwise
      *  invoke the class with `new`. If an object, it will be used for sub-lookups
      *  of attrTypes.
+     * @param {String} [name] Attribute name.
      * @returns {ko.observable} The new observable attribute. You should assign
      *  this to the right place on `attributes`, bro.
      */
-    _generateAttribute: (val, coerceFn) ->
+    _generateAttribute: (val, coerceFn, name) ->
         if isArray = _.isArray val
             obs = ko.observableArray()
         else
@@ -376,6 +377,7 @@ class exports.Base extends EventEmitter
                 coerceFn = @..plainSubclass(coerceFn or {})
         
         obs = obs.coerce coerceFn, this, {isArray} if typeof coerceFn is 'function'
+        obs import { displayName:name, __owner__:this }
         obs
     
     
@@ -417,9 +419,12 @@ class exports.Base extends EventEmitter
         # Preserve attribute-observers
         return fn if fn is @attributes[name]
         
+        # Info to add to the resulting observer for debugging
+        info = { name, displayName:name, __owner__:this }
+        
         # Apply observer annotations
-        if info = fn.__decorate__
-            { base, extender, options, wrapped } = info
+        if decor = fn.__decorate__
+            { base, extender, options, wrapped } = decor
             options = { read:fn, owner, ...options }
             fn = fn() if wrapped
             
@@ -427,12 +432,16 @@ class exports.Base extends EventEmitter
                 obs = ko.computed _.extend({}, options)
             else
                 obs = ko[base]()
+            
+            obs import info
             return obs if typeof obs[extender] is not 'function'
             
             if _ <[ typed model coerce ]> .contains extender
                 obs = obs[extender](fn, owner, options)
             else
                 obs = obs[extender](options)
+            
+            obs import info
             return obs
         
         # Re-wrap non-attribute observables and copy objects so neither causes shared state
@@ -444,7 +453,9 @@ class exports.Base extends EventEmitter
                 val .= slice()
             else if _.isObject val
                 val = _.merge {}, val
-            return ko.utils.toObservable val
+            obs = ko.utils.toObservable val
+            obs import info
+            return obs
         
         fn
     
@@ -482,11 +493,14 @@ class exports.Base extends EventEmitter
     _setupSubscription: (fn, name, owner=this) ->
         return fn unless typeof fn is 'function'
         
-        _opts = {-ensure, getter:'\0'}
-        return fn unless (prop = fn.__onChange__) and
-            ko.isObservable obs = _.getNested(this, prop, null, _opts)
+        if prop = fn.__onChange__
+            obs = _.getNested this, prop, null, {-ensure, getter:'\0'}
+            return fn unless ko.isObservable obs
+            return obs.onChange fn, owner
+        if fn.__onBuild__
+            owner.on? 'watch-build', fn.bind(owner)
         
-        obs.onChange fn, owner
+        fn
     
     
     
@@ -599,6 +613,11 @@ class exports.Base extends EventEmitter
      */
     @onChange = (prop, method) ->
         method.__onChange__ = prop
+        method
+    
+    
+    @onBuild = (method) ->
+        method.__onBuild__ = true
         method
     
     

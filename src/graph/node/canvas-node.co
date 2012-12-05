@@ -52,32 +52,18 @@ class exports.CanvasNode extends GraphNode
     viewportHeight : @computed ->
         @frameHeight() - @margin.top - @margin.bottom
     
-    width : @computed -> @viewportWidth()
+    width  : @computed -> @viewportWidth()
     height : @computed -> @viewportHeight()
     
     
-    
-    
     # }}}
-    
+    /* * * *  Scales  * * * {{{ */
     
     /**
      * The scale that translates x domain values into x output range values
      * @type d3.time.scale
      */
     xScale : null
-    
-    /**
-     * The x domain materialized as a finite array
-     * @type Array<Number>
-     */
-    xSteps : null
-    
-    /**
-     * The x output range distance between two x domain values.
-     * Dynamically calculated to spread just enough xSteps over the x output range.
-     */
-    xStep : 0
     
     /**
      * The x output range distance which is "close enough" to an xStep
@@ -87,35 +73,63 @@ class exports.CanvasNode extends GraphNode
     /**
      * The scale that translates y domain values into y output range values
      */
-    yScale: null
-    yTicks: null
+    yScale : null
+    yTicks : null
     
     /**
-     * The domain of @see yScale needs to be kept separately so we can add padding that takes into account all metrics
+     * Changes the yScale to pad the edges; expressed as a fraction of the domain's
+     * extents.
+     * @type Number
      */
-    yDomain: null
+    scaleBuffer : 0.1
     
+    /**
+     * Observable for the contents of xScale and yScale, tracking their changes.
+     * @type ko.observable<Object>
+     */
+    scales : ko.observable null
     
+    /**
+     * Recomputes the scale values.
+     * @type Array<Metric>
+     */
     metrics : @computed ->
         metrics = @walk [], (metrics, node) ->
-            if node.hasTrait(Trait.REQUIRES_METRIC) and metric = node.model().metric()
+            if node.hasTrait(Trait.REQUIRES_METRIC) and metric = node.model.peek().metric()
                 metrics.push metric
             metrics
         
+        # grab old values for comparison so only mutate @scales when something has changed
+        _xDomain = @xScale.domain()
+        _yDomain = @yScale.domain()
+        _width   = @xScale.range()[1]
+        _height  = @yScale.range()[1]
+        
         xs = _.compact _.flatten _.invoke metrics, 'dates'
-        @xScale.domain d3.extent xs if xs.length
-        @xScale.range [0, @viewportWidth()]
+        xDomain = d3.extent xs
+        @xScale.domain xDomain
+        width = @viewportWidth() if xs.length
+        @xScale.range [0, width]
         
         ys = _.compact _.flatten _.invoke metrics, 'values'
-        @yScale.domain d3.extent ys if ys.length
-        @yScale.range [@viewportHeight(), 0]
+        yDomain = d3.extent ys
+        if ys.length
+            yDomain[0] -= @scaleBuffer * yDomain[0]
+            yDomain[1] += @scaleBuffer * yDomain[1]
+            @yScale.domain yDomain
+        height = @viewportHeight()
+        @yScale.range [height, 0]
         
-        # if metrics.length > 0
-        #     @xSteps metrics.dates()
-        #     true
-        # else
-        #     false
+        if      xDomain[0] != _xDomain[0] or xDomain[1] != _xDomain[1]   or
+                yDomain[0] != _yDomain[0] or yDomain[1] != _yDomain[1]   or
+                width      != _width      or height     != _height
+            @scales { @xScale, @yScale, @scaleLine }
+        
         metrics
+    
+    
+    # }}}
+    
     
     
     /**
@@ -126,11 +140,12 @@ class exports.CanvasNode extends GraphNode
     (graph, model) ->
         @xScale = d3.time.scale().clamp(true)
         @yScale = d3.scale.log()
-        @makeLine = d3.svg.line()
+        @scaleLine = d3.svg.line()
             .x ([date, val], i) ~> @xScale date # TODO: assumes all metrics have the same x domain
             .y ([date, val], i) ~> @yScale val
             .interpolate 'linear'
         super ...
+        @scales 
     
     
     watchOthers: ->

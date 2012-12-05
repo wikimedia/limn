@@ -21,37 +21,43 @@ class exports.GridNode extends GraphNode
     @registerType()
     
     
-    -> super ...
+    ->
+        super ...
+        
+        # Trigger the grid computed to auto-update
+        # once we build for the first time.
+        @on 'watch-build', @grid
     
-    buildElement: (parentElment) ->
-        el = super ...
-        @grid()
-        el
+    
     
     grid: @computed ->
         return null unless @el() and @sel
+        return null unless dimension = @options()?.dimension()
+        return null unless scales = @root().scales()
+        console.log "#this.grid!"
         
         @sel.classed "#{@options().dimension()}Grid", true
-        switch @options().dimension()
+        
+        switch dimension
             case 'x'
-                ticks = @root().xScale.ticks(20)
-                scale = @root().xScale
+                ticks = scales.xScale.ticks(20)
+                scale = scales.xScale
                 enter =
                     y1: 0
                     y2: @root().height()
                 transition =
-                    x1: @root().xScale
-                    x2: @root().xScale
+                    x1: scales.xScale
+                    x2: scales.xScale
             
             case 'y'
-                ticks = @root().yScale.ticks()
-                scale = @root().yScale
+                ticks = scales.yScale.ticks()
+                scale = scales.yScale
                 enter =
                     x1: 0
                     x2: @root().width()
                 transition =
-                    y1: @root().yScale
-                    y2: @root().yScale
+                    y1: scales.yScale
+                    y2: scales.yScale
         
         gridLinesData = @sel.selectAll 'line'
             .data ticks
@@ -61,3 +67,5 @@ class exports.GridNode extends GraphNode
         gridLinesData.transition()
             .attr transition
         gridLinesData.exit().remove()
+    
+

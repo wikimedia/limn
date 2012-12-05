@@ -1,7 +1,10 @@
 _ = require 'underscore'
 
+
+# Save for override
+_pick = _.pick
+
 _obj =
-    
     
     /**
      * Aliases properties. Takes a hash of `src` -> `dest` pairs of property names
@@ -20,6 +23,29 @@ _obj =
                 dests .= split(/\s+/g) unless _.isArray dests
                 _.each dests, (dest) ~> obj[dest] = obj[src]
         obj
+    
+    
+    /**
+     * As `_.pick()`, but also accepts a function to filter the object:
+     * 
+     *      `fn.call(obj, value, key, obj) -> Boolean`
+     * 
+     * ...in addition to a list of Strings whitelisting keys acceptable in the
+     * resulting object.
+     * 
+     * @param {Object} obj Object to filter.
+     * @param {Function|String} fn Function to filter by; otherwise
+     *  normal `_.pick()` behavior.
+     * @param {Object} [cxt=obj] Context object for the filter function.
+     * @returns {Object} Resulting filtered object.
+     */
+    pick: (obj, fn, cxt=obj) ->
+        if typeof fn is 'function'
+            _.reduce_ {}, (acc, v, k) ->
+                acc[k] = v if fn.call cxt, v, k, obj
+                acc
+        else
+            _pick ...
     
 
 

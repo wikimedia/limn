@@ -2,6 +2,7 @@
  * @fileOverview Observable utilities.
  */
 
+_ = require 'underscore'
 ko = require 'knockout'
 
 

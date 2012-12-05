@@ -197,7 +197,7 @@ class exports.GraphNode extends Base
      */
     el : @eagerCoerciveObservable (el) ->
         @$el = @sel = null
-        el   = @unwrapElement el
+        el   = @toElement el
         return el unless _.isElement el
         @$el = $ el
         @sel = d3.select el
@@ -269,26 +269,37 @@ class exports.GraphNode extends Base
      * @returns {Element} Newly constructed root element for this GraphNode.
      */
     build: @ignoreDeps (parentElement) ->
-        parentElement = @unwrapElement(parentElement)
-        console.log "#this.build!", parentElement
+        parentElement = @toElement(parentElement)
+        origEl = el = @el.peek()
+        console.log "#this.build! el:", el, 'parent:', parentElement
         
-        unless _.isElement el = @el.peek()
-            el = @buildElement(parentElement)
+        # Do we lack a DOM element?
+        unless _.isElement origEl
+            el = @toElement @buildElement parentElement
+            # Publish an event so most consumers can avoid overriding this or @buildElement
+            if _.isElement el
+                @trigger 'build', el, parentElement, this   # for normal event handlers
+                @trigger 'watch-build'                      # for `ko.computed()` which will die if we pass args
+        
+        # Ensure we save the element if it's valid
         return el unless _.isElement el
-        @el parentElement.appendChild el
+        @el el unless origEl is el
         
+        # Ensure the element is in the DOM
+        @el parentElement.appendChild el unless _.isElement el.parentNode
+        
+        # Build our child nodes
         for node of @children()
             nodeParentEl = @determineDOMParentForChildNode(node)
             continue unless node.build nodeParentEl
         el
     
     
-    
     /**
-     * Override to customize the process of ONLY creating the DOM element.
+     * Override to customize the creation of this node's root DOM element.
      * 
-     * @param {Element} parentElement 
-     * @returns {Element} 
+     * @param {Element} parentElement
+     * @returns {Element}
      */
     buildElement: (parentElement) ->
         tagName  = _.result this, 'tagName'
@@ -297,8 +308,15 @@ class exports.GraphNode extends Base
         el
     
     
+    /**
+     * Override to choose the DOM node to act as the parent the given node.
+     * 
+     * @param {GraphNode} node
+     * @returns {Element}
+     */
     determineDOMParentForChildNode: (node) ->
         @el()
+    
     
     
     /**
@@ -315,17 +333,23 @@ class exports.GraphNode extends Base
      * @protected
      */
     watch: @computed ->
-        console.log "#this.watch!"
+        # console.log "#this.watch!"
         @isWatching = true
-        parent      = @watchParent()
-        children    = @watchChildren()
-        childModels = @watchModelChildren()
-        others      = @watchOthers()
         
-        # Recursively activate watch() on children
-        _.invoke @children(), 'watch'
+        # Creates a dependency on our children
+        @children()
         
-        [ parent, children, childModels, others ]
+        # ...But ignores whatever other watchers do
+        ko.dependencyDetection.ignore ~>
+            _parent      = @watchParent()
+            _children    = @watchChildren()
+            _childModels = @watchModelChildren()
+            _others      = @watchOthers()
+            
+            # Recursively activate watch() on children
+            _.invoke @children(), 'watch'
+            
+            [ _parent, _children, _childModels, _others ]
     
     
     /**
@@ -387,19 +411,35 @@ class exports.GraphNode extends Base
     # }}}
     ### DOM Helpers {{{
     
+    /**
+     * `jQuery(el).find(...)`, using the element for this node.
+     */
     $: ->
         @$el?.find.apply @$el, arguments
     
     
+    /**
+     * `d3.select(el).select(...)`, using the element for this node.
+     */
     select: (selector) ->
         @sel?.select selector
     
     
+    /**
+     * `d3.select(el).selectAll(...)`, using the element for this node.
+     */
     selectAll: (selector) ->
         @sel?.selectAll selector
     
     
-    unwrapElement : (el) ->
+    /**
+     * Unwrap an Element wrapped by jQuery or d3.
+     * 
+     * @param {jQuery|d3.selection|*} el A potentially wrapped element.
+     * @returns {Element|*} The unwrapped element if it was wrapped;
+     *  otherwise whatever we got.
+     */
+    toElement: (el) ->
         el = el[0]      if el instanceof jQuery
         el = el.node()  if el instanceof d3.selection
         el
