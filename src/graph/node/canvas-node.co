@@ -74,20 +74,22 @@ class exports.CanvasNode extends GraphNode
      * The scale that translates y domain values into y output range values
      */
     yScale : null
-    yTicks : null
     
-    /**
-     * Changes the yScale to pad the edges; expressed as a fraction of the domain's
-     * extents.
-     * @type Number
-     */
-    scaleBuffer : 0.1
     
     /**
      * Observable for the contents of xScale and yScale, tracking their changes.
      * @type ko.observable<Object>
      */
     scales : ko.observable null
+    
+    /**
+     * @returns {false|Object} The scales object if all are valid; false otherwise.
+     */
+    scalesIfValid: ->
+        scales = @scales()
+        return scales if scales?.xValid and scales.yValid
+        false
+    
     
     /**
      * Recomputes the scale values.
@@ -99,31 +101,37 @@ class exports.CanvasNode extends GraphNode
                 metrics.push metric
             metrics
         
-        # grab old values for comparison so only mutate @scales when something has changed
+        # Grab old values for comparison so only mutate @scales when something has changed
+        _scales  = @scales.peek()
         _xDomain = @xScale.domain()
         _yDomain = @yScale.domain()
         _width   = @xScale.range()[1]
         _height  = @yScale.range()[1]
         
+        # Update each scale using metrics
         xs = _.compact _.flatten _.invoke metrics, 'dates'
         xDomain = d3.extent xs
-        @xScale.domain xDomain
-        width = @viewportWidth() if xs.length
+        @xScale.domain xDomain if xs.length
+        
+        width = @viewportWidth()
         @xScale.range [0, width]
+        
+        xValid = xs.length and width > 0
         
         ys = _.compact _.flatten _.invoke metrics, 'values'
         yDomain = d3.extent ys
-        if ys.length
-            yDomain[0] -= @scaleBuffer * yDomain[0]
-            yDomain[1] += @scaleBuffer * yDomain[1]
-            @yScale.domain yDomain
+        @yScale.domain yDomain if ys.length
+        
         height = @viewportHeight()
         @yScale.range [height, 0]
         
+        yValid = ys.length and height > 0
+        
+        # If anything changed, trigger a notification by setting the scales computed
         if      xDomain[0] != _xDomain[0] or xDomain[1] != _xDomain[1]   or
                 yDomain[0] != _yDomain[0] or yDomain[1] != _yDomain[1]   or
                 width      != _width      or height     != _height
-            @scales { @xScale, @yScale, @scaleLine }
+            @scales { @xScale, @yScale, @scaleLine, xValid, yValid }
         
         metrics
     
@@ -138,16 +146,19 @@ class exports.CanvasNode extends GraphNode
      * @param {GraphNodeData} model
      */
     (graph, model) ->
+        super ...
         @xScale = d3.time.scale().clamp(true)
         @yScale = d3.scale.log()
         @scaleLine = d3.svg.line()
             .x ([date, val], i) ~> @xScale date # TODO: assumes all metrics have the same x domain
             .y ([date, val], i) ~> @yScale val
             .interpolate 'linear'
-        super ...
-        @scales 
+        @scales { @xScale, @yScale, @scaleLine, -xValid, -yValid }
     
     
+    /**
+     * Hooks into the `@watch()` trigger.
+     */
     watchOthers: ->
         @metrics()
     
@@ -174,6 +185,8 @@ class exports.CanvasNode extends GraphNode
                 @$ 'section.meta > .fg' .0
             else
                 @$ 'section.meta > .bg' .0
-        
+    
+    
+    
     
 

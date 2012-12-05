@@ -252,17 +252,16 @@ class exports.GraphNode extends Base implements formatters
         
         # Trigger the grid computed to auto-update
         # once we build for the first time.
-        if @render
+        if typeof @render is 'function'
             @renderWrap = ko.computed do
                 owner: this
                 deferEvaluation: true
                 read: ->
                     return null unless @el() and @sel
                     return null unless @model().options()
-                    return null unless @root().scales()
                     @render.call this
             
-            @on 'watch-build', @renderWrap
+            @once 'watch-build', @renderWrap
         
         console.log "new #this"
     

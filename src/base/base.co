@@ -498,7 +498,7 @@ class exports.Base extends EventEmitter
             return fn unless ko.isObservable obs
             return obs.onChange fn, owner
         if fn.__onBuild__
-            owner.on? 'watch-build', fn.bind(owner)
+            owner.once 'watch-build', fn.bind(owner)
         
         fn
     
@@ -631,6 +631,16 @@ class exports.Base extends EventEmitter
      * @param {String} ...keys Keys on the instance on which to depend.
      * @param {Function} method Method to wrap.
      * @returns {Function} Wrapped method.
+     * 
+     * @example
+     *  class Client extends Base
+     *      ->
+     *          super ...
+     *          # pretend there's async setup for @connection()
+     *      defaults: ->
+     *          connection: null
+     *      bytesSent : @computedRequires 'connection', (connection) ->
+     *          connection.bytesSent
      */
     @computedRequires = (...keys, method) ->
         wrapper = @computed ->

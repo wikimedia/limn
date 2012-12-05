@@ -28,16 +28,14 @@ class exports.AxisNode extends GraphNode
     
     
     render: ->
-        scales  = @root().scales()
         options = @model().options()
-        console.log "#this.axis!"
+        return unless scales    = @root().scalesIfValid()
+        return unless dimension = options.get('dimension')
+        return unless scale     = scales[ dimension+'Scale' ]
         
-        dimension = options.get('dimension')
-        orient    = options.get('orient')
-        ticks     = options.get('ticks')
-        
-        scale     = scales[ dimension+'Scale' ]
-        axis      = d3.svg.axis().scale  scale
+        orient = options.get('orient')
+        ticks  = options.get('ticks')
+        axis   = d3.svg.axis().scale scale
         
         switch dimension
         case 'x'
