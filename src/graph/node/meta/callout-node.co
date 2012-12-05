@@ -37,10 +37,16 @@ class exports.CalloutNode extends GraphNode
         @renderView parentElement
     
     
+    metric: @computed ->
+        return unless metrics = @root()?.metrics()
+        return unless typeof (ref = @model()?.metricRef()) is 'number'
+        metrics[ref]
+    
+    
     data: @computed ->
-        return unless metric = @model()?.metric()
+        return unless metric = @metric()
         # return unless step   = metric.timespan.peek().get('step') # TODO
-        return unless (data  = metric.data())?.length
+        return unless (data = metric.data())?.length
         
         # Compare against latest non-null, non-NaN value
         i = data.length
