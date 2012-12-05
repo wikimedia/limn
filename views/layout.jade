@@ -7,14 +7,13 @@ html(lang="en", dir="ltr")
             meta(http-equiv="content-type", content="text/html; charset=utf-8")
             meta(name="viewport", content="width=device-width, initial-scale=1.0")
             
-            block styles
-                //- mixin css('reset.min.css')
+            block vendor-styles
                 mixin css('/vendor/bootstrap/css/bootstrap.css')
-                mixin css('/vendor/bootstrap/css/bootstrap.css', media='print')
-                mixin css('layout.css')
-                mixin css('layout.css', media='print')
+                mixin css('/vendor/bootstrap-colorpicker/css/colorpicker.css')
+                mixin css('/vendor/bootstrap-datepicker/css/datepicker.css')
                 mixin css('hicons.css')
-                
+            block styles
+                mixin css('layout.css')
             
             link(type="image/ico", rel="icon", href="/favicon.ico")
             link(type="image/x-icon", rel="shortcut icon", href="/favicon.ico")
@@ -25,6 +24,13 @@ html(lang="en", dir="ltr")
     body
         block body
             
+            section#content: .inner
+                block content
+            
+            footer
+                block footer
+                    include footer
+        
         block defs
             .templates
                 block jade-templates

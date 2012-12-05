@@ -1,4 +1,4 @@
-section.graph(data-bind="attr: { id:graphId }")
+section.graph.graph-display(data-bind="attr: { id:graphId }")
     
     .graph-name-row.row-fluid
         h2: a.graph-name(data-bind="text: model().name, attr: { href:model().link }")
@@ -15,7 +15,8 @@ section.graph(data-bind="attr: { id:graphId }")
     .graph-notes-row.row
         .span7.offset3.ug.graph-notes(data-bind='html: model().notesMarkdown')
     
-    a(data-bind="attr: {href: '/graphs/'+ model().id() +'/edit'}") edit
+    .row
+        a(data-bind="attr: {href: '/graphs/'+ model().id() +'/edit'}") edit
 //-
     ul(data-bind="foreach: model().tags")
         li

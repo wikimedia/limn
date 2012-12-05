@@ -78,17 +78,20 @@ class exports.Query
     filter: ->
         (row, idx) ~> true
     
+    
     /**
      * Apply this query to the given data in column-major format.
      */
     call: (...cols) ->
         @_process new ZipIterator cols
     
+    
     /**
      * Apply this query to the given data in row-major format.
      */
     apply: (rows) ->
         @_process new IndexIterator rows
+    
     
     /**
      * Executes the query on an iterator stream.
@@ -120,7 +123,7 @@ class exports.Query
             pickCols = op.I
         
         result = iter.pipe pickCols, filterTime .toArray()
-        result = _.zip ...result unless opts.rows or result[0].length is 1
+        result = _.zip ...result unless opts.rows or result[0]?.length is 1
         result
     
 

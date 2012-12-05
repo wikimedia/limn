@@ -1,3 +1,4 @@
+_ = require 'underscore'
 { Resource,
 } = require './resource'
 { Model,
