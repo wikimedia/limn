@@ -5,13 +5,6 @@ _ = require './underscore'
 _fmt = do
     
     /**
-     * @param {String} pattern Date formatting pattern.
-     * @returns {Function} Function that formats a date into the supplied pattern.
-     */
-    dateFormatterFor: (pattern) ->
-        (d) -> moment(d).format(pattern)
-    
-    /**
      * Formats a date for display on an axis: `MM/YYYY`
      * @param {Date} d Date to format.
      * @returns {String}
@@ -24,8 +17,15 @@ _fmt = do
      * @param {Date} d Date to format.
      * @returns {String}
      */
-    _dateFormatter: (d) ->
+    dateFormatter: (d) ->
         moment(d).format 'DD MMM YYYY'
+    
+    /**
+     * @param {String} pattern Date formatting pattern.
+     * @returns {Function} Function that formats a date into the supplied pattern.
+     */
+    dateFormatterFor: (pattern) ->
+        (d) -> moment(d).format(pattern)
     
     /**
      * Formats a number for display, first dividing by the greatest suffix
@@ -67,6 +67,8 @@ _fmt = do
         <span class='suffix'>#suffix</span>
         </span>"
     
+    numberFormatterFor: (digits, abbrev) ->
+        (n) ~> @numberFormatter(n, digits, abbrev)
     
 
 

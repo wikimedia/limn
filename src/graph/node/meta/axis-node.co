@@ -48,11 +48,11 @@ class exports.AxisNode extends GraphNode
         switch dimension
         case 'x'
             axis.ticks(d3.time.months, ticks or 4)
-                .tickFormat(@dateFormatter)
+                .tickFormat @dateFormatterFor 'MMM YY'
                 .orient(orient or= 'bottom')
         case 'y'
             axis.ticks(ticks or 5)
-                .tickFormat @numberFormatter
+                .tickFormat @numberFormatterFor 2
                 .orient(orient or= 'left')
         
         @sel.classed dimension+'-axis axis', true

@@ -8,7 +8,7 @@ ko = require 'knockout'
 
 { Base,
 } = require '../../base/base'
-{ compareIds, OrderedSet,
+{ compareIds, OrderedSet, formatters,
 } = require '../../util'
 
 Trait = require './graph-node-trait'
@@ -32,7 +32,7 @@ NODE_TYPES = exports.NODE_TYPES = {}
  * @class Handles the presentation of a specific type of visualization element in a Graph.
  * @extends Base
  */
-class exports.GraphNode extends Base
+class exports.GraphNode extends Base implements formatters
     
     
     /**

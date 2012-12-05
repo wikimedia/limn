@@ -69,6 +69,7 @@ exports import collections
 parse       = exports.parse       = require './parse'
 exports import parse
 
+formatters  = exports.formatters  = require './formatters'
 crc         = exports.crc         = require './crc'
 markdown    = exports.markdown    = require './markdown'
 
