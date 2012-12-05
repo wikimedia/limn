@@ -1,0 +1,75 @@
+_  = require 'underscore'
+ko = require 'knockout'
+d3 = require 'd3'
+
+{ GraphNode,
+} = require '../graph-node'
+
+Trait = require '../graph-node-trait'
+
+
+
+/**
+ * @class
+ * @extends GraphNode
+ */
+class exports.AxisNode extends GraphNode
+    nodeType : 'axis'
+    traits   : [
+        Trait.META_NODE
+        Trait.FG_LAYER
+        Trait.SVG
+        Trait.LEAF
+    ]
+    @registerType()
+    
+    
+    ->
+        super ...
+        
+        # Trigger the axis computed to auto-update
+        # once we build for the first time.
+        @on 'watch-build', @axis
+    
+    
+    axis: @computed ->
+        return unless @el() and @sel
+        return unless scales  = @root().scales()
+        return unless options = @model().options()
+        console.log "#this.axis!"
+        
+        dimension = options.get('dimension')
+        orient    = options.get('orient')
+        ticks     = options.get('ticks')
+        
+        scale     = scales[ dimension+'Scale' ]
+        axis      = d3.svg.axis().scale  scale
+        
+        switch dimension
+        case 'x'
+            axis.ticks(d3.time.months, ticks or 4)
+                .tickFormat(@dateFormatter)
+                .orient(orient or= 'bottom')
+        case 'y'
+            axis.ticks(ticks or 5)
+                .tickFormat @numberFormatter
+                .orient(orient or= 'left')
+        
+        @sel.classed dimension+'-axis axis', true
+        @sel.call axis
+        @moveAxis()
+        
+        axis
+    
+    
+    moveAxis: @computed ->
+        return unless el = @el() and @sel
+        @sel.attr 'transform', ''
+        
+        # TODO: handle other orientations
+        return unless @model()?.options()?.get('dimension') is 'x'
+        height = @root().viewportHeight()
+        @sel.attr 'transform', "translate(0, #height)"
+        height
+    
+

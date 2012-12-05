@@ -1,3 +1,4 @@
+_  = require 'underscore'
 ko = require 'knockout'
 d3 = require 'd3'
 
@@ -33,11 +34,12 @@ class exports.GridNode extends GraphNode
     
     grid: @computed ->
         return null unless @el() and @sel
-        return null unless dimension = @options()?.dimension()
-        return null unless scales = @root().scales()
+        return null unless options   = @model().options()
+        return null unless dimension = options.dimension()
+        return null unless scales    = @root().scales()
         console.log "#this.grid!"
         
-        @sel.classed "#{@options().dimension()}Grid", true
+        @sel.classed dimension+'-grid', true
         
         switch dimension
             case 'x'

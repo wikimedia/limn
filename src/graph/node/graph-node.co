@@ -279,7 +279,7 @@ class exports.GraphNode extends Base
             # Publish an event so most consumers can avoid overriding this or @buildElement
             if _.isElement el
                 @trigger 'build', el, parentElement, this   # for normal event handlers
-                @trigger 'watch-build'                      # for `ko.computed()` which will die if we pass args
+                @trigger 'watch-build'                      # for readonly `ko.computed()`, which will die if we pass args
         
         # Ensure we save the element if it's valid
         return el unless _.isElement el
@@ -298,6 +298,7 @@ class exports.GraphNode extends Base
     /**
      * Override to customize the creation of this node's root DOM element.
      * 
+     * @protected
      * @param {Element} parentElement
      * @returns {Element}
      */
@@ -308,21 +309,31 @@ class exports.GraphNode extends Base
         el
     
     
-    renderView: (targetEl, view=this) ->
-        el = @toElement targetEl
-        $ el .attr 'data-bind', 'template: { name:template, data:$data }'
-        ko.applyBindings view, el
-        targetEl
-    
-    
     /**
      * Override to choose the DOM node to act as the parent the given node.
      * 
+     * @abstract
+     * @protected
      * @param {GraphNode} node
      * @returns {Element}
      */
     determineDOMParentForChildNode: (node) ->
         @el()
+    
+    
+    /**
+     * Create a template binding on `targetEl` and render it using `view`.
+     * 
+     * @protected
+     * @param {Element} targetEl Container element for the rendered template.
+     * @param {Object} [view=this] View instance (with a `template` property).
+     * @returns {Element} The target element.
+     */
+    renderView: (targetEl, view=this) ->
+        el = @toElement targetEl
+        $ el .attr 'data-bind', 'template: { name:template, data:$data }'
+        ko.applyBindings view, el
+        targetEl
     
     
     
@@ -361,7 +372,9 @@ class exports.GraphNode extends Base
     
     /**
      * Stub to allow you to hook into @watch() without overriding everything.
+     * 
      * @abstract
+     * @protected
      */
     watchOthers: ->
     

@@ -622,6 +622,30 @@ class exports.Base extends EventEmitter
     
     
     /**
+     * A computed wrapper that gets the given keys -- invoking observables
+     * found -- and uses those values as the arguments to invoke `method`
+     * so long as none of the values are `null` or `undefined`. Keys are
+     * inspected in the supplied order, but inspection short-circuits on
+     * the first `null` seen.
+     * 
+     * @param {String} ...keys Keys on the instance on which to depend.
+     * @param {Function} method Method to wrap.
+     * @returns {Function} Wrapped method.
+     */
+    @computedRequires = (...keys, method) ->
+        wrapper = @computed ->
+            args = []
+            for k of keys
+                # val = unwrap _.getNested this, k, null, {-ensure, getter:'\0'}
+                val = unwrap @[k]
+                return unless val?
+                args.push val
+            method.apply this, args
+        wrapper.__compReq__ = { keys, method }
+        wrapper
+    
+    
+    /**
      * Decorates the given method to prevent its actions from registering
      * dependencies upward while it executes.
      * 

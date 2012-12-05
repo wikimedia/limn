@@ -5,6 +5,13 @@ _ = require './underscore'
 _fmt = do
     
     /**
+     * @param {String} pattern Date formatting pattern.
+     * @returns {Function} Function that formats a date into the supplied pattern.
+     */
+    dateFormatterFor: (pattern) ->
+        (d) -> moment(d).format(pattern)
+    
+    /**
      * Formats a date for display on an axis: `MM/YYYY`
      * @param {Date} d Date to format.
      * @returns {String}
@@ -17,7 +24,7 @@ _fmt = do
      * @param {Date} d Date to format.
      * @returns {String}
      */
-    dateFormatter: (d) ->
+    _dateFormatter: (d) ->
         moment(d).format 'DD MMM YYYY'
     
     /**
@@ -52,7 +59,7 @@ _fmt = do
         }
     
     numberFormatterHTML: (n, digits=2) ->
-        { whole, fraction, suffix } = _fmt._numberFormatter n, digits
+        { whole, fraction, suffix } = _fmt.numberFormatter n, digits
         # coco will trim the whitespace
         "<span class='value'>
         <span class='whole'>#whole</span>
