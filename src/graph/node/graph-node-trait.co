@@ -10,11 +10,27 @@ exports import do
      */
     HTML : 'html-element'
     
+    
     /**
      * Node needs an SVG parent element.
      * @constant
      */
     SVG : 'svg-element'
+    
+    
+    /**
+     * Node should render above others.
+     * @constant
+     */
+    FG_LAYER : 'fg-layer'
+    
+    
+    /**
+     * Node should render behind others.
+     * @constant
+     */
+    BG_LAYER : 'bg-layer'
+    
     
     /**
      * Node participates in visualizing data.

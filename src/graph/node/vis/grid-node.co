@@ -15,7 +15,9 @@ Trait = require '../graph-node-trait'
 class exports.GridNode extends GraphNode
     nodeType : 'grid'
     traits   : [
-        Trait.VIS_NODE
+        Trait.META_NODE
+        Trait.BG_LAYER
+        Trait.SVG
         Trait.LEAF
     ]
     @registerType()
@@ -27,7 +29,6 @@ class exports.GridNode extends GraphNode
         # Trigger the grid computed to auto-update
         # once we build for the first time.
         @on 'watch-build', @grid
-    
     
     
     grid: @computed ->
