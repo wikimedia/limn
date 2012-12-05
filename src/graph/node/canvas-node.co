@@ -15,7 +15,7 @@ Trait = require './graph-node-trait'
  */
 class exports.CanvasNode extends GraphNode
     nodeType : 'canvas'
-    traits   : [ Trait.META_NODE, Trait.VIEWPORT, ]
+    traits   : [ Trait.VIEWPORT ]
     @registerType()
     
     template: 'canvas-node'

@@ -13,6 +13,10 @@ Trait = require '../graph-node-trait'
  */
 class exports.LineGroupNode extends GroupNode
     nodeType : 'line-group'
+    traits   : [
+        Trait.VIS_NODE
+        Trait.SVG
+    ]
     @registerType()
     
     -> super ...

@@ -17,6 +17,7 @@ class exports.TimeseriesNode extends GraphNode
         Trait.VIS_NODE
         Trait.REQUIRES_METRIC
         Trait.METRIC_TIMESERIES
+        Trait.SVG
         Trait.LEAF
     ]
     @registerType()

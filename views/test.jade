@@ -6,9 +6,11 @@ block styles
     mixin css('/vendor/qunit/themes/qunit.css')
     mixin css('/vendor/qunit/theme-picker.css')
 
-block body
-    #qunit
+block content
+    .inner(style='padding:1em')
+        #qunit
 
+block footer
 
 append defs
     .tests
