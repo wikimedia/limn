@@ -120,7 +120,7 @@ class exports.Query
             pickCols = op.I
         
         result = iter.pipe pickCols, filterTime .toArray()
-        result = _.zip ...result unless opts.rows
+        result = _.zip ...result unless opts.rows or result[0].length is 1
         result
     
 

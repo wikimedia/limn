@@ -55,9 +55,10 @@ class exports.Metric extends Model
      * @depends source, query
      */
     data : @computed ->
-        return unless query      = @query()
-        return unless csv        = @source()?.data()
-        return unless source_col = @get 'source_col'
+        source_col = @get 'source_col'
+        return unless source_col?
+        return unless query = @query()
+        return unless csv   = @source()?.data()
         query
             .rows true
             .columns 0, source_col
@@ -74,7 +75,7 @@ class exports.Metric extends Model
         return unless csv   = @source()?.data()
         query
             .rows false
-            .columns null
+            .columns 0
             .call csv.getDateColumn()
     
     
