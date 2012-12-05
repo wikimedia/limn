@@ -24,19 +24,12 @@ class exports.GridNode extends GraphNode
     @registerType()
     
     
-    ->
-        super ...
-        
-        # Trigger the grid computed to auto-update
-        # once we build for the first time.
-        @on 'watch-build', @grid
+    -> super ...
     
     
-    grid: @computed ->
-        return null unless @el() and @sel
-        return null unless options   = @model().options()
-        return null unless dimension = options.dimension()
-        return null unless scales    = @root().scales()
+    render: ->
+        scales = @root().scales()
+        dimension = @options().dimension()
         console.log "#this.grid!"
         
         @sel.classed dimension+'-grid', true

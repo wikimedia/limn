@@ -23,4 +23,12 @@ class exports.TimeseriesNode extends GraphNode
     @registerType()
     
     -> super ...
-    # TODO: factor out LineNode stuff into here after coding other TimeseriesNode children
+    
+    
+    /**
+     * Materialized timeseries data, Array-wrapped for d3.
+     * @type ko.computed<Array<Array<[Date, Value]>>>
+     */
+    timeseriesData: @computed ->
+        metric = @model()?.metric()
+        data   = if metric?.data() then [that] else []

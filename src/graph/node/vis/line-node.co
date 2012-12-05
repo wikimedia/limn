@@ -27,28 +27,12 @@ class exports.LineNode extends TimeseriesNode
     
     -> super ...
     
-    buildElement: (parentElment) ->
-        el = super ...
-        # touch the line to start updates
-        @line()
-        el
-    
-    
-    /**
-     * Materialized timeseries data, Array-wrapped for d3.
-     * @type ko.computed<Array<Array<[Date, Value]>>>
-     */
-    timeseriesData: @computed ->
-        metric = @model()?.metric()
-        data   = if metric?.data() then [that] else []
-    
     
     /**
      * Update selection representing the SVG path element for the line.
      * @type ko.computed<d3.selection.update>
      */
-    line: @computed ->
-        return null unless @el() and @sel
+    render: ->
         data = @timeseriesData()
         
         # create selection

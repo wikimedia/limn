@@ -24,18 +24,12 @@ class exports.AxisNode extends GraphNode
     @registerType()
     
     
-    ->
-        super ...
-        
-        # Trigger the axis computed to auto-update
-        # once we build for the first time.
-        @on 'watch-build', @axis
+    -> super ...
     
     
-    axis: @computed ->
-        return unless @el() and @sel
-        return unless scales  = @root().scales()
-        return unless options = @model().options()
+    render: ->
+        scales  = @root().scales()
+        options = @model().options()
         console.log "#this.axis!"
         
         dimension = options.get('dimension')
