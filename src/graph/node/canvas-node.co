@@ -181,7 +181,10 @@ class exports.CanvasNode extends GraphNode
         
         # HTML nodes
         else
-            if node.hasTrait Trait.FG_LAYER
+            # XXX: Hack
+            if node.hasTrait Trait.CALLOUT_NODE
+                @graph.$ '.graph-name-row > .callout' .0
+            else if node.hasTrait Trait.FG_LAYER
                 @$ 'section.meta > .fg' .0
             else
                 @$ 'section.meta > .bg' .0

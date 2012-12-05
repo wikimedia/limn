@@ -81,5 +81,15 @@ exports import do
     VIEWPORT : 'viewport'
     
     
+    
+    # XXX: These are all basically hacks
+    
+    /**
+     * CalloutNode renders in the graph's title row.
+     * @constant
+     */
+    CALLOUT_NODE : 'callout-node'
+    
+    
 
 

@@ -17,6 +17,7 @@ Trait = require '../graph-node-trait'
 class exports.CalloutNode extends GraphNode
     nodeType : 'callout'
     traits   : [
+        Trait.CALLOUT_NODE # XXX: Hack
         Trait.META_NODE
         Trait.REQUIRES_METRIC
         Trait.METRIC_TIMESERIES
@@ -32,13 +33,13 @@ class exports.CalloutNode extends GraphNode
     
     
     buildElement: (parentElement) ->
-        el = super ...
-        @renderView el
+        @el parentElement
+        @renderView parentElement
     
     
     data: @computed ->
         return unless metric = @model()?.metric()
-        return unless step   = metric.timespan.peek().get('step')
+        # return unless step   = metric.timespan.peek().get('step') # TODO
         return unless (data  = metric.data())?.length
         
         # Compare against latest non-null, non-NaN value
@@ -51,7 +52,7 @@ class exports.CalloutNode extends GraphNode
         last_year  = data[ i - 12 ]
         last_month = data[ i - 1 ]
         
-        step      : step
+        step      : '1mo' # TODO
         latest    : { date, value }
         year      : 
             dates : [ last_year[0],  date  ]
@@ -64,11 +65,13 @@ class exports.CalloutNode extends GraphNode
     
     
     latestValue: @computed ->
-        return '' unless data  = @data()?.latest
+        return '' unless data = @data()?.latest
+        # TODO: options.precision etc
         @numberFormatter data.value, 2, false .toString()
     
     datesFor: (span) ->
         return '' unless data = @data()?[span]
+        # TODO: options.dateFormat = 'MMM YY'
         _.map data.dates, -> moment(it).format('MMM YY')
         .join ' &mdash; '
     
