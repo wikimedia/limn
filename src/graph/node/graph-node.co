@@ -201,6 +201,7 @@ class exports.GraphNode extends Base implements formatters
         return el unless _.isElement el
         @$el = $ el
         @sel = d3.select el
+        @sparent = d3.select @$el.parent()[0]
         el
     
     
@@ -218,7 +219,11 @@ class exports.GraphNode extends Base implements formatters
      */
     sel : null
     
-    
+    /**
+     * Gets the d3 selected parent of this.el, or null
+     * @type d3.selection
+     */
+    sparent : null
     # }}}
     
     

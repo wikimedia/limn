@@ -1,0 +1,42 @@
+_  = require 'underscore'
+ko = require 'knockout'
+d3 = require 'd3'
+
+{ GraphNode,
+} = require '../graph-node'
+
+Trait = require '../graph-node-trait'
+
+
+
+/**
+ * @class
+ * @extends GraphNode
+ */
+class exports.ZoomPanNode extends GraphNode
+    nodeType : 'zoom-pan'
+    traits   : [
+        Trait.META_NODE
+        Trait.BG_LAYER
+        Trait.SVG
+        Trait.LEAF
+    ]
+    @registerType()
+    
+    
+    -> super ...
+    
+    
+    render: ->
+        return unless scales = @root().scalesIfValid()
+        console.log "#this.zoom!"
+        
+        @behavior = d3.behavior.zoom()
+        @behavior.on 'zoom', @zooming
+        
+        @behavior.x scales.xScale
+        @behavior.y scales.yScale
+        @sparent.call @behavior
+    
+    zooming: ->
+        console.log 'zooming', arguments
