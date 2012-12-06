@@ -176,12 +176,31 @@ class exports.CanvasNode extends GraphNode
      */
     watchOthers: ->
         @metrics()
-        
+    
+    
+    /**
+     * register a handler for an event name so that child nodes can see parent events
+     * @param {string} eventName
+     * @param {Object} context the context to call the function in
+     * @param {Function} fn the handling function
+     */
+    handle: (eventName, context, fn) ->
+        @on eventName, ~> fn.apply context, arguments
     
     
     buildElement: (parentElement) ->
         @renderView parentElement
         @el el = $(parentElement).find('.canvas-node.graph-node').0
+        
+        # TODO: factor this out into viewport-node
+        viewport = @sel.select 'g.viewport'
+        viewport.on 'mousemove', ~>
+            [xOffset, yOffset] = d3.mouse(viewport[0][0])
+            @trigger 'hover-graph', xOffset, yOffset
+        
+        viewport.on 'mouseout', ~>
+            @trigger 'hover-out-graph'
+        
         el
     
     

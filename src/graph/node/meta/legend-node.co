@@ -12,8 +12,6 @@ moment = require 'moment'
 Trait = require '../graph-node-trait'
 
 
-
-
 /**
  * @class
  * @extends GraphNode
