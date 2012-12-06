@@ -142,6 +142,10 @@ class exports.GraphView extends View
         node
     
     
+    resize: ->
+        @rootNode?.peek()?.resize()
+    
+    
     /**
      * Called by Knockout once the Graph template has finished rendering.
      */

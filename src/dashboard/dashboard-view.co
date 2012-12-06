@@ -26,7 +26,7 @@ class exports.DashboardView extends View
         tabs        : []
     
     attributeTypes:
-        tabs        : DashboardTabView
+        tabs        : (tab) -> new DashboardTabView this, tab
     
     
     (model, action) ->
@@ -46,6 +46,12 @@ class exports.DashboardView extends View
         @action action
         @model  model
         
+        # Fires when afterRender is called
+        @once 'render', ~>
+            @$el.on 'shown', '.graphs.tabbable .nav a[data-toggle="tab"]', ~>
+                _.invoke @tabs(), 'resize'
+        
+        @on 'render', @updateActiveTab, this
         @watch()
     
     
@@ -55,15 +61,61 @@ class exports.DashboardView extends View
     
     
     watchOthers : ->
-        console.log "#this.watchOthers!"
+        # console.log "#this.watchOthers!"
         tabs = @watchModels()
         _.invoke @tabs(), 'watch'
         tabs
     
     
     watchModels : @computed ->
-        console.log "#this.watchModels!"
+        # console.log "#this.watchModels!"
         @tabs newModels = @model().tabs().slice()
         newModels
+    
+    
+    updateActiveTab: ->
+        console.log "#this.updateActiveTab!"
+        tabnav = @$ '.graphs.tabbable .nav.subnav.nav-pills'
+        unless tabnav.find('li.tab-button.active').length
+            # tabnav.find('li.tab-button:first')
+            #     .addClass('active')
+            tabnav.find('li.tab-button:first a')
+                .click()
+    
+    
+    ### Navigation Between Graphs {{{
+    
+    
+    /**
+     * Scroll to the specified graph.
+     * 
+     * @param {String|Number|Graph} graph The Graph to scroll to; can be specified as a
+     *  Graph id, an index into the Graphs list, or a Graph object.
+     * @returns {this} 
+     */
+    scrollToGraph: (graph) ->
+        if typeof graph is 'string'
+            graph = @graphs.get graph
+        else if typeof graph is 'number'
+            graph = @graphs.at graph
+        unless graph instanceof Graph
+            console.error "#this.scrollToGraph() Unknown graph #graph!"
+            return this
+        return this unless view = _.find @subviews, -> it.model is graph
+        $ 'body' .scrollTop view.$el.offset().top if view.$el.is ':visible'
+        this
+    
+    
+    findClosestGraph: (scroll) ->
+        scroll or= $ 'body' .scrollTop()
+        views = @subviews
+            .filter -> it.$el.is ':visible'
+            .map -> [ it.$el.offset().top, it ]
+            .filter -> it[0] >= scroll
+            .sort (a,b) -> op.cmp a[0], b[0]
+        return views[0][1] if views.length
+    
+    
+    ### }}}
     
     

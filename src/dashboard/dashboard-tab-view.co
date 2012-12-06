@@ -11,6 +11,11 @@ ko = require 'knockout'
 class exports.DashboardTabView extends View
     template: 'dashboard-tab'
     
+    (@dashboard, model) ->
+        super model
+        @on 'render', ~> @dashboard.updateActiveTab()
+    
+    
     defaults: ->
         model       : null
         isDestroyed : false
@@ -19,8 +24,14 @@ class exports.DashboardTabView extends View
     attributeTypes:
         graphs      : GraphView
     
+    tabId: @computed ->
+        _.underscored @model().name() .toLowerCase()
     
-    -> super ...
+    tabButtonCss: @computed ->
+        @tabId() + '-button'
+    
+    tabPaneCss: @computed ->
+        @tabId() + '-graphs-pane'
     
     
     watchDeps: ->
@@ -29,15 +40,17 @@ class exports.DashboardTabView extends View
     
     
     watchOthers : ->
-        console.log "#this.watchOthers!"
+        # console.log "#this.watchOthers!"
         graphs = @watchModels()
         _.invoke @graphs(), 'watch'
         graphs
     
     
     watchModels : @computed ->
-        console.log "#this.watchModels!"
+        # console.log "#this.watchModels!"
         @graphs newModels = @model().graphs().slice()
         newModels
     
+    resize: ->
+        _.invoke @graphs(), 'resize'
     

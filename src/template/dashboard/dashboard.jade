@@ -1,6 +1,21 @@
 section.dashboard
-    h2(data-bind="text: model().headline")
-    h3(data-bind="text: model().subhead")
+    .page-header
+        h1
+            span(data-bind='text: model().headline')
+            |  
+            small(data-bind='visible: model().subhead, text: model().subhead')
     
-    ol(data-bind="foreach: { data:tabs, as:'tab' }")
-        li(data-bind="subview: tab")
+    .row
+        .graphs.tabbable
+            nav
+                ul.nav.subnav.nav-pills
+                    li: h3 Graphs
+                    // ko foreach: { data:tabs, as:'tab' }
+                    li.tab-button(data-bind="css: tab.tabButtonCss")
+                        a(data-toggle="tab", data-bind="attr: { href:'#' + tabId() + '-graphs-tab' }, text: tab.model().name")
+                    // /ko
+            
+            .tab-content(data-bind="foreach: { data:tabs, as:'tab' }")
+                .tab-pane(data-bind="attr: { id: tabId() + '-graphs-tab' }, css: tabPaneCss, subview: tab")
+
+

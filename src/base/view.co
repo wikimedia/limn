@@ -110,6 +110,16 @@ class exports.View extends Base
     afterRender: (element) ->
         console.log "#this.afterRender()"
         @el element
+        @trigger 'render', this, element
+    
+    
+    /**
+     * Called by Knockout once the Graph template has updated rendering.
+     */
+    afterAdd: (element) ->
+        console.log "#this.afterAdd()"
+        @el element
+        @trigger 'render-add', this, element
     
     
     toString: ->

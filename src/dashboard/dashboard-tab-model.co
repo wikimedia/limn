@@ -34,7 +34,7 @@ class exports.DashboardTab extends Model
      * Inform sub-objects its safe to begin their watchers.
      */
     watch: @computed ->
-        console.log "#this.watch!"
+        # console.log "#this.watch!"
         @isWatching = true
         @graphs()
         ko.dependencyDetection.ignore ~>
