@@ -16,8 +16,7 @@ Trait = require '../graph-node-trait'
 class exports.ZoomPanNode extends GraphNode
     nodeType : 'zoom-pan'
     traits   : [
-        Trait.META_NODE
-        Trait.BG_LAYER
+        Trait.VIS_NODE
         Trait.SVG
         Trait.LEAF
     ]
@@ -28,15 +27,25 @@ class exports.ZoomPanNode extends GraphNode
     
     
     render: ->
-        return unless scales = @root().scalesIfValid()
+        return unless root = @root()
+        return unless scales = root.scalesIfValid()
         console.log "#this.zoom!"
         
-        @behavior = d3.behavior.zoom()
-        @behavior.on 'zoom', @zooming
+        return if @behavior
+        
+        @behavior = d3.behavior.zoom().scaleExtent [1,10]
+        @behavior.on 'zoom', ~> @zooming.apply this, arguments
         
         @behavior.x scales.xScale
         @behavior.y scales.yScale
+        
+        @sparent.append 'rect'
+            .classed 'zooming', true
+            .attr do
+                fill: 'none'
+                width: root.width()
+                height: root.height()
         @sparent.call @behavior
     
     zooming: ->
-        console.log 'zooming', arguments
+        @sparent.attr 'transform', "translate(#{translate[0]},#{translate[1]}) scale(#scale)"
