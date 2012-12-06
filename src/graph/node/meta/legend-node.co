@@ -21,6 +21,7 @@ Trait = require '../graph-node-trait'
 class exports.LegendNode extends GraphNode
     nodeType : 'legend'
     traits   : [
+        Trait.SECTION
         Trait.META_NODE
         Trait.REQUIRES_METRIC_POINTER
         Trait.METRIC_TIMESERIES
@@ -28,8 +29,7 @@ class exports.LegendNode extends GraphNode
         Trait.LEAF
     ]
     @registerType()
-    
-    tagName  : 'fieldset'
+    tagName  : 'section'
     template : 'legend-node'
     
     
@@ -38,6 +38,7 @@ class exports.LegendNode extends GraphNode
     
     buildElement: (parentElement) ->
         el = super ...
+        $ parentElement .prepend el
         @renderView el
     
     nodes: @computed ->

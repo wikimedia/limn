@@ -18,6 +18,7 @@ class exports.CanvasNode extends GraphNode
     traits   : [ Trait.VIEWPORT ]
     @registerType()
     
+    tagName : 'section'
     template: 'canvas-node'
     
     
@@ -27,23 +28,26 @@ class exports.CanvasNode extends GraphNode
     defaultWidth  : @computed -> 750
     defaultHeight : @computed -> 500
     
-    fullWidth    : @computed -> @$el.innerWidth()  if @el()
-    fullHeight   : @computed -> @$el.innerHeight() if @el()
+    _sizeProxy    : ko.observable {}
+    resize        : -> @_sizeProxy {}
+    
+    fullWidth     : @computed -> @$el.innerWidth()  if @el() and @_sizeProxy()
+    fullHeight    : @computed -> @$el.innerHeight() if @el() and @_sizeProxy()
     
     margin : { top:30, right:60, bottom:30, left:60 }
     
     frameWidth : @computed ->
-        return @defaultWidth() unless model = @model()
+        return unless model = @model()
         width = model.width()
         if width is 'auto'
-            width = @fullWidth() or @defaultWidth()
+            width = @fullWidth()
         width
     
     frameHeight : @computed ->
-        return @defaultHeight() unless model = @model()
+        return unless model = @model()
         height = model.height()
         if height is 'auto'
-            height = @fullHeight() or @defaultHeight()
+            height = @fullHeight()
         height
     
     viewportWidth : @computed ->
@@ -74,6 +78,13 @@ class exports.CanvasNode extends GraphNode
      * The scale that translates y domain values into y output range values
      */
     yScale : null
+    
+    padding : 0.1
+    
+    applyPadding: ([min, max]) ->
+        min -= min * @padding
+        max += max * @padding
+        [min, max]
     
     
     /**
@@ -119,7 +130,7 @@ class exports.CanvasNode extends GraphNode
         xValid = xs.length and width > 0
         
         ys = _.compact _.flatten _.invoke metrics, 'values'
-        yDomain = d3.extent ys
+        yDomain = @applyPadding d3.extent ys
         @yScale.domain yDomain if ys.length
         
         height = @viewportHeight()
@@ -154,6 +165,9 @@ class exports.CanvasNode extends GraphNode
             .y ([date, val], i) ~> @yScale val
             .interpolate 'linear'
         @scales { @xScale, @yScale, @scaleLine, -xValid, -yValid }
+        
+        # Trigger resize whenever a child is added
+        @on 'child-built', @resize, this
     
     
     /**
@@ -183,11 +197,13 @@ class exports.CanvasNode extends GraphNode
         else
             # XXX: Hack
             if node.hasTrait Trait.CALLOUT_NODE
-                @graph.$ '.graph-name-row > .callout' .0
+                @graph.$ '.graph-name-row > section.callout' .0
+            else if node.hasTrait Trait.SECTION
+                @$el.parent().0
             else if node.hasTrait Trait.FG_LAYER
-                @$ 'section.meta > .fg' .0
+                @$ 'section.meta.fg' .0
             else
-                @$ 'section.meta > .bg' .0
+                @$ 'section.meta.bg' .0
     
     
     

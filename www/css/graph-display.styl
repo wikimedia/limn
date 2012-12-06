@@ -6,15 +6,16 @@ section.graph-display.graph
     max-width 900px
     margin 3em auto
     
-    *
-        position relative
-    
     .graph-name-row
         margin-bottom 1em
         clearfix()
     
+    .inner, .row
+        position relative
+    
     /* * * *  Chart & Viewport  * * * {{{ */
-    .callout
+    
+    section.callout
         float left
         z-index 100
         width 15.385em
@@ -38,41 +39,57 @@ section.graph-display.graph
                     &.delta-negative
                         color #C9313D
     
-    .graph-legend
-        absolute top 1em left 0
-        z-index 100
+    // .canvas-node:hover + .legend-node
+    //     border 1px solid $light
+    
+    section.canvas-node
+        position relative
+        min-width 200px
+        min-height 320px
+        margin-bottom 1.5em
+        overflow hidden
+        
+        & section.meta
+            absolute top left
+            
+            &.fg
+                z-index 500
+            &.bg
+                z-index 0
+        
+        section.chart
+            // absolute top left
+            z-index 100
+    
+    section.legend-node ~ section.canvas-node
+        margin-left 17.385em
+    
+    section.legend-node
+        absolute top left
+        z-index 200
         width 14.667em
         
+        margin-top 30px
         padding 1em
         background-color rgba(255,255,255, 0.75)
         font 12px/1.5 "helvetica neue", helvetica, arial, sans-serif
         border 1px solid $light
         border-radius 5px
         
-        b
+        .entry-label
             display inline-block
             width 10em
-        .whole
-            display inline-block
-            width 2.5em
-            text-align right
-        .fraction
-            text-align left
-        .suffix
-            text-align left
+        .entry-value
+            .whole
+                display inline-block
+                width 2.5em
+                text-align right
+            .fraction
+                text-align left
+            .suffix
+                text-align left
     
-    .graph-viewport-row > .inner
-        padding-left 17.385em
     
-    .viewport:hover + .graph-legend
-        border 1px solid $light
-    
-    .viewport
-        position relative
-        min-width 200px
-        min-height 320px
-        margin-bottom 1.5em
-        overflow hidden
     
     /* }}} */
     

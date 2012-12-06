@@ -310,6 +310,7 @@ class exports.GraphNode extends Base implements formatters
         for node of @children()
             nodeParentEl = @determineDOMParentForChildNode(node)
             continue unless node.build nodeParentEl
+            @trigger 'child-built', node, this
         el
     
     

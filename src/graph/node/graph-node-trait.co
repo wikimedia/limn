@@ -82,6 +82,13 @@ exports import do
     
     
     /**
+     * Node is a top-level section in the canvas, likely altering the flow of other elements.
+     * @constant
+     */
+    SECTION : 'section'
+    
+    
+    /**
      * Node defines a viewing window for other nodes to render in.
      * @constant
      */
