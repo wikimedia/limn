@@ -1,6 +1,8 @@
 _  = require 'underscore'
 ko = require 'knockout'
 
+{ compareIds, OrderedSet, formatters,
+} = require '../util'
 { Model,
 } = require '../base'
 { Graph,
@@ -16,7 +18,7 @@ class exports.DashboardTab extends Model
     
     defaults: ->
         name        : ''
-        graph_ids   : []
+        graphs      : []
     
     attributeTypes:
         graphs      : Graph
@@ -32,8 +34,11 @@ class exports.DashboardTab extends Model
      * Inform sub-objects its safe to begin their watchers.
      */
     watch: @computed ->
+        console.log "#this.watch!"
         @isWatching = true
-        _.invoke @graphs(), 'watch'
+        @graphs()
+        ko.dependencyDetection.ignore ~>
+            _.invoke @graphs(), 'watch'
     
     
     toJSON: ->

@@ -2,5 +2,5 @@ section.dashboard
     h2(data-bind="text: model().headline")
     h3(data-bind="text: model().subhead")
     
-    ol(data-bind="foreach: tabs")
-        li(data-bind="subview: $data")
+    ol(data-bind="foreach: { data:tabs, as:'tab' }")
+        li(data-bind="subview: tab")

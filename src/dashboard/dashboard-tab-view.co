@@ -1,6 +1,8 @@
 _ = require 'underscore'
 ko = require 'knockout'
 
+{ compareIds, OrderedSet, formatters,
+} = require '../util'
 { View,
 } = require '../base/view'
 { GraphView,
@@ -21,13 +23,21 @@ class exports.DashboardTabView extends View
     -> super ...
     
     
-    /**
-     * Inform sub-objects its safe to begin watchers.
-     */
-    watch : @computed ->
-        console.log "#this.watch!"
-        @isWatching = true
-        model       = @model().watch()
-        graphs      = _.invoke @graphs(), 'watch'
-        [ model, graphs ]
+    watchDeps: ->
+        @model().graphs()
+        @graphs()
+    
+    
+    watchOthers : ->
+        console.log "#this.watchOthers!"
+        graphs = @watchModels()
+        _.invoke @graphs(), 'watch'
+        graphs
+    
+    
+    watchModels : @computed ->
+        console.log "#this.watchModels!"
+        @graphs newModels = @model().graphs().slice()
+        newModels
+    
     

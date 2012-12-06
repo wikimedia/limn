@@ -1,12 +1,20 @@
 _ = require 'underscore'
 ko = require 'knockout'
+{
+    unwrapObservable : unwrap
+    peekObservable   : peek
+} = ko.utils
 
+{ compareIds, OrderedSet, formatters,
+} = require '../util'
 { View,
 } = require '../base/view'
 { Dashboard,
 } = require './dashboard-model'
 { DashboardTabView,
 } = require './dashboard-tab-view'
+
+
 
 class exports.DashboardView extends View
     template: 'dashboard'
@@ -24,6 +32,10 @@ class exports.DashboardView extends View
     (model, action) ->
         super()
         
+        # Decorate properties we need to clean up with history tracking
+        @tabs = @attributes.tabs = @tabs.history({ -includeInitial })
+        @tabs.equalityComparer = compareIds
+        
         if model instanceof Dashboard
             model.fetch()
         else if typeof model is 'string'
@@ -32,25 +44,26 @@ class exports.DashboardView extends View
             model = new Dashboard model
         
         @action action
-        @model model
-        
-        # model.fetch.promise?.done ~>
-        #     @model().fetchGraphs().done ~>
-        #         for tab of @model().tabs()
-        #             tabView = new DashboardTabView tab
-        #             @tabs.push tabView
+        @model  model
         
         @watch()
     
     
-    /**
-     * Inform sub-objects its safe to begin their watchers.
-     */
-    watch : @computed ->
-        console.log "#this.watch!"
-        @isWatching = true
-        model       = @model().watch()
-        tabs        = _.invoke @tabs(), 'watch'
-        [ model, tabs ]
+    watchDeps: ->
+        @model().tabs()
+        @tabs()
+    
+    
+    watchOthers : ->
+        console.log "#this.watchOthers!"
+        tabs = @watchModels()
+        _.invoke @tabs(), 'watch'
+        tabs
+    
+    
+    watchModels : @computed ->
+        console.log "#this.watchModels!"
+        @tabs newModels = @model().tabs().slice()
+        newModels
     
     

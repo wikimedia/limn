@@ -2,6 +2,8 @@ _       = require 'underscore'
 ko      = require 'knockout'
 Seq     = require 'seq'
 
+{ compareIds, OrderedSet, formatters,
+} = require '../util'
 { StoredModel,
 } = require '../base'
 { Graph,
@@ -29,27 +31,13 @@ class exports.Dashboard extends StoredModel
         tabs        : DashboardTab
     
     
-    fetchGraphs: ->
-        promise = $.Deferred()
-        Seq(@tabs())
-            .parEach_ (next, tab) ->
-                Seq(tab.graph_ids())
-                    .parEach_ (next, graph_id) ->
-                        graph = Graph.load id, (err, graph) ->
-                            tab.graphs.push(graph)
-                            next.ok()
-                    .seq ->
-                        next.ok()
-            .seq ->
-                promise.resolve(this)
-        promise
-    
-    
     /**
      * Inform sub-objects its safe to begin their watchers.
      */
     watch: @computed ->
         console.log "#this.watch!"
         @isWatching = true
-        _.invoke @tabs(), 'watch'
+        @tabs()
+        ko.dependencyDetection.ignore ~>
+            _.invoke @tabs(), 'watch'
     

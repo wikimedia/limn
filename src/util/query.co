@@ -109,6 +109,7 @@ class exports.Query
             timeStart = opts.timeStart ? -Infinity
             timeEnd   = opts.timeEnd   ?  Infinity
             filterTime = (row) ->
+                # TODO: turns out JS dates aren't comparable >:(
                 timeStart <= row?[timeCol] <= timeEnd
         else
             filterTime = op.K true

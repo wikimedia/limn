@@ -107,12 +107,10 @@ class exports.GraphView extends View
     /**
      * Inform sub-objects its safe to begin their watchers.
      */
-    watch : @computed ->
-        @isWatching = true
-        model       = @model().watch()
+    watchOthers : ->
         rootNode    = @rootNode().watch()
         rootBuilt   = @watchDOM()
-        [ model, rootNode, rootBuilt ]
+        [ rootNode, rootBuilt ]
     
     
     /**

@@ -57,7 +57,36 @@ class exports.View extends Base
     watch : @computed ->
         console.log "#this.watch!"
         @isWatching = true
-        model = @model().watch()
+        
+        # Creates a dependency on our children
+        @model()
+        @watchDeps()
+        
+        # ...But ignores whatever other watchers do
+        ko.dependencyDetection.ignore ~>
+            others = @watchOthers()
+            model  = @model.watch?()
+            [ model, others ]
+    
+    
+    /**
+     * Stub to allow you to hook into @watch() without overriding everything.
+     * Called to generate dependencies prior to `watch` recursion.
+     * 
+     * @abstract
+     * @protected
+     */
+    watchDeps: ->
+    
+    
+    /**
+     * Stub to allow you to hook into @watch() without overriding everything.
+     * Called to recursively notify of deps.
+     * 
+     * @abstract
+     * @protected
+     */
+    watchOthers: ->
     
     
     /**
@@ -83,6 +112,12 @@ class exports.View extends Base
         @el element
     
     
+    toString: ->
+        cid       = @__id__
+        Class     = @constructor
+        className = Class.displayName or Class.name
+        model     = @model?.peek()
+        "#className(cid=#cid, model=#model)"
 
 
 class exports.NotFoundView extends View

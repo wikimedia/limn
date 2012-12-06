@@ -1,5 +1,5 @@
 section.dashboard-tab
     h3(data-bind="text: model().name")
     
-    ol(data-bind="foreach: graphs")
-        li(data-bind="subview: $data")
+    ol(data-bind="foreach: { data:graphs, as:'graph' }")
+        li(data-bind="subview: graph")
