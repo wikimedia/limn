@@ -1,7 +1,8 @@
+axis_node     = require './axis-node'
 callout_node  = require './callout-node'
 grid_node     = require './grid-node'
-axis_node     = require './axis-node'
+legend_node   = require './legend-node'
 zoom_pan_node = require './zoom-pan-node'
 
-exports import callout_node import grid_node import axis_node import zoom_pan_node
+exports import axis_node import callout_node import grid_node import legend_node import zoom_pan_node
 
