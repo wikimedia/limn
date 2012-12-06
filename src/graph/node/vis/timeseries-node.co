@@ -26,9 +26,10 @@ class exports.TimeseriesNode extends GraphNode
     
     
     /**
-     * Materialized timeseries data, Array-wrapped for d3.
-     * @type ko.computed<Array<Array<[Date, Value]>>>
+     * Materialized timeseries data.
+     * @type ko.computed<Array<[Date, Value]>>
      */
-    timeseriesData: @computed ->
-        metric = @model()?.metric()
-        data   = if metric?.data() then [that] else []
+    timeseriesData: @computedRequires 'model.metric', (metric) ->
+        metric.data()
+    
+    

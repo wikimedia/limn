@@ -85,7 +85,7 @@ class exports.CanvasNode extends GraphNode
     /**
      * @returns {false|Object} The scales object if all are valid; false otherwise.
      */
-    scalesIfValid: ->
+    scalesIfValid: @computed ->
         scales = @scales()
         return scales if scales?.xValid and scales.yValid
         false

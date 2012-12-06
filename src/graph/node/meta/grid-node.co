@@ -30,7 +30,7 @@ class exports.GridNode extends GraphNode
     render: ->
         scales = @root().scales()
         dimension = @options().dimension()
-        console.log "#this.grid!"
+        # console.log "#this.grid!"
         
         @sel.classed dimension+'-grid', true
         

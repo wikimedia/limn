@@ -393,34 +393,81 @@ class exports.GraphNode extends Base implements formatters
     
     
     /**
-     * Performs a depth-first walk across the tree of GraphNodes, invoking an
-     * iteration function much like  `Array.reduce`, passing a custom "accumulator"
-     * value along with the current node: 
-     * 
-     *  `newAcc = fn.call(context, currentAcc, node)`
-     * 
-     * The iterator's return becomes the new accumulator. If not specified, the
-     * iterator will be invoked with the node as the context.
-     * 
-     * @param {*} acc Starting accumulator value.
-     * @param {Object} [context=this] Execution context for the iteration function.
-     * @param {Function} fn Iteration function passed the current accumulator and current GraphNode.
-     * @returns {*} Final accumulator value.
-     */
-    walk: (acc, cxt, fn) ->
-        [fn, cxt] = [cxt, null] unless typeof fn is 'function'
-        acc = fn.call(cxt or this, acc, this)
-        for childNode of @children().slice()
-            acc = childNode.walk acc, cxt, fn
-        acc
-    
-    
-    /**
      * @param {String} trait Trait to test for membership.
      * @returns {Boolean} Whether this node possesses the trait.
      */
     hasTrait: (trait) ->
         _.contains @traits, trait
+    
+    
+    /**
+     * Performs a depth-first walk across the tree of GraphNodes, invoking an
+     * iteration function much like  `Array.reduce`, passing a custom "accumulator"
+     * value along with the current node: 
+     * 
+     *  `newAcc = fn.call(context || node, currentAcc, node, childIndex)`
+     * 
+     * The iterator's return becomes the new accumulator. If not specified, the
+     * iterator will be invoked with the node as the context.
+     * 
+     * @param {*} acc Starting accumulator value.
+     * @param {Object} [context] Execution context for the iteration function.
+     * @param {Function} fn Iteration function passed the current accumulator and current GraphNode.
+     * @returns {*} Final accumulator value.
+     */
+    walk: (acc, cxt, fn, idx=null) ->
+        [fn, cxt] = [cxt, null] unless typeof fn is 'function'
+        acc = fn.call(cxt or this, acc, this, idx)
+        for childNode, childIdx of @children().slice()
+            acc = childNode.walk acc, cxt, fn, childIdx
+        acc
+    
+    
+    /**
+     * As `Array.map()` but walking the tree of GraphNodes.
+     * Mapping function invoked with:
+     * 
+     *  `fn.call(context || node, node, childIndex) -> newValue`
+     * 
+     * @param {Object} [context] Execution context for the mapping function.
+     * @param {Function} fn Mapping function.
+     * @returns {Array<GraphNode>} Mapped GraphNode children.
+     */
+    map: (cxt, fn) ->
+        [fn, cxt] = [cxt, null] unless typeof fn is 'function'
+        @walk [], cxt, (acc, node, childIdx) ->
+            acc.push fn.call this, node, childIdx
+            acc
+    
+    
+    /**
+     * As `Array.filter()` but walking the tree of GraphNodes.
+     * Filter function invoked with:
+     * 
+     *  `fn.call(context || node, node, childIndex) -> Boolean`
+     * 
+     * @param {Object} [context] Execution context for the filter function.
+     * @param {Function} fn Filter function.
+     * @returns {Array<GraphNode>} Matching GraphNode children.
+     */
+    filter: (cxt, fn) ->
+        [fn, cxt] = [cxt, null] unless typeof fn is 'function'
+        @walk [], cxt, (acc, node, childIdx) ->
+            acc.push node if fn.call this, node, childIdx
+            acc
+    
+    
+    /**
+     * Walk the GraphNode tree and filter out all nodes that do not have
+     * all the given traits.
+     * 
+     * @param {Trait|Array<Trait>} traits List of trait(s) which must
+     *  be present to keep a node.
+     * @returns {Array<GraphNode>}
+     */
+    filterTraits: (traits) ->
+        traits = [traits] unless _.isArray traits
+        @filter (node) -> _.all traits, node.hasTrait, node
     
     
     /**

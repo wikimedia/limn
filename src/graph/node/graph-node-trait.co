@@ -54,6 +54,13 @@ exports import do
     
     
     /**
+     * Associated GraphNodeData must define a pointer to another Metric as a prerequisite to render.
+     * @constant
+     */
+    REQUIRES_METRIC_POINTER : 'metric-pointer'
+    
+    
+    /**
      * Metric for associated GraphNodeData is timeseries data if defined.
      * @constant
      */

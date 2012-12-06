@@ -58,17 +58,22 @@ _fmt = do
             "#{@whole}#{@fraction}#{if abbrev then '' else ' '}#{@suffix}"
         }
     
-    numberFormatterHTML: (n, digits=2) ->
-        { whole, fraction, suffix } = _fmt.numberFormatter n, digits
+    numberFormatterHTML: (n, digits=2, addWrapper=true) ->
+        { whole, fraction, suffix } = @numberFormatter n, digits
         # coco will trim the whitespace
-        "<span class='value'>
-        <span class='whole'>#whole</span>
-        <span class='fraction'>#fraction</span>
-        <span class='suffix'>#suffix</span>
-        </span>"
+        value = "
+            <span class='whole'>#whole</span>
+            <span class='fraction'>#fraction</span>
+            <span class='suffix'>#suffix</span>
+        "
+        value = "<span class='value'>#value</span>" if addWrapper
+        value
     
     numberFormatterFor: (digits, abbrev) ->
         (n) ~> @numberFormatter(n, digits, abbrev)
+    
+    numberFormatterHTMLFor: (digits, abbrev, addWrapper) ->
+        (n) ~> @numberFormatterHTML(n, digits, abbrev, addWrapper)
     
 
 

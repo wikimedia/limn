@@ -19,7 +19,7 @@ class exports.CalloutNode extends GraphNode
     traits   : [
         Trait.CALLOUT_NODE # XXX: Hack
         Trait.META_NODE
-        Trait.REQUIRES_METRIC
+        Trait.REQUIRES_METRIC_POINTER
         Trait.METRIC_TIMESERIES
         Trait.HTML
         Trait.LEAF

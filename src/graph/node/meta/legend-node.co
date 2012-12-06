@@ -1,0 +1,101 @@
+_  = require 'underscore'
+ko = require 'knockout'
+moment = require 'moment'
+
+{ guidFor, formatters,
+} = require '../../../util'
+{ GraphNode,
+} = require '../graph-node'
+
+Trait = require '../graph-node-trait'
+
+
+
+
+/**
+ * @class
+ * @extends GraphNode
+ */
+class exports.LegendNode extends GraphNode
+    nodeType : 'legend'
+    traits   : [
+        Trait.META_NODE
+        Trait.REQUIRES_METRIC_POINTER
+        Trait.METRIC_TIMESERIES
+        Trait.HTML
+        Trait.LEAF
+    ]
+    @registerType()
+    
+    tagName  : 'fieldset'
+    template : 'legend-node'
+    
+    
+    -> super ...
+    
+    
+    buildElement: (parentElement) ->
+        el = super ...
+        @renderView el
+    
+    nodes: @computed ->
+        @filterTraits [Trait.VIS_NODE, Trait.REQUIRES_METRIC]
+    
+    label: @computedRequires 'options', (options) ->
+        options.get('label')
+    
+    dateFormatter : @computedRequires 'options', (options) ->
+        @dateFormatterFor legendOptions.get('dateFormat')
+    
+    date : @computedRequires 'root.scalesIfValid', (scales) ->
+        [firstDate, lastDate] = scales.xScale.domain()
+        @dateFormatter() lastDate
+    
+    entries: @computedRequires 'nodes', (nodes) ->
+        _ nodes .chain()
+            .filter (node) ->
+                not (node.get('disabled') or node.options()?.get('noLegend'))
+            .map (node) ~>
+                new LegendEntry this, node
+
+
+
+/**
+ * @class
+ * @extends Base
+ */
+class exports.LegendEntry extends Base implements formatters
+    
+    (@legend, @node) ->
+        super {}
+        @legendOptions = @legend.options
+        @options = @node.options
+        this import _.pick(@options.peek(), 'label', 'color')
+    
+    nodeId: @computed ->
+        guidFor @node
+    
+    dateFormatter : @computedRequires 'legendOptions', 'options', (legendOptions, options) ->
+        dateFormat = legendOptions.get('dateFormat') or options.get('dateFormat')
+        @dateFormatterFor dateFormat
+    
+    valueFormatter : @computedRequires 'legendOptions', 'options', (legendOptions, options) ->
+        # valueFormat = legendOptions.get('valueFormat') or options.get('valueFormat')
+        @numberFormatterHTMLFor digits=2, abbrev=true, addWrapper=false
+    
+    date : @computedRequires 'node.timeseriesData', (data) ->
+        # TODO: update on hover
+        [date, val] = _.last(data)
+        @dateFormatter()(date)
+    
+    value : @computedRequires 'node.timeseriesData', (data) ->
+        # TODO: update on hover
+        [date, val] = _.last(data)
+        @valueFormatter()(val)
+    
+    
+
+
+
+
+

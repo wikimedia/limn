@@ -645,10 +645,13 @@ class exports.Base extends EventEmitter
     @computedRequires = (...keys, method) ->
         wrapper = @computed ->
             args = []
-            for k of keys
-                # val = unwrap _.getNested this, k, null, {-ensure, getter:'\0'}
-                val = unwrap @[k]
-                return unless val?
+            for key of keys
+                val = this
+                for k of key.split('.')
+                    val = unwrap val[k]
+                    return unless val?
+                    return if _.isArray(val) and not val.length
+                else return
                 args.push val
             method.apply this, args
         wrapper.__compReq__ = { keys, method }

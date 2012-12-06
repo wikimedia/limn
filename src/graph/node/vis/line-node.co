@@ -33,7 +33,7 @@ class exports.LineNode extends TimeseriesNode
      * @type ko.computed<d3.selection.update>
      */
     render: ->
-        data = @timeseriesData()
+        data = if @timeseriesData() then [that] else []
         
         # create selection
         line = @selectAll 'path.metric-line' .data data
@@ -60,5 +60,13 @@ class exports.LineNode extends TimeseriesNode
         line.transition()
             .attr 'd', scales.scaleLine
         line
+    
+    
+    # TODO: Options:
+    # - color with palette lookup on line-group
+    # - opacity
+    # - stroke-width
+    # - label with default == metric.defaultLabel
+    # - valueFormat, dateFormat
     
 
