@@ -1,0 +1,60 @@
+_  = require 'underscore'
+ko = require 'knockout'
+moment = require 'moment'
+
+{ guidFor, formatters,
+} = require '../../../util'
+{ Base,
+} = require '../../../base'
+{ GraphNode,
+} = require '../graph-node'
+
+Trait = require '../graph-node-trait'
+
+
+/**
+ * @class
+ * @extends GraphNode
+ */
+class exports.GuideNode extends GraphNode
+    nodeType : 'guide'
+    traits   : [
+        Trait.META_NODE
+        Trait.BG_LAYER
+        Trait.SVG
+        Trait.LEAF
+    ]
+    @registerType()
+    
+    
+    -> super ...
+    
+    
+    render: ->
+        options = @model().options()
+        return unless scales    = @root().scalesIfValid()
+        return unless dimension = options.get('dimension')
+        
+        return if @line
+        
+        @line = @sparent.append 'line'
+            .attr do
+                'pointer-events': 'none'
+        
+        switch dimension
+            case 'x'
+                @line
+                    .classed 'verticalGuide', true
+                    .attr do
+                        y1: 0
+                        y2: @root().height()
+                
+                @root().handle 'hover-graph', this, (xOffset) ~>
+                    @line.attr do
+                        x1: xOffset
+                        x2: xOffset
+                
+                @root().handle 'hover-out-graph', this, ~>
+                    @line.attr do
+                        x1: 0
+                        x2: 0
