@@ -7,8 +7,8 @@ section.canvas-node.graph-node
                     rect(data-bind='attr: { width:viewportWidth, height:viewportHeight }')
                 g.metricDefs
             g(data-bind='attr: { transform:"translate("+margin.left+","+margin.top+")" }')
-                g.fg
                 g.frame(data-bind='attr: { "clip-path":"url(#clip-"+graphId+")" }')
-                    g.viewport
                     g.bg
+                    g.viewport
+                g.fg
     section.meta.bg
