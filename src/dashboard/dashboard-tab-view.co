@@ -14,3 +14,5 @@ class exports.DashboardTabView extends View
         for graph of @model().graphs()
             graphView = new GraphView graph
             @graphs.push graphView
+    
+    

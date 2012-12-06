@@ -16,9 +16,8 @@ class exports.Dashboard extends StoredModel
     /**
      * @constructor
      */
-    (attributes) ->
-        super ...
-        
+    -> super ...
+    
     
     defaults: ->
         id          : null
@@ -29,18 +28,28 @@ class exports.Dashboard extends StoredModel
     attributeTypes:
         tabs        : DashboardTab
     
+    
     fetchGraphs: ->
         promise = $.Deferred()
         Seq(@tabs())
             .parEach_ (next, tab) ->
                 Seq(tab.graph_ids())
                     .parEach_ (next, graph_id) ->
-                        graph = new Graph id: graph_id
-                        graph.fetch ->
+                        graph = Graph.load id, (err, graph) ->
                             tab.graphs.push(graph)
                             next.ok()
                     .seq ->
                         next.ok()
             .seq ->
-                promise.resolve()
+                promise.resolve(this)
         promise
+    
+    
+    /**
+     * Inform sub-objects its safe to begin their watchers.
+     */
+    watch: @computed ->
+        console.log "#this.watch!"
+        @isWatching = true
+        @root().watch()
+    
