@@ -48,4 +48,6 @@ class exports.ZoomPanNode extends GraphNode
         @sparent.call @behavior
     
     zooming: ->
+        scale = @behavior.scale()
+        translate = @behavior.translate()
         @sparent.attr 'transform', "translate(#{translate[0]},#{translate[1]}) scale(#scale)"
