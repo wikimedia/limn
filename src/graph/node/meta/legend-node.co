@@ -55,7 +55,7 @@ class exports.LegendNode extends GraphNode
         @dateFormatter() lastDate
     
     entries: @computedRequires 'nodes', (nodes) ->
-        _ nodes .chain()
+        nodes
             .filter (node) ->
                 not (node.get('disabled') or node.options()?.get('noLegend'))
             .map (node) ~>
