@@ -4,6 +4,8 @@ moment = require 'moment'
 
 { guidFor, formatters,
 } = require '../../../util'
+{ Base,
+} = require '../../../base'
 { GraphNode,
 } = require '../graph-node'
 
