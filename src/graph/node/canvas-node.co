@@ -28,11 +28,11 @@ class exports.CanvasNode extends GraphNode
     defaultWidth  : @computed -> 750
     defaultHeight : @computed -> 500
     
-    _sizeProxy    : ko.observable {}
-    resize        : -> @_sizeProxy {}
+    _resizeProxy  : ko.observable {}
+    resize        : -> @_resizeProxy {} if @el.peek()
     
-    fullWidth     : @computed -> @$el.innerWidth()  if @el() and @_sizeProxy()
-    fullHeight    : @computed -> @$el.innerHeight() if @el() and @_sizeProxy()
+    fullWidth     : @computed -> @$el.innerWidth()  if @el() and @_resizeProxy()
+    fullHeight    : @computed -> @$el.innerHeight() if @el() and @_resizeProxy()
     
     margin : { top:30, right:60, bottom:30, left:60 }
     
@@ -168,6 +168,8 @@ class exports.CanvasNode extends GraphNode
         
         # Trigger resize whenever a child is added
         @on 'child-built', @resize, this
+        
+        $ window .on 'resize', _.debounce @resize.bind(this), 100ms
     
     
     /**
@@ -175,6 +177,7 @@ class exports.CanvasNode extends GraphNode
      */
     watchOthers: ->
         @metrics()
+        
     
     
     buildElement: (parentElement) ->
