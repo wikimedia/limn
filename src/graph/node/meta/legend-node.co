@@ -72,6 +72,19 @@ class exports.LegendEntry extends Base implements formatters
         @legendOptions = @legend.options
         @options = @node.options
         this import _.pick(@options.peek(), 'label', 'color')
+        
+        @value = ko.observable()
+        @date = ko.observable()
+        @legend.root().handle 'hover-graph', this, (xOffset) ~>
+            @date @legend.root().xScale.invert xOffset
+            closestValue = null
+            closestDateDifference = 9007199254740992
+            for [date, value] of @node.metric().data()
+                dateDifference = Math.abs @date().getTime() - date.getTime()
+                if dateDifference < closestDateDifference
+                    closestDateDifference = dateDifference
+                    closestValue = value
+            @value @valueFormatter()(closestValue)
     
     nodeId: @computed ->
         guidFor @node
@@ -84,15 +97,15 @@ class exports.LegendEntry extends Base implements formatters
         # valueFormat = legendOptions.get('valueFormat') or options.get('valueFormat')
         @numberFormatterHTMLFor digits=2, abbrev=true, addWrapper=false
     
-    date : @computedRequires 'node.timeseriesData', (data) ->
+    dateReady : @computedRequires 'node.timeseriesData', (data) ->
         # TODO: update on hover
         [date, val] = _.last(data)
-        @dateFormatter()(date)
+        @date @dateFormatter()(date)
     
-    value : @computedRequires 'node.timeseriesData', (data) ->
+    valueReady : @computedRequires 'node.timeseriesData', (data) ->
         # TODO: update on hover
         [date, val] = _.last(data)
-        @valueFormatter()(val)
+        @value @valueFormatter()(val)
     
     
 
