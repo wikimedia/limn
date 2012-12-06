@@ -34,7 +34,7 @@ class exports.ZoomPanNode extends GraphNode
         return if @behavior
         
         @behavior = d3.behavior.zoom().scaleExtent [1,10]
-        @behavior.on 'zoom', ~> @zooming.apply this, arguments
+        @behavior.on 'zoom', ~> @zooming.call this
         
         @behavior.x scales.xScale
         @behavior.y scales.yScale
@@ -48,6 +48,6 @@ class exports.ZoomPanNode extends GraphNode
         @sparent.call @behavior
     
     zooming: ->
-        scale = @behavior.scale()
-        translate = @behavior.translate()
+        scale = d3.event.scale
+        translate = d3.event.translate
         @sparent.attr 'transform', "translate(#{translate[0]},#{translate[1]}) scale(#scale)"
