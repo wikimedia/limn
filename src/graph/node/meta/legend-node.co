@@ -42,7 +42,7 @@ class exports.LegendNode extends GraphNode
         @renderView el
     
     nodes: @computed ->
-        @filterTraits [Trait.VIS_NODE, Trait.REQUIRES_METRIC]
+        @root().filterTraits [Trait.VIS_NODE, Trait.REQUIRES_METRIC]
     
     label: @computedRequires 'options', (options) ->
         options.get('label')

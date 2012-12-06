@@ -1,7 +1,7 @@
 .latest-metric(data-bind='text: latestValue')
 .metric-change.year-over-year
-    span.dates(data-bind='text: yearDates')
+    span.dates(data-bind='html: yearDates')
     span.value(data-bind='text: yearValue, css:yearCssClass')
 .metric-change.month-over-month
-    span.dates(data-bind='text: monthDates')
+    span.dates(data-bind='html: monthDates')
     span.value(data-bind='text: monthValue, css:monthCssClass')

@@ -168,7 +168,6 @@ class exports.CanvasNode extends GraphNode
         
         # Trigger resize whenever a child is added
         @on 'child-built', @resize, this
-        
         $ window .on 'resize', _.debounce @resize.bind(this), 100ms
     
     
