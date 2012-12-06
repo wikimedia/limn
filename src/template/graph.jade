@@ -16,9 +16,9 @@ section.graph.graph-display(data-bind="attr: { id:graphId }")
     .graph-notes-row.row
         .span7.offset3.ug.graph-notes(data-bind='html: model().notesMarkdown')
     
+//-
     .row
         a(data-bind="attr: {href: '/graphs/'+ model().id() +'/edit'}") edit
-//-
     ul(data-bind="foreach: model().tags")
         li
             span(data-bind="text: data")
