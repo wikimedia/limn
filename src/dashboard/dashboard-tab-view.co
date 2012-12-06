@@ -1,3 +1,6 @@
+_ = require 'underscore'
+ko = require 'knockout'
+
 { View,
 } = require '../base/view'
 { GraphView,
@@ -6,13 +9,25 @@
 class exports.DashboardTabView extends View
     template: 'dashboard-tab'
     
-    (tab) ->
-        super()
-        @model tab
-        @graphs = ko.observableArray()
-        # FIXME: a common pattern is synchronizing two observable arrays, and this isn't clean:
-        for graph of @model().graphs()
-            graphView = new GraphView graph
-            @graphs.push graphView
+    defaults: ->
+        model       : null
+        isDestroyed : false
+        graphs      : []
     
+    attributeTypes:
+        graphs      : GraphView
+    
+    
+    -> super ...
+    
+    
+    /**
+     * Inform sub-objects its safe to begin watchers.
+     */
+    watch : @computed ->
+        console.log "#this.watch!"
+        @isWatching = true
+        model       = @model().watch()
+        graphs      = _.invoke @graphs(), 'watch'
+        [ model, graphs ]
     

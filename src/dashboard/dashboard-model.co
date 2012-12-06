@@ -51,5 +51,5 @@ class exports.Dashboard extends StoredModel
     watch: @computed ->
         console.log "#this.watch!"
         @isWatching = true
-        @root().watch()
+        _.invoke @tabs(), 'watch'
     

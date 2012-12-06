@@ -1,3 +1,4 @@
+_  = require 'underscore'
 ko = require 'knockout'
 
 { Base,
@@ -19,8 +20,27 @@ class exports.View extends Base
     
     defaults: ->
         model       : null
+        action      : null
         isDestroyed : false
     
+    /**
+     * DOM Element for this view. jQuery objects and d3 Selections
+     * will be automatically stripped of their wrappers.
+     * @type ko.observable<Element>
+     */
+    el : @eagerCoerciveObservable (el) ->
+        @$el = null
+        el = el[0]      if el instanceof jQuery
+        el = el.node()  if el instanceof d3.selection
+        return el       unless _.isElement el
+        @$el = $ el
+        el
+    
+    /**
+     * jQuery-wrapped root element.
+     * @type jQuery
+     */
+    $el : null
     
     
     /**
@@ -49,6 +69,18 @@ class exports.View extends Base
         @isDestroyed true
         @trigger 'destroy', this
         this
+    
+    
+    $: ->
+        @$el?.find.apply @$el, arguments
+    
+    
+    /**
+     * Called by Knockout once the Graph template has finished rendering.
+     */
+    afterRender: (element) ->
+        console.log "#this.afterRender()"
+        @el element
     
     
 

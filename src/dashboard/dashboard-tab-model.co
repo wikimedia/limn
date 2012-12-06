@@ -1,4 +1,4 @@
-_ = require 'underscore'
+_  = require 'underscore'
 ko = require 'knockout'
 
 { Model,
@@ -11,9 +11,7 @@ class exports.DashboardTab extends Model
     /**
      * @constructor
      */
-    (attributes) ->
-        super ...
-        @graphs = ko.observableArray()
+    -> super ...
     
     
     defaults: ->
@@ -24,6 +22,12 @@ class exports.DashboardTab extends Model
         graphs      : Graph
     
     
+    canonicalize : (data) ->
+        data.graphs = _.map data.graph_ids, (id) -> {id}
+        delete data.graph_ids
+        data
+    
+    
     /**
      * Inform sub-objects its safe to begin their watchers.
      */
@@ -31,5 +35,11 @@ class exports.DashboardTab extends Model
         @isWatching = true
         _.invoke @graphs(), 'watch'
     
+    
+    toJSON: ->
+        attrs = _.without @attributes, 'graphs'
+        graphs = @attributes.graphs.peek()
+        attrs.graph_ids = _.map graphs, -> it.id.peek()
+        attrs
     
 

@@ -1,3 +1,6 @@
+_ = require 'underscore'
+ko = require 'knockout'
+
 { View,
 } = require '../base/view'
 { Dashboard,
@@ -10,9 +13,12 @@ class exports.DashboardView extends View
     
     defaults: ->
         model       : null
+        action      : null
         isDestroyed : false
         tabs        : []
     
+    attributeTypes:
+        tabs        : DashboardTabView
     
     
     (model, action) ->
@@ -28,19 +34,20 @@ class exports.DashboardView extends View
         @action action
         @model model
         
-        if promise = model.fetch.promise
-            promise.done ~>
-                @model().fetchGraphs().done ~>
-                    for tab of @model().tabs()
-                        tabView = new DashboardTabView tab
-                        @tabs.push tabView
+        # model.fetch.promise?.done ~>
+        #     @model().fetchGraphs().done ~>
+        #         for tab of @model().tabs()
+        #             tabView = new DashboardTabView tab
+        #             @tabs.push tabView
         
         @watch()
+    
     
     /**
      * Inform sub-objects its safe to begin their watchers.
      */
     watch : @computed ->
+        console.log "#this.watch!"
         @isWatching = true
         model       = @model().watch()
         tabs        = _.invoke @tabs(), 'watch'

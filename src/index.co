@@ -63,7 +63,7 @@ class limn.LimnApp
         @currentView new limn.base.LoadingView()
         ko.applyBindings this
         
-        page '/:view/:id?/:action?', (context, next) ~>
+        page '/:view?/:id?/:action?', (context, next) ~>
             { view, id, action } = context.params
             
             # default to the reportcard dashboard
