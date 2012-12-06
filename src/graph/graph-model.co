@@ -3,6 +3,8 @@ ko = require 'knockout'
 
 { StoredModel,
 } = require '../base'
+{ GraphJSONConverter,
+} = require '../data/graph-json-converter'
 { GraphNodeData,
 } = require './node/graph-node-data'
 
@@ -15,16 +17,17 @@ class exports.Graph extends StoredModel
     
     getId    : -> @get 'id'
     defaults : ->
-        id        : null
-        slug      : ''
-        name      : ''
-        shortName : ''
-        desc      : ''
-        notes     : ''
-        root      :
-            nodeType : 'canvas'
-            width    : 750
-            height   : 500
+        graph_version : '0.6.0'
+        id            : null
+        slug          : ''
+        name          : ''
+        shortName     : ''
+        desc          : ''
+        notes         : ''
+        root          : 
+            nodeType  : 'canvas'
+            width     : 750
+            height    : 500
     
     attributeTypes :
         root : GraphNodeData
@@ -37,6 +40,18 @@ class exports.Graph extends StoredModel
         console.log "#this.watch!"
         @isWatching = true
         @root().watch()
+    
+    
+    /**
+     * Invoked to transform raw attribute data into its "proper" form for
+     * this object, whatever that might be.
+     * 
+     * @param {Object} data Raw attributes to canonicalize.
+     * @returns {Object} Converted raw data.
+     */
+    canonicalize: (data) ->
+        converter = new GraphJSONConverter data
+        converter.canonicalize()
     
     
 
