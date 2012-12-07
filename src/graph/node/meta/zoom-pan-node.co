@@ -39,13 +39,7 @@ class exports.ZoomPanNode extends GraphNode
         @behavior.x scales.xScale
         @behavior.y scales.yScale
         
-        @sparent.append 'rect'
-            .classed 'zooming', true
-            .attr do
-                fill: 'none'
-                width: root.width()
-                height: root.height()
-        @sparent.call @behavior
+        d3.select('svg').call @behavior
     
     zooming: ->
         scale = d3.event.scale
