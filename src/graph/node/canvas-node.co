@@ -113,9 +113,10 @@ class exports.CanvasNode extends GraphNode
             metrics
         
         # Grab old values for comparison so only mutate @scales when something has changed
+        # Keep x and y domains around to enable zooming and unzooming
         _scales  = @scales.peek()
-        _xDomain = @xScale.domain()
-        _yDomain = @yScale.domain()
+        @xDomain = @xScale.domain()
+        @yDomain = @yScale.domain()
         _width   = @xScale.range()[1]
         _height  = @yScale.range()[1]
         
@@ -139,8 +140,8 @@ class exports.CanvasNode extends GraphNode
         yValid = ys.length and height > 0
         
         # If anything changed, trigger a notification by setting the scales computed
-        if      xDomain[0] != _xDomain[0] or xDomain[1] != _xDomain[1]   or
-                yDomain[0] != _yDomain[0] or yDomain[1] != _yDomain[1]   or
+        if      xDomain[0] != @xDomain[0] or xDomain[1] != @xDomain[1]   or
+                yDomain[0] != @yDomain[0] or yDomain[1] != @yDomain[1]   or
                 width      != _width      or height     != _height
             @scales { @xScale, @yScale, @scaleLine, xValid, yValid }
         
@@ -149,6 +150,9 @@ class exports.CanvasNode extends GraphNode
     
     # }}}
     
+    
+    zooming: (translate, scale) ->
+        @trigger 'zoom-graph', translate, scale
     
     
     /**
@@ -194,11 +198,12 @@ class exports.CanvasNode extends GraphNode
         
         # TODO: factor this out into viewport-node
         viewport = @sel.select 'g.viewport'
-        viewport.on 'mousemove', ~>
+        svg = d3.select(el).select 'svg'
+        svg.on 'mousemove', ~>
             [xOffset, yOffset] = d3.mouse(viewport[0][0])
             @trigger 'hover-graph', xOffset, yOffset
         
-        viewport.on 'mouseout', ~>
+        svg.on 'mouseout', ~>
             @trigger 'hover-out-graph'
         
         el

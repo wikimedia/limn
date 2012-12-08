@@ -76,6 +76,8 @@ class exports.LegendEntry extends Base implements formatters
         @value = ko.observable()
         @date = ko.observable()
         @legend.root().handle 'hover-graph', this, (xOffset) ~>
+            return unless @node?.metric()?.data()?.length
+            
             @date @legend.root().xScale.invert xOffset
             closestValue = null
             closestDateDifference = 9007199254740992
