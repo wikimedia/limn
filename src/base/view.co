@@ -133,7 +133,9 @@ class exports.View extends Base
 class exports.NotFoundView extends View
     template: 'notFound'
     message: ko.observable 'This does not exist'
+    -> super ...
 
 
 class exports.LoadingView extends View
     template: 'loading'
+    -> super ...
