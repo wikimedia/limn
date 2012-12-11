@@ -6,7 +6,7 @@ d3 = require 'd3'
 } = require './timeseries-node'
 
 Trait = require '../graph-node-trait'
-ProjectColors = require '../project-colors'
+ProjectColors = require '../../project-colors'
 
 
 

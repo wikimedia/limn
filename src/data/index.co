@@ -1,9 +1,6 @@
-datasource_cache        = require './datasource-cache'
 datasource_model        = require './datasource-model'
-geo_metric_model        = require './geo-metric-model'
 graph_json_converter    = require './graph-json-converter'
 metric_model            = require './metric-model'
-timeseries_metric_model = require './timeseries-metric-model'
 
-exports import datasource_cache import datasource_model import geo_metric_model import graph_json_converter import metric_model import timeseries_metric_model
+exports import datasource_model import graph_json_converter import metric_model
 
