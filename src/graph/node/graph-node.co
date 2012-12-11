@@ -373,8 +373,10 @@ class exports.GraphNode extends Base implements formatters
         # console.log "#this.watch!"
         @isWatching = true
         
-        # Creates a dependency on our children
+        # Create dependencies
         @children()
+        # @parent()
+        @watchDeps()
         
         # ...But ignores whatever other watchers do
         ko.dependencyDetection.ignore ~>
@@ -391,6 +393,17 @@ class exports.GraphNode extends Base implements formatters
     
     /**
      * Stub to allow you to hook into @watch() without overriding everything.
+     * Called to generate dependencies prior to `watch` recursion.
+     * 
+     * @abstract
+     * @protected
+     */
+    watchDeps: ->
+    
+    
+    /**
+     * Stub to allow you to hook into @watch() without overriding everything.
+     * Called to recursively notify of deps.
      * 
      * @abstract
      * @protected
