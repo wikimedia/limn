@@ -4,7 +4,7 @@ section.canvas-node.graph-node
         svg(pointer-events='all', data-bind='attr: { width:frameWidth, height:frameHeight }')
             defs
                 clipPath(data-bind='attr: { id:"clip-"+graphId }')
-                    rect(data-bind='attr: { width:viewportWidth, height:viewportHeight }')
+                    rect(width=10000, height=10000)
                 g.metricDefs
             g(data-bind='attr: { transform:"translate("+margin.left+","+margin.top+")" }')
                 g.frame(data-bind='attr: { "clip-path":"url(#clip-"+graphId+")" }')
