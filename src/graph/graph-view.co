@@ -150,7 +150,7 @@ class exports.GraphView extends View
      * Called by Knockout once the Graph template has finished rendering.
      */
     afterRender: (element) ->
-        console.log "#this.afterRender()"
+        # console.log "#this.afterRender()"
         @el element
         
         if @action() is 'edit'

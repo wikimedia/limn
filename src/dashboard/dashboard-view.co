@@ -74,7 +74,7 @@ class exports.DashboardView extends View
     
     
     updateActiveTab: ->
-        console.log "#this.updateActiveTab!"
+        # console.log "#this.updateActiveTab!"
         tabnav = @$ '.graphs.tabbable .nav.subnav.nav-pills'
         unless tabnav.find('li.tab-button.active').length
             # tabnav.find('li.tab-button:first')

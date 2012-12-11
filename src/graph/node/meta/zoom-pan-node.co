@@ -29,7 +29,6 @@ class exports.ZoomPanNode extends GraphNode
     render: ->
         return unless root = @root()
         return unless scales = root.scalesIfValid()
-        console.log "#this.zoom!"
         
         return if @behavior
         

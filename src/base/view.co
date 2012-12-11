@@ -55,7 +55,7 @@ class exports.View extends Base
      * Inform sub-objects its safe to begin watchers.
      */
     watch : @computed ->
-        console.log "#this.watch!"
+        # console.log "#this.watch!"
         @isWatching = true
         
         # Creates a dependency on our children
@@ -108,7 +108,7 @@ class exports.View extends Base
      * Called by Knockout once the Graph template has finished rendering.
      */
     afterRender: (element) ->
-        console.log "#this.afterRender()"
+        # console.log "#this.afterRender()"
         @el element
         @trigger 'render', this, element
     
@@ -117,7 +117,7 @@ class exports.View extends Base
      * Called by Knockout once the Graph template has updated rendering.
      */
     afterAdd: (element) ->
-        console.log "#this.afterAdd()"
+        # console.log "#this.afterAdd()"
         @el element
         @trigger 'render-add', this, element
     

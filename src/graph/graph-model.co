@@ -37,7 +37,7 @@ class exports.Graph extends StoredModel
      * Inform sub-objects its safe to begin their watchers.
      */
     watch: @computed ->
-        console.log "#this.watch!"
+        # console.log "#this.watch!"
         @isWatching = true
         @root().watch()
     
