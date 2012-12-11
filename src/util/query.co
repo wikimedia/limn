@@ -108,8 +108,12 @@ class exports.Query
             timeCol   = opts.timeCol or 0 # ?  _.find( _.items(rows[1]), ([id, v]) -> v instanceof Date )[0]
             timeStart = opts.timeStart ? -Infinity
             timeEnd   = opts.timeEnd   ?  Infinity
+            
+            # convert to ms since the epoch
+            timeStart = moment(timeStart).valueOf() unless typeof timeStart is 'number' # if (timeStart instanceof Date) or moment.isMoment(timeStart)
+            timeEnd   = moment(timeEnd).valueOf()   unless typeof timeEnd   is 'number'
+            
             filterTime = (row) ->
-                # TODO: turns out JS dates aren't comparable >:(
                 timeStart <= row?[timeCol] <= timeEnd
         else
             filterTime = op.K true
