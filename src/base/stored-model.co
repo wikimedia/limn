@@ -28,6 +28,7 @@ class exports.StoredModel extends Model
     urlRoot : ->
         require('limn').mount()
     
+    link: @computed -> "#{@urlRoot()}#{@resource}/#{@slug()}"
     
     toString: ->
         cid       = @__id__

@@ -165,8 +165,9 @@ class exports.CanvasNode extends GraphNode
         @xScale = d3.time.scale().clamp(true)
         @yScale = d3.scale.log()
         @scaleLine = d3.svg.line()
-            .x ([date, val], i) ~> @xScale date # TODO: assumes all metrics have the same x domain
+            .x ([date, val], i) ~> @xScale date
             .y ([date, val], i) ~> @yScale val
+            .defined ([date, val], i) ~> not isNaN @yScale val
             .interpolate 'linear'
         @scales { @xScale, @yScale, @scaleLine, -xValid, -yValid }
         
