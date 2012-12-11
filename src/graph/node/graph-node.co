@@ -268,7 +268,7 @@ class exports.GraphNode extends Base implements formatters
             
             @once 'watch-build', @renderWrap
         
-        console.log "new #this"
+        # console.log "new #this"
     
     
     
@@ -289,7 +289,7 @@ class exports.GraphNode extends Base implements formatters
     build: @ignoreDeps (parentElement) ->
         parentElement = @toElement(parentElement)
         origEl = el = @el.peek()
-        console.log "#this.build! el:", el, 'parent:', parentElement
+        # console.log "#this.build! el:", el, 'parent:', parentElement
         
         # Do we lack a DOM element?
         unless _.isElement origEl

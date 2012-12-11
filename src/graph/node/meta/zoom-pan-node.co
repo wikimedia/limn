@@ -29,7 +29,6 @@ class exports.ZoomPanNode extends GraphNode
     render: ->
         return unless root = @root()
         return unless scales = root.scalesIfValid()
-        console.log "#this.zoom!"
         
         return if @behavior
         
@@ -39,15 +38,22 @@ class exports.ZoomPanNode extends GraphNode
         @behavior.x scales.xScale
         @behavior.y scales.yScale
         
-        @sparent.append 'rect'
-            .classed 'zooming', true
-            .attr do
-                fill: 'none'
-                width: root.width()
-                height: root.height()
-        @sparent.call @behavior
+        d3.select('svg').call @behavior
     
     zooming: ->
-        scale = d3.event.scale
         translate = d3.event.translate
-        @sparent.attr 'transform', "translate(#{translate[0]},#{translate[1]}) scale(#scale)"
+        scale = d3.event.scale
+        frame = d3.select 'g.frame'
+        
+        # special case, if they zoom all the way out, bring them back to normal
+        if scale is 1
+            translate = [0,0]
+            @behavior.translate(translate)
+            @behavior.scale(scale)
+            frame = frame.transition(100)
+        
+        frame.attr do
+            transform: "translate(#{translate[0]},#{translate[1]}) scale(#scale)"
+        
+        unless scale is 1
+            @root().zooming translate, scale

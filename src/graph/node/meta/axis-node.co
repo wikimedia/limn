@@ -51,6 +51,10 @@ class exports.AxisNode extends GraphNode
         @sel.call axis
         @moveAxis()
         
+        @zoomHandler ?= @root().handle 'zoom-graph', this, (translate, scale) ~>
+            # TODO: this does dark magic, figure out why it's broken
+            @render()
+        
         axis
     
     

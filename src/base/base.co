@@ -135,7 +135,7 @@ class exports.Base extends EventEmitter
      * it multiple times.
      */
     watch: ->
-        console.log "#this.watch!"
+        # console.log "#this.watch!"
         @isWatching = true
         this
     

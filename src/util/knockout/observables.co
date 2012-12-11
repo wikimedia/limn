@@ -26,7 +26,7 @@ toObservable = exports.toObservable = (val) ->
 logObservedChanges = exports.logObservedChanges = (obs, key='') ->
     oldValue = obs.peek()
     obs.subscribe (newValue) ->
-        console.log "#key:", oldValue, '-->', newValue
+        # console.log "#key:", oldValue, '-->', newValue
         oldValue := newValue
 
 
