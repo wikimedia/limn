@@ -42,6 +42,7 @@ class exports.ZoomPanNode extends GraphNode
     
     zooming: ->
         scale = d3.event.scale
+        # FIXME: this still isn't zooming or clipping quite right - the scales are consistent on zoomin/zoomout but they're off by maybe the offset?
         frame = d3.select 'g.content-frame'
         
         # special case, if they zoom all the way out, bring them back to normal
