@@ -138,7 +138,7 @@ class exports.GraphJSONConverter
                                 color : &gridLineColor
                     
                     ### Zooming
-                    children.push { nodeType:'zoom-pan' }
+                    children.push { nodeType:'zoom-brush' }
                     
                     ### Callout
                     children.push do
@@ -222,7 +222,7 @@ class exports.GraphJSONConverter
             *   nodeType  : 'grid'
                 options   : dimension : 'y'
             
-            *   nodeType  : 'zoom-pan'
+            *   nodeType  : 'zoom-brush'
             
             *   nodeType  : 'callout'
                 metricRef : 0

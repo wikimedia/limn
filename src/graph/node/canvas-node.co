@@ -154,6 +154,17 @@ class exports.CanvasNode extends GraphNode
         metrics
     
     
+    /**
+     * Changes the x and y domains of the graph and refreshes the this.scales observable
+     * @param {Array} xDomain an array with length 2: [startX, stopX]
+     * @param {Array} yDomain an array with length 2: [startY, stopY]
+     */
+    changeDomains: (xDomain, yDomain) ->
+        @xScale.domain(xDomain)
+        @yScale.domain(yDomain)
+        @scales { @xScale, @yScale, @scaleLine, +xValid, +yValid }
+    
+    
     logDomains: ->
         xd = @xScale.domain().map -> if it instanceof Date then it.getTime() else it
         console.log 'xScale.domain:', xd, '--', 'yScale.domain:', @yScale.domain()
