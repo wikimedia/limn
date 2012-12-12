@@ -40,20 +40,22 @@ class exports.ZoomPanNode extends GraphNode
         
         d3.select('svg').call @behavior
     
+    
     zooming: ->
-        translate = d3.event.translate
+        [tx, ty] = translate = d3.event.translate
         scale = d3.event.scale
-        frame = d3.select 'g.frame'
+        frame = d3.select 'g.content-frame'
         
         # special case, if they zoom all the way out, bring them back to normal
         if scale is 1
-            translate = [0,0]
+            [tx, ty] = translate = [0,0]
             @behavior.translate(translate)
             @behavior.scale(scale)
             frame = frame.transition(100)
         
-        frame.attr do
-            transform: "translate(#{translate[0]},#{translate[1]}) scale(#scale)"
+        frame.attr "transform", "translate(#tx,#ty) scale(#scale)"
         
         unless scale is 1
             @root().zooming translate, scale
+    
+
