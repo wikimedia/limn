@@ -38,22 +38,24 @@ class exports.GridNode extends GraphNode
             case 'x'
                 ticks = scales.xScale.ticks(20)
                 scale = scales.xScale
+                size = @root().height()
                 enter =
-                    y1: 0
-                    y2: @root().height()
+                    y1: -1 * size
+                    y2:  2 * size
                 transition =
-                    x1: scales.xScale
-                    x2: scales.xScale
+                    x1: scale
+                    x2: scale
             
             case 'y'
                 ticks = scales.yScale.ticks()
                 scale = scales.yScale
+                size = @root().width()
                 enter =
-                    x1: 0
-                    x2: @root().width()
+                    x1: -1 * size
+                    x2:  2 * size
                 transition =
-                    y1: scales.yScale
-                    y2: scales.yScale
+                    y1: scale
+                    y2: scale
         
         gridLinesData = @sel.selectAll 'line'
             .data ticks
