@@ -30,30 +30,26 @@ class exports.ZoomPanNode extends GraphNode
         return unless root = @root()
         return unless scales = root.scalesIfValid()
         
-        return if @behavior
-        
-        @behavior = d3.behavior.zoom().scaleExtent [1,10]
-        @behavior.on 'zoom', ~> @zooming.call this
-        
-        @behavior.x scales.xScale
-        @behavior.y scales.yScale
+        # FIXME: because of limitations in d3, this does not generate a new behavior, it just overrides the CURRENT behavior for the PAGE
+        @behavior ?= d3.behavior.zoom()
+            .x scales.xScale
+            .y scales.yScale
+            .scaleExtent [1,10]
+            .on 'zoom', ~> @zooming.call this
         
         d3.select('svg').call @behavior
     
     zooming: ->
-        translate = d3.event.translate
         scale = d3.event.scale
         frame = d3.select 'g.frame'
         
         # special case, if they zoom all the way out, bring them back to normal
         if scale is 1
-            translate = [0,0]
-            @behavior.translate(translate)
+            @behavior.translate([0,0])
             @behavior.scale(scale)
             frame = frame.transition(100)
         
         frame.attr do
-            transform: "translate(#{translate[0]},#{translate[1]}) scale(#scale)"
+            transform: "translate(#{@behavior.translate()}) scale(#{@behavior.scale()})"
         
-        unless scale is 1
-            @root().zooming translate, scale
+        @root().zooming @behavior.translate(), @behavior.scale()

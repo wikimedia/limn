@@ -3,8 +3,9 @@ callout_node  = require './callout-node'
 grid_node     = require './grid-node'
 legend_node   = require './legend-node'
 zoom_pan_node = require './zoom-pan-node'
+zoom_brush_node = require './zoom-brush-node'
 guide_node    = require './guide-node'
 viewport_node    = require './viewport-node'
 
-exports import axis_node import callout_node import grid_node import legend_node import zoom_pan_node import guide_node import viewport_node
+exports import axis_node import callout_node import grid_node import legend_node import zoom_pan_node import zoom_brush_node import guide_node import viewport_node
 

@@ -1,0 +1,57 @@
+_  = require 'underscore'
+ko = require 'knockout'
+d3 = require 'd3'
+
+{ GraphNode,
+} = require '../graph-node'
+
+Trait = require '../graph-node-trait'
+
+
+
+/**
+ * @class
+ * @extends GraphNode
+ */
+class exports.ZoomBrushNode extends GraphNode
+    nodeType : 'zoom-brush'
+    traits   : [
+        Trait.VIS_NODE
+        Trait.SVG
+        Trait.LEAF
+    ]
+    @registerType()
+    
+    
+    -> super ...
+    
+    
+    render: ->
+        return unless root = @root()
+        return unless scales = root.scalesIfValid()
+        
+        return if @brush
+        
+        @brush = d3.svg.brush()
+            .x scales.xScale
+            .y scales.yScale
+            .on 'brushend', ~> @zooming.apply this
+        root.sel.select 'svg'
+            .on 'dblclick', ~>
+                @$el .toggle true
+                window.getSelection?().removeAllRanges()
+                document.selection?.empty();
+        
+        @sel.call @brush
+        @sel.selectAll 'rect'
+            .attr 'height', root.viewportHeight()
+    
+    zooming: ->
+        extent = d3.event.target.extent()
+        unless @root().xDistanceIsInsignificant# TODO: implement extent[0], extent[1]
+            # TODO: change data @trigger 'changed:data', extent
+            # @root().zooming @behavior.translate(), @behavior.scale()
+            @$el .toggle false
+        @brush.clear()
+        @sel.call @brush
+        

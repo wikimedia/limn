@@ -115,8 +115,8 @@ class exports.CanvasNode extends GraphNode
         # Grab old values for comparison so only mutate @scales when something has changed
         # Keep x and y domains around to enable zooming and unzooming
         _scales  = @scales.peek()
-        @xDomain = @xScale.domain()
-        @yDomain = @yScale.domain()
+        _xDomain = @xScale.domain()
+        _yDomain = @yScale.domain()
         _width   = @xScale.range()[1]
         _height  = @yScale.range()[1]
         
@@ -140,8 +140,8 @@ class exports.CanvasNode extends GraphNode
         yValid = ys.length and height > 0
         
         # If anything changed, trigger a notification by setting the scales computed
-        if      xDomain[0] != @xDomain[0] or xDomain[1] != @xDomain[1]   or
-                yDomain[0] != @yDomain[0] or yDomain[1] != @yDomain[1]   or
+        if      xDomain[0] != _xDomain[0] or xDomain[1] != _xDomain[1]   or
+                yDomain[0] != _yDomain[0] or yDomain[1] != _yDomain[1]   or
                 width      != _width      or height     != _height
             @scales { @xScale, @yScale, @scaleLine, xValid, yValid }
         
@@ -190,7 +190,16 @@ class exports.CanvasNode extends GraphNode
      * @param {Function} fn the handling function
      */
     handle: (eventName, context, fn) ->
-        @on eventName, ~> fn.apply context, arguments
+        @handlers ?= {}
+        unless @handlers[eventName]
+            @handlers[eventName] = []
+            @on eventName, ~>
+                for handler of @handlers[eventName]
+                    handler.fn.apply handler.context, arguments
+        
+        existing = false
+        unless existing
+            @handlers[eventName].push {fn, context}
     
     
     buildElement: (parentElement) ->
