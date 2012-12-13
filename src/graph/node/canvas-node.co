@@ -223,6 +223,7 @@ class exports.CanvasNode extends GraphNode
      * @param {Object} context the context to call the function in
      * @param {Function} fn the handling function
      */
+    #FIXME: this doesn't work because of the changing / overwriting of the GraphNode tree.  Move to dependency tracking instead of events
     handle: (eventName, context, fn) ->
         @handlers ?= {}
         unless @handlers[eventName]
@@ -232,9 +233,17 @@ class exports.CanvasNode extends GraphNode
                     handler.fn.apply handler.context, arguments
         
         existing = false
+        for handler of @handlers[eventName]
+            if handler.context is context
+                handler.fn = fn
+                existing = true
+                break
+        
         unless existing
             @handlers[eventName].push {fn, context}
     
+    
+    viewportHover: ko.observable {}
     
     buildElement: (parentElement) ->
         @renderView parentElement
@@ -245,10 +254,10 @@ class exports.CanvasNode extends GraphNode
         svg = d3.select(el).select 'svg'
         svg.on 'mousemove', ~>
             [xOffset, yOffset] = d3.mouse(viewport[0][0])
-            @trigger 'hover-graph', xOffset, yOffset
+            @viewportHover { xOffset, yOffset, +hovering }
         
         svg.on 'mouseout', ~>
-            @trigger 'hover-out-graph'
+            @viewportHover { -hovering }
         
         el
     

@@ -115,4 +115,17 @@ class exports.Metric extends Model
         @columnDef()?.get 'label'
     
     
-
+    /**
+     * Find the entry with a date closest to the date specified
+     * @param {Date} closestTo
+     * @returns {numeric} the closest entry
+     */
+    findClosest : (closestTo) ->
+        closest = null
+        closestDateDifference = 9007199254740992
+        for [date, value] of @data()
+            dateDifference = Math.abs closestTo.getTime() - date.getTime()
+            if dateDifference < closestDateDifference
+                closestDateDifference = dateDifference
+                closest = {date, value}
+        closest

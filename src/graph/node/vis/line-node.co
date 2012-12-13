@@ -26,7 +26,32 @@ class exports.LineNode extends TimeseriesNode
     @registerType()
     
     
-    -> super ...
+    ->
+        super ...
+        @trackHover()
+    
+    trackHover: @computed ->
+        return unless viewportHover = @root().viewportHover()
+        return unless @model().metric()?.data()?.length
+        
+        @trackingCircle ?= @sel.append 'circle'
+            .style do
+                fill: @color()
+            .attr do
+                r: 5
+        
+        if viewportHover.hovering
+            date = @root().xScale.invert viewportHover.xOffset
+            closest = @model().metric().findClosest date
+            
+            @trackingCircle.attr do
+                cx: @root().xScale closest.date
+                cy: @root().yScale closest.value
+    
+    
+    color: ->
+        label   = @model().label() or @model().metric()?.defaultLabel() or '(no label)'
+        options?.get('color') or ProjectColors.lookup(label) or 'black'
     
     
     /**
@@ -46,9 +71,7 @@ class exports.LineNode extends TimeseriesNode
         return null unless model  = @model()
         return null unless scales = @root().scales()
         
-        label   = model.get('label') or model.metric()?.defaultLabel() or '(no label)'
         options = model.options()
-        color   = options?.get('color') or ProjectColors.lookup(label) or 'black'
         stroke  = options?.get('stroke') or 5
         
         line.enter()
@@ -57,7 +80,7 @@ class exports.LineNode extends TimeseriesNode
                 .attr  'vector-effect', 'non-scaling-stroke'
                 .style 'fill',          'none'
                 .style 'stroke-width',  stroke
-                .style 'stroke',        color
+                .style 'stroke',        @color()
         line.transition()
             .attr 'd', scales.scaleLine
         line

@@ -75,18 +75,17 @@ class exports.LegendEntry extends Base implements formatters
         
         @value = ko.observable()
         @date = ko.observable()
-        @legend.root().handle 'hover-graph', this, (xOffset) ~>
-            return unless @node?.metric()?.data()?.length
-            
-            @date @legend.root().xScale.invert xOffset
-            closestValue = null
-            closestDateDifference = 9007199254740992
-            for [date, value] of @node.metric().data()
-                dateDifference = Math.abs @date().getTime() - date.getTime()
-                if dateDifference < closestDateDifference
-                    closestDateDifference = dateDifference
-                    closestValue = value
-            @value @valueFormatter()(closestValue)
+        @trackHover()
+    
+    trackHover: @computed ->
+        return unless viewportHover = @legend.root().viewportHover()
+        return unless @node?.metric()?.data()?.length
+        
+        if viewportHover.hovering
+            date = @legend.root().xScale.invert viewportHover.xOffset
+            closest = @node.metric().findClosest date
+            @date closest.date
+            @value @valueFormatter() closest.value
     
     nodeId: @computed ->
         guidFor @node
