@@ -31,9 +31,9 @@ class exports.LineNode extends TimeseriesNode
         @trackHover()
     
     trackHover: @computed ->
-        return unless @sel
         return unless viewportHover = @root().viewportHover()
         return unless @model().metric()?.data()?.length
+        return unless @sel
         
         @trackingCircle ?= @sel.append 'circle'
             .style do

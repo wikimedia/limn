@@ -134,8 +134,8 @@ class exports.Base extends EventEmitter
      * This method must be idempotent; it should always be safe to call
      * it multiple times.
      */
-    watch: ->
-        # console.log "#this.watch!"
+    watching: ->
+        # console.log "#this.watching!"
         @isWatching = true
         this
     

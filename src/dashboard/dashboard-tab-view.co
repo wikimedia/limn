@@ -42,7 +42,7 @@ class exports.DashboardTabView extends View
     watchOthers : ->
         # console.log "#this.watchOthers!"
         graphs = @watchModels()
-        _.invoke @graphs(), 'watch'
+        _.invoke @graphs(), 'watching'
         graphs
     
     

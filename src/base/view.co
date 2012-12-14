@@ -54,8 +54,8 @@ class exports.View extends Base
     /**
      * Inform sub-objects its safe to begin watchers.
      */
-    watch : @computed ->
-        # console.log "#this.watch!"
+    watching : @computed ->
+        # console.log "#this.watching!"
         @isWatching = true
         
         # Creates a dependency on our children
@@ -65,13 +65,13 @@ class exports.View extends Base
         # ...But ignores whatever other watchers do
         ko.dependencyDetection.ignore ~>
             others = @watchOthers()
-            model  = @model.watch?()
+            model  = @model.watching?()
             [ model, others ]
     
     
     /**
-     * Stub to allow you to hook into @watch() without overriding everything.
-     * Called to generate dependencies prior to `watch` recursion.
+     * Stub to allow you to hook into @watching() without overriding everything.
+     * Called to generate dependencies prior to `watching` recursion.
      * 
      * @abstract
      * @protected
@@ -80,7 +80,7 @@ class exports.View extends Base
     
     
     /**
-     * Stub to allow you to hook into @watch() without overriding everything.
+     * Stub to allow you to hook into @watching() without overriding everything.
      * Called to recursively notify of deps.
      * 
      * @abstract

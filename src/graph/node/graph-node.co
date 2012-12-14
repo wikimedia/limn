@@ -251,7 +251,7 @@ class exports.GraphNode extends Base implements formatters
         _.defaults this, model.attributes if model?.attributes
         
         # Set initial attributes now that we've wrapped observers.
-        # Caller still needs to call `.watch()` once we return so we can begin
+        # Caller still needs to call `.watching()` once we return so we can begin
         # observing updates without causing a loop.
         @set { model }
         
@@ -369,8 +369,8 @@ class exports.GraphNode extends Base implements formatters
      * it multiple times. (Using a `@computed` ensures this.)
      * @protected
      */
-    watch: @computed ->
-        # console.log "#this.watch!"
+    watching: @computed ->
+        # console.log "#this.watching!"
         @isWatching = true
         
         # Create dependencies
@@ -385,15 +385,15 @@ class exports.GraphNode extends Base implements formatters
             _childModels = @watchModelChildren()
             _others      = @watchOthers()
             
-            # Recursively activate watch() on children
-            _.invoke @children(), 'watch'
+            # Recursively activate watching() on children
+            _.invoke @children(), 'watching'
             
             [ _parent, _children, _childModels, _others ]
     
     
     /**
-     * Stub to allow you to hook into @watch() without overriding everything.
-     * Called to generate dependencies prior to `watch` recursion.
+     * Stub to allow you to hook into @watching() without overriding everything.
+     * Called to generate dependencies prior to `watching` recursion.
      * 
      * @abstract
      * @protected
@@ -402,7 +402,7 @@ class exports.GraphNode extends Base implements formatters
     
     
     /**
-     * Stub to allow you to hook into @watch() without overriding everything.
+     * Stub to allow you to hook into @watching() without overriding everything.
      * Called to recursively notify of deps.
      * 
      * @abstract
