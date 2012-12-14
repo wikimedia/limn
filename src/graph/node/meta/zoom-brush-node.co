@@ -44,18 +44,18 @@ class exports.ZoomBrushNode extends GraphNode
                 @root().changeDomains @previousXDomain, @previousYDomain
                 @$el .toggle true
                 window.getSelection?().removeAllRanges()
-                document.selection?.empty();
+                document.selection?.empty()
         
         @sel.call @brush
         @sel.selectAll 'rect'
             .attr 'height', root.viewportHeight()
+    
     
     zooming: ->
         unless @root().xDistanceIsInsignificant # TODO: implement
             extent = d3.event.target.extent()
             @$el .toggle false
             @root().changeDomains [extent[0][0], extent[1][0]], [extent[0][1], extent[1][1]]
-        
         @brush.clear()
         @sel.call @brush
-        
+    
