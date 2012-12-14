@@ -42,6 +42,18 @@ class exports.LegendNode extends GraphNode
     ->
         @entryCache = new OrderedMap()
         super ...
+        @date = ko.observable()
+        @trackHover()
+    
+    
+    /**
+     * Track hover events and change the legend date.  This can be used by legend entries
+     */
+    trackHover: @computed ->
+        return unless viewportHover = @root().viewportHover()
+        
+        if viewportHover.hovering
+            @date @root().xScale.invert viewportHover.xOffset
     
     
     buildElement: (parentElement) ->
@@ -79,18 +91,8 @@ class exports.LegendNode extends GraphNode
         entry
     
     
-    label: @computedRequires 'options', (options) ->
-        options.get('label')
-    
-    
     dateFormatter : @computedRequires 'options', (options) ->
         @dateFormatterFor options.get('dateFormat')
-    
-    
-    date : @computedRequires 'root.scalesIfValid', (scales) ->
-        [firstDate, lastDate] = scales.xScale.domain()
-        @dateFormatter() lastDate
-    
 
 
 /**
@@ -110,17 +112,18 @@ class exports.LegendEntry extends Base implements formatters
         @options = @node.options
         this import _.pick(@options.peek(), 'label')
         @color = that if @node.color
-        @trackHover()
+        @legend.date.subscribe @trackLegendDate, this
     
-    trackHover: @computed ->
-        return unless viewportHover = @legend.root().viewportHover()
+    
+    trackLegendDate: (newDate) ->
         return unless @node?.metric()?.data()?.length
         
-        if viewportHover.hovering
-            date = @legend.root().xScale.invert viewportHover.xOffset
-            closest = @node.metric().findClosest date
+        if newDate
+            closest = @node.metric().findClosest newDate
             @date closest.date
             @value @valueFormatter() closest.value
+            
+            @legend.label @dateFormatter() @date()
     
     nodeId: @computed ->
         guidFor @node
