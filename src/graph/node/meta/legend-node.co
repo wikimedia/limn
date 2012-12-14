@@ -2,7 +2,7 @@ _  = require 'underscore'
 ko = require 'knockout'
 moment = require 'moment'
 
-{ guidFor, formatters,
+{ guidFor, formatters, OrderedMap,
 } = require '../../../util'
 { Base,
 } = require '../../../base'
@@ -31,7 +31,17 @@ class exports.LegendNode extends GraphNode
     template : 'legend-node'
     
     
-    -> super ...
+    /**
+     * The `LegendEntry` cache.
+     * @protected
+     * @type OrderedMap<GraphNode, LegendEntry>
+     */
+    entryCache : null
+    
+    
+    ->
+        @entryCache = new OrderedMap()
+        super ...
     
     
     buildElement: (parentElement) ->
@@ -39,26 +49,48 @@ class exports.LegendNode extends GraphNode
         $ parentElement .prepend el
         @renderView el
     
+    
     nodes: @computed ->
         @root().filterTraits [Trait.VIS_NODE, Trait.REQUIRES_METRIC]
     
-    label: @computedRequires 'options', (options) ->
-        options.get('label')
-    
-    dateFormatter : @computedRequires 'options', (options) ->
-        @dateFormatterFor legendOptions.get('dateFormat')
-    
-    date : @computedRequires 'root.scalesIfValid', (scales) ->
-        [firstDate, lastDate] = scales.xScale.domain()
-        @dateFormatter() lastDate
     
     entries: @computedRequires 'nodes', (nodes) ->
         nodes
             .filter (node) ->
                 not (node.get('disabled') or node.options()?.get('noLegend'))
             .map (node) ~>
-                new LegendEntry this, node
-
+                @lookupEntry node
+    
+    
+    lookupEntry: (node) ->
+        return null unless node?
+        return that if @entryCache.get node
+        
+        entry = new LegendEntry this, node
+        @entryCache.set node, entry
+        
+        # register for notification when the node is destroyed
+        destroySub = node.isDestroyed.subscribe (isDestroyed) ~>
+            throw new Error "WTF! node.isDestroyed false for #node!" unless isDestroyed
+            currentEntry = @entryCache.get node
+            @entryCache.remove node if currentEntry is entry
+            destroySub.dispose()
+        
+        entry
+    
+    
+    label: @computedRequires 'options', (options) ->
+        options.get('label')
+    
+    
+    dateFormatter : @computedRequires 'options', (options) ->
+        @dateFormatterFor options.get('dateFormat')
+    
+    
+    date : @computedRequires 'root.scalesIfValid', (scales) ->
+        [firstDate, lastDate] = scales.xScale.domain()
+        @dateFormatter() lastDate
+    
 
 
 /**
@@ -67,14 +99,17 @@ class exports.LegendNode extends GraphNode
  */
 class exports.LegendEntry extends Base implements formatters
     
+    defaults: ->
+        value : null
+        date  : null
+    
+    
     (@legend, @node) ->
         super {}
         @legendOptions = @legend.options
         @options = @node.options
-        this import _.pick(@options.peek(), 'label', 'color')
-        
-        @value = ko.observable()
-        @date = ko.observable()
+        this import _.pick(@options.peek(), 'label')
+        @color = that if @node.color
         @trackHover()
     
     trackHover: @computed ->
@@ -98,15 +133,13 @@ class exports.LegendEntry extends Base implements formatters
         # valueFormat = legendOptions.get('valueFormat') or options.get('valueFormat')
         @numberFormatterHTMLFor digits=2, abbrev=true, addWrapper=false
     
-    dateReady : @computedRequires 'node.timeseriesData', (data) ->
-        # TODO: update on hover
+    dateReady : @computedRequires 'node.timeseriesData', 'dateFormatter', (data, dateFormatter) ->
         [date, val] = _.last(data)
-        @date @dateFormatter()(date)
+        @date dateFormatter date
     
-    valueReady : @computedRequires 'node.timeseriesData', (data) ->
-        # TODO: update on hover
+    valueReady : @computedRequires 'node.timeseriesData', 'valueFormatter', (data, valueFormatter) ->
         [date, val] = _.last(data)
-        @value @valueFormatter()(val)
+        @value valueFormatter val
     
     
 

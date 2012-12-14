@@ -49,9 +49,10 @@ class exports.LineNode extends TimeseriesNode
                 cy: @root().yScale closest.value
     
     
-    color: ->
-        label   = @model().label() or @model().metric()?.defaultLabel() or '(no label)'
-        options?.get('color') or ProjectColors.lookup(label) or 'black'
+    color: @computedRequires 'model.options', (options) ->
+        return that if options?.get('color')
+        label = @model().label() or @model().metric()?.defaultLabel() or '(no label)'
+        ProjectColors.lookup(label) or 'black'
     
     
     /**
