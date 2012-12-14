@@ -45,9 +45,13 @@ class exports.LineNode extends TimeseriesNode
             date = @root().xScale.invert viewportHover.xOffset
             closest = @model().metric().findClosest date
             
-            @trackingCircle.attr do
-                cx: @root().xScale closest.date
-                cy: @root().yScale closest.value
+            cx = @root().xScale closest.date
+            cy = @root().yScale closest.value
+            
+            unless isNaN cx or isNaN cy
+                @trackingCircle.attr do
+                    cx: cx
+                    cy: cy
     
     
     color: @computedRequires 'model.options', (options) ->
