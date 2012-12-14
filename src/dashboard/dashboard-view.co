@@ -52,7 +52,7 @@ class exports.DashboardView extends View
                 _.invoke @tabs(), 'resize'
         
         @on 'render', @updateActiveTab, this
-        @watch()
+        @watching()
     
     
     watchDeps: ->
@@ -63,7 +63,7 @@ class exports.DashboardView extends View
     watchOthers : ->
         # console.log "#this.watchOthers!"
         tabs = @watchModels()
-        _.invoke @tabs(), 'watch'
+        _.invoke @tabs(), 'watching'
         tabs
     
     

@@ -81,7 +81,7 @@ class exports.GraphNodeData extends Model
         @parent.equalityComparer = @children.equalityComparer = compareIds
         
         # Set initial attributes now that we've wrapped observers.
-        # Caller still needs to call `.watch()` once we return so we can begin
+        # Caller still needs to call `.watching()` once we return so we can begin
         # observing updates without causing a loop.
         @set attributes
     
@@ -98,13 +98,13 @@ class exports.GraphNodeData extends Model
      * This method must be idempotent; it should always be safe to call
      * it multiple times.
      */
-    watch: @computed ->
+    watching: @computed ->
         @isWatching = true
         parent      = @watchParent()
         children    = @watchChildren()
         
-        # Recursively activate watch() on children
-        _.invoke @children(), 'watch'
+        # Recursively activate watching() on children
+        _.invoke @children(), 'watching'
         
         [ parent, children ]
     

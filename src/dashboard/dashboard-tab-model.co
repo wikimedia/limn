@@ -33,12 +33,12 @@ class exports.DashboardTab extends Model
     /**
      * Inform sub-objects its safe to begin their watchers.
      */
-    watch: @computed ->
-        # console.log "#this.watch!"
+    watching: @computed ->
+        # console.log "#this.watching!"
         @isWatching = true
         @graphs()
         ko.dependencyDetection.ignore ~>
-            _.invoke @graphs(), 'watch'
+            _.invoke @graphs(), 'watching'
     
     
     toJSON: ->

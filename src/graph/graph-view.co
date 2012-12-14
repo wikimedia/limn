@@ -101,14 +101,14 @@ class exports.GraphView extends View
         @action action
         @model model
         
-        @watch()
+        @watching()
     
     
     /**
      * Inform sub-objects its safe to begin their watchers.
      */
     watchOthers : ->
-        rootNode    = @rootNode().watch()
+        rootNode    = @rootNode().watching()
         rootBuilt   = @watchDOM()
         [ rootNode, rootBuilt ]
     
@@ -137,7 +137,7 @@ class exports.GraphView extends View
             destroySub.dispose()
         
         # inform the node it can begin watching
-        node.watch() if @isWatching
+        node.watching() if @isWatching
         
         node
     
