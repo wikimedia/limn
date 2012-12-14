@@ -74,14 +74,14 @@ class exports.LineNode extends TimeseriesNode
         return null unless scales = @root().scales()
         
         options = model.options()
-        stroke  = options?.get('stroke') or 5
+        stroke  = options?.get('stroke')
         
         line.enter()
             .append 'path'
                 .classed 'metric-line', true
                 .attr  'vector-effect', 'non-scaling-stroke'
                 .style 'fill',          'none'
-                .style 'stroke-width',  stroke
+                .style 'stroke-width',  stroke.width()
                 .style 'stroke',        @color()
         line.transition()
             .attr 'd', scales.scaleLine

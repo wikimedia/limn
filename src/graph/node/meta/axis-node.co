@@ -8,6 +8,24 @@ d3 = require 'd3'
 Trait = require '../graph-node-trait'
 
 
+timeFormat = (formats) ->
+  (date) ->
+    i = formats.length - 1
+    f = formats[i]
+    while !f[1](date)
+        f = formats[--i]
+    f[0] date
+
+multiTimeFormatter = timeFormat [
+    [ d3.time.format("%Y"),    -> true ],
+    [ (-> moment(it).format('MMM')), -> it.getMonth() ],
+    [ d3.time.format("%b %d"), -> it.getDate() != 1 ],
+    [ d3.time.format("%a %d"), -> it.getDay() && it.getDate() != 1 ],
+    [ d3.time.format("%I %p"), -> it.getHours() ],
+    [ d3.time.format("%I:%M"), -> it.getMinutes() ],
+    [ d3.time.format(":%S"),   -> it.getSeconds() ],
+    [ d3.time.format(".%L"),   -> it.getMilliseconds() ]
+]
 
 /**
  * @class
@@ -39,12 +57,15 @@ class exports.AxisNode extends GraphNode
         
         switch dimension
         case 'x'
-            axis.tickFormat @dateFormatterFor 'MMM YY'
+            axis.tickFormat multiTimeFormatter # @dateFormatterFor 'MMM YY'
                 .orient(orient or= 'bottom')
+            ticks ?= 3
             axis.ticks d3.time.months, ticks if ticks > 0
         case 'y'
             axis.tickFormat @numberFormatterFor 2
+                .tickSubdivide 4
                 .orient(orient or= 'left')
+            ticks ?= 10
             axis.ticks ticks if ticks > 0
         
         @sel.classed dimension+'-axis axis', true
