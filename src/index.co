@@ -55,6 +55,15 @@ class limn.LimnApp
     (config) ->
         @currentView = ko.observable()
         
+        # Prevent page.js from intercepting clicks on links to datafiles
+        window.addEventListener do
+            'click'
+            (evt) ->
+                return unless $ evt.target .is '.graph-raw-data-row a'
+                evt.stopPropagation()
+                false
+            true # capture phase
+        
         # Because, really, everyone hates typing when debugging
         ko.computed ~>
             view  = limn.view  = @currentView()
