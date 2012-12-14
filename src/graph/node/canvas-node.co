@@ -9,10 +9,15 @@ op = require 'operator'
 Trait = require './graph-node-trait'
 
 
-cmpNumberic = (a, b) ->
+cmpNumeric = (a, b) ->
     a = a.getTime() if a instanceof Date
     b = b.getTime() if b instanceof Date
     op.cmp a, b
+
+
+tuplesEqual = (a, b) ->
+    cmpNumeric(a[0], b[0]) is 0 and
+    cmpNumeric(a[1], b[1]) is 0
 
 
 /**
@@ -145,11 +150,9 @@ class exports.CanvasNode extends GraphNode
         
         
         # If anything changed, trigger a notification by setting the scales computed
-        if      cmpNumberic(xDomain[0], _xDomain[0]) != 0   or cmpNumberic(xDomain[1], _xDomain[1]) != 0    or
-                cmpNumberic(yDomain[0], _yDomain[0]) != 0   or cmpNumberic(yDomain[1], _yDomain[1]) != 0    or
-                width != _width                             or height != _height
+        unless  width  is _width  and tuplesEqual(xDomain, _xDomain) and
+                height is _height and tuplesEqual(yDomain, _yDomain)
             @scales { @xScale, @yScale, @scaleLine, xValid, yValid }
-            # @logDomains()
         
         metrics
     
@@ -160,9 +163,19 @@ class exports.CanvasNode extends GraphNode
      * @param {Array} yDomain an array with length 2: [startY, stopY]
      */
     changeDomains: (xDomain, yDomain) ->
+        _xDomain = @xScale.domain()
+        xValid = xDomain?.length > 1 and xDomain[0]? and xDomain[1]?
         @xScale.domain(xDomain)
+        
+        _yDomain = @yScale.domain()
+        yValid = yDomain?.length > 1 and yDomain[0]? and yDomain[1]?
         @yScale.domain(yDomain)
-        @scales { @xScale, @yScale, @scaleLine, +xValid, +yValid }
+        
+        # If anything changed, trigger a notification by setting the scales computed
+        unless tuplesEqual(xDomain, _xDomain) and tuplesEqual(yDomain, _yDomain)
+            @scales { @xScale, @yScale, @scaleLine, xValid, yValid }
+        
+        @scales.peek()
     
     
     logDomains: ->
@@ -254,7 +267,9 @@ class exports.CanvasNode extends GraphNode
         svg = d3.select(el).select 'svg'
         svg.on 'mousemove', ~>
             [xOffset, yOffset] = d3.mouse(viewport[0][0])
-            @viewportHover { xOffset, yOffset, +hovering }
+            vh = @viewportHover.peek()
+            if not vh?.hovering or vh.xOffset != xOffset or vh.yOffset != yOffset
+                @viewportHover { xOffset, yOffset, +hovering }
         
         svg.on 'mouseout', ~>
             @viewportHover { -hovering }
