@@ -27,6 +27,18 @@ task \server 'Start dev server' ->
     run './server/server.co'
 
 
+task \link_reportcard_data 'Link to reportcard data from environment variable LIMN_REPORTCARD' ->
+    sh 'mkdir ./var/data'
+    sh 'mkdir ./var/data/dashboards'
+    sh 'mkdir ./var/data/datafiles'
+    sh 'mkdir ./var/data/datasources'
+    sh 'mkdir ./var/data/graphs'
+    sh 'ln -s $LIMN_REPORTCARD/dashboards ./var/data/dashboards/rc'
+    sh 'ln -s $LIMN_REPORTCARD/datafiles ./var/data/datafiles/rc'
+    sh 'ln -s $LIMN_REPORTCARD/datasources ./var/data/datasources/rc'
+    sh 'ln -s $LIMN_REPORTCARD/graphs ./var/data/graphs/rc'
+
+
 task \build 'Build coco sources' ->
     invoke \setup
     coco <[ -bjc package.co ]>
