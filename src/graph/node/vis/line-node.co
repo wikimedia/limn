@@ -36,10 +36,14 @@ class exports.LineNode extends TimeseriesNode
         return unless @sel
         
         @trackingCircle ?= @sel.append 'circle'
+            .classed 'tracking', true
             .style do
                 fill: @color()
             .attr do
                 r: 5
+        
+        cx = -10
+        cy = -10
         
         if viewportHover.hovering
             date = @root().xScale.invert viewportHover.xOffset
@@ -48,10 +52,13 @@ class exports.LineNode extends TimeseriesNode
             cx = @root().xScale closest.date
             cy = @root().yScale closest.value
             
-            unless isNaN cx or isNaN cy
-                @trackingCircle.attr do
-                    cx: cx
-                    cy: cy
+            unless isFinite cx and isFinite cy
+                cx = -10
+                cy = -10
+        
+        @trackingCircle.attr do
+            cx: cx
+            cy: cy
     
     
     color: @computedRequires 'model.options', (options) ->

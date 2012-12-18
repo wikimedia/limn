@@ -51,7 +51,7 @@ class exports.CalloutNode extends GraphNode
         # Compare against latest non-null, non-NaN value
         i = data.length
         while --i > 0 and [date, value] = data[i]
-            break if value? and not isNaN value
+            break if value? and isFinite value
         else return
         
         # TODO: accommodate timestep other than 1mo
