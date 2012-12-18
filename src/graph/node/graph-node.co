@@ -385,7 +385,8 @@ class exports.GraphNode extends Base implements formatters
             _childModels = @watchModelChildren()
             _others      = @watchOthers()
             
-            # Recursively activate watching() on children
+            # Recursively activate watching() on models and children
+            @model().watching()
             _.invoke @children(), 'watching'
             
             [ _parent, _children, _childModels, _others ]

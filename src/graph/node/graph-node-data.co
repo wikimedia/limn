@@ -96,17 +96,48 @@ class exports.GraphNodeData extends Model
      * before anyone else can get a reference to the object.
      * 
      * This method must be idempotent; it should always be safe to call
-     * it multiple times.
+     * it multiple times. (Using a `@computed` ensures this.)
+     * @protected
      */
     watching: @computed ->
+        # console.log "#this.watching!"
         @isWatching = true
-        parent      = @watchParent()
-        children    = @watchChildren()
         
-        # Recursively activate watching() on children
-        _.invoke @children(), 'watching'
+        # Create dependencies
+        @children()
+        # @parent()
+        @watchDeps()
         
-        [ parent, children ]
+        # ...But ignores whatever other watchers do
+        ko.dependencyDetection.ignore ~>
+            _parent      = @watchParent()
+            _children    = @watchChildren()
+            _others      = @watchOthers()
+            
+            # Recursively activate watching() on children
+            _.invoke @children(), 'watching'
+            
+            [ _parent, _children, _others ]
+    
+    
+    /**
+     * Stub to allow you to hook into @watching() without overriding everything.
+     * Called to generate dependencies prior to `watching` recursion.
+     * 
+     * @abstract
+     * @protected
+     */
+    watchDeps: ->
+    
+    
+    /**
+     * Stub to allow you to hook into @watching() without overriding everything.
+     * Called to recursively notify of deps.
+     * 
+     * @abstract
+     * @protected
+     */
+    watchOthers: ->
     
     
     /* * * *  Tree Operations  * * * {{{ */
