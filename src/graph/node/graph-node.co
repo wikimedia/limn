@@ -450,7 +450,7 @@ class exports.GraphNode extends Base implements formatters
      * 
      * @param {Object} [context] Execution context for the mapping function.
      * @param {Function} fn Mapping function.
-     * @returns {Array<GraphNode>} Mapped GraphNode children.
+     * @returns {Array} Mapped GraphNode children.
      */
     map: (cxt, fn) ->
         [fn, cxt] = [cxt, null] unless typeof fn is 'function'
