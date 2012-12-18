@@ -63,10 +63,18 @@ class exports.AxisNode extends GraphNode
             axis.ticks d3.time.months, ticks if ticks > 0
         case 'y'
             axis.tickFormat @numberFormatterFor 2
-                .tickSubdivide 4
                 .orient(orient or= 'left')
-            ticks ?= 10
-            axis.ticks ticks if ticks > 0
+            
+            # TODO: handle different scale-types -- this only handles logscale
+            # TODO: GridNode to apply the same scale calculations
+            ticks ?= 14
+            tickValues = scale.ticks()
+            while 5 < tickValues.length > ticks + 2
+                tickValues .= filter (v, i) ->
+                    L = tickValues.length
+                    mod = Math.max 2, Math.round((L - 2) / (L - 2 - ticks))
+                    i == 0 or i == (L - 1) or i % mod != 0
+            axis.tickValues tickValues
         
         @sel.classed dimension+'-axis axis', true
         @sel.call axis
