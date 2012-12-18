@@ -1,23 +1,11 @@
 require: 2.0.4
 modernizr: 2.0.6
-
 jquery: 1.8.0
-jquery.history: 1.7.1rc2
-jquery.isotope: 1.5.11
 bootstrap: 2.0.4
 moment: 1.7.2
 spin: 1.2.5
 showdown: 0.3.1
-
 underscore: 1.4.2
 underscore.string: 2.0.0
-backbone: 0.9.2
-backbone-nested: 1.1.2
-
-ember: 1.0.0-pre.2
-handlebars: 1.0.rc.1
-
 knockout: 2.2.0
-
-dygraph: 1.2dev
 d3: 2.10.1
