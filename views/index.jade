@@ -3,30 +3,11 @@ extends layout
 
 append styles
     //-
-        TODO: sort these out for a client side app
-    
-    //-
-        from dashboard/view.jade
-    mixin css('graph-display.css')
-    //- graph-display-print contains overrides needed to make printed pages look better
-    mixin css('graph-display-print.css', media='print')
-    
+        Add cssClasses='livecss' to enable live reloading of chart-edit.css
     mixin css('dashboard.css')
-    
-    //-
-        from graph/view.jade
     mixin css('graph-display.css')
-    
-    //-
-        from graph/edit.jade
-    //- mixin css('graph-edit.css')
+    mixin css('graph-display-print.css', media='print')
     mixin css('chart.css')
-    
-    //-
-        Toggle these last two comments to enable live reloading of chart-edit.css
-    //-
-        mixin css('chart-edit.css', cssClasses='livecss')
-    mixin css('chart-edit.css')
 
 
 block content
@@ -39,5 +20,3 @@ append main-scripts
             jQuery(function(){
                 window.limn && limn.expose && limn.expose();
             });
-
-//- block addenda

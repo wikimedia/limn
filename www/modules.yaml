@@ -13,37 +13,27 @@ development:
         - es5-shim.min
         - modernizr.min
         - json2.min
-        
         - jquery
-        # - jquery.history.min
-        # - jquery.hotkeys.min
-        # - jquery.isotope.min
-        # - jquery.spin.min
-        # - jquery.transit.min
-        # - jquery.proximity
-        # - jquery-ui-1.9.1.custom.min
-        
         - bootstrap.min
-        # - bootstrap-colorpicker
-        # - bootstrap-datepicker
-        
         - knockout-2.2.0
-        # - knockoutExternalTemplateEngine
         
         ### CommonJS Support Starts Here
         ### (this means Browserify must come before any .mod files)
         - browserify
-        # - require
-        
         - underscore.string.mod
-        
         - colorbrewer.mod
         - showdown.mod.min
-        # - jade.runtime.min
         - moment.mod
         - d3.v2
         - page.mod
         
+        # Might need these soon
+        # - jquery.spin.min
+        # - jquery.transit.min
+        # - jquery-ui-1.9.1.custom.min
+        # - bootstrap-colorpicker
+        # - bootstrap-datepicker
+        # - jade.runtime.min
         # - livecss
 
 -   suffix: .mod.js
