@@ -210,7 +210,7 @@ class exports.CanvasNode extends GraphNode
         @scaleLine = d3.svg.line()
             .x ([date, val], i) ~> @xScale date
             .y ([date, val], i) ~> @yScale val
-            .defined ([date, val], i) ~> not isNaN @yScale val
+            .defined ([date, val], i) ~> isFinite @yScale val
             .interpolate 'linear'
         @scales { @xScale, @yScale, @scaleLine, -xValid, -yValid }
         
