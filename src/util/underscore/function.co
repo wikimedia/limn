@@ -21,6 +21,21 @@ _fn =
         m.__wraps__ = fn
         m
     
+    
+    /**
+     * Tests whether `val` is a function, calling it with the supplied context
+     * and/or arguments if so, and returning it unchanged otherwise.
+     * 
+     * @param {Function|*} val Value to test.
+     * @param {Object} [context=this] Execution context for `val` if it is a function.
+     * @param {*} ...args Arguments to pass if `val` is a function.
+     * @returns {*} Value or result.
+     */
+    resulting : (val, context=this, ...args) ->
+        return val unless typeof val is 'function'
+        val.apply context, args
+    
+    
 
 
 _.mixin exports import _fn
