@@ -1,0 +1,35 @@
+_  = require 'underscore'
+ko = require 'knockout'
+
+{ GraphNode,
+} = require '../graph-node'
+
+Trait = require '../graph-node-trait'
+
+
+/**
+ * @class
+ * @extends GraphNode
+ */
+class exports.TimeseriesNode extends GraphNode
+    nodeType : 'timeseries'
+    traits   : [
+        Trait.VIS_NODE
+        Trait.REQUIRES_METRIC
+        Trait.METRIC_TIMESERIES
+        Trait.SVG
+        Trait.LEAF
+    ]
+    @registerType()
+    
+    -> super ...
+    
+    
+    /**
+     * Materialized timeseries data.
+     * @type ko.computed<Array<[Date, Value]>>
+     */
+    timeseriesData: @computedRequires 'model.metric', (metric) ->
+        metric.data()
+    
+    

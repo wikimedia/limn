@@ -1,0 +1,193 @@
+_  = require 'underscore'
+ko = require 'knockout'
+
+{ Model,
+} = require '../../base'
+{ compareIds, OrderedSet,
+} = require '../../util'
+{ Metric,
+} = require '../../data/metric-model'
+
+
+
+class exports.GraphNodeData extends Model
+    
+    
+    defaults: ->
+        nodeType       : 'group'
+        label          : null
+        disabled       : false
+        metric         : null
+        options        : {}
+        children       : []
+    
+    attributeTypes :
+        metric   : Metric
+        children : GraphNodeData
+    
+    
+    /**
+     * Parent of this node.
+     * @type ko.observable<GraphNodeData>
+     */
+    parent : @eagerCoerciveObservable GraphNodeData
+    
+    
+    /**
+     * Ensure children Arrays are properly updated when parent changes.
+     * 
+     * Note: Knockout ignores cycles in deps, so the circular modification
+     * trigger between `parent` and `children` is benign.
+     */
+    watchParent : @computed ->
+        oldParent = @parent.prev()
+        oldParent?.children.remove this
+        newParent = @parent()
+        newParent?.children.push this unless _.contains newParent?.children.peek(), this
+        newParent
+    
+    
+    /**
+     * Ensure parents are properly set when child-nodes are added or removed.
+     * 
+     * Note: Knockout ignores cycles in deps, so the circular modification
+     * trigger between `parent` and `children` is benign.
+     */
+    watchChildren : @computed ->
+        oldChildren = @children.prev()
+        newChildren = @children()
+        
+        # Unparent children being removed (not in the new set)
+        _.each oldChildren, (child) ~>
+            child.parent(null) if child.parent.peek() is this and not _.contains newChildren, child
+        
+        # Set the parent of objects that are children
+        # FIXME causes infinite loop:
+        _.invoke newChildren, 'parent', this
+        
+        newChildren
+    
+    
+    
+    /**
+     * @constructor
+     */
+    (attributes={}) ->
+        super()
+        
+        # Decorate observers that need history tracking for state cleanup
+        @parent   .= history({ -includeInitial })
+        @children  = @attributes.children = @children.history({ -includeInitial })
+        @parent.equalityComparer = @children.equalityComparer = compareIds
+        
+        # Set initial attributes now that we've wrapped observers.
+        # Caller still needs to call `.watching()` once we return so we can begin
+        # observing updates without causing a loop.
+        @set attributes
+    
+    
+    /**
+     * Starts watching relevant properties and informs sub-objects its safe to
+     * begin their watchers.
+     * 
+     * Note that this function **must** be invoked by the object creator once
+     * construction is finished. It cannot be called automatically by the
+     * constructor without causing a loop, potentially triggering updates
+     * before anyone else can get a reference to the object.
+     * 
+     * This method must be idempotent; it should always be safe to call
+     * it multiple times.
+     */
+    watching: @computed ->
+        @isWatching = true
+        parent      = @watchParent()
+        children    = @watchChildren()
+        
+        # Recursively activate watching() on children
+        _.invoke @children(), 'watching'
+        
+        [ parent, children ]
+    
+    
+    /* * * *  Tree Operations  * * * {{{ */
+    
+    
+    /**
+     * Performs a depth-first walk across the tree of nodes, invoking an
+     * iteration function much like  `Array.reduce`, passing a custom "accumulator"
+     * value along with the current node: 
+     * 
+     *  `newAcc = fn.call(context || node, currentAcc, node, childIndex)`
+     * 
+     * The iterator's return becomes the new accumulator. If not specified, the
+     * iterator will be invoked with the node as the context.
+     * 
+     * @param {*} acc Starting accumulator value.
+     * @param {Object} [context] Execution context for the iteration function.
+     * @param {Function} fn Iteration function passed the current accumulator and current node.
+     * @returns {*} Final accumulator value.
+     */
+    walk: (acc, cxt, fn, idx=null) ->
+        [fn, cxt] = [cxt, null] unless typeof fn is 'function'
+        acc = fn.call(cxt or this, acc, this, idx)
+        for childNode, childIdx of @children().slice()
+            acc = childNode.walk acc, cxt, fn, childIdx
+        acc
+    
+    
+    /**
+     * As `Array.map()` but walking the tree of nodes.
+     * Mapping function invoked with:
+     * 
+     *  `fn.call(context || node, node, childIndex) -> newValue`
+     * 
+     * @param {Object} [context] Execution context for the mapping function.
+     * @param {Function} fn Mapping function.
+     * @returns {Array} Mapped children.
+     */
+    map: (cxt, fn) ->
+        [fn, cxt] = [cxt, null] unless typeof fn is 'function'
+        @walk [], cxt, (acc, node, childIdx) ->
+            acc.push fn.call this, node, childIdx
+            acc
+    
+    
+    /**
+     * As `Array.filter()` but walking the tree of nodes.
+     * Filter function invoked with:
+     * 
+     *  `fn.call(context || node, node, childIndex) -> Boolean`
+     * 
+     * @param {Object} [context] Execution context for the filter function.
+     * @param {Function} fn Filter function.
+     * @returns {Array<GraphNodeData>} Matching children.
+     */
+    filter: (cxt, fn) ->
+        [fn, cxt] = [cxt, null] unless typeof fn is 'function'
+        @walk [], cxt, (acc, node, childIdx) ->
+            acc.push node if fn.call this, node, childIdx
+            acc
+    
+    
+    
+    
+    # }}}
+    /* * * *  Property Cascading  * * * {{{ */
+    
+    # TODO
+    
+    
+    # }}}
+    
+    
+    toString: ->
+        id        = @__id__
+        Class     = @constructor
+        className = Class.displayName or Class.name
+        nodeType  = @peek 'nodeType'
+        nChildren = @children.peek().length
+        "#className(id=#id, nodeType=#nodeType, \#children=#nChildren)"
+    
+    
+
+

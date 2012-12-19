@@ -1,0 +1,141 @@
+_  = require 'underscore'
+ko = require 'knockout'
+
+{ Base,
+} = require './base'
+
+
+class exports.View extends Base
+    
+    /**
+     * @type ko.observable<Model>
+     */
+    model : null
+    
+    /**
+     * Identifier of the template.
+     * @type String
+     */
+    template : ''
+    
+    defaults: ->
+        model       : null
+        action      : null
+        isDestroyed : false
+    
+    /**
+     * DOM Element for this view. jQuery objects and d3 Selections
+     * will be automatically stripped of their wrappers.
+     * @type ko.observable<Element>
+     */
+    el : @eagerCoerciveObservable (el) ->
+        @$el = null
+        el = el[0]      if el instanceof jQuery
+        el = el.node()  if el instanceof d3.selection
+        return el       unless _.isElement el
+        @$el = $ el
+        el
+    
+    /**
+     * jQuery-wrapped root element.
+     * @type jQuery
+     */
+    $el : null
+    
+    
+    /**
+     * @constructor
+     */
+    (model) ->
+        super()
+        @model model
+    
+    
+    /**
+     * Inform sub-objects its safe to begin watchers.
+     */
+    watching : @computed ->
+        # console.log "#this.watching!"
+        @isWatching = true
+        
+        # Creates a dependency on our children
+        @model()
+        @watchDeps()
+        
+        # ...But ignores whatever other watchers do
+        ko.dependencyDetection.ignore ~>
+            others = @watchOthers()
+            model  = @model.watching?()
+            [ model, others ]
+    
+    
+    /**
+     * Stub to allow you to hook into @watching() without overriding everything.
+     * Called to generate dependencies prior to `watching` recursion.
+     * 
+     * @abstract
+     * @protected
+     */
+    watchDeps: ->
+    
+    
+    /**
+     * Stub to allow you to hook into @watching() without overriding everything.
+     * Called to recursively notify of deps.
+     * 
+     * @abstract
+     * @protected
+     */
+    watchOthers: ->
+    
+    
+    /**
+     * Call when disposing of this view.
+     * @returns {this}
+     */
+    destroy: ->
+        return this if @isDestroyed()
+        @isDestroyed true
+        @trigger 'destroy', this
+        this
+    
+    
+    $: ->
+        @$el?.find.apply @$el, arguments
+    
+    
+    /**
+     * Called by Knockout once the Graph template has finished rendering.
+     */
+    afterRender: (element) ->
+        # console.log "#this.afterRender()"
+        @el element
+        @trigger 'render', this, element
+    
+    
+    /**
+     * Called by Knockout once the Graph template has updated rendering.
+     */
+    afterAdd: (element) ->
+        # console.log "#this.afterAdd()"
+        @el element
+        @trigger 'render-add', this, element
+    
+    
+    toString: ->
+        cid       = @__id__
+        Class     = @constructor
+        className = Class.displayName or Class.name
+        model     = @model?.peek()
+        "#className(cid=#cid, model=#model)"
+
+
+class exports.NotFoundView extends View
+    template: 'notFound'
+    message: ko.observable 'This does not exist'
+    -> super ...
+
+
+class exports.LoadingView extends View
+    template: 'loading'
+    -> super ...

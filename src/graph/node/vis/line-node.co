@@ -1,0 +1,109 @@
+_  = require 'underscore'
+ko = require 'knockout'
+d3 = require 'd3'
+
+{ TimeseriesNode,
+} = require './timeseries-node'
+
+Trait = require '../graph-node-trait'
+ProjectColors = require '../../project-colors'
+
+
+
+/**
+ * @class
+ * @extends TimeseriesNode
+ */
+class exports.LineNode extends TimeseriesNode
+    nodeType : 'line'
+    traits   : [
+        Trait.VIS_NODE
+        Trait.REQUIRES_METRIC
+        Trait.METRIC_TIMESERIES
+        Trait.SVG
+        Trait.LEAF
+    ]
+    @registerType()
+    
+    
+    ->
+        super ...
+        @trackHover()
+    
+    trackHover: @computed ->
+        return unless viewportHover = @root().viewportHover()
+        return unless @model().metric()?.data()?.length
+        return unless @sel
+        
+        @trackingCircle ?= @sel.append 'circle'
+            .classed 'tracking', true
+            .style do
+                fill: @color()
+            .attr do
+                r: 5
+        
+        cx = -10
+        cy = -10
+        
+        if viewportHover.hovering
+            date = @root().xScale.invert viewportHover.xOffset
+            closest = @model().metric().findClosest date
+            
+            cx = @root().xScale closest.date
+            cy = @root().yScale closest.value
+            
+            unless isFinite cx and isFinite cy
+                cx = -10
+                cy = -10
+        
+        @trackingCircle.attr do
+            cx: cx
+            cy: cy
+    
+    
+    color: @computedRequires 'model.options', (options) ->
+        return that if options?.get('color')
+        label = @model().label() or @model().metric()?.defaultLabel() or '(no label)'
+        ProjectColors.lookup(label) or 'black'
+    
+    
+    /**
+     * Update selection representing the SVG path element for the line.
+     * @type ko.computed<d3.selection.update>
+     */
+    render: ->
+        data = if @timeseriesData() then [that] else []
+        
+        # create selection
+        line = @selectAll 'path.metric-line' .data data
+        
+        # always exit() to remove existing nodes if data has changed and become invalid
+        line.exit().remove()
+        
+        return line unless data.length
+        return null unless model  = @model()
+        return null unless scales = @root().scales()
+        
+        options = model.options()
+        stroke  = options?.get('stroke')
+        
+        line.enter()
+            .append 'path'
+                .classed 'metric-line', true
+                .attr  'vector-effect', 'non-scaling-stroke'
+                .style 'fill',          'none'
+                .style 'stroke-width',  stroke.width()
+                .style 'stroke',        @color()
+        line.transition()
+            .attr 'd', scales.scaleLine
+        line
+    
+    
+    # TODO: Options:
+    # - color with palette lookup on line-group
+    # - opacity
+    # - stroke-width
+    # - label with default == metric.defaultLabel
+    # - valueFormat, dateFormat
+    
+

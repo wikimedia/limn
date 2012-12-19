@@ -1,7 +1,117 @@
-_ = require 'underscore'
+_    = require 'underscore'
+_arr = require './array'
+
+
+objToString = {}.toString
+TYPENAME_PAT = /^\[object ([^\]]+)\]$/
+
+STR_TO_TYPENAME = _arr.synthesize do
+    <[ Boolean Number String Array Date RegExp Object Function ]>
+    (name) -> [ "[object #name]", name ]
+
+TRICKY_TYPES = { +Object, +Function }
 
 
 _cls =
+    
+    /**
+     * @returns {Boolean} Whether the given function is a class constructor.
+     */
+    isClass: (fn) ->
+        return true if fn is Object
+        typeof fn is 'function'     and
+        _.isObject( proto = fn:: )  and do
+            fn.__class__ is fn   or
+            not _.isEmpty(proto) or
+            not _.isPlainObject(proto)
+    
+    
+    /**
+     * @returns {String} The name of the type of the thing you passed me.
+     */
+    typeName : (o) ->
+        # null, undefined
+        return String(o) unless o?
+        
+        # Primitives &co are easy ...Except the tricky ones.
+        return name unless TRICKY_TYPES[ name = objToString.call(o) ]
+        
+        # If it's a limn type, it'll help us out.
+        return o.displayName or o.name or 'Class' if _.isClass o
+        
+        # Functions are complicated.
+        # and loose if statements sink builds: FIXME if _.isFunction o
+            
+        
+        return o.constructor
+    
+    
+    /**
+     * Creates a new instance of the given class without running its constructor.
+     * 
+     * @param {Class<T>} Class Class to instantiate.
+     * @returns {T} New instance of the given class, created without running
+     *  its constructor.
+     */
+    fabricate: (Class) ->
+        AnonymousInnerClass = ->
+        AnonymousInnerClass:: = Class::
+        instance = new AnonymousInnerClass()
+        instance.constructor = Class
+        instance
+    
+    
+    /**
+     * Creates a new instance of the given class, applying the given arguments
+     * array to the constructor.
+     * 
+     * @param {Class<T>} Class Class to instantiate.
+     * @param {Array} [args=[]] Arguments to pass to the class constructor.
+     * @returns {T} New instance of the given class.
+     */
+    instantiate: (Class, args=[]) ->
+        instance = _.fabricate Class
+        Class.apply instance, args
+        instance
+    
+    
+    /**
+     * Create an instance of an anonymous subclass of the given class, allowing
+     * you to provide prototype overrides prior to the invocation of the constructor.
+     * 
+     * Note that this process triggers Coco's `@extended()` hook.
+     * 
+     * @param {Class<T>} Class Class to subclass.
+     * @param {Array} [args] Partial constructor arguments which will be prepended
+     *  to whatever is actually supplied to the constructor. if omitted, prototype
+     *  overrides may still be supplied.
+     * @param {Object} [overrides={}] Prototype overrides.
+     * @returns {? extends T>} An instance of the new anonymous subclass of this class.
+     */
+    subclass: (Class, args=[], overrides={}) ->
+        [overrides, args] = [args, []] unless _.isArray args
+        
+        class AnonymousInnerClass extends Class implements overrides
+            (..._args) -> super ...args.concat(_args)
+        
+        AnonymousInnerClass
+    
+    
+    /**
+     * Create an instance of an anonymous subclass of the given class, allowing
+     * you to provide prototype overrides prior to the invocation of the constructor.
+     * 
+     * Note that this process triggers Coco's `@extended()` hook.
+     * 
+     * @param {Class<T>} Class Class to subclass.
+     * @param {Array} [args] Constructor arguments; if omitted, overrides may still be supplied.
+     * @param {Object} [overrides={}] Prototype overrides.
+     * @returns {? extends T>} An instance of the new anonymous subclass of this class.
+     */
+    subclassInstance: (Class, args=[], overrides={}) ->
+        AnonymousInnerClass = _.subclass Class, args, overrides
+        new AnonymousInnerClass()
+    
     
     /**
      * @returns {Array<Class>} The list of all superclasses for this class
@@ -20,6 +130,7 @@ _cls =
         unless superclass then []
         else [superclass].concat getSuperClasses superclass
     
+    
     /**
      * Looks up an attribute on the prototype of each class in the class
      * hierarchy. Values from Object or Function are not typically included --
@@ -31,10 +142,11 @@ _cls =
      */
     pluckSuper : (obj, prop) ->
         return [] unless obj
-        _ _cls.getSuperClasses(obj) .chain()
+        _ _.getSuperClasses(obj) .chain()
             .pluck 'prototype'
             .pluck prop 
             .value()
+    
     
     /**
      * As `.pluckSuper()` but includes value of `prop` on passed `obj`. Values
@@ -46,8 +158,8 @@ _cls =
      */
     pluckSuperAndSelf : (obj, prop) ->
         return [] unless obj
-        [ obj[prop] ].concat _cls.pluckSuper(obj, prop)
+        [ obj[prop] ].concat _.pluckSuper(obj, prop)
     
 
 
-exports import _cls
+_.mixin exports import _cls

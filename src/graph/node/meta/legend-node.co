@@ -1,0 +1,152 @@
+_  = require 'underscore'
+ko = require 'knockout'
+moment = require 'moment'
+
+{ guidFor, formatters, OrderedMap,
+} = require '../../../util'
+{ Base,
+} = require '../../../base'
+{ GraphNode,
+} = require '../graph-node'
+
+Trait = require '../graph-node-trait'
+
+
+/**
+ * @class
+ * @extends GraphNode
+ */
+class exports.LegendNode extends GraphNode
+    nodeType : 'legend'
+    traits   : [
+        Trait.SECTION
+        Trait.META_NODE
+        Trait.REQUIRES_METRIC_POINTER
+        Trait.METRIC_TIMESERIES
+        Trait.HTML
+        Trait.LEAF
+    ]
+    @registerType()
+    tagName  : 'section'
+    template : 'legend-node'
+    
+    
+    /**
+     * The `LegendEntry` cache.
+     * @protected
+     * @type OrderedMap<GraphNode, LegendEntry>
+     */
+    entryCache : null
+    
+    
+    ->
+        @entryCache = new OrderedMap()
+        super ...
+        @date = ko.observable()
+        @trackHover()
+    
+    
+    /**
+     * Track hover events and change the legend date.  This can be used by legend entries
+     */
+    trackHover: @computed ->
+        return unless viewportHover = @root().viewportHover()
+        
+        if viewportHover.hovering
+            @date @root().xScale.invert viewportHover.xOffset
+    
+    
+    buildElement: (parentElement) ->
+        el = super ...
+        $ parentElement .prepend el
+        @renderView el
+    
+    
+    nodes: @computed ->
+        @root().filterTraits [Trait.VIS_NODE, Trait.REQUIRES_METRIC]
+    
+    
+    entries: @computedRequires 'nodes', (nodes) ->
+        nodes
+            .filter (node) ->
+                not (node.get('disabled') or node.options()?.get('noLegend'))
+            .map (node) ~>
+                @lookupEntry node
+    
+    
+    lookupEntry: (node) ->
+        return null unless node?
+        return that if @entryCache.get node
+        
+        entry = new LegendEntry this, node
+        @entryCache.set node, entry
+        
+        # register for notification when the node is destroyed
+        destroySub = node.isDestroyed.subscribe (isDestroyed) ~>
+            throw new Error "WTF! node.isDestroyed false for #node!" unless isDestroyed
+            currentEntry = @entryCache.get node
+            @entryCache.remove node if currentEntry is entry
+            destroySub.dispose()
+        
+        entry
+    
+    
+    dateFormatter : @computedRequires 'options', (options) ->
+        @dateFormatterFor options.get('dateFormat')
+
+
+/**
+ * @class
+ * @extends Base
+ */
+class exports.LegendEntry extends Base implements formatters
+    
+    defaults: ->
+        value : null
+        date  : null
+    
+    
+    (@legend, @node) ->
+        super {}
+        @legendOptions = @legend.options
+        @options = @node.options
+        this import _.pick(@options.peek(), 'label')
+        @color = that if @node.color
+        @legend.date.subscribe @trackLegendDate, this
+    
+    
+    trackLegendDate: (newDate) ->
+        return unless @node?.metric()?.data()?.length
+        
+        if newDate
+            closest = @node.metric().findClosest newDate
+            @date closest.date
+            @value @valueFormatter() closest.value
+            
+            @legend.label @dateFormatter() @date()
+    
+    nodeId: @computed ->
+        guidFor @node
+    
+    dateFormatter : @computedRequires 'legendOptions', 'options', (legendOptions, options) ->
+        dateFormat = legendOptions.get('dateFormat') or options.get('dateFormat')
+        @dateFormatterFor dateFormat
+    
+    valueFormatter : @computedRequires 'legendOptions', 'options', (legendOptions, options) ->
+        # valueFormat = legendOptions.get('valueFormat') or options.get('valueFormat')
+        @numberFormatterHTMLFor digits=2, abbrev=true, addWrapper=false
+    
+    dateReady : @computedRequires 'node.timeseriesData', 'dateFormatter', (data, dateFormatter) ->
+        [date, val] = _.last(data)
+        @date dateFormatter date
+    
+    valueReady : @computedRequires 'node.timeseriesData', 'valueFormatter', (data, valueFormatter) ->
+        [date, val] = _.last(data)
+        @value valueFormatter val
+    
+    
+
+
+
+
+

@@ -1,0 +1,57 @@
+/**
+ * @fileOverview Observable utilities.
+ */
+_ = require 'underscore'
+ko = require 'knockout'
+
+
+
+/**
+ * Creates a `ko.observableArray` if appropriate for the type of the input,
+ * and a `ko.observable` otherwise.
+ * 
+ * @param {*} val Value to wrap.
+ * @returns {ko.observable|ko.observableArray} The observable.
+ */
+toObservable = exports.toObservable = (val) ->
+    return val if ko.isObservable val
+    if _.isArray val
+        ko.observableArray val
+    else
+        ko.observable val
+
+
+/**
+ * Log all changes to the given observable.
+ */
+logObservedChanges = exports.logObservedChanges = (obs, key='') ->
+    oldValue = obs.peek()
+    obs.subscribe (newValue) ->
+        # console.log "#key:", oldValue, '-->', newValue
+        oldValue := newValue
+
+
+/**
+ * Wrap a fluent method of a given object with an observer to publish changes,
+ * still invoking the underlying method.
+ * 
+ * @param {Object} target Object with the method to wrap.
+ * @param {String} methodName Name of the method to wrap.
+ * @returns {Function} Wrapped method.
+ */
+observeFluentMethod = exports.observeFluentMethod = (target, methodName) ->
+    method   = target[methodName]
+    observer = ko.observable()
+    wrapper  = ko.computed do
+        read  : observer
+        write : ->
+            method.apply target, arguments
+            val = method.call target
+            observer val
+            val
+    wrapper import {target, methodName, method, observer}
+    target[methodName] = wrapper
+
+
+
+ko.utils import exports

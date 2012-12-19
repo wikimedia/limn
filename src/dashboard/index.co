@@ -1,3 +1,6 @@
-models = require './dashboard-model'
-views  = require './dashboard-view'
-exports import models import views
+dashboard_model     = require './dashboard-model'
+dashboard_tab_model = require './dashboard-tab-model'
+dashboard_view      = require './dashboard-view'
+dashboard_tab_view  = require './dashboard-tab-view'
+
+exports import dashboard_model import dashboard_tab_model import dashboard_view import dashboard_tab_view

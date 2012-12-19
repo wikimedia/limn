@@ -1,0 +1,334 @@
+/**
+ * @fileOverview RESTful Resource Mixin. Mostly adapted from Backbone.
+ */
+
+{ _, op, root, generateId, guidFor, Mixin,
+} = require '../util'
+{ EventEmitter,
+} = require 'emitters'
+
+Deferred = jQuery.Deferred
+
+
+### Helpers & Constants
+
+ACTION_TO_METHOD =
+    create : 'POST'
+    update : 'PUT'
+    delete : 'DELETE'
+    read   : 'GET'
+
+DEFAULT_OPTIONS =
+    /**
+     * Turn on `emulateHTTP` to support legacy HTTP servers. Setting this option
+     * will fake `"PUT"` and `"DELETE"` requests via the `_method` parameter and
+     * set a `X-Http-Method-Override` header.
+     * @name emulateHTTP
+     * @type Boolean
+     */
+    emulateHTTP : false
+    
+    /**
+     * Turn on `emulateJSON` to support legacy servers that can't deal with direct
+     * `application/json` requests ... will encode the body as
+     * `application/x-www-form-urlencoded` instead and will send the model in a
+     * form param named `model`.
+     * @name emulateJSON
+     * @type Boolean
+     */
+    emulateJSON : false
+
+
+
+/**
+ * @class Mixin which represents a remote resource following the REST pattern:
+ * 
+ * POST    /<RESOURCE>              ->  create
+ * GET     /<RESOURCE>/:id          ->  show
+ * PUT     /<RESOURCE>/:id          ->  update
+ * DELETE  /<RESOURCE>/:id          ->  destroy
+ * 
+ */
+class exports.Resource extends Mixin
+    
+    /* * * *  Instance Methods  * * * {{{ */
+    
+    /**
+     * The name of the resource -- by convention, resources are named with plural nouns.
+     * @type {String|Function}
+     */
+    resource : ''
+    
+    
+    /**
+     * When set, this overrides the result of `isNew()`, allowing formerly saved
+     * models to become new again.
+     * 
+     * @protected
+     * @type Boolean
+     */
+    _isNew : null
+    
+    
+    
+    /**
+     * @returns {Boolean} Whether the resource has been saved to the server.
+     */
+    isNew: ->
+        if typeof @_isNew is 'boolean' then @_isNew else not @getId()?
+    
+    
+    /**
+     * Root prepended to all resource requests.
+     * @type {String|Function}
+     */
+    urlRoot : ->
+        '/'
+    
+    
+    /**
+     * @returns {String} URL to this resource.
+     */
+    url: ->
+        throw new Error "No Resource name found! (@resource=#{@resource}, model=#this)" unless @resource
+        root = _.result this, 'urlRoot'
+        id = encodeURIComponent(@getId() or '')
+        id += '.json' if id
+        _.compact [ root, @resource, id ]
+            .map -> _.rtrim it, '/'
+            .join '/'
+    
+    
+    /**
+     * Fetch the model from the server.
+     * 
+     * Fires a "before-fetch" event prior to execution, and a "fetch" event upon completion.
+     * 
+     * @param {Function} [cb] Called on fetch success: `cb(model)`
+     * @param {Object} [options={}] Options passed to `sync()`.
+     * @returns {Promise} Promise for the result of the Ajax request. Note that callbacks can
+     *  still be attached with no chance of missing events.
+     */
+    fetch: (cb, options={}) ->
+        [options, cb] = [cb, null] unless typeof cb is 'function'
+        
+        # Fetch data from the server...
+        promise = @fetch.promise = @sync 'read', 'fetch', options
+        
+        # ...Update the model with the result, overriding any local changes
+        promise.done (model, data) ~> @update @canonicalize data
+        
+        if cb then promise.done ~> cb ...
+        promise
+    
+    
+    /**
+     * Save the model to the server.
+     * 
+     * Fires a "before-save" event prior to execution, and a "save" event upon completion.
+     * 
+     * @param {Function} [cb] Called on save success: `cb(model)`
+     * @param {Object} [options={}] Options passed to `sync()`.
+     * @returns {Promise} Promise for the Ajax request. Note that callbacks can
+     *  still be attached with no chance of missing events.
+     */
+    save: (cb, options={}) ->
+        [options, cb] = [cb, null] unless typeof cb is 'function'
+        action  = if @isNew() then 'create' else 'update'
+        promise = @save.promise = @sync action, 'save', options
+        if cb then promise.done ~> cb ...
+        promise
+    
+    
+    /**
+     * Destroy the model.
+     * 
+     * Fires a `before-destroy` event prior to execution, and a `destroy` event upon completion.
+     * 
+     * No network request is made if it has not been persisted to the server. In this case, only
+     * the `before-destroy` and `destroy` events will still fire (additionally passing `false`
+     * as the second parameter to the callback) -- `sync` events will not.
+     * 
+     * @param {Function} [cb] Called on save success: `cb(model)`
+     * @param {Object} [options={}] Options passed to `sync()`.
+     * @returns {Promise} Promise for the Ajax request. Note that callbacks can
+     *  still be attached with no chance of missing events.
+     */
+    destroy: (cb, options={}) ->
+        [options, cb] = [cb, null] unless typeof cb is 'function'
+        
+        # Don't issue request if the server doesn't know about the model
+        if @isNew()
+            model     = this
+            payload   = null
+            xhr       = false
+            
+            syncEvent = 'before-sync'
+            @trigger                'before-destroy',   model, payload, xhr, options
+            @trigger                syncEvent,          model, payload, xhr, options
+            @constructor.trigger?   syncEvent,          model, payload, xhr, options
+            Resource.trigger        syncEvent,          model, payload, xhr, options
+            
+            deferred = new Deferred()
+            deferred.done ~>
+                syncEvent = 'sync'
+                @trigger                'destroy',          model, payload, xhr, options
+                @trigger                syncEvent,          model, payload, xhr, options
+                @constructor.trigger?   syncEvent,          model, payload, xhr, options
+                Resource.trigger        syncEvent,          model, payload, xhr, options
+            
+            if cb then deferred.done ~> cb ...
+            _.defer -> deferred.resolve(model, payload, xhr, options)
+            
+            return @destroy.promise = deferred.promise()
+        
+        # Inform the server to destroy the model
+        promise = @destroy.promise = @sync 'delete', 'destroy', options
+        
+        # Override the new status of this model, reflecting that it no longer exists on the server
+        promise.done ~> @_isNew = true
+        
+        if cb then promise.done ~> cb ...
+        promise
+    
+    
+    /**
+     * Executes the ajax call to perform a REST action.
+     * 
+     * This method fires a large number of events from both the originating object
+     * and several central places, so that responding to persistence actions does not
+     * require wrapping the methods or subclassing model objects.
+     * 
+     * `sync()` fires events from three places (in this order):
+     * - The model instance
+     * - The model's class object
+     * - The Resource class object
+     * 
+     * The events fired are:
+     * - `before-sync`: This is always fired, and fires from all locations.
+     * - One of `fetch`, `save`, `destroy`, depending on the method that triggered this
+     *  `sync` call. This is only fired from the model instance, and only on success.
+     * - One of `fetch-error`, `save-error`, `destroy-error`, depending on the method
+     *  that triggered this `sync` call. This is only fired from the model instance,
+     *  and only on failure.
+     * - `sync`: Fired on success from all locations.
+     * - `sync-error`: Fired on failure from all locations.
+     * 
+     * All events fire with the arguments `cb(model, result, xhr, options)` where
+     * result is either the data response or the error thrown.
+     * 
+     * @protected
+     * @param {String} action REST action to be applied.
+     * @param {String} event Event to fire on success ("-error" appended on failure).
+     * @param {Object} [options=DEFAULT_OPTIONS] Options passed to the ajax call,
+     *  overriding what `sync` would set in the case of conflict.
+     * @returns {Promise} Promise for the Ajax request. Note that callbacks can
+     *  still be attached with no chance of missing events.
+     */
+    sync: (action, event, options={}) ->
+        model   = this
+        type    = ACTION_TO_METHOD[action]
+        params  = { type, dataType:'json' }
+        options = _.extend {}, DEFAULT_OPTIONS, options
+        
+        # Ensure that we have a URL.
+        params.url = options.url or _.result(model, 'url')
+        unless params.url
+            throw new Error "A 'url' property or function must be specified!"
+        
+        # Store in-flight requests
+        loading = @loading or= {}
+        
+        # Ensure that we have the appropriate request data.
+        if not options.data and model and (action is 'create' or action is 'update')
+            params.contentType = 'application/json'
+            params.data        = JSON.stringify model
+        
+        # For older servers, emulate JSON by encoding the request into an HTML-form.
+        if options.emulateJSON
+            params.contentType = 'application/x-www-form-urlencoded'
+            params.data        = if params.data then { model:that } else {}
+        
+        # For older servers, emulate HTTP by mimicking the HTTP method with `_method`
+        if setOverride = options.emulateHTTP and (type is 'PUT' or type is 'DELETE')
+            params.type         = 'POST'
+            params.data._method = type if options.emulateJSON
+        
+        # Don't process data on a non-GET request.
+        if params.type is not 'GET' and not options.emulateJSON
+            params.processData = false
+        
+        # Finally, allowing the user to override any Ajax options.
+        params = _.extend params, options
+        
+        
+        # Start the request!
+        xhr = Resource.ajax params
+        requestId = guidFor xhr
+        
+        # Set `X-HTTP-Method-Override` header for older servers.
+        xhr.setRequestHeader 'X-HTTP-Method-Override', type if setOverride
+        
+        # Create a filter on the xhr-promise to inject the model.
+        deferred = new Deferred()
+        xhr.then do
+            # trigger success callback
+            (result, status, _xhr)  ~> deferred.resolveWith model, [model, result, xhr, params]
+            # trigger error callback
+            (_xhr, status, result)  ~> deferred.rejectWith  model, [model, result, xhr, params]
+            # trigger progress callbacks
+            (...args)               ~> deferred.notifyWith  model, [model].concat args
+        
+        # Trigger an event on: the model, the model's class, Resource
+        triggerAll = (modelEvent, syncEvent, payload) ->
+            model.trigger               modelEvent, model, payload, xhr, params if modelEvent
+            model.trigger               syncEvent,  model, payload, xhr, params
+            model.constructor.trigger?  syncEvent,  model, payload, xhr, params
+            Resource.trigger            syncEvent,  model, payload, xhr, params
+        
+        # Trigger the `before` event.
+        triggerAll  "before-#event", "before-sync", xhr
+        
+        # Trigger events on completion.
+        xhr.always ->
+            # XXX: No throttling enforced in `sync` atm.
+            # delete loading[action] if requestId is guidFor xhr
+            if arguments[1] is 'success'
+                [result, status, _xhr] = arguments
+                resultEvent = event
+                syncEvent   = "sync"
+            else
+                [_xhr, status, result] = arguments
+                resultEvent = "#{event}-error"
+                syncEvent   = "sync-error"
+            triggerAll    resultEvent, syncEvent, result
+            triggerAll    null, "sync-complete", result
+        
+        # Attach the original xhr
+        deferred.xhr = xhr
+        
+        # Return the filtered xhr object to be used as a promise, etc
+        deferred
+    
+    
+    
+    
+    # }}}
+    /* * * *  Class Methods  * * * {{{ */
+    
+    # Make the class-object itself an event emitter.
+    this import EventEmitter::
+    
+    /**
+     * $.ajax() provider.
+     */
+    @$ = root.jQuery or root.Zepto or root.ender
+    
+    /**
+     * Issue an ajax request.
+     */
+    @ajax = ->
+        Resource.$.ajax.apply Resource.$, arguments
+    
+    # }}}
+

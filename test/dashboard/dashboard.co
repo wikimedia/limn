@@ -1,0 +1,32 @@
+limn = require 'limn'
+Dashboard = limn.dashboard.Dashboard
+DashboardTab = limn.dashboard.DashboardTab
+
+/******** Dashboard ********/
+QUnit.module '[dashboard] Dashboard', do
+    setup: ->
+    teardown: ->
+
+asyncTest 'fetch', ->
+    dashboard = new Dashboard id: 'reportcard'
+    dashboard.fetch().done ->
+        start()
+        ok dashboard.headline().length > 0, 'The dashboard headline was loaded'
+
+asyncTest 'fetch tabs and graphs', ->
+    dashboard = new Dashboard id: 'reportcard'
+    initialFetch = ''
+    dashboard.fetch().done ->
+        ok dashboard.tabs().length > 0, 'The tabs were loaded'
+        ok dashboard.tabs()[0] instanceof DashboardTab, 'The tabs are typed correctly'
+        
+        initialFetch = JSON.stringify dashboard
+        dashboard.fetchGraphs().done ->
+            start()
+            graphs = dashboard.tabs()[0].graphs()
+            ok graphs.length > 0, 'the first tab has graphs'
+            ok graphs[0].name().length > 0, 'the first graph has a name'
+            
+            serialized = JSON.stringify dashboard
+            strictEqual initialFetch, serialized, 'round trip serialization works'
+

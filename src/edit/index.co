@@ -1,0 +1,3 @@
+edit_view = require './edit-view'
+
+exports import edit_view

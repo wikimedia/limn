@@ -1,175 +1,131 @@
-{ _, op,
-} = require '../util'
-{ BaseModel, BaseList,
+_  = require 'underscore'
+ko = require 'knockout'
+
+{ Model, StoredModel, ModelCache,
 } = require '../base'
-ProjectColors = require './project-colors'
-DataSource = DataSourceList = null
+{ Query, ParsingMixin,
+} = require '../util'
+{ DataSource,
+} = require './datasource-model'
 
 
-
-
-
-/**
- * @class
- */
-Metric = exports.Metric = BaseModel.extend do # {{{
-    NEW_METRIC_LABEL : 'New Metric'
-    urlRoot  : '/metrics'
+class exports.Metric extends Model
+    ParsingMixin.mix this
+    
+    
+    (attributes) -> super ...
+    
+    
+    defaults : ->
+        source_id  : null       # String
+        source_col : null       # String|Number
+        type       : 'int'      # String
+        timespan : 
+            start  : null       # String -> Date
+            end    : null       # String -> Date
+            step   : null       # String -> moment.Duration
+    
     
     /**
      * Data source of the Metric.
-     * @type DataSource
+     * @type ko.computed<DataSource>
+     * @depends source_id
      */
-    source : null
-    
-    is_def_label : true
-    
-    defaults : ->
-        index            : 0
-        label            : ''
-        type             : 'int'
-        timespan         : { start:null, end:null, step:null }
-        disabled         : false
-        
-        # DataSource
-        source_id        : null
-        source_col       : -1
-        
-        # Chart Options
-        color            : null
-        visible          : true
-        format_value     : null
-        format_axis      : null
-        
-        transforms       : []
-        scale            : 1.0
-        
-        chartType        : null
-    
-    
-    
-    constructor: function Metric
-        BaseModel ...
-    
-    initialize : ->
-        BaseModel::initialize ...
-        @is_def_label = @isDefaultLabel()
-        @on 'change:source_id',     @load,          this
-        @on 'change:source_col',    @updateId,      this
-        @on 'change:label',         @updateLabel,   this
-        @load()
-    
-    
-    # toJSON: ->
-    #     json = Metric.__super__.toJSON ...
-    #     json.color or= ProjectColors.lookup(json.label) or 'black'
-    #     json
-    
-    
-    getDateColumn: ->
-        @source?.getDateColumn()
-    
-    getData: ->
-        @source?.getColumn @get 'source_col'
-    
-    getLabel: ->
-        @get('label') or @getPlaceholderLabel()
-    
-    getPlaceholderLabel: ->
-        col  = @get 'source_col'
-        name = "#{@source.get 'shortName'}, #{@source.getColumnName col}" if @source and col >= 0
-        name or @NEW_METRIC_LABEL
-    
-    getSourceColumnName: ->
-        col = @get 'source_col'
-        @source.getColumnName col if @source and col > 0
-    
-    getColor: ->
-        @get('color') or ProjectColors.lookup(@get('label')) or 'black'
-    
-    
-    load: (opts={}) ->
-        source_id  = @get 'source_id'
-        @resetReady() if opts.force or @source?.id is not source_id
-        return this if @loading or @ready
-        
-        unless source_id and @get('source_col') >= 0
-            return @triggerReady()
-        
-        # console.log "#this.load()..."
-        @updateId()
-        @loading = true
-        @wait()
-        @trigger 'load', this
-        
-        DataSource.lookup source_id, (err, source) ~>
-            # console.log "#this.onSourceReady", arguments
-            @loading = false
-            @unwait() # terminates the `load` wait
-            if err
-                console.error "#{this} Error loading DataSource! #err"
-            else
-                # console.log "#{this}.load() complete!"
-                @source = source
-                @is_def_label = @isDefaultLabel()
-                @updateId()
-                @triggerReady()
-        this
-    
-    
-    isDefaultLabel: ->
-        label = @get 'label'
-        not label or label is @getPlaceholderLabel() or label is @NEW_METRIC_LABEL
-    
-    updateLabel: ->
-        return this unless @source
-        label = @get 'label'
-        if not label or @is_def_label
-            @set 'label', ''
-            @is_def_label = true
-        else
-            @is_def_label = @isDefaultLabel()
-        this
-    
-    updateId: ->
-        source_id  = @get 'source_id'
-        source_col = @get 'source_col'
-        if source_id and source_col?
-            @id = "#source_id[#source_col]"
-        @updateLabel()
-        this
+    source : @asyncComputed ->
+        DataSource.lookup id if id = @get 'source_id'
     
     
     /**
-     * Check whether the metric has aiight-looking values so we don't
-     * attempt to graph unconfigured crap.
+     * Query object for the parameters of this Metric.
+     * @type ko.computed<Query>
+     * @depends source_col, timespan
      */
-    isOk: ->
-        @source?.ready # and _.every @get('timespan'), op.ok
+    query : @computed ->
+        source_col = @get 'source_col'
+        timespan   = @get 'timespan'
+        return unless source_col? and timespan
+        Query()
+            .step       timespan.step()
+            .timespan   timespan.start(), timespan.end()
     
-# }}}
-
-
-/**
- * @class
- */
-MetricList = exports.MetricList = BaseList.extend do # {{{
-    urlRoot  : '/metrics'
-    model    : Metric
     
-    constructor: function MetricList then BaseList ...
-    initialize: -> BaseList::initialize ...
+    /**
+     * The reified dataset (as (date, value) pairs) associated with this Metric.
+     * @type ko.computed<[Date, Value]>
+     * @depends source, query
+     */
+    data : @computed ->
+        source_col = @get 'source_col'
+        return unless source_col?
+        return unless query = @query()
+        return unless csv   = @source()?.data()
+        query
+            .rows true
+            .columns 0, source_col
+            .apply csv.getData()
     
-    comparator: (metric) ->
-        metric.get('index') ? Infinity
     
-    onlyOk: ->
-        new MetricList @filter -> it.isOk()
+    /**
+     * The reified dates for the dataset associated with this Metric.
+     * @type ko.computed<Array<Date>>
+     * @depends source, query
+     */
+    dates : @computed ->
+        return unless query = @query()
+        return unless csv   = @source()?.data()
+        query
+            .rows false
+            .columns 0
+            .call csv.getDateColumn()
     
-# }}}
-
-### FIXME: LOLHACKS ###
-setTimeout do
-    -> { DataSource, DataSourceList, } := require './datasource-model'
-    10
-
+    
+    /**
+     * The reified dataset values associated with this Metric.
+     * @type ko.computed<Array<Value>>
+     * @depends source, query, source_col
+     */
+    values : @computed ->
+        source_col = @get 'source_col'
+        return unless source_col?
+        return unless query = @query()
+        return unless csv   = @source()?.data()
+        query
+            .rows false
+            .columns source_col
+            .apply csv.getData()
+    
+    
+    /**
+     * The reified dataset associated with this Metric.
+     * @type ko.computed<ColumnDef>
+     * @depends source, source_col
+     */
+    columnDef : @computed ->
+        source_col = @get 'source_col'
+        return unless source_col?
+        @source()?.columns()?[source_col]
+    
+    
+    /**
+     * The reified dataset associated with this Metric.
+     * @type ko.computed<String>
+     * @depends columnDefinition
+     */
+    defaultLabel : @computed ->
+        @columnDef()?.get 'label'
+    
+    
+    /**
+     * Find the entry with a date closest to the date specified
+     * @param {Date} closestTo
+     * @returns {numeric} the closest entry
+     */
+    findClosest : (closestTo) ->
+        closest = null
+        closestDateDifference = 9007199254740992
+        for [date, value] of @data()
+            dateDifference = Math.abs closestTo.getTime() - date.getTime()
+            if dateDifference < closestDateDifference
+                closestDateDifference = dateDifference
+                closest = {date, value}
+        closest

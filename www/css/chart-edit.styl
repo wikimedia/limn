@@ -1,0 +1,111 @@
+.box
+    position: absolute
+    margin: 1em
+    top: 0
+    right: 0
+    bottom: 0
+    left: 0
+
+.flying
+    box-shadow: 3px 3px 3px 3px #bbb
+    padding: 10px
+    p
+        font-size: 16px
+    > div
+        position: relative
+        height: 100%
+        width: 100%
+
+.left.box
+    top: -20%
+    right: 100%
+    left: -20%
+.top.box
+    left: 0
+    top: -20%
+    bottom: 100%
+.right.box
+    top: 20%
+    bottom: 20%
+    right: -20%
+    left: 100%
+.bottom.box
+    top: 100%
+    bottom: -20%
+    left: 20%
+
+/* css for all four boxes open
+
+.middle.box
+    top: 20%
+    right: 20%
+    bottom: 20%
+    left: 20%
+.left.box
+    right: 80%
+.top.box
+    left: 20%
+    bottom: 80%
+.right.box
+    top: 20%
+    bottom: 20%
+    left: 80%
+.bottom.box
+    top: 80%
+    left: 20%
+*/
+
+.chart-edit-row
+    position absolute
+    // top 0
+    // bottom 0
+    // left 0
+    // right 0
+
+.chart-element-edit
+    display none
+    
+    z-index 99999
+    position relative
+    margin 1em
+    padding 1.75em 1.75em 1em 1em
+    border 1px solid #ddd
+    border-radius 4px
+    background-color #fff
+    
+    .close
+        position absolute
+        display block
+        top   0.10em
+        right 0.35em
+        z-index 100
+    
+    form:last-child, form > :last-child
+        margin-bottom 0
+
+.line-chart-element-edit
+    display none
+
+.line:hover
+    cursor pointer
+
+.edit-legend
+    ul
+        list-style: none
+        margin: 0
+    li.draggable
+        padding: 6px
+        border-radius: 5px
+        border-width: 2px
+        border-style: solid
+        cursor: -webkit-grab
+        cursor: -moz-grab
+        cursor: grab
+        margin: 0 0 8px 0
+        text-align: left
+    li.ui-sortable-placeholder, li.ui-sortable-helper
+        cursor: -webkit-grabbing
+        cursor: -moz-grabbing
+        cursor: grabbing
+        background-color: white
+        box-shadow: 2px 2px 2px 2px #bbb

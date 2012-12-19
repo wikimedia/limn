@@ -1,0 +1,25 @@
+include mixins/helpers
+extends layout
+
+block styles
+    //- mixin css('reset.min.css')
+    mixin css('/vendor/qunit/themes/qunit.css')
+    mixin css('/vendor/qunit/theme-picker.css')
+
+block content
+    .inner(style='padding:1em')
+        #qunit
+
+block footer
+
+append defs
+    .tests
+        block tests
+            script(src="/vendor/qunit/qunit.js")
+            script(src="/vendor/qunit/theme-picker.js")
+            
+            for test in tests()
+                script(src=path.join(mount, test))
+            
+            script
+                limn.test = require('limn/test');

@@ -1,0 +1,22 @@
+extends layout
+
+
+append styles
+    //-
+        Add cssClasses='livecss' to enable live reloading of chart-edit.css
+    mixin css('dashboard.css')
+    mixin css('graph-display.css')
+    mixin css('graph-display-print.css', media='print')
+    mixin css('chart.css')
+
+
+block content
+    section.page(data-bind="subview: currentView")
+
+
+append main-scripts
+    if IS_DEV
+        script
+            jQuery(function(){
+                window.limn && limn.expose && limn.expose();
+            });

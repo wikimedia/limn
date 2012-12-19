@@ -1,0 +1,46 @@
+op = require 'operator'
+
+
+/**
+ * @namespace Parsers by type.
+ */
+parsers =
+    
+    parseBoolean: (v) ->
+        op.toBool v
+    
+    parseNumber: (v) ->
+        r = Number v
+        unless isNaN r then r else null
+    
+    parseInteger: (v) ->
+        r = op.toInt v
+        unless isNaN r then r else null
+    
+    parseFloat: (v) ->
+        r = op.toFloat v
+        unless isNaN r then r else null
+    
+    parseString: (v) ->
+        if v? then op.toStr v else null
+    
+    parseDate: (v) ->
+        if v then op.toDate v else null
+    
+    parseRegExp: (v) ->
+        if v then op.toRegExp v else null
+    
+    parseArray: (v) ->
+        if v then op.toObject v else null
+    
+    parseObject: (v) ->
+        if v then op.toObject v else null
+    
+    parseFunction: (v) ->
+        if v and String(v).slice(0, 8) is 'function'
+            try eval "(#v)" catch then null
+        else
+            null
+    
+
+exports import parsers

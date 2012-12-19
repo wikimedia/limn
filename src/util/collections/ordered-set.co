@@ -1,0 +1,523 @@
+_ = require '../underscore'
+{ guidFor,
+} = require '../guid'
+
+
+/**
+ * A Set class, implemented using `guid.guidFor()`, which keeps values in insertion order.
+ * 
+ * @class
+ */
+class exports.OrderedSet
+    /**
+     * Class guid.
+     * @type String
+     */
+    @__id__ = guidFor this
+    
+    /**
+     * Instance guid.
+     * @type String
+     */
+    __id__ : null
+    
+    /**
+     * Set contents.
+     * @protected
+     * @type Array
+     */
+    _items : null
+    
+    /**
+     * Map from Id to Objects in the set.
+     * @protected
+     * @type Object<Id, *>
+     */
+    _byId : null
+    
+    
+    
+    /**
+     * @constructor
+     * Invokes `@clear()` to initialize state tracking objects.
+     */
+    ->
+        @__id__ = guidFor this
+        @clear()
+        @update ... if arguments.length
+    
+    
+    
+    /**
+     * Determine a unique identifier for the given value.
+     * @protected
+     * @returns {String} Id for this value.
+     */
+    _getId : (v) ->
+        guidFor v
+    
+    
+    /**
+     * All of OrderedSet's methods assume an Array (`_items` by default) stores
+     * the set contents. If you've changed this in a subclass by overriding
+     * `@clear()`, also override this method to wrap or transform your backing
+     * store so it is presented as an Array.
+     * 
+     * @protected
+     * @returns {Array} Array backing the set's contents.
+     */
+    _getItems: ->
+        @_items
+    
+    
+    /**
+     * Removes all elements from the set.
+     * @returns {this}
+     */
+    clear : ->
+        @_byId  = {}
+        @_items = []
+        this
+    
+    
+    /**
+     * Clones the set, returning a new object.
+     * @returns {OrderedSet}
+     */
+    clone : ->
+        @..create().update @_getItems()
+    
+    
+    /**
+     * @returns {Number} Number of elements in the set.
+     */
+    size : ->
+        @_getItems().length
+    
+    
+    /**
+     * @return {Boolean}
+     */
+    isEmpty : ->
+        @size() is 0
+    
+    
+    /**
+     * @protected
+     * @param {*} value
+     * @returns {Boolean} Whether the set contains `value`.
+     */
+    _hasOne : (value) ->
+        @_getId(value) in @_byId
+    
+    
+    /**
+     * Tests whether the set contains all given values.
+     * @aliases OrderedSet#contains
+     * 
+     * @param {*} value...
+     * @returns {Boolean} Whether the set contains all given values.
+     */
+    has : (value) ->
+        _.all arguments, @_hasOne, this
+    
+    
+    /**
+     * @protected
+     * @returns {this}
+     */
+    _appendOne : (v) ->
+        id = @_getId v
+        return this if id in @_byId
+        @_byId[id] = v
+        @_getItems().push v
+        this
+    
+    
+    /**
+     * @protected
+     * @returns {this}
+     */
+    _prependOne : (v) ->
+        id = @_getId v
+        return this if id in @_byId
+        @_byId[id] = v
+        @_getItems().unshift v
+        this
+    
+    
+    /**
+     * Add values to the OrderedSet.
+     * @aliases OrderedSet#push OrderedSet#append
+     * @param {*} values... Values to add.
+     * @returns {this}
+     */
+    add : (...values) ->
+        _.each arguments, @_appendOne, this
+        this
+    
+    
+    /**
+     * Add values to the beginning of the OrderedSet.
+     * @aliases OrderedSet#unshift
+     * @param {*} values... Values to add.
+     * @returns {this}
+     */
+    prepend : (...values) ->
+        _.each values.reverse(), @_prependOne, this
+        this
+    
+    
+    /**
+     * @protected
+     * @param {*} v Value to remove.
+     * @returns {Boolean} Whether the value was removed.
+     */
+    _removeOne : (v) ->
+        id = @_getId v
+        return false unless id in @_byId
+        delete @_byId[id]
+        idx = @indexOf v
+        @_getItems().splice idx, 1 if idx > -1
+        true
+    
+    
+    /**
+     * Remove values from the OrderedSet.
+     * @param {*} values... Values to remove.
+     * @returns {this}
+     */
+    remove : (...values) ->
+        _.each arguments, @_removeOne, this
+        this
+    
+    
+    /**
+     * @param {*} value
+     * @returns {Number} Index of `value` if found, otherwise `-1`.
+     */
+    indexOf : (value) ->
+        _.indexOf @_getItems(), value
+    
+    
+    /**
+     * Retrieve the value stored at the given index.
+     * 
+     * @param {Number} idx Index to retrieve.
+     * @returns {*} The value stored at the given index.
+     */
+    at : (idx) ->
+        @_getItems()[idx]
+    
+    
+    /**
+     * @returns {*|Array} An array of the first `n` elements if `n` was given;
+     *  otherwise just the first element of the set.
+     */
+    first : (n) ->
+        _.first @_getItems(), n
+    
+    
+    /**
+     * @returns {*|Array} An array of the last `n` elements if `n` was given;
+     *  otherwise just the last element of the set.
+     */
+    last : (n) ->
+        _.last @_getItems(), n
+    
+    
+    /**
+     * @returns {*} Removes and returns the last (most recently added) element in the set.
+     */
+    pop : ->
+        return if @isEmpty()
+        v  = @_getItems().pop()
+        id = @_getId v
+        delete @_byId[id]
+        v
+    
+    
+    /**
+     * @returns {*} Removes and returns the first element in the set.
+     */
+    shift : ->
+        return if @isEmpty()
+        v  = @_getItems().shift()
+        id = @_getId v
+        delete @_byId[id]
+        v
+    
+    
+    /**
+     * Update this OrderedSet (in-place) with other collections.
+     * @param {Array|Object} it... Collection to add.
+     * @returns {this}
+     */
+    update : (vs) ->
+        _.each do
+            arguments
+            -> _.each it, @_appendOne, this
+            this
+        this
+    
+    
+    /**
+     * Converts this OrderedSet to an Array.
+     * @returns {Array}
+     */
+    slice : (start, stop) ->
+        items = @_getItems()
+        items.slice.apply items, arguments
+    
+    
+    
+    /* * * *  Iteration/Collection Methods  * * * {{{ */
+    
+    # Synthesized: map, filter, reject, some/any, every/all, find/detect
+    
+    
+    /**
+     * @returns {Array} List of the unique identifiers for each element of the set.
+     */
+    keys : ->
+        _.keys @_byId
+    
+    
+    /**
+     * Converts this OrderedSet to an Array.
+     * @aliases OrderedSet#toArray
+     * @returns {Array}
+     */
+    values : ->
+        @_getItems().slice()
+    
+    
+    /**
+     * @returns {Array<[Key, Value]>} Key-value pairs of set contents.
+     */
+    items : ->
+        _.map @_getItems(), ~> [ @_getId(it), it ]
+    
+    
+    /**
+     * Transforms the collection into a single value, front-to-back.
+     * @param {Function} fn Reducer function.
+     * @param {*} [acc] Starting accumulator value.
+     * @param {Object} [cxt=this] Context; defaults to this OrderedSet.
+     * @returns {*}
+     * @see https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Array/reduce
+     */
+    reduce : (fn, acc, cxt=this) ->
+        _.reduce @_getItems(), fn, acc, cxt
+    
+    
+    /**
+     * Applies a function to each element.
+     * @aliases OrderedSet#each
+     * @returns {this}
+     * @see https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Array/forEach
+     */
+    forEach : (fn, cxt=this) ->
+        _.forEach @_getItems(), fn, cxt
+        this
+    
+    
+    /**
+     * @returns {Array} List of all values at property `prop`.
+     */
+    pluck : (prop) ->
+        _.pluck @_getItems(), prop
+    
+    
+    /**
+     * Invokes the named method on each element in the set, returning a list of the results.
+     * @param {String} methodName Name of the method on each element to call.
+     * @param {Any...} [args...] Optional arguments to call pass to method call.
+     * @returns {Array} List of results.
+     */
+    invoke : (methodName) ->
+        _.invoke @_getItems(), ...arguments
+    
+    
+    
+    # }}}
+    /* * * *  Comparators and Set Operations  * * * {{{ */
+    
+    /**
+     * Tests if `a` is a Collection and has all elements in common with the set.
+     * Sets are equal if and only if their intersection has the same size as both sets.
+     * @param {Collection} a
+     * @returns {Boolean}
+     */
+    isEqual : (a) ->
+        return false unless a
+        L = @size()
+        return L is _.values(a).length and L is @intersect(a).length
+    
+    
+    /**
+     * Tests if the set has no elements in common with `a`.
+     * Sets are disjoint if and only if their intersection is the empty set.
+     * @param {Collection} a
+     * @returns {Boolean}
+     */
+    isDisjoint : (a) ->
+        return true unless a
+        return not _.some a, @_hasOne, this
+    
+    
+    /**
+     * Test whether every element in the set is in `a`.
+     * @param {Collection} a
+     * @returns {Boolean}
+     */
+    isSubset : (a) ->
+        return false unless a
+        A = _ a
+        @every A.contains, A
+    
+    
+    /**
+     * Test whether every element in `a` is in the set.
+     * @param {Collection} a
+     * @returns {Boolean}
+     */
+    isSuperset : (a) ->
+        return false unless a
+        _.every a, @_hasOne, this
+    
+    
+    /**
+     * Test whether any elements in `a` are in the set.
+     * @param {Collection} a
+     * @returns {Boolean}
+     */
+    isOverlapping : (a) ->
+        return false unless a
+        _.any a, @_hasOne, this
+    
+    
+    /**
+     * OrderedSet Intersection (A ^ B)
+     * Intersects the set with another collection, returning a new set. The
+     * membership test uses `_(other).contains()`, so it is possible to intersect
+     * collections of different types. Set membership is tested with `_getId()`, but
+     * membership in `other` will use strict equality via `.indexOf()`.
+     * 
+     * @param {Array|Object} other Comparison collection.
+     * @returns {OrderedSet} A new set of all elements of `this` found in the supplied collection.
+     * 
+     * @example
+     *      foo = /foo/
+     *      A = [foo, 'A', 1, 2, 3, 'C', /foo/]
+     *      B = [foo, 'B', 3, 'A', 1, /foo/]
+     *      ins = _(A).intersect(B)
+     *      ins.toString() is "OrderedSet([/foo/,A,1,3])" # true
+     *      ins.get(0) is foo # true
+     */
+    intersect : (a) ->
+        @..create().update _.intersect @_getItems(), _.map(arguments, _.values)
+    
+    
+    /**
+     * OrderedSet Union (A v B)
+     * @aliases OrderedSet#concat
+     * @param {Array|Object} a Other collection(s).
+     * @returns {OrderedSet} A new set of all elements of both collections, without duplicates.
+     */
+    union : (a) ->
+        _.reduce_ arguments, @clone(), (out, it) -> out.update it
+    
+    
+    /**
+     * OrderedSet Difference (A - B)
+     * @param {Array|Object} a Comparison collection(s).
+     * @returns {OrderedSet} A new set of only elements of this OrderedSet not in supplied collection(s).
+     */
+    difference : (a) ->
+        @..create().update _.difference @_getItems(), _.map(arguments, _.values)
+    
+    
+    /**
+     * Symmetric Difference (A - B) v (B - A)
+     * @returns {OrderedSet} 
+     */
+    xor : (a) ->
+        a = _.values a
+        @difference a .union _.difference a, @_getItems()
+    
+    
+    # }}}
+    
+    
+    toString : ->
+        Class     = @constructor
+        className = Class.displayName or Class.name
+        "OrderedSet(size=#{@size()})"
+    
+    
+    /* * * *  Class Methods  * * * {{{ */
+    
+    # These methods are all inherited by subclasses; the 
+    # factories all support generic subclass instantiation.
+    
+    
+    /**
+     * Set factory.
+     * @static
+     * @returns {? extends OrderedSet} A new set.
+     */
+    @create = ->
+        Class = this
+        new Class()
+    
+    
+    /**
+     * @static
+     * @returns {Function} A factory function that creates new instances
+     *  without requiring the accursed `new` keyword.
+     */
+    @factory = ->
+        @create.bind this
+    
+    
+    /**
+     * Invoked when extended; copies over all class methods to the Subclass (including this).
+     * @protected
+     * @static
+     */
+    @extended = (SubClass) ->
+        SuperClass = this
+        for own k, v in SuperClass
+            SubClass[k] = v unless SubClass[k]
+        SubClass.__id__         = guidFor SubClass
+        SubClass.__class__      = SubClass
+        SubClass.__super__      = SuperClass::
+        SubClass.__superclass__ = SuperClass
+        SubClass
+    
+    
+    # }}}
+    
+
+
+# Synthesize collection functions from Underscore
+_.each <[ map filter reject some every find ]>, (name) ->
+    OrderedSet::[name] = (fn, cxt=this) ->
+        _[name] @_getItems(), fn, cxt
+
+
+# Alias methods to alternate names
+_.alias OrderedSet::,
+    # src   : dest
+    has     : 'contains'
+    add     : 'push append'
+    prepend : 'unshift'
+    forEach : 'each'
+    every   : 'all'
+    some    : 'any'
+    find    : 'detect'
+    values  : 'toArray'
+    union   : 'concat'
+
+

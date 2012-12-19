@@ -3,78 +3,17 @@
 
 section.graph-display.graph
     position relative
-    max-width 900px
+    max-width 1200px
     margin 3em auto
-    
-    *
-        position relative
     
     .graph-name-row
         margin-bottom 1em
         clearfix()
     
-    /* * * *  Chart & Viewport  * * * {{{ */
-    .callout
-        float left
-        z-index 100
-        width 15.385em
-        padding 0 6em 0 0
-        background-color white
-        text-align right
-        
-        .latest-metric
-            font-size 18px
-            line-height 36px
-        .metric-change
-            font 11px/1.5 "helvetica neue", helvetica, arial, sans-serif
-            span
-                display inline-block
-                &.dates
-                    width 140px
-                &.value
-                    width 60px
-                    &.delta-positive
-                        color #009048
-                    &.delta-negative
-                        color #C9313D
-    
-    .graph-legend
-        absolute top 1em left 0
-        z-index 100
-        width 14.667em
-        
-        padding 1em
-        background-color rgba(255,255,255, 0.75)
-        font 12px/1.5 "helvetica neue", helvetica, arial, sans-serif
-        border 1px solid $light
-        border-radius 5px
-        
-        b
-            display inline-block
-            width 10em
-        .whole
-            display inline-block
-            width 2.5em
-            text-align right
-        .fraction
-            text-align left
-        .suffix
-            text-align left
-    
-    .graph-viewport-row > .inner
-        padding-left 17.385em
-    
-    .viewport:hover + .graph-legend
-        border 1px solid $light
-    
-    .viewport
+    .inner, .row
         position relative
-        min-width 200px
-        min-height 320px
-        margin-bottom 1.5em
-        overflow hidden
-    
-    /* }}} */
+    .row
+        margin 0 0 .2em 0
     
     
     /* * * *  Subnav & Tabs  * * * {{{ */

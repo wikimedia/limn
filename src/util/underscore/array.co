@@ -3,7 +3,21 @@ _ = require 'underscore'
 I       = -> it
 defined = (o) -> o?
 
-_array = do
+_array =
+    
+    /**
+     * Create an array of size `n` filled with the values derived from n invocations
+     * of the iterator function.
+     * 
+     * @param {Number} n Target length for the new array.
+     * @param {Function} fn Iterator function called to generate values: `fn.call(cxt, i) -> value`
+     * @param {Object} [cxt] Context
+     * @returns {Array}
+     */
+    fill : (n, fn, cxt) ->
+        for i til n
+            fn.call(cxt, i)
+    
     /**
      * Transforms an Array of tuples (two-element Arrays) into an Object, such that for each
      * tuple [k, v]:
@@ -23,7 +37,9 @@ _array = do
             {}
     
     /**
-     * As {@link _.generate}, but first transforms the collection using `fn`.
+     * As {@link _.generate}, but first transforms the collection using `fn`; useful
+     * for constructing keys out of values (or vice-versa) to build an object.
+     * 
      * @param {Array} o A collection.
      * @param {Function} [fn=I] Transformation function. Defaults to the identity transform.
      * @param {Function} [filter=defined] Optional filter function. If omitted, will 
@@ -32,7 +48,7 @@ _array = do
      * @return {Object} Transformed result.
      */
     synthesize : (o, fn=I, filter=defined, context) ->
-        _array.generate _.map(o, fn, context), filter
+        _.generate _.map(o, fn, context), filter
     
     
     /**
@@ -43,6 +59,18 @@ _array = do
         b = _.values b
         return _.union _.difference(a,b), _.difference(b,a)
     
+    
+    /**
+     * Whitespace-friendly version of reduce, taking the iteration function last.
+     */
+    reduce_ : (it, acc, cxt, fn) ->
+        switch len = arguments.length
+        case 2  then [fn, acc] = [acc, void]
+        case 3  then [fn, cxt] = [cxt, void]
+        default then throw new Error "You must supply (at least!) a collection and an iteration function" if len < 2
+        _.reduce it, fn, acc, cxt
+    
 
 
-exports import _array
+
+_.mixin exports import _array

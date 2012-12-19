@@ -1,0 +1,43 @@
+_ = require '../underscore'
+{ Mixin,
+} = require '../mixin'
+
+parsers = require './parsers'
+
+
+/**
+ * @class Methods for a class to select parsers by type reflection.
+ * @mixin
+ */
+class exports.ParsingMixin extends Mixin implements parsers
+    
+    parseValue: (v, type) ->
+        @getParser(type)(v)
+    
+    
+    getParser: (type='String') ->
+        # If this is a known type and we have a parser for it, return that
+        fn = @["parse#type"]
+        return fn if typeof fn is 'function'
+        
+        # Handle compound/optional types
+        # XXX: handle 'or' by returning an array of parsers?
+        type = _ String(type).toLowerCase()
+        for t of <[ Integer Float Number Boolean Object Array Function ]>
+            if type.startsWith t.toLowerCase()
+                return @["parse#t"]
+        @defaultParser or @parseString
+    
+    
+    getParserFromExample: (v) ->
+        return null unless v?
+        type = typeof v
+        
+        if type is not 'object'
+            @getParser type
+        else if _.isArray v
+            @getParser 'Array'
+        else
+            @getParser 'Object'
+    
+

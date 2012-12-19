@@ -1,17 +1,138 @@
-// Styling for SVG charts
+@import 'nib'
 
-.viewport svg
+section.graph
     
-    .line
-      fill none
-      stroke #000
-      stroke-width 3px
-    
-    .axis
-        font-size 11px
-        color #666
+    section.canvas-node
+        height: 100%
+        position: relative
         
-        text
-            fill #666
+        .meta
+            width 18%
+            padding 10px 24px 10px 10px
+            display inline-block
+            vertical-align top
+            
+            .btn.edit
+                position: absolute
+                top: 4px
+                right: 0px
+                width: 40px
+                height: 20px
     
-
+    
+    section.callout
+        float left
+        z-index 100
+        width 15.385em
+        padding 0 6em 0 0
+        background-color white
+        text-align right
+        
+        .latest-metric
+            font-size 18px
+            line-height 36px
+        .metric-change
+            font 11px/1.5 "helvetica neue", helvetica, arial, sans-serif
+            span
+                display inline-block
+                &.dates
+                    width 140px
+                &.value
+                    width 60px
+                    &.delta-positive
+                        color #009048
+                    &.delta-negative
+                        color #C9313D
+    
+    
+    section.canvas-node
+        position relative
+        min-width 200px
+        min-height 320px
+        margin-bottom 1.5em
+        overflow hidden
+        
+        & section.meta
+            absolute top left
+            
+            &.fg
+                z-index 500
+            &.bg
+                z-index 0
+        
+        section.chart
+            // absolute top left
+            z-index 100
+    
+    section.legend-node ~ section.canvas-node
+        margin-left 17.385em
+    
+    
+    section.legend-node
+        absolute top left
+        z-index 200
+        width 14.667em
+        
+        margin-top 30px
+        padding 1em
+        background-color rgba(255,255,255, 0.75)
+        font 12px/1.5 "helvetica neue", helvetica, arial, sans-serif
+        border 1px solid $light
+        border-radius 5px
+        
+        legend
+            font-size 14px
+            margin-bottom 1em
+            line-height 2em
+        
+        ul, li
+            list-style none
+            margin-left 0
+            padding-left 0
+        .entry-label
+            display inline-block
+            width 9.5em
+            font-weight bold
+        .entry-value
+            .whole
+                display inline-block
+                width 2.5em
+                text-align right
+            .fraction
+                text-align left
+            .suffix
+                text-align left
+    
+    
+    g.zoom-brush-node
+        stroke #fff
+        fill #000
+        opacity .225
+        shape-rendering crispEdges
+    
+    
+    line.verticalGuide
+        stroke #cacaca
+        stroke-width 1
+    
+    
+    g.grid-node line
+        stroke #cacaca
+        stroke-width 0.5
+    
+    
+    g.axis
+        path
+            fill none
+            stroke #666
+            stroke-width 1
+        text
+            font 100 1em "helvetica neue", helvetica, arial, sans-serif
+            stroke #cacaca
+            stroke-width 0.5
+    
+    
+    g.viewport path
+        fill none
+    
+    

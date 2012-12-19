@@ -13,124 +13,88 @@ development:
         - es5-shim.min
         - modernizr.min
         - json2.min
-        
         - jquery
-        - jquery.history.min
-        - jquery.hotkeys.min
-        - jquery.isotope.min
-        - jquery.spin.min
-        
         - bootstrap.min
-        - bootstrap-colorpicker
-        - bootstrap-datepicker
+        - knockout-2.2.0
         
         ### CommonJS Support Starts Here
         ### (this means Browserify must come before any .mod files)
         - browserify
-        
         - underscore.string.mod
-        
-        - backbone.mod
-        # - synapse.mod
-        
         - colorbrewer.mod
         - showdown.mod.min
-        - jade.runtime.min
-        - moment.mod.min
-        - dygraph
-        - dygraph-extra
-        # - d3
+        - moment.mod
+        - d3.v2
+        - page.mod
+        
+        # Might need these soon
+        # - jquery.spin.min
+        # - jquery.transit.min
+        # - jquery-ui-1.9.1.custom.min
+        # - bootstrap-colorpicker
+        # - bootstrap-datepicker
+        # - jade.runtime.min
+        # - livecss
 
 -   suffix: .mod.js
     paths:
     - js:
         - limn:
-            - template:
-                - chart:
-                    - chart-option.jade
-                    - chart-scaffold.jade
-                - dashboard:
-                    - dashboard.jade
-                    - dashboard-tab.jade
-                - data:
-                    - dataset.jade
-                    - dataset-metric.jade
-                    - metric-edit.jade
-                    - datasource.jade
-                    - datasource-ui.jade
-                    - data.jade
-                - graph:
-                    - graph-display.jade
-                    - graph-edit.jade
-                    - graph-list.jade
             - util:
                 - underscore:
                     - function
                     - array
                     - class
                     - string
+                    - knockout
                     - index
-                - event:
-                    - ready-emitter
-                    - waiting-emitter
+                - knockout:
+                    - add-extender
+                    - observables
+                    - async-computed-observable
+                    - typed-observable
+                    - subview-binding
                     - index
-                - backbone
+                - guid
+                - mixin
+                - emitters
+                - iterator
+                - query
                 - parser
+                - parser-mixin
+                - aliasdict
                 - cascade
+                - hashset
                 - formatters
                 - index
             - base:
-                - scaffold:
-                    - scaffold-model
-                    - scaffold-view
-                    - index
                 - base
-                - base-mixin
-                - base-model
-                - base-view
-                - data-binding
+                - model
+                - stored-model
                 - model-cache
-                - cascading-model
-                - parser-mixin
-                - index
-            - graph:
-                - graph-model
-                - graph-view
-                - graph-display-view
-                - graph-edit-view
-                - graph-list-view
-                - index
-            - chart:
-                - option:
-                    - chart-option-model
-                    - chart-option-view
-                    - index
-                - type:
-                    - d3:
-                        - d3-chart-element
-                        - d3-line-element
-                        - d3-bar-element
-                        # - d3-geo-chart-type
-                        - index
-                    - d3-chart
-                    - dygraphs
-                    - index
-                - chart-type
+                - resource
+                - view
                 - index
             - data:
-                - project-colors
                 - metric-model
-                - metric-edit-view
                 - datasource-model
-                - datasource-view
-                - datasource-ui-view
-                - dataset-model
-                - dataset-view
-                - data-view
+                - index
+            - edit:
+                - edit-view
+                - index
+            - graph:
+                - node:
+                    - graph-node
+                    - graph-node-data
+                    - index
+                - graph-model
+                - graph-view
                 - index
             - dashboard:
                 - dashboard-model
+                - dashboard-tab-model
+                - dashboard-tab-view
                 - dashboard-view
                 - index
-            - client
+            - index
 

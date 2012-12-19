@@ -1,0 +1,90 @@
+fs         = require 'fs'
+path       = require 'path'
+exists     = fs.existsSync or path.existsSync
+
+op         = require 'operator'
+Seq        = require 'seq'
+glob       = require 'glob'
+mkdirp     = require 'mkdirp'
+yaml       = require 'js-yaml'
+
+_ = require '../../src/util/underscore'
+{ readFilesAsync, readJSONFilesAsync,
+} = require '../files'
+
+FileBackedController = require '../file-controller'
+
+
+/**
+ * @class Resource controller for graph requests.
+ */
+class GraphController extends FileBackedController
+    PROTECTED_GRAPH_IDS : <[
+        unique_visitors
+        pageviews
+        pageviews_mobile
+        reach
+        commons
+        articles
+        articles_per_day
+        edits
+        new_editors
+        active_editors
+        active_editors_target
+        very_active_editors
+    ]>
+    PROTECT_GRAPHS : true
+    
+    name : 'graphs'
+    -> super ...
+    
+    
+    toFileSimple: (id) ->
+        "#{@dataDir}/#id.json"
+    
+    # GET /graphs.:format?
+    index: (req, res, next) ->
+        return next() unless req.format is 'json'
+        Seq()
+            # find list of data/graph/*.json files, send back the objects
+            .seq readJSONFilesAsync, "#{@dataDir}/**", Seq
+            # remove filepath info from the hash of graphs
+            .seq -> res.send _.values it
+    
+    # POST /graphs
+    create: (req, res, next) ->
+        return unless data = @processBody req, res
+        Seq()
+            .seq @findFile, data.id, Seq
+            .seq (file) ->
+                res.send { result:"error", message:"Graph '#{data.id}' already exists!" }, 409 # 409: Resource Conflict
+            .catch (err) ~>
+                fs.writeFile @toFileSimple(data.id), JSON.stringify(data), "utf8", @errorHandler(res, "Error writing graph!")
+    
+    # PUT /graphs/:graph
+    update: (req, res, next) ->
+        return unless data = @processBody req, res
+        if @PROTECT_GRAPHS and _ @PROTECTED_GRAPH_IDS .contains data.id
+            return res.send {result:"error", message:"Graph '#{data.id}' is read-only."}, 403 # 403: Forbidden
+        console.log "#this.update(#{data.id})"
+        Seq()
+            .seq_ (next) ~>
+                @findFile data.id, (err, file) ~>
+                    next.ok if err then @toFileSimple(data.id) else file
+            .seq (file) ~>
+                fs.writeFile file, JSON.stringify(data), "utf8", @errorHandler(res, "Error writing graph!")
+    
+    # DELETE /graphs/:graph
+    destroy: (req, res, next) ->
+        id = req.param.graph
+        if @PROTECT_GRAPHS and _ @PROTECTED_GRAPH_IDS .contains id
+            return res.send {result:"error", message:"Graph '#{id}' is read-only."}, 403 # 403: Forbidden
+        Seq()
+            .seq @findFile, data.id, Seq
+            .seq   (file) ~> fs.unlink file, @errorHandler(res, "Error destroying Graph '#id'!", 500)
+            .catch (err)  -> res.send {result:"error", message:"Graph '#id' does not exist!"}, 410 # 410: Resource Gone
+    
+    
+
+
+module.exports = exports = GraphController

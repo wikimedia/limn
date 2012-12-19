@@ -1,0 +1,73 @@
+_  = require 'underscore'
+ko = require 'knockout'
+
+{ OrderedSet,
+} = require '../collections'
+
+
+
+/**
+ * @class An observable OrderedSet, publishing changes via events as well as
+ * providing observables for each mutation type (add, remove, move).
+ * @extends OrderedSet
+ */
+class exports.ObservableSet extends OrderedSet
+    -> super ...
+    
+    
+    /**
+     * Back the set with an observableArray to notify others of changes.
+     * @returns {this}
+     */
+    clear : ->
+        @_byId  = {}
+        @_items = ko.observableArray()
+        this
+    
+    
+    /**
+     * Get the underlying value from the observable, adding a dependency if
+     * anyone is dependent.
+     * @protected
+     * @returns {Array} Backing array.
+     */
+    _getItems: ->
+        @_items()
+    
+    
+    /**
+     * Get the backing array wihtout adding a dependency.
+     * @returns {Array}
+     */
+    peek: ->
+        @_items.peek()
+    
+    
+    /**
+     * @returns {ko.observableArray} The backing observable.
+     */
+    getObservable: ->
+        @_items
+    
+    
+    /* * * *  Subscribable API  * * * {{{ */
+    
+    /**
+     * Apply extenders to the underlying observable, and then re-set the property.
+     * @returns {this}
+     */
+    extend: ->
+        @_items = @_items.extend ...arguments
+        this
+    
+    
+    # proxy most calls to the observable array
+    _.each <[ subscribe notifySubscribers getSubscriptionsCount ]>, (methodName) ->
+        ObservableSet::[ methodName ] = ->
+            @_getItems()[methodName] ...arguments
+    
+    # }}}
+    
+
+
+

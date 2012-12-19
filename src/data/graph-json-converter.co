@@ -1,0 +1,252 @@
+{ _, op,
+} = require '../util'
+
+
+/**
+ * @class
+ */
+class exports.Version
+    
+    (@major=0, @minor=0, @patch=0, @suffix) ->
+        
+    
+    compare : (other) ->
+        if typeof other is 'string'
+            other = Version.fromString other
+        return do
+            op.cmp(@major, other.major) or
+            op.cmp(@minor, other.minor) or
+            op.cmp(@patch, other.patch) or
+            op.cmp(@suffix, other.suffix)
+    
+    toJSON : ->
+        @toString()
+    
+    toString : ->
+        "#{@major}.#{@minor}.#{@patch}#{@suffix or ''}"
+    
+    @fromString = (s) ->
+        parts = s.split('.')
+        if parts.length > 3
+            suffix = parts.slice(3).join('.')
+            parts  = parts.slice(0, 3)
+        [major, minor, patch] = parts.map op.toInt
+        VersionClass = this
+        new VersionClass major, minor, patch, suffix
+
+
+
+/**
+ * @class
+ */
+class exports.GraphJSONConverter
+    CURRENT_VERSION : '0.6.0'
+    
+    (@data) ->
+    
+    
+    determineVersion: (data) ->
+        if 'graph_version' in data
+            return data.graph_version
+        if 'root' in data and 'nodeType' in data?.root
+            return '0.6.0'
+        if 'chartType' in data and 'data' in data
+            return '0.5.0'
+        if 'chartType' in data and 'dataset' in data
+            return '0.1.0'
+        throw new Error 'Unknown Graph Version!'
+    
+    
+    canonicalize: (versionString) ->
+        version = Version.fromString( versionString or @determineVersion(@data) )
+        converter = @converters[ version.major ]?[ version.minor ]
+        throw new Error "Unable to convert Graph v#{@version} to #{@CURRENT_VERSION}!" unless converter
+        converter.call this, @data, @version
+    
+    
+    converters :
+        0 :
+            # Pass through unchanged as this is the current version
+            6 : op.I
+            
+            # Upgrade Dygraphs chartType to d3
+            5 : (graph, version) ->
+                throw new Error "Unknown ChartType '#{graph.chartType}'!" unless graph.chartType is 'dygraphs'
+                
+                out = _.pick graph, 'id', 'slug', 'name', 'shortName', 'desc', 'notes'
+                
+                out.root = {
+                    nodeType: 'canvas'
+                    graph.width
+                    height : Math.max graph.height, 500 # we were ignoring this in the old world
+                    children: children = []
+                }
+                
+                # Port Dygraph options
+                with graph.options
+                    ### Axes
+                    children.push do
+                        nodeType  : 'axis'
+                        enabled   : &drawXAxis
+                        options   :
+                            dimension  : 'x'
+                            orient     : 'bottom'
+                            
+                            label      : &xlabel
+                            labelSize  : &axisLabelFontSize
+                            labelColor : &axisLabelColor
+                            
+                            # ignore axisTickSize as d3 is way more sophiscated
+                            stroke :
+                                width : &axisLineWidth
+                                color : &axisLineColor
+                    
+                    children.push do
+                        nodeType  : 'axis'
+                        enabled   : &drawYAxis
+                        options   :
+                            dimension  : 'y'
+                            orient     : 'left'
+                            
+                            # XXX: y2label?
+                            label      : &ylabel
+                            labelSize  : &axisLabelFontSize
+                            labelColor : &axisLabelColor
+                            
+                            # ignore axisTickSize as d3 is way more sophiscated
+                            stroke :
+                                width : &axisLineWidth
+                                color : &axisLineColor
+                    
+                    ### Grid
+                    children.push do
+                        nodeType  : 'grid'
+                        enabled   : &drawXGrid
+                        options   :
+                            dimension : 'x'
+                            stroke :
+                                width : &gridLineWidth
+                                color : &gridLineColor
+                    
+                    children.push do
+                        nodeType  : 'grid'
+                        enabled   : &drawYGrid
+                        options   :
+                            dimension : 'y'
+                            stroke :
+                                width : &gridLineWidth
+                                color : &gridLineColor
+                    
+                    ### Zooming
+                    children.push { nodeType:'zoom-brush' }
+                    
+                    ### Callout
+                    children.push do
+                        nodeType  : 'callout'
+                        metricRef : 0
+                        options   :
+                            dateFormat  : 'MMM YYYY'
+                            valueFormat : ",.#{&digitsAfterDecimal}s"
+                            deltaFormat : "+,.#{&digitsAfterDecimal}%"
+                    
+                    ### Legend
+                    children.push do
+                        nodeType  : 'legend'
+                        enabled   : &legend and &legend is not 'none'
+                        options   :
+                            dateFormat  : 'MMM YYYY'
+                            valueFormat : ',.2s'
+                    
+                    
+                    # TODO: PointsNode, LineNode.options.points = { +enabled, size:2 }
+                    # drawPoints
+                    # pointSize                       : 1
+                    # highlightCircleSize             : 4
+                    
+                    # TODO: StackedLineGroup
+                    # stackedGraph                    : false
+                    
+                    # TODO: LineNode.options.stepPlot?
+                    # stepPlot                        : false
+                    
+                    # TODO: LineNode.options.fill = color # parse with d3 as SVG doesn't support RGBA
+                    # fillGraph                       : false
+                    # fillAlpha                       : 0.15
+                    
+                    
+                    ### Line Options
+                    
+                    ### Line Group
+                    out.root.children.push lines =
+                        nodeType : 'line-group'
+                        options  : 
+                            palettes    : <[ wmf_projects spectral ]>
+                            scale       : if &logscale then 'log' else 'linear'
+                            dateFormat  : 'MMM YYYY'
+                            valueFormat : ",.#{&digitsAfterDecimal}s"
+                            stroke : 
+                                width   : &strokeWidth
+                                pattern : &strokePattern
+                    
+                    ### Line nodes for Metrics
+                    &colors or= []
+                    lines.children = graph.data.metrics.map (metric, idx) ~>
+                        node = _.merge @makeLineNode(), {
+                            nodeType : 'line'
+                            metric   : _.pick metric, 'source_id', 'source_col', 'timespan', 'type'
+                            options  :
+                                label       : metric.label or null
+                                dateFormat  : 'MMM YYYY'
+                                valueFormat : ",.#{&digitsAfterDecimal}s"
+                                stroke :
+                                    color   : metric.color or &colors[idx]
+                                    width   : &strokeWidth
+                                    pattern : &strokePattern
+                        }
+                out
+            
+            # TODO: Upgrade dataset to data, then call v5
+            1 : (graph, version) ->
+                ...
+            
+    defaultChildren: ->
+        [
+            *   nodeType  : 'axis'
+                options   : dimension: 'x', orient: 'bottom'
+            
+            *   nodeType  : 'axis'
+                options   : dimension: 'y', orient: 'left'
+            
+            *   nodeType  : 'grid'
+                options   : dimension : 'x'
+            
+            *   nodeType  : 'grid'
+                options   : dimension : 'y'
+            
+            *   nodeType  : 'zoom-brush'
+            
+            *   nodeType  : 'callout'
+                metricRef : 0
+                options   :
+                    precision  : 2
+                    dateFormat : 'MMM YY'
+            
+            *   nodeType  : 'legend'
+                options   :
+                    dateFormat : 'DD MMM YYYY'
+            
+            *   nodeType  : 'line-group'
+                options   :
+                    palette : 'spectral'
+                children  : []
+        ]
+    
+    makeLineNode : ->
+        nodeType     : 'line'
+        metric : 
+            type     : 'int'
+            timespan : { start: null, end: null, step: null }
+        options      : {}
+    
+    
+

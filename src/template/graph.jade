@@ -1,0 +1,32 @@
+section.graph.graph-display(data-bind="attr: { id:graphId }")
+    
+    .graph-name-row.row-fluid
+        section.callout
+        h2: a.graph-name(data-bind="text: model().name, attr: { href:model().link }")
+    
+    .graph-canvas-row.row-fluid: .inner
+    
+    .graph-details-row.row
+        .span7.offset3.ug.graph-desc(data-bind='html: model().desc')
+    
+    .graph-links-row.row(data-bind="if: model().permalink")
+        .span6.offset3.ug.graph-permalink
+            input.span6(data-bind="attr: { value:model().permalink }", readonly="readonly")
+    
+    .graph-notes-row.row
+        .span7.offset3.ug.graph-notes(data-bind='html: model().notes')
+    
+    .graph-raw-data-row.row
+        .span7.offset3.ug
+            h4 Raw Data used by this graph
+            ul(data-bind="foreach: rootNode().uniqueMetricDataLinks()")
+                li
+                    a(data-bind="text: $data, attr: {href: $data}", target="_blank")
+    
+//-
+    .row
+        a(data-bind="attr: {href: '/graphs/'+ model().id() +'/edit'}") edit
+    ul(data-bind="foreach: model().tags")
+        li
+            span(data-bind="text: data")
+            button (remove)

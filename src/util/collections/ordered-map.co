@@ -1,0 +1,434 @@
+_ = require '../underscore'
+{ guidFor,
+} = require '../guid'
+{ OrderedSet,
+} = require './ordered-set'
+
+
+/**
+ * A Map which keeps pairs in insertion order; keys may be of any type,
+ * with uniqueness ensured via `guid.guidFor()`.
+ * 
+ * @class
+ */
+class exports.OrderedMap
+    /**
+     * Class guid.
+     * @type String
+     */
+    @__id__ = guidFor this
+    
+    /**
+     * Instance guid.
+     * @type String
+     */
+    __id__ : null
+    
+    /**
+     * Set of keys in this map.
+     * @protected
+     * @type OrderedSet
+     */
+    _keys : null
+    
+    /**
+     * Map from key-id to their values.
+     * @protected
+     * @type Object<Id, *>
+     */
+    _values : null
+    
+    
+    
+    /**
+     * @constructor
+     */
+    ->
+        @__id__  = guidFor this
+        @clear()
+        @update ... if arguments.length
+    
+    
+    
+    /**
+     * Determine a unique identifier for the given value.
+     * @protected
+     * @returns {String} Id for this value.
+     */
+    _getId : (v) ->
+        guidFor v
+    
+    
+    /**
+     * Removes all elements from the set.
+     * @returns {this}
+     */
+    clear : ->
+        @_values = {}
+        @_keys   = new OrderedSet()
+        
+        # Override the id generation function for the key-set to ensure
+        # we're all on the same page even if ours is overriden by a subclass.
+        @_keys._getId = @_getId.bind this
+        
+        this
+    
+    
+    /**
+     * Clones the set, returning a new object.
+     * @returns {OrderedMap}
+     */
+    clone : ->
+        @..create().update @items()
+    
+    
+    /**
+     * @returns {Number} Number of elements in the set.
+     */
+    size : ->
+        @_keys.size()
+    
+    
+    /**
+     * @return {Boolean}
+     */
+    isEmpty : ->
+        @_keys.size() is 0
+    
+    
+    /**
+     * @protected
+     * @param {*} key
+     * @returns {Boolean} Whether the map contains `key`.
+     */
+    _hasOne : (key) ->
+        @_keys.has key
+    
+    
+    /**
+     * Tests whether the map contains all given keys.
+     * @aliases OrderedMap#contains
+     * 
+     * @param {*} key...
+     * @returns {Boolean} Whether the map contains all given values.
+     */
+    has : (key) ->
+        _.all arguments, @_hasOne, this
+    
+    
+    /**
+     * Retrieves the value stored at `key`.
+     * 
+     * @param {*} key Key to get; keys may be of any value.
+     * @returns {*} Value at `key`.
+     */
+    get : (key) ->
+        @_values[ @_getId key ]
+    
+    
+    /**
+     * Retrieves the `[key, value]` pair stored for `key`.
+     * 
+     * @param {*} key Key to get; keys may be of any value.
+     * @returns {*} The `[key, value]` pair stored for `key`.
+     */
+    pair : (key) ->
+        [ key, @_values[ @_getId key ] ]
+    
+    
+    /**
+     * @param {String} key
+     * @returns {Number} Index of `key` if found, otherwise `-1`.
+     */
+    indexOf : (key) ->
+        @_keys.indexOf key
+    
+    
+    /**
+     * Retrieve the pair stored at the given index.
+     * 
+     * @param {Number} idx Index to retrieve.
+     * @returns {[Key, Value]} An array of `[key, value]` as found at the given
+     *  index.
+     */
+    at : (idx) ->
+        @pair @_keys.at idx
+    
+    
+    /**
+     * Retrieve the key stored at the given index.
+     * 
+     * @param {Number} idx Index to retrieve.
+     * @returns {*} Key as found at the given index.
+     */
+    keyAt : (idx) ->
+        @_keys.at idx
+    
+    
+    /**
+     * Retrieve the key stored at the given index.
+     * 
+     * @param {Number} idx Index to retrieve.
+     * @returns {*} Key as found at the given index.
+     */
+    valueAt : (idx) ->
+        @get @_keys.at idx
+    
+    
+    /**
+     * @returns {*|Array} An array of the first `n` pairs if `n` was given;
+     *  otherwise just the first pair in the map.
+     */
+    first : (n) ->
+        if n?
+            _.map @_keys.first(n), @pair, this
+        else
+            @pair @_keys.first()
+    
+    
+    /**
+     * @returns {*|Array} An array of the last `n` pairs if `n` was given;
+     *  otherwise just the last pair in the map.
+     */
+    last : (n) ->
+        if n?
+            _.map @_keys.last(n), @pair, this
+        else
+            @pair @_keys.last()
+    
+    
+    /**
+     * Puts a single value to `key`.
+     * 
+     * @param {*} key Key to get; keys may be of any value.
+     * @param {*} val Value to set at `key`.
+     * @returns {this}
+     */
+    set : (key, val) ->
+        @_keys.add key
+        @_values[ @_getId key ] = val
+        this
+    
+    
+    /**
+     * @protected
+     * @param {*} key Key to remove.
+     * @returns {Boolean} Whether the key was removed.
+     */
+    _removeKey : (key) ->
+        id = @_getId key
+        delete @_values[id]
+        return false unless @_keys.has key
+        @_keys.remove key
+        true
+    
+    
+    /**
+     * @protected
+     * @param {Number} idx
+     * @returns {Boolean} Whether the value at that index was removed.
+     */
+    _removeIndex : (idx) ->
+        return false if 0 > idx >= @_keys.size()
+        @_removeKey @keyAt idx
+        true
+    
+    
+    /**
+     * Remove given key(s) from the OrderedMap.
+     * @param {*} keys... Keys to remove.
+     * @returns {this}
+     */
+    remove : (key) ->
+        _.each arguments, @_removeKey, this
+        this
+    
+    
+    /**
+     * @returns {*} Removes and returns the last (most recently added) pair in the map.
+     */
+    pop : ->
+        return unless @_keys.size()
+        key = @_keys.pop()
+        id  = @_getId v
+        delete @_values[id]
+        v
+    
+    
+    /**
+     * @returns {*} Removes and returns the first pair in the map.
+     */
+    shift : ->
+        return unless @_keys.size()
+        key = @_keys.shift()
+        id  = @_getId key
+        delete @_values[id]
+        v
+    
+    
+    /**
+     * Update this OrderedMap with values from [any number of] other collections.
+     * Arrays are treated as a list of `[key, value]` pairs; all other objects are
+     * imported using their native keys and values.
+     * 
+     * @param {Array|Object} pairs... Collection to add.
+     * @returns {this}
+     */
+    update : (vs) ->
+        _.each arguments, (collection) ~>
+            if _.isArray collection
+                _.each collection, ([k, v]) ~> @set k, v
+            else
+                _.each collection, @set, this
+        this
+    
+    
+    
+    /* * * *  Iteration/Collection Methods  * * * {{{ */
+    
+    # Synthesized: map, filter, reject, some/any, every/all, find/detect
+    
+    
+    /**
+     * @returns {Array} Ordered list of keys in the map.
+     */
+    keys : ->
+        @_keys.toArray()
+    
+    
+    /**
+     * @returns {Array} Ordered list of values in the map.
+     */
+    values : ->
+        @_keys.map @get, this
+    
+    
+    /**
+     * @aliases OrderedMap#pairs, OrderedMap#toArray
+     * @returns {Array<[Key, Value]>} Ordered list of key-value pairs in the map.
+     */
+    items : ->
+        @_keys.map @pair, this
+    
+    
+    /**
+     * Transforms the collection into a single value, front-to-back.
+     * @param {Function} fn Reducer function.
+     * @param {*} [acc] Starting accumulator value.
+     * @param {Object} [cxt=this] Context; defaults to this OrderedMap.
+     * @returns {*}
+     * @see https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Array/reduce
+     */
+    reduce : (fn, acc, cxt=this) ->
+        @_keys.reduce do
+            (acc, key) -> fn.call cxt, acc, @get(key), key, this
+            acc
+            this
+    
+    
+    /**
+     * Applies a function to each element.
+     * @aliases OrderedMap#each
+     * @see https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Array/forEach
+     * @returns {this}
+     */
+    forEach : (fn, cxt=this) ->
+        @_keys.forEach (key) ~> fn.call cxt, @get(key), key, this
+        this
+    
+    
+    /**
+     * @returns {Array} Ordered list of the value of the property `prop` on
+     *  each value in the map.
+     */
+    pluck : (prop) ->
+        _.pluck @_values, prop
+    
+    
+    /**
+     * Invokes the named method on each value in the map, returning an ordered
+     * list of the results.
+     * 
+     * @param {String} methodName Name of the method on each value to invoke.
+     * @param {Any...} [args...] Optional arguments to call pass to method call.
+     * @returns {Array} List of results.
+     */
+    invoke : (methodName) ->
+        _.invoke @_values, ...arguments
+    
+    
+    # }}}
+    
+    
+    toString : ->
+        "OrderedMap(size=#{@_keys.size()})"
+    
+    
+    /* * * *  Class Methods  * * * {{{ */
+    
+    # These methods are all inherited by subclasses; the 
+    # factories all support generic subclass instantiation.
+    
+    
+    /**
+     * Map factory.
+     * @static
+     * @returns {? extends OrderedMap} A new map.
+     */
+    @create = ->
+        Class = this
+        new Class()
+    
+    
+    /**
+     * @static
+     * @returns {Function} A factory function that creates new instances
+     *  without requiring the accursed `new` keyword.
+     */
+    @factory = ->
+        @create.bind this
+    
+    
+    /**
+     * Invoked when extended; copies over all class methods to the Subclass (including this).
+     * @protected
+     * @static
+     */
+    @extended = (SubClass) ->
+        SuperClass = this
+        for own k, v in SuperClass
+            SubClass[k] = v unless SubClass[k]
+        SubClass.__id__         = guidFor SubClass
+        SubClass.__class__      = SubClass
+        SubClass.__super__      = SuperClass::
+        SubClass.__superclass__ = SuperClass
+        SubClass
+    
+    
+    # }}}
+    
+
+
+# Synthesize transformation functions from the key-set
+_.each <[ map some every ]>, (methodName) ->
+    OrderedMap::[methodName] = (fn, cxt=this) ->
+        @_keys[methodName] (key) ~> fn.call cxt, @get(key), key, this
+
+
+# Synthesize filter functions from pairs + Underscore
+_.each <[ filter reject find ]>, (methodName) ->
+    OrderedMap::[methodName] = (fn, cxt=this) ->
+        _[methodName] @items(), ([key, val]) ~> fn.call cxt, val, key, this
+
+
+# Alias methods to alternate names
+_.alias OrderedMap::,
+    # src   : dest
+    has     : 'contains'
+    items   : 'pairs toArray'
+    forEach : 'each'
+    every   : 'all'
+    some    : 'any'
+    find    : 'detect'
+
+

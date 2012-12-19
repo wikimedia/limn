@@ -1,0 +1,99 @@
+_  = require 'underscore'
+ko = require 'knockout'
+d3 = require 'd3'
+
+{ GraphNode,
+} = require '../graph-node'
+
+Trait = require '../graph-node-trait'
+
+
+timeFormat = (formats) ->
+  (date) ->
+    i = formats.length - 1
+    f = formats[i]
+    while !f[1](date)
+        f = formats[--i]
+    f[0] date
+
+multiTimeFormatter = timeFormat [
+    [ d3.time.format("%Y"),    -> true ],
+    [ (-> moment(it).format('MMM')), -> it.getMonth() ],
+    [ d3.time.format("%b %d"), -> it.getDate() != 1 ],
+    [ d3.time.format("%a %d"), -> it.getDay() && it.getDate() != 1 ],
+    [ d3.time.format("%I %p"), -> it.getHours() ],
+    [ d3.time.format("%I:%M"), -> it.getMinutes() ],
+    [ d3.time.format(":%S"),   -> it.getSeconds() ],
+    [ d3.time.format(".%L"),   -> it.getMilliseconds() ]
+]
+
+/**
+ * @class
+ * @extends GraphNode
+ */
+class exports.AxisNode extends GraphNode
+    nodeType : 'axis'
+    traits   : [
+        Trait.META_NODE
+        Trait.FG_LAYER
+        Trait.SVG
+        Trait.LEAF
+    ]
+    @registerType()
+    
+    
+    -> super ...
+    
+    
+    render: ->
+        options = @model().options()
+        return unless scales    = @root().scalesIfValid()
+        return unless dimension = options.get('dimension')
+        return unless scale     = scales[ dimension+'Scale' ]
+        
+        orient = options.get('orient')
+        ticks  = options.get('ticks')
+        axis   = d3.svg.axis().scale scale
+        
+        switch dimension
+        case 'x'
+            axis.tickFormat multiTimeFormatter # @dateFormatterFor 'MMM YY'
+                .orient(orient or= 'bottom')
+            ticks ?= 3
+            axis.ticks d3.time.months, ticks if ticks > 0
+        case 'y'
+            axis.tickFormat @numberFormatterFor 2
+                .orient(orient or= 'left')
+            
+            # TODO: handle different scale-types -- this only handles logscale
+            # TODO: GridNode to apply the same scale calculations
+            ticks ?= 14
+            tickValues = scale.ticks()
+            while 5 < tickValues.length > ticks + 2
+                tickValues .= filter (v, i) ->
+                    L = tickValues.length
+                    mod = Math.max 2, Math.round((L - 2) / (L - 2 - ticks))
+                    i == 0 or i == (L - 1) or i % mod != 0
+            axis.tickValues tickValues
+        
+        @sel.classed dimension+'-axis axis', true
+        @sel.call axis
+        @moveAxis()
+        
+        @zoomHandler ?= @root().handle 'zoom-graph', this, (translate, scale) ~>
+            @sel.call axis
+        
+        axis
+    
+    
+    moveAxis: @computed ->
+        return unless el = @el() and @sel
+        @sel.attr 'transform', ''
+        
+        # TODO: handle other orientations
+        return unless @model()?.options()?.get('dimension') is 'x'
+        height = @root().viewportHeight()
+        @sel.attr 'transform', "translate(0, #height)"
+        height
+    
+

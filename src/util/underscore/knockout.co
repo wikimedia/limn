@@ -1,0 +1,327 @@
+root = do -> this
+
+_ = require?('underscore') or root._
+unless _ko_obj = module?.exports or exports?
+    root.UnderscoreNested = _ko_obj = {}
+
+
+getProto    = Object.getPrototypeOf
+OBJ_PROTO   = Object.prototype
+{
+    hasOwnProperty : hasOwn
+    toString       : objToString
+} = {}
+
+/**
+ * Default options for delegate-accessor functions.
+ */
+DEFAULT_DELEGATE_OPTIONS = _ko_obj.DEFAULT_DELEGATE_OPTIONS = {
+    getter  : 'get'
+    setter  : 'set'
+    deleter : 'unset'
+    /**
+     * Performs any `get`s required inside a ignore block, temporarily 
+     * circumventing dependency tracking.
+     */
+    -ignore
+    /**
+     * Unwrap observables to perform a get, rather than invoking them.
+     * This both circumvents dependency tracking and squlches events.
+     */
+    -unwrap
+}
+
+/**
+ * Tombstone for deleted, non-passthrough keys.
+ */
+TOMBSTONE = _ko_obj.TOMBSTONE = {}
+
+/**
+ * Default options for nested-accessor functions.
+ */
+DEFAULT_NESTED_OPTIONS = _ko_obj.DEFAULT_NESTED_OPTIONS =
+    {-ensure, tombstone:TOMBSTONE} import DEFAULT_DELEGATE_OPTIONS
+
+
+
+/**
+ * @namespace Functions for working with objects and object graphs.
+ */
+_ko_obj import {
+    
+    
+    ### Delegating Accessors
+    
+    /**
+     * Gets the value at `key` from the object if present, returning `def` otherwise.
+     * 
+     * @param {Object} object Object on which to perform lookup.
+     * @param {String} key Key to get.
+     * @param {*} [def=undefined] Default value.
+     * @param {Object} [opts] Options.
+     * @returns {*} Value or default.
+     */
+    get: (obj, key, def, opts) ->
+        return unless obj?
+        getter = opts?.getter or 'get'
+        if typeof obj[getter] is 'function'
+            return obj[getter] key, def, opts
+        
+        # TODO: opts.unwrap, opts.ignore
+        val = obj[key]
+        if ko.isObservable val
+            if (v = val()) is not void  then v   else def
+        else
+            if val is not void          then val else def
+    
+    /**
+     * Puts the given value to `key` on the given target object.
+     * 
+     * @param {Object} target Target object for the set.
+     * @param {String|Object} key The key to set. If an object is supplied here, each key will be set with its value on the target object.
+     * @param {*} [value] Value to set at `key`. Omit this if an object of KV-pairs was passed as `key`.
+     * @param {Object} [opts] Options.
+     * @returns {Object} The target object.
+     */
+    set: (obj, key, value, opts) ->
+        return unless obj?
+        if key? and _.isObject(key)
+            [values, opts] = [key, value]
+        else
+            values = { "#key": value }
+        
+        setter = opts?.setter or 'set'
+        if typeof obj[setter] is 'function'
+            for key, value in values
+                obj[setter] key, value, opts
+        else
+            # TODO: opts.unwrap, opts.ignore
+            for key, value in values
+                current = obj[key]
+                if ko.isObservable current
+                    current value
+                else
+                    obj[key] = value
+        
+        obj
+    
+    /**
+     * Deletes `key` from the target object.
+     * 
+     * @param {Object} target Target object.
+     * @param {String} key Key to be deleted.
+     * @param {Object} [opts] Options.
+     * @returns {*} Value at `key` prior to being removed from the target.
+     */
+    unset: (obj, key, opts) ->
+        return unless obj?
+        deleter = opts?.deleter or 'unset'
+        if typeof obj[deleter] is 'function'
+            obj[deleter] key, opts
+        else
+            # TODO: opts.unwrap, opts.ignore
+            val = obj[key]
+            if ko.isObservable val
+                val null
+            else
+                delete obj[key]
+    
+    ### Nested Acccessors
+    
+    /**
+     * Searches a hierarchical object for a given subkey specified in dotted-property syntax,
+     * respecting sub-object accessor-methods (e.g., 'get', 'set') if they exist.
+     * 
+     * @param {Object} base The object to serve as the root of the property-chain.
+     * @param {Array|String} chain The property-chain to lookup.
+     * @param {Object} [opts] Options:
+     * @param {Boolean} [opts.ensure=false] If true, intermediate keys that are `null` or
+     *  `undefined` will be filled in with a new empty object `{}`, ensuring the get will
+     *   return valid metadata.
+     * @param {String} [opts.getter="get"] Name of the sub-object getter method use if it exists.
+     * @param {String} [opts.setter="set"] Name of the sub-object setter method use if it exists.
+     * @param {String} [opts.deleter="unset"] Name of the sub-object deleter method use if it exists.
+     * @param {Object} [opts.tombstone=TOMBSTONE] Sentinel value to be interpreted as no-passthrough,
+     *  forcing the lookup to fail and return `undefined`. TODO: opts.returnTombstone
+     * @returns {undefined|Object} If found, the object is of the form 
+     *  `{ key: Qualified key name, obj: Parent object of key, val: Value at obj[key], opts: Options }`. 
+     *  Otherwise `undefined`.
+     */
+    getNestedMeta : (obj, chain, opts) ->
+        chain = chain.split('.') if typeof chain is 'string'
+        len   = chain.length - 1
+        opts  = _.clone(DEFAULT_NESTED_OPTIONS) import (opts or {})
+        
+        _.reduce do
+            chain
+            (obj, key, idx) ->
+                return unless obj?
+                val = _ko_obj.get obj, key, void, opts
+                
+                if val is opts.tombstone
+                    return unless ops.ensure
+                    val = void
+                
+                if idx is len
+                    return { key, val, obj, opts }
+                if not val? and opts.ensure
+                    val = {}
+                    _ko_obj.set obj, key, val, opts
+                val
+            obj
+    
+    
+    /**
+     * Searches a hierarchical object for a given subkey specified in dotted-property syntax.
+     * 
+     * @param {Object} obj The object to serve as the root of the property-chain.
+     * @param {Array|String} chain The property-chain to lookup.
+     * @param {Any} [def=undefined] Value to return if lookup fails.
+     * @param {Object} [opts] Options to pass to `{@link #getNestedMeta}`.
+     * @returns {null|Object} If found, returns the value, and otherwise `default`.
+     */
+    getNested : (obj, chain, def, opts) ->
+        meta = _ko_obj.getNestedMeta obj, chain, opts
+        return def if meta?.val is void
+        meta.val
+    
+    
+    /**
+     * Searches a hierarchical object for a given subkey specified in
+     * dotted-property syntax, setting it with the provided value if found.
+     * 
+     * @param {Object} root The object to serve as the root of the property-chain.
+     * @param {Array|String} chain The property-chain to lookup.
+     * @param {Any} value The value to set.
+     * @param {Object} [opts] Options to pass to `{@link #getNestedMeta}`.
+     * @returns {undefined|Any} If found, returns the old value, and otherwise `undefined`.
+     */
+    setNested : (root, chain, value, opts) ->
+        return unless meta = _ko_obj.getNestedMeta root, chain, opts
+        {obj, key, val, opts} = meta
+        _ko_obj.set obj, key, value, opts
+        val
+    
+    
+    /**
+     * Searches a hierarchical object for a potentially-nested key and removes it.
+     * 
+     * @param {Object} obj The root of the lookup chain.
+     * @param {String|Array<String>} chain The chain of property-keys to navigate.
+     *  Nested keys can be supplied as a dot-delimited string (e.g., `_.unsetNested(obj, 'user.name')`),
+     *  or an array of strings, allowing for keys with dots (eg.,
+     *  `_.unsetNested(obj, ['products', 'by_price', '0.99'])`).
+     * @param {Object} [opts] Options to pass to `{@link #getNestedMeta}`.
+     * @returns {undefined|Any} The old value if found; otherwise `undefined`.
+     */
+    unsetNested : (obj, chain, opts) ->
+        return unless meta = _ko_obj.getNestedMeta obj, chain, opts
+        {obj, key, val, opts} = meta
+        _ko_obj.unset obj, key, opts
+        val
+    
+    
+    
+    ### Collection Utilities
+    
+    /**
+     * @returns {Boolean} Whether value is a plain object or not.
+     */
+    isPlainObject: (obj) ->
+        # Must be an Object.
+        # Because of IE, we also have to check the presence of the constructor property.
+        # Make sure that DOM nodes and window objects don't pass through, as well.
+        if not obj or objToString.call(obj) !== "[object Object]" or obj.nodeType or obj.setInterval
+            return false
+        
+        # Not own constructor property must be Object
+        return false if obj.constructor
+            and not hasOwn.call(obj, "constructor")
+            and not hasOwn.call(obj.constructor.prototype, "isPrototypeOf")
+        
+        # Own properties are enumerated firstly, so to speed up,
+        # if last one is own, then all properties are own.
+        for key in obj then ;
+        return key is void or hasOwn.call obj, key
+    
+    # isPlainObject : (o) ->
+    #     !!( o and _.isObject(o) and OBJ_PROTO is getProto(o) )
+    
+    
+    /**
+     * In-place removal of a value from an Array or Object.
+     * 
+     * @param {Object} obj The object.
+     * @param {*} v Value to remove.
+     * @returns {Object} The object, `obj`.
+     */
+    remove: (obj, v) ->
+        values = [].slice.call arguments, 1
+        if _.isArray(obj) or obj instanceof Array
+            for v of values
+                idx = obj.indexOf v
+                obj.splice idx, 1 if idx is not -1
+        else
+            for k, v in obj
+                delete obj[k] if -1 is not values.indexOf v
+        obj
+    
+    
+    /**
+     * Converts the collection to a list of its items:
+     * - Objects become a list of `[key, value]` pairs.
+     * - Strings become a list of characters.
+     * - Arguments objects become an array.
+     * - Arrays are copied.
+     */
+    items: (obj) ->
+        if _.isObject(obj) and not _.isArguments(obj)
+            _.map obj, (v, k) -> [k, v]
+        else
+            [].slice.call obj
+    
+    
+    /**
+     * Recursively merges together any number of donor objects into the target object.
+     * Modified from `jQuery.extend()`.
+     * 
+     * @param {Object} target Target object of the merge.
+     * @param {Object} ...donors Donor objects.
+     * @returns {Object} 
+     */
+    merge: (target={}, ...donors) ->
+        # Handle case when target is a string or something (possible in deep copy)
+        unless typeof target is "object" or _.isFunction(target)
+            target = if _.isArray donors[0] then [] else {}
+        
+        for donor of donors
+            # Only deal with non-null/undefined values
+            continue unless donor?
+            
+            # Extend the base object
+            _.each donor, (value, key) ->
+                current = target[key]
+                
+                # Prevent never-ending loop
+                return if target is value
+                
+                # Recurse if we're merging plain objects or arrays
+                if value and (_ko_obj.isPlainObject(value) or (valueIsArray = _.isArray(value)))
+                    if valueIsArray
+                        current = [] unless _.isArray current
+                    else
+                        current = {} unless current and typeof current is 'object'
+                    
+                    # Never move original objects, clone them
+                    _ko_obj.set target, key, _ko_obj.merge(current, value)
+                    
+                # Don't bring in undefined values
+                else if value is not void
+                    _ko_obj.set target, key, value
+        
+        # Return the modified object
+        target
+    
+    
+}
+

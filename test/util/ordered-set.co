@@ -1,0 +1,98 @@
+_ = require 'underscore'
+
+limn = require 'limn'
+{ OrderedSet,
+} = limn.util
+
+
+QUnit.module '[util] OrderedSet'
+
+test 'Basic Accessors', ->
+    expect 37
+    
+    set = new OrderedSet()
+    
+    strictEqual set.add(0, 'lol', null, true, 'lol', false, 'lol'), set, 'Set.add() multiple primitives (with dupes) ok'
+    strictEqual set.size(), 5, 'Set.size() correct'
+    deepEqual set.values(), [0, 'lol', null, true, false], 'Set.values() are correct'
+    
+    strictEqual set.push(null, true, 'lol'), set, 'Set.push() multiple primitive dupes ok'
+    strictEqual set.size(), 5, 'Set.size() correct'
+    deepEqual set.values(), [0, 'lol', null, true, false], 'Set.values() are correct'
+    
+    strictEqual set.prepend(1, '', null), set, 'Set.prepend() multiple primitives ok'
+    strictEqual set.size(), 7, 'Set.size() correct'
+    deepEqual set.values(), [1, '', 0, 'lol', null, true, false], 'Set.values() are correct'
+    
+    strictEqual set.pop(), false, 'Set.pop() correct'
+    strictEqual set.size(), 6, 'Set.size() correct'
+    strictEqual set.shift(), 1, 'Set.shift() correct'
+    strictEqual set.size(), 5, 'Set.size() correct'
+    deepEqual set.values(), ['', 0, 'lol', null, true], 'Set.values() are correct'
+    
+    strictEqual set.first(), '', 'Set.first() correct'
+    strictEqual set.last(), true, 'Set.last() correct'
+    strictEqual set.at(1), 0, 'Set.at(1) correct'
+    strictEqual set.indexOf('lol'), 2, 'Set.indexOf("lol") hilarious'
+    strictEqual set.at(69), void, 'Set.at( GIANT_INDEX ) correct'
+    strictEqual set.indexOf('NOPE'), -1, 'Set.indexOf() missing value correct'
+    
+    strictEqual set.remove(null, ''), set, 'Set.remove() multiple primitives ok'
+    strictEqual set.size(), 3, 'Set.size() correct post-remove'
+    deepEqual set.values(), [0, 'lol', true], 'Set.values() are correct post-remove'
+    
+    strictEqual set.first(), 0, 'Set.first() correct post-remove'
+    strictEqual set.last(), true, 'Set.last() correct post-remove'
+    strictEqual set.at(1), 'lol', 'Set.at(1) correct post-remove'
+    strictEqual set.indexOf('lol'), 1, 'Set.indexOf("lol") hilarious post-remove'
+    
+    strictEqual set.update([ 'lol', 0, 'array-update' ], [ -1, 2, 'lol' ]), set, 'Set.update() arrays ok'
+    strictEqual set.size(), 6, 'Set.size() correct post-array-update'
+    deepEqual set.values(), [0, 'lol', true, 'array-update', -1, 2], 'Set.values() are correct post-array-update'
+    
+    strictEqual set.update({ ohai:0, b:'obj-update' }, { c:-1, lol:42 }), set, 'Set.update() objects ok'
+    strictEqual set.size(), 8, 'Set.size() correct post-object-update'
+    deepEqual set.values(), [0, 'lol', true, 'array-update', -1, 2, 'obj-update', 42], 'Set.values() are correct post-object-update'
+    
+    clone = set.clone()
+    deepEqual clone.values(), [0, 'lol', true, 'array-update', -1, 2, 'obj-update', 42], 'Clone.values() are correct'
+    
+    clone.clear()
+    deepEqual clone.values(), [], 'Clone.values() correct post-clear'
+    strictEqual clone.size(), 0, 'Clone.size()'
+    strictEqual clone.isEmpty(), true, 'Clone.isEmpty()'
+
+
+test 'Collection Methods', ->
+    expect 0
+    set = new OrderedSet().add(1)
+    
+
+
+
+
+/*
+    ## Methods ##
+    
+    reduce: (fn, acc, cxt=this) ->
+    forEach: (fn, cxt=this) ->
+    map: (fn, cxt=this) ->
+    filter: (fn, cxt=this) ->
+    reject: (fn, cxt=this) ->
+    some/any: (fn, cxt=this) ->
+    every/all: (fn, cxt=this) ->
+    find/detect: (fn, cxt=this) ->
+    pluck : (prop) ->
+    invoke : (methodName) ->
+    
+    isEqual : (a) ->
+    isDisjoint : (a) ->
+    isSubset : (a) ->
+    isSuperset : (a) ->
+    isOverlapping: (a) ->
+    
+    intersect : (a) ->
+    union : (a) ->
+    difference : (a) ->
+    xor : (a) ->
+*/

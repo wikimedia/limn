@@ -1,0 +1,28 @@
+_ = require 'underscore'
+
+setupQUnitThemepicker = ($) ->
+    theme_root = limn_config.mount + "test/qunit/themes"
+    themes = <[ qunit gabe ninja nv ]>
+    
+    $picker = $ '<select id="qunit-themepicker"></select>'
+    for theme of themes
+        $picker.append "<option value='#theme'>#theme.css</option>"
+    
+    $ '#qunit' .on 'change', '#qunit-themepicker', (evt) ->
+        theme = $ this .val()
+        console.log "Changing QUnit theme to #theme"
+        $theme_link = $ "head link[rel='stylesheet'][href^='#theme_root']"
+        console.error "Unable to find current theme!" unless $theme_link.length
+        $theme_link.remove()
+        $ 'head' .append "<link rel='stylesheet' href='#theme_root/#theme.css' />"
+    
+    # attach to quint chrome
+    $ '<div id="qunit-themepicker-container"><label>Theme:</label> </div>'
+        .append $picker
+        .appendTo '#qunit #qunit-testrunner-toolbar'
+    
+
+jQuery ($) ->
+    setTimeout do
+        -> setupQUnitThemepicker $
+        250

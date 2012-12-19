@@ -1,0 +1,140 @@
+ko = require 'knockout'
+
+limn = require 'limn'
+
+unwrap = ko.utils.unwrapObservable
+peek   = ko.utils.peekObservable
+toObs  = ko.utils.toObservable
+
+
+{ CREATED, ADD, REMOVE, CHANGE, REPLACE } = ko.observablesArray.ACTIONS
+
+QUnit.module '[util.knockout] observablesArray', do
+    setup: ->
+        @a = ko.observablesArray([1,2,3])
+    teardown: ->
+
+test 'initializing', ->
+    strictEqual @a.lastAction(), CREATED, 'the created action was reported'
+    ok ko.isObservable(@a()[0]), 'the items are converted to observables'
+
+test 'adding', ->
+    i = @a.push(4)
+    strictEqual @a.lastAction(), ADD, 'the add action was reported'
+    strictEqual @a.lastChange, @a()[i-1](), 'the lastChange property was set correctly'
+    
+    ok ko.isObservable(@a()[i-1]), 'the item is converted to an observable'
+
+# test 'adding observable', ->
+#     i = @a.push(ko.observable(4))
+#     ok ( ko.isObservable(@a.lastChange) and not ko.isObservable(@a.lastChange())), 'does not double-wrap the observable'
+
+test 'popping', ->
+    val = @a.pop()
+    strictEqual @a.lastAction(), REMOVE, 'the remove action was reported'
+    strictEqual @a.lastChange, val, 'the lastChange property was set correctly'
+
+test 'removing', ->
+    val = @a.remove(3)
+    strictEqual @a.lastAction(), REMOVE, 'the remove action was reported'
+    strictEqual @a.lastChange, val[0], 'the lastChange property was set correctly'
+
+test 'changing', ->
+    @a()[0](12)
+    strictEqual @a.lastAction(), CHANGE, 'the change action was reported'
+    strictEqual @a.lastChange, 12, 'the lastChange property was set correctly'
+
+test 'getting the index of a value', ->
+    i = @a.indexOf 2
+    strictEqual i, 1, 'works with plain values'
+    i = @a.indexOf ko.observable(2)
+    strictEqual i, 1, 'works with observables'
+
+test 'replace', ->
+    @a.replace 2, 12
+    strictEqual @a.lastAction(), CHANGE, 'the replace action was reported'
+    strictEqual @a()[1](), 12, 'item replaced correctly'
+
+test 're-initialize', ->
+    @a([5,6,7])
+    strictEqual @a()[1], @a._meta[1].target, 'subscriptions metadata stays in sync'
+    @a.pop()
+    @a.pop()
+    @a.pop()
+    @a([9,10,11])
+    strictEqual @a()[1], @a._meta[1].target, 'subscriptions metadata stays in sync'
+    @a([12,13])
+    strictEqual @a()[1], @a._meta[1].target, 'subscriptions metadata stays in sync'
+    @a([14,15,16,17])
+    strictEqual @a()[1], @a._meta[1].target, 'subscriptions metadata stays in sync'
+    @a(4)
+    strictEqual @a()[0], @a._meta[0].target, 'subscriptions metadata stays in sync'
+
+test 'doing all operations in combination', ->
+    @a.pop()
+    @a.pop()
+    @a.pop()
+    @a.push(12)
+    @a.push(ko.observable(12))
+    @a.replace(12, 5)
+    @a.remove(12)
+    @a.remove(5)
+    @a.replace(5, 8)
+    @a.push(13)
+    # TODO: if this is useful, implement @a.destroy(13)
+    @a.push(1)
+    @a([5,6,7])
+    @a.replace(5, 99)
+    strictEqual @a()[0](), 99, 'does not cause any problems'
+
+
+test 'subscribing and observing', ->
+    expectedSubs = 10
+    expectedComp = expectedSubs + 1
+    expect expectedComp + 2*expectedSubs + 2
+    
+    a = ko.observablesArray()
+    
+    compFired = 0
+    EXPECTED_ACTIONS = <[ CREATED ADD ADD ADD ADD CHANGE CHANGE REMOVE REMOVE REMOVE REMOVE ]>
+    computedSub = ko.computed ~>
+        lastChange     = peek a.lastChange
+        expectedAction = EXPECTED_ACTIONS[ compFired ]
+        strictEqual a.lastAction(), expectedAction, "[#compFired] compute sees expected action '#expectedAction' for #{JSON.stringify lastChange}"
+        compFired++
+    
+    subsFired = 0
+    testSubscription = (expectedAction, changePrefix) ~>
+        ~>
+            lastAction = a.lastAction()
+            lastChange = unwrap(a.lastChange).slice 0, changePrefix.length
+            strictEqual lastAction, expectedAction, "#expectedAction action triggered the subscription"
+            strictEqual lastChange, changePrefix,   "#expectedAction action set lastChange correctly"
+            subsFired++
+    
+    sub = a.subscribe testSubscription(ADD, 'added')
+    a.push 'added first'
+    a.push 'added second'
+    a.push 'added third', 'added fourth'
+    sub.dispose()
+    
+    sub = a.subscribe testSubscription(CHANGE, 'changed')
+    a()[2] 'changed first'
+    a()[3] 'changed second'
+    sub.dispose()
+    
+    sub = a.subscribe testSubscription(REMOVE, 'changed')
+    a.pop()
+    a.pop()
+    sub.dispose()
+    
+    sub = a.subscribe testSubscription(REMOVE, 'added')
+    a.remove 'added first'
+    a.remove 'added second'
+    sub.dispose()
+    
+    computedSub.dispose()
+    strictEqual compFired,  expectedComp,   'Computed called as expected'
+    strictEqual subsFired,  expectedSubs,   'Subscriptions called as expected'
+
+

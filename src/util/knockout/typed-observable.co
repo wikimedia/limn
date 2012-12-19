@@ -1,0 +1,139 @@
+ko = require 'knockout'
+_  = require '../underscore'
+require './observables'
+require './add-extender'
+
+toObs = ko.utils.toObservable
+
+
+/**
+ * Coerces input to this observable using the supplied function before it the
+ * value is set, implying subscribers will only see the converted values. If the
+ * underlying observable is a `ko.observableArray`, coercion will be applied to
+ * each element before being added.
+ * 
+ * @param {ko.observable} obs Observable to decorate.
+ * @param {Function} coerce Function invoked to coerce values before they are
+ *  written to the underlying observable.
+ * @param {Object} [owner=obs] Context for calls to coerce.
+ * @returns {ko.dependentObservable} Wrapped observable.
+ */
+exports.typedExtender = ko.addExtender 'typed', (obs, coerce, owner=obs, options={}) ->
+    unless typeof coerce is 'function'
+        throw new Error "ko.typedObservable requires a coercion function! Got a #{typeof coerce} instead: #coerce"
+    
+    # current = obs() # peek?
+    current = obs.peek()
+    
+    # Wrap observer with the coercion transform
+    options = options import {
+        owner
+        read  : obs
+        write : (value) ->
+            if _.isArray value
+                # don't map, or we lose object identity with the backing array
+                _.each value, (val, i) ->
+                    value[i] = coerce.call owner, val
+            else
+                value = coerce.call owner, value
+            obs value
+            value
+    }
+    wrapper = ko.computed options
+    
+    options.isArray ?= _.isArray current
+    if options.isArray
+        # Wrap additive `ko.observableArray` methods to transform new data
+        _.each <[ push unshift splice replace ]>, (methodName) ->
+            origMethod = obs[methodName]
+            switch methodName
+            case 'splice'
+                obs.splice = (start, drop, ...args) ->
+                    origMethod.apply this, [start, drop].concat _.map(args, coerce, owner)
+            case 'replace'
+                obs.replace = (oldItem, newItem) ->
+                    origMethod.call this, oldItem, coerce.call(owner, newItem)
+            default
+                obs[methodName] = (arg) ->
+                    origMethod.apply this, _.map(arguments, coerce, owner)
+    
+    # Copy over observable and observableArray methods
+    delete wrapper.equalityComparer
+    _.defaults wrapper, obs
+    
+    # Update with starting value
+    wrapper current
+    
+    # Replace with decorated property
+    wrapper
+
+
+/**
+ * Convenience for wrapping a value in both an observable and the type coercion wrapper.
+ * @returns {ko.dependentObservable}
+ */
+exports.typedObservable = ko.typedObservable = (coerce, val, owner, options) ->
+    toObs val .typed coerce, owner, options
+
+
+
+/**
+ * Coerces input to this observable using the supplied Model before it the
+ * value is set, implying subscribers will only see the converted values. If the
+ * underlying observable is a `ko.observableArray`, coercion will be applied to
+ * each element before being added.
+ * 
+ * @param {ko.observable} obs Property to decorate.
+ * @param {Class<Model>} ModelType Model to ensure.
+ * @returns {ko.dependentObservable} Wrapped observable.
+ */
+exports.modelExtender = ko.addExtender 'model', (obs, ModelType, owner, options) ->
+    coerce = (value) ->
+        return value if value instanceof ModelType
+        # Do not wrap undefined or nulls
+        return value unless value?
+        new ModelType value
+    
+    if typeof ModelType.comparator is 'function'
+        obs.equalityComparer = ModelType.comparator
+    
+    obs.typed coerce, owner, options
+
+
+/**
+ * Convenience for wrapping a value in both an observable and the model coercion wrapper.
+ * @returns {ko.dependentObservable}
+ */
+exports.modeledObservable = ko.modeledObservable = (ModelType, val, owner, options) ->
+    toObs val .model ModelType, owner, options
+
+
+
+/**
+ * Coerces input to this observable using the supplied function before it the
+ * value is set, implying subscribers will only see the converted values. If the
+ * underlying observable is a `ko.observableArray`, coercion will be applied to
+ * each element before being added.
+ * 
+ * @param {ko.observable} obs Property to decorate.
+ * @param {Function|Class} coerce Function invoked to coerce incoming data into
+ *  the appropriate type. If the function appears to be a class constructor, it will
+ *  be wrapped to perform an instanceof check to prevent double-wrapping, and otherwise
+ *  invoke the class with `new`.
+ * @returns {ko.dependentObservable} Wrapped observable.
+ */
+exports.coerciveExtender = ko.addExtender 'coerce', (obs, coerce, owner, options) ->
+    if _.isClass coerce
+        obs.model coerce, owner, options
+    else
+        obs.typed coerce, owner, options
+
+
+/**
+ * Convenience for wrapping a value in both an observable and the "smart" coercion wrapper.
+ * @returns {ko.dependentObservable}
+ */
+exports.coerciveObservable = ko.coerciveObservable = (coerce, val, owner, options) ->
+    toObs val .coerce coerce, owner, options
+
+

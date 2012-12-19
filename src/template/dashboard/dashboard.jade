@@ -1,16 +1,21 @@
-section#dashboard.centered
+section.dashboard
     .page-header
         h1
+            span(data-bind='text: model().headline')
+            |  
+            small(data-bind='visible: model().subhead, text: model().subhead')
     
     .row
         .graphs.tabbable
             nav
-                //- Dashboard Tab Buttons appended here
                 ul.nav.subnav.nav-pills
                     li: h3 Graphs
+                    // ko foreach: { data:tabs, as:'tab' }
+                    li.tab-button(data-bind="css: tab.tabButtonCss")
+                        a(data-toggle="tab", data-bind="attr: { href:'#' + tabId() + '-graphs-tab' }, text: tab.model().name")
+                    // /ko
             
-            //- Dashboard Tabs (each with a collection of GraphDisplayViews) appended here
-            .tab-content(data-subview="DashboardTabView")
-        
+            .tab-content(data-bind="foreach: { data:tabs, as:'tab' }")
+                .tab-pane(data-bind="attr: { id: tabId() + '-graphs-tab' }, css: tabPaneCss, subview: tab")
 
 

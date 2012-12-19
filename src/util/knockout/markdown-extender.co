@@ -1,0 +1,23 @@
+ko = require 'knockout'
+Showdown = require 'showdown'
+
+require './add-extender'
+
+DEFAULT_OPTIONS =
+    doubleNL : false
+
+markdownExtender = exports.markdownExtender = (obs, options={}) ->
+    Markdown = new Showdown.converter()
+    options = { ...DEFAULT_OPTIONS, ...options }
+    
+    wrapper = ko.computed {
+        +deferEvaluation
+        read : ->
+            s = obs()
+            s .= replace /\n/g, '\n\n' if options.doubleNL
+            Markdown.makeHtml s
+        write : obs
+    }
+    wrapper
+
+ko.addExtender 'markdown', markdownExtender

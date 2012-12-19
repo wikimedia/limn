@@ -1,0 +1,65 @@
+
+/**
+ * Action type constants.
+ * @const
+ */
+ACTIONS = exports.ACTIONS = { 'NONE', 'ADD', 'REMOVE', 'MOVE', 'CHANGE', }
+exports import ACTIONS
+
+
+/**
+ * @class Represents a mutation to an indexable collection.
+ */
+class exports.Change implements ACTIONS
+    
+    
+    /**
+     * @constructor
+     * @param {*} value
+     * @param {*} collection
+     * @param {Number} oldIndex
+     * @param {Number} [newIndex=oldIndex]
+     * @param {String} action
+     */
+    (@value, @collection, @oldIndex, @newIndex=oldIndex, @action) ->
+        # Ensure things are coherent
+        switch @action
+        case ADD            then @oldIndex = -1
+        case REMOVE         then @newIndex = -1
+        case NONE, CHANGE   then @oldIndex = @newIndex
+        case MOVE
+            throw new Error 'Change.MOVE to the same index!' if @oldIndex is @newIndex
+    
+    
+    toString: ->
+        { action, oldIndex, newIndex, value } = this
+        switch action
+        case MOVE           then action += "[#oldIndex -> #newIndex]"
+        case ADD            then action += "[#newIndex]"
+        case REMOVE, CHANGE then action += "[#oldIndex]"
+        "Change(#action, #value)"
+    
+    
+    /**
+     * Create a new Change, inferring the action from the given indices.
+     *
+     * @param {*} value
+     * @param {*} collection
+     * @param {Number} oldIndex
+     * @param {Number} [newIndex=oldIndex]
+     * @returns {Change}
+     */
+    @fromIndices = (value, collection, oldIndex, newIndex=oldIndex) ->
+        if oldIndex is newIndex
+            action = CHANGE
+        else if oldIndex is -1
+            action = ADD
+        else if newIndex is -1
+            action = REMOVE
+        else
+            action = MOVE
+        
+        ChangeClass = this
+        new ChangeClass value, collection, oldIndex, newIndex, action
+
+

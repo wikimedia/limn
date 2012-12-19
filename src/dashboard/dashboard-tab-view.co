@@ -1,0 +1,56 @@
+_ = require 'underscore'
+ko = require 'knockout'
+
+{ compareIds, OrderedSet, formatters,
+} = require '../util'
+{ View,
+} = require '../base/view'
+{ GraphView,
+} = require '../graph/graph-view'
+
+class exports.DashboardTabView extends View
+    template: 'dashboard-tab'
+    
+    (@dashboard, model) ->
+        super model
+        @on 'render', ~> @dashboard.updateActiveTab()
+    
+    
+    defaults: ->
+        model       : null
+        isDestroyed : false
+        graphs      : []
+    
+    attributeTypes:
+        graphs      : GraphView
+    
+    tabId: @computed ->
+        _.underscored @model().name() .toLowerCase()
+    
+    tabButtonCss: @computed ->
+        @tabId() + '-button'
+    
+    tabPaneCss: @computed ->
+        @tabId() + '-graphs-pane'
+    
+    
+    watchDeps: ->
+        @model().graphs()
+        @graphs()
+    
+    
+    watchOthers : ->
+        # console.log "#this.watchOthers!"
+        graphs = @watchModels()
+        _.invoke @graphs(), 'watching'
+        graphs
+    
+    
+    watchModels : @computed ->
+        # console.log "#this.watchModels!"
+        @graphs newModels = @model().graphs().slice()
+        newModels
+    
+    resize: ->
+        _.invoke @graphs(), 'resize'
+    

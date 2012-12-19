@@ -1,101 +1,90 @@
-Seq = require 'seq'
+_ = require 'underscore'
+ko = require 'knockout'
+{
+    unwrapObservable : unwrap
+    peekObservable   : peek
+} = ko.utils
 
-{ _, op,
+{ compareIds, OrderedSet, formatters,
 } = require '../util'
-{ BaseModel, BaseView,
-} = require '../base'
-{ Graph, GraphList, GraphDisplayView,
-} = require '../graph'
+{ View,
+} = require '../base/view'
 { Dashboard,
 } = require './dashboard-model'
+{ DashboardTabView,
+} = require './dashboard-tab-view'
 
 
-/**
- * @class
- */
-DashboardView = exports.DashboardView = BaseView.extend do # {{{
-    __bind__       : <[ addTab ]>
-    tagName        : 'section'
-    className      : 'dashboard'
-    template       : require '../template/dashboard/dashboard'
+
+class exports.DashboardView extends View
+    template: 'dashboard'
+    
+    defaults: ->
+        model       : null
+        action      : null
+        isDestroyed : false
+        tabs        : []
+    
+    attributeTypes:
+        tabs        : (tab) -> new DashboardTabView this, tab
     
     
-    events:
-        # Select the whole permalink URI text when it receives focus.
-        # 'click .graphs.tabbable .nav a' : 'onTabClick'
-        'shown .graphs.tabbable .nav a' : 'render'
-    
-    # subviews : []
-    graphs   : null
-    ready    : false
-    
-    
-    constructor: function DashboardView(options={})
-        @graphs = new GraphList
-        BaseView ...
-    
-    initialize: ->
-        @model or= new Dashboard
-        DashboardView.__super__.initialize ...
-        # @graphs.on 'add', @attachGraphs, this
-        # @graphs.on 'add', @attachGraph, this
-        @model.once 'ready', @load, this .load()
-    
-    
-    # FIXME:
-    #   - combine all loads into one seq so...
-    #   - trigger ready when finished
-    # TODO:
-    #   - only render graph when scrolling makes it visible
-    load: ->
-        console.log "#this.load! Model ready!", @model
-        Seq @model.get('tabs')
-            .seqEach_ @addTab
-            .seq ~>
-                console.log "#{this}.load! Done adding tabs!"
-                @render()
-                @triggerReady()
-    
-    addTab: (nextTab, tab) ->
-        isActive = not @subviews.length
-        tabModel = new BaseModel tab
-        tabView  = @addSubview new DashboardTabView {model:tabModel}
-        tabId    = tabView.getTabId()
-        navEl    = $ "<li class='tab-button #tabId-button'><a href='##tabId' data-toggle='tab'>#{tab.name}</a></li>"
-            .appendTo @$ "nav > ul.nav"
-        navEl.add tabView.$el .addClass 'active' if isActive
+    (model, action) ->
+        super()
         
-        graphs = _ tab.graph_ids .map ~> @model.graphs.get it
-        Seq graphs
-            .parMap_ (next, graph) ~>
-                @graphs.add graph
-                next null, new GraphDisplayView {model:graph}
-            .parMap_ (next, graphView) ~>
-                return next.ok() if graphView.isAttached
-                tabView.addSubview graphView
-                next.ok()
-            .seq ~>
-                console.log "#{this}.addTab: All graphs added!"
-                # @render()
-                nextTab.ok()
-        this
-    
-    ### Tabs {{{
-    
-    onTabShown: (e) ->
-        @render()
-        # @renderSubviews()
-        # Seq @subviews
-        #     .parMap (view) ->
-        #         # view.resizeViewport()
-        #         view.renderChart()
-    
-    onTabClick: (evt) ->
-        evt.preventDefault()
+        # Decorate properties we need to clean up with history tracking
+        @tabs = @attributes.tabs = @tabs.history({ -includeInitial })
+        @tabs.equalityComparer = compareIds
+        
+        if model instanceof Dashboard
+            model.fetch()
+        else if typeof model is 'string'
+            model = Dashboard.load { id:model }
+        else
+            model = new Dashboard model
+        
+        @action action
+        @model  model
+        
+        # Fires when afterRender is called
+        @once 'render', ~>
+            @$el.on 'shown', '.graphs.tabbable .nav a[data-toggle="tab"]', ~>
+                _.invoke @tabs(), 'resize'
+        
+        @on 'render', @updateActiveTab, this
+        @watching()
     
     
-    ### }}}
+    watchDeps: ->
+        @model().tabs()
+        @tabs()
+    
+    
+    watchOthers : ->
+        # console.log "#this.watchOthers!"
+        tabs = @watchModels()
+        _.invoke @tabs(), 'watching'
+        tabs
+    
+    
+    watchModels : @computed ->
+        # console.log "#this.watchModels!"
+        @tabs newModels = @model().tabs().slice()
+        newModels
+    
+    
+    updateActiveTab: ->
+        # console.log "#this.updateActiveTab!"
+        tabnav = @$ '.graphs.tabbable .nav.subnav.nav-pills'
+        unless tabnav.find('li.tab-button.active').length
+            # tabnav.find('li.tab-button:first')
+            #     .addClass('active')
+            tabnav.find('li.tab-button:first a')
+                .click()
+    
+    
     ### Navigation Between Graphs {{{
+    
     
     /**
      * Scroll to the specified graph.
@@ -112,11 +101,10 @@ DashboardView = exports.DashboardView = BaseView.extend do # {{{
         unless graph instanceof Graph
             console.error "#this.scrollToGraph() Unknown graph #graph!"
             return this
-        
         return this unless view = _.find @subviews, -> it.model is graph
         $ 'body' .scrollTop view.$el.offset().top if view.$el.is ':visible'
-        
         this
+    
     
     findClosestGraph: (scroll) ->
         scroll or= $ 'body' .scrollTop()
@@ -127,40 +115,7 @@ DashboardView = exports.DashboardView = BaseView.extend do # {{{
             .sort (a,b) -> op.cmp a[0], b[0]
         return views[0][1] if views.length
     
+    
     ### }}}
-
-
-
-/**
- * @class
- * @extends BaseView
- */
-DashboardTabView = exports.DashboardTabView = BaseView.extend do # {{{
-    __bind__       : <[  ]>
-    className      : 'tab-pane'
-    tag            : 'div'
-    template       : require '../template/dashboard/dashboard-tab'
     
     
-    constructor: function DashboardTabView
-        BaseView ...
-    
-    initialize: ->
-        BaseView::initialize ...
-    
-    getTabId: ->
-        _.underscored @model.get('name') .toLowerCase() + '-graphs-tab'
-    
-    toTemplateLocals: ->
-        json = DashboardTabView.__super__.toTemplateLocals ...
-        tab_name = _.underscored @model.get('name') .toLowerCase()
-        json import
-            tab_cls : "#tab_name-graphs-pane"
-            tab_id  : "#tab_name-graphs-tab"
-    
-# }}}
-
-
-
-
-

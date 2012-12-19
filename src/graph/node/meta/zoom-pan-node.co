@@ -1,0 +1,57 @@
+_  = require 'underscore'
+ko = require 'knockout'
+d3 = require 'd3'
+
+{ GraphNode,
+} = require '../graph-node'
+
+Trait = require '../graph-node-trait'
+
+
+
+/**
+ * @class
+ * @extends GraphNode
+ */
+class exports.ZoomPanNode extends GraphNode
+    nodeType : 'zoom-pan'
+    traits   : [
+        Trait.VIS_NODE
+        Trait.SVG
+        Trait.LEAF
+    ]
+    @registerType()
+    
+    
+    -> super ...
+    
+    
+    render: ->
+        return unless root = @root()
+        return unless scales = root.scalesIfValid()
+        
+        # FIXME: because of limitations in d3, this does not generate a new behavior, it just overrides the CURRENT behavior for the PAGE
+        @behavior ?= d3.behavior.zoom()
+            .x scales.xScale
+            .y scales.yScale
+            .scaleExtent [1,10]
+            .on 'zoom', ~> @zooming.call this
+        
+        d3.select('svg').call @behavior
+    
+    
+    zooming: ->
+        scale = d3.event.scale
+        # FIXME: this still isn't zooming or clipping quite right - the scales are consistent on zoomin/zoomout but they're off by maybe the offset?
+        frame = d3.select 'g.content-frame'
+        
+        # special case, if they zoom all the way out, bring them back to normal
+        if scale is 1
+            @behavior.translate([0,0])
+            @behavior.scale(scale)
+            frame = frame.transition(100)
+        
+        frame.attr do
+            transform: "translate(#{@behavior.translate()}) scale(#{@behavior.scale()})"
+        
+        @root().zooming @behavior.translate(), @behavior.scale()

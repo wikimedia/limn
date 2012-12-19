@@ -1,0 +1,77 @@
+fs         = require 'fs'
+path       = require 'path'
+exists     = fs.existsSync or path.existsSync
+
+op         = require 'operator'
+Seq        = require 'seq'
+glob       = require 'glob'
+yaml       = require 'js-yaml'
+
+_                    = require '../../src/util/underscore'
+{readFilesAsync}     = require '../files'
+FileBackedController = require '../file-controller'
+
+
+EXT_PAT          = /\.[^\.]*$/i
+YAML_EXT_PAT     = /\.ya?ml$/i
+YAML_OR_JSON_PAT = /\.(json|ya?ml)$/i
+
+
+/**
+ * @class Resource controller for datasource requests.
+ */
+class DataSourceController extends FileBackedController
+    name    : 'datasources'
+    mapping :
+        all : 'allData'
+    
+    -> super ...
+    
+    
+    /**
+     * GET /datasources
+     * @returns {Object} JSON listing of the datasource metadata files.
+     */
+    index : (req, res, next) ->
+        return next() unless req.format is 'json'
+        Seq()
+            .seq glob, "#{@dataDir}/**/*.@(yaml|json)", {+nocase, +nosort}, Seq
+            .map -> "#it".replace YAML_EXT_PAT, '.json'
+            .seq -> res.send it
+    
+    /**
+     * Returns the aggregated JSON content of the datasource metadata files.
+     */
+    allData : (req, res, next) ->
+        data = {}
+        Seq()
+            .seq glob, "#{@dataDir}/**/*.@(yaml|json)", {+nocase, +nosort}, Seq
+            .seq (paths) -> readFilesAsync paths, this
+            .seq (txts) -> @ok _.items txts
+            .flatten false
+            .parMap ([f, text]) ->
+                # console.log "parsing file[#i]: '#f' -> text[#{text.length}]..."
+                k = f.replace YAML_EXT_PAT, '.json'
+                v = data[k] = {}
+                try
+                    if YAML_EXT_PAT.test f
+                        v = data[k] = yaml.load text
+                    else
+                        v = data[k] = JSON.parse text
+                    # console.log "#f ok!", data
+                    @ok v
+                catch err
+                    console.error "[/datasources] Error parsing data!"
+                    console.error err
+                    console.error that if err.stack
+                    res.send { error:String(err), partial_data:data }, 500
+            .seq -> res.send data
+            .catch (err) ->
+                console.error '[/datasources] Error!'
+                console.error err
+                console.error that if err.stack
+                res.send { error:String(err), partial_data:data }, 500
+    
+
+
+module.exports = exports = DataSourceController

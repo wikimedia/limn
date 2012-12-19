@@ -1,12 +1,8 @@
-exports.Base = require './base'
-mixins       = require './base-mixin'
-models       = require './base-model'
-views        = require './base-view'
-cache        = require './model-cache'
-cascading    = require './cascading-model'
-data_binding = require './data-binding'
-exports import mixins   import models       import views \
-        import cache    import cascading    import data_binding
+base         = require './base'
+model        = require './model'
+model_cache  = require './model-cache'
+resource     = require './resource'
+stored_model = require './stored-model'
+view         = require './view'
 
-parser_mixin = require './parser-mixin'
-exports import parser_mixin
+exports import base import model import model_cache import resource import stored_model import view

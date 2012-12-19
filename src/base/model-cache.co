@@ -1,7 +1,10 @@
 _   = require 'underscore'
 Seq = require 'seq'
 
-{ReadyEmitter} = require '../util/event'
+{ EventEmitter, ReadyEmitter
+} = require 'emitters'
+
+Deferred = jQuery.Deferred
 
 
 # TODO: Bubble events to decorated emitters
@@ -10,13 +13,14 @@ Seq = require 'seq'
  * @class Caches models and provides static lookups by ID.
  */
 class exports.ModelCache extends ReadyEmitter
+    
     /**
      * @see ReadyEmitter#readyEventName
      * @private
      * @constant
      * @type String
      */
-    readyEventName : 'cache-ready'
+    __ready_event__ : 'cache-ready'
     
     /**
      * Default options.
@@ -37,38 +41,42 @@ class exports.ModelCache extends ReadyEmitter
     options : null
     
     /**
-     * Type we're caching (presumably extending `Backbone.Model`), used to create new
+     * Type we're caching (presumably extending `Model`), used to create new
      * instances unless a `create` function was provided in options.
      * @private
-     * @type Class<Backbone.Model>
+     * @type Class<Model>
      */
     ModelType : null
     
     /**
-     * Collection holding the cached Models.
+     * Map holding the cached Models.
      * @private
-     * @type Backbone.Collection
+     * @type Map<id, Model>
      */
     cache : null
+    
+    /**
+     * Holds promises for fetch requests: Map from id to Deferred
+     * @private
+     * @type Object
+     */
+    promises : null
     
     
     
     /**
      * @constructor
-     * @param {Class<Backbone.Model>} [ModelType] Type of cached object (presumably extending
-     *  `Backbone.Model`), used to create new instances unless `options.create`
+     * @param {Class<Model>} [ModelType] Type of cached object (presumably extending
+     *  `Model`), used to create new instances unless `options.create`
      *  is provided.
      * @param {Object} [options] Options:
      * @param {Boolean} [options.ready=true] Starting `ready` state. If false,
      *  the cache will queue lookup calls until `triggerReady()` is called.
-     * @param {Class<Backbone.Collection>} [options.cache=new Backbone.Collection]
-     *  The backing data-structure for the cache. If omitted, we'll use a new
-     *  `Backbone.Collection`, but really, anything with a `get(id)` method for
-     *  model lookup will work here.
+     * @param {Object} [options.cache={}] The backing data-structure for the cache.
      * @param {Function} [options.create] A function called when a new Model
      *  object is needed, being passed the new model ID.
-     * @param {Class<Backbone.Model>} [options.ModelType] Type of cached object
-     *  (presumably extending `Backbone.Model`), used to create new instances
+     * @param {Class<Model>} [options.ModelType] Type of cached object
+     *  (presumably extending `Model`), used to create new instances
      *  unless `options.create` is provided.
      */
     (ModelType, options) ->
@@ -76,12 +84,13 @@ class exports.ModelCache extends ReadyEmitter
             [options, ModelType] = [ModelType or {}, null]
         @options = {...@DEFAULT_OPTIONS, ...options}
         
-        @cache = @options.cache or new Backbone.Collection
+        @promises = {}
+        @cache = @options.cache or {}
         
         @ModelType = ModelType or @options.ModelType
         @createModel = that if @options.create
         
-        @ready = !!@options.ready
+        @_ready = !!@options.ready
         @decorate @ModelType if @ModelType
     
     
@@ -96,6 +105,59 @@ class exports.ModelCache extends ReadyEmitter
         new @ModelType {id}
     
     /**
+     * Synchronously check if a model is in the cache, returning it if so.
+     * 
+     * @param {String} id The model ID to get.
+     * @returns {Model}
+     */
+    get: (id) ->
+        @cache[id]
+    
+    /**
+     * Looks up a model, requesting it from the server if it is not already
+     * known to the cache.
+     *
+     * @param {String|Array<String>} id Model ID to lookup.
+     * @param {Function} [cb] Callback of the form `(err, model)`,
+     *  where `err` will be null on success and `model` will be the
+     *  model object.
+     * @param {Object} [cxt=this] Callback context.
+     * @returns {this}
+     */
+    lookup: (id, cb, cxt) ->
+        throw new Error "A model ID must be specified!" unless id
+        model = @get id
+        
+        # Cache hit? Return its extant promise.
+        if model
+            
+            # The cache can be populated via `add()` calls not originating in `lookup()`,
+            # resulting in cache entries without promises. If so, we need to both create
+            # the promise and resolve it before handing things back.
+            deferred = @promises[id] or= new Deferred().resolve(model)
+            
+        # Cache miss? Create a new promise and a new request.
+        else
+            deferred = @promises[id] = new Deferred()
+            model    = @add @createModel id
+            xhr      = model.fetch()
+            
+            deferred.xhr = xhr.xhr
+            xhr.then do
+                -> deferred.resolveWith this, arguments
+                -> deferred.rejectWith  this, arguments
+        
+        # optional callback: `cb(err, model)`
+        if typeof cb is 'function'
+            _.defer ~> deferred.then do
+                (model)       ~> cb.call(cxt or this, null, model)
+                (model, err)  ~> cb.call(cxt or this, err,  model)
+        
+        # Return a promise for the loaded model
+        deferred
+    
+    
+    /**
      * Registers a model with the cache. If a model by this ID already exists
      * in the cache, it will be removed and this one will take its place.
      *
@@ -104,79 +166,46 @@ class exports.ModelCache extends ReadyEmitter
      * @param {Model} model The model.
      * @returns {Model} The model.
      */
-    register: (model) ->
-        # console.log "ModelCache(#{@CACHE}).register(#{model.id or model.get('id')})", model
-        if @cache.contains model
-            @cache.remove model, {+silent}
-        @cache.add model
+    add: (model) ->
+        throw new Error "You must supply a model! (model=#model)" unless model
+        
+        id = model.getId()
+        throw new Error "Supplied model has no id! (model=#model, id=#id)" unless id
+        
+        if @cache[id] and @cache[id] is not model
+            className = @ModelType.displayName or @ModelType.name
+            throw new Error "Model of type #className already exists at #id."
+        @cache[id] = model
         @trigger 'add', this, model
         model
     
-    /**
-     * Synchronously check if a model is in the cache, returning it if so.
-     * 
-     * @param {String} id The model ID to get.
-     * @returns {Model}
-     */
-    get: (id) ->
-        @cache.get id
     
     /**
-     * Asynchronously look up any number of models, requesting them from the
-     * server if not already known to the cache.
-     *
-     * @param {String|Array<String>} ids List of model IDs to lookup.
-     * @param {Function} cb Callback of the form `(err, models)`,
-     *  where `err` will be null on success and `models` will be an Array
-     *  of model objects.
-     * @param {Object} [cxt=this] Callback context.
+     * Invalidate a model, removing it from the cache.
+     * 
+     * @param {String} id ID of the model to invalidate.
      * @returns {this}
      */
-    lookupAll: (ids, cb, cxt=this) ->
-        ids = [ids] unless _.isArray ids
-        # console.log "ModelCache(#{@cache}).lookup([#ids], #{typeof cb})"
-        
-        unless @ready
-            @on 'cache-ready', ~>
-                @off 'cache-ready', arguments.callee
-                @lookupAll ids, cb, cxt
-            return this
-        
-        Seq ids
-            .parMap_ (next, id) ~>
-                return next.ok(that) if @cache.get id
-                @register @createModel id
-                    .on 'ready', -> next.ok it
-                    .load()
-            .unflatten()
-            .seq (models) ->
-                cb.call cxt, null, models
-            .catch (err) ->
-                cb.call cxt, err
+    invalidate: (id) ->
+        return this unless id?
+        delete @cache[id]
+        delete @promises[id]
         this
     
     /**
-     * Looks up a model, requesting it from the server if it is not already
-     * known to the cache.
-     *
-     * @param {String|Array<String>} id Model ID to lookup.
-     * @param {Function} cb Callback of the form `(err, model)`,
-     *  where `err` will be null on success and `model` will be the
-     *  model object.
-     * @param {Object} [cxt=this] Callback context.
+     * Invalidates all cache entries.
      * @returns {this}
      */
-    lookup: (id, cb, cxt=this) ->
-        @lookupAll [id], (err, models) ->
-            if err then cb.call cxt, err
-            else        cb.call cxt, null, models[0]
+    purge: ->
+        _.each _.keys(@cache), @invalidate, this
+        this
     
     /**
      * Decorate an object with the cache methods:
-     *  - register
      *  - get
      *  - lookup
-     *  - lookupAll
+     *  - invalidate
+     *  - purge
      * 
      * This is automatically called on `ModelType` if supplied.
      * 
@@ -186,7 +215,7 @@ class exports.ModelCache extends ReadyEmitter
     decorate: (obj) ->
         obj.__cache__ = this
         # Bind the ModelCache methods to the class
-        for m of <[ register get lookup lookupAll ]>
+        for m of <[ get lookup invalidate purge ]>
             obj[m] = @[m].bind this
         obj
     

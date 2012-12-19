@@ -1,0 +1,109 @@
+
+/**
+ * @namespace Describes values of `GraphNode::traits` utilized elsewhere in Limn.
+ */
+exports import do
+    
+    /**
+     * Node needs an HTML parent element.
+     * @constant
+     */
+    HTML : 'html-element'
+    
+    
+    /**
+     * Node needs an SVG parent element.
+     * @constant
+     */
+    SVG : 'svg-element'
+    
+    
+    /**
+     * Node should render above others.
+     * @constant
+     */
+    FG_LAYER : 'fg-layer'
+    
+    
+    /**
+     * Node should render behind others.
+     * @constant
+     */
+    BG_LAYER : 'bg-layer'
+    
+    
+    /**
+     * Node participates in visualizing data.
+     * @constant
+     */
+    VIS_NODE : 'visualization-node'
+    
+    
+    /**
+     * Node serves some purpose other than visualizing data.
+     * @constant
+     */
+    META_NODE : 'meta-node'
+    
+    
+    /**
+     * Associated GraphNodeData must define a valid Metric as a prerequisite to render.
+     * @constant
+     */
+    REQUIRES_METRIC : 'metric'
+    
+    
+    /**
+     * Associated GraphNodeData must define a pointer to another Metric as a prerequisite to render.
+     * @constant
+     */
+    REQUIRES_METRIC_POINTER : 'metric-pointer'
+    
+    
+    /**
+     * Metric for associated GraphNodeData is timeseries data if defined.
+     * @constant
+     */
+    METRIC_TIMESERIES : 'metric-timeseries'
+    
+    
+    /**
+     * Node cannot have children.
+     * @constant
+     */
+    LEAF : 'leaf'
+    
+    
+    /**
+     * Node has an associated edit UI.
+     * @constant
+     */
+    EDITABLE : 'editable'
+    
+    
+    /**
+     * Node is a top-level section in the canvas, likely altering the flow of other elements.
+     * @constant
+     */
+    SECTION : 'section'
+    
+    
+    /**
+     * Node defines a viewing window for other nodes to render in.
+     * @constant
+     */
+    VIEWPORT : 'viewport'
+    
+    
+    
+    # XXX: These are all basically hacks
+    
+    /**
+     * CalloutNode renders in the graph's title row.
+     * @constant
+     */
+    CALLOUT_NODE : 'callout-node'
+    
+    
+
+

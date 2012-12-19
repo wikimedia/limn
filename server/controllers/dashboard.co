@@ -1,0 +1,66 @@
+fs         = require 'fs'
+path       = require 'path'
+{existsSync:exists} = path
+
+_          = require 'underscore'
+Seq        = require 'seq'
+yaml       = require 'js-yaml'
+
+{ readJSONFilesAsync,
+} = require '../files'
+
+FileBackedController = require '../file-controller'
+
+
+/**
+ * @class Resource controller for dashboard requests.
+ */
+class DashboardController extends FileBackedController
+    PROTECTED_IDS : <[
+        main
+        reportcard
+    ]>
+    PROTECT : true
+    
+    name : 'dashboards'
+    -> super ...
+    
+    
+    
+    # GET /dashboards.:format?
+    index: (req, res, next) ->
+        return next() unless req.format is 'json'
+        Seq()
+            # find list of data/dashboard/*.json files, send back the objects
+            .seq readJSONFilesAsync, "#{@dataDir}/**", Seq
+            # remove filepath info
+            .seq (files) -> res.send _.values files
+    
+    # POST /dashboards
+    create: (req, res, next) ->
+        return unless data = @processBody req, res
+        file = @toFile data.id
+        if exists file
+            return res.send { result:"error", message:"Dashboard '#{data.id}' already exists!" }, 409 # 409: Resource Conflict
+        else
+            fs.writeFile file, JSON.stringify(data), "utf8", @errorHandler(res, "Error writing Dashboard!")
+    
+    # PUT /dashboards/:dashboard
+    update: (req, res, next) ->
+        return unless data = @processBody req, res
+        if @PROTECT and _ @PROTECTED_IDS .contains data.id
+            return res.send {result:"error", message:"Dashboard '#{data.id}' is read-only."}, 403 # 403: Forbidden
+        fs.writeFile @toFile(data.id), JSON.stringify(data), "utf8", @errorHandler(res, "Error writing Dashboard!")
+    
+    # DELETE /dashboards/:dashboard
+    destroy: (req, res, next) ->
+        id = req.param.dashboard
+        if @PROTECT and _ @PROTECTED_IDS .contains id
+            return res.send {result:"error", message:"Dashboard '#{id}' is read-only."}, 403 # 403: Forbidden
+        fs.unlink @toFile(id), @errorHandler(res, "Dashboard '#{id}' does not exist!", 410) # 410: Resource Gone
+    
+    
+
+
+
+module.exports = exports = DashboardController

@@ -1,0 +1,114 @@
+# Utilities for use in templates
+
+fs    = exports.fs   = require 'fs'
+path  = exports.path = require 'path'
+glob  = exports.glob = require 'glob'
+
+{dirname, basename} = path
+BASE     = exports.BASE     = dirname __dirname
+WWW      = exports.WWW      = "#BASE/www"
+VAR      = exports.VAR      = "#BASE/var"
+STATIC   = exports.STATIC   = "#BASE/static"
+TEMPLATE = exports.TEMPLATE = "#BASE/src/template"
+TEST     = exports.TEST     = "#BASE/test"
+
+VERSION = 'HEAD'
+try VERSION = require '../version' catch e
+exports.VERSION = exports.version = VERSION
+
+_     = exports._ = require 'underscore'
+_.str = require 'underscore.string'
+_.mixin _.str.exports()
+
+op   = exports.op   = require 'operator'
+yaml = exports.yaml = require 'js-yaml'
+jade = exports.jade = require 'jade'
+
+getTemplate = exports.getTemplate = (filename) ->
+    name = path.basename filename .replace /\.jade$/i, ''
+    text = fs.readFileSync filename, 'utf8'
+    if /\.jade$/i.test filename
+        text = jade.compile(text, { filename, +pretty })(^exports)
+    { name, filename, text }
+
+exports.env = process.env
+NODE_ENV = exports.NODE_ENV = (process.env.NODE_ENV or 'development').toLowerCase()
+IS_PROD  = exports.IS_PROD  = NODE_ENV is 'production'
+IS_TEST  = exports.IS_TEST  = NODE_ENV is 'test'
+IS_DEV   = exports.IS_DEV   = not (IS_PROD or IS_TEST)
+
+
+
+SOURCES_ENV = if process.env.LIMN_FORCE_BUNDLES then 'production' else NODE_ENV
+
+/**
+ * Reify a modules.yaml file
+ * FIXME: this executes many times when loading the website
+ */
+sources = exports.sources = (node_env=SOURCES_ENV, modulesFile="#WWW/modules.yaml") ->
+    mods = yaml.load fs.readFileSync modulesFile, 'utf8'
+    modlist = (mods.all or []).concat (mods[node_env] or [])
+    _.flatten modlist.map ({suffix or '', paths}) -> joinTree('', paths).map -> it+suffix
+
+
+/**
+ * Search for source files in listed directories.
+ * 
+ * @param {String|Array<String>} [srcDirs=<[ src ]>] Source directories to search.
+ * @param {Object} [opts={}] Options.
+ * @param {Boolean} [opts.dropSrcDir=true] Do not include the directory-prefix we searched.
+ * @param {Boolean} [opts.ext='.mod.js'] Replace .co with this extension.
+ * @returns {Array<String>} List of paths to source files.
+ */
+findSources = exports.findSources = (srcDirs=<[ src ]>, opts={}) ->
+    srcDirs = [ srcDirs ] unless _.isArray srcDirs
+    opts    = { +dropSrcDir, ext:'.mod.js', ...opts }
+    return _ srcDirs .chain()
+        .map (srcDir) ->
+            srcDir = _.str.rtrim srcDir, '/'
+            pat = "#srcDir/**/*.co"
+            cwd = process.cwd()
+            if opts.dropSrcDir
+                pat = '**/*.co'
+                cwd = path.join cwd, srcDir
+            glob.sync pat, { +nosort, cwd }
+        .flatten()
+        .map (f) -> f.replace /\.co$/, opts.ext
+        .sort indexSorter
+        .value()
+
+/**
+ * Sort index files to the end of their directory.
+ */
+indexSorter = exports.indexSorter = (p1, p2) ->
+    return that if op.cmp dirname(p1), dirname(p2)
+    f1 = basename p1
+    f2 = basename p2
+    return that if op.cmp _.startsWith(f1, 'index.'), _.startsWith(f2, 'index.')
+    return op.cmp f1, f2
+
+
+/**
+ * Search for tests.
+ */
+tests = exports.tests = ->
+    return glob.sync "#TEST/**/*.co"
+        .filter (f) ->
+            f is not "#TEST/index.co" and not _.startsWith(f, "#TEST/qunit")
+        .concat [ "#TEST/index.co" ]
+        .map (f) ->
+            p = path.join dirname(f), basename(f).replace /\.co$/, '.mod.js'
+            '/js/limn/' + p.slice BASE.length+1
+
+joinTree = exports.joinTree = function joinTree(root, tree)
+    return ["#root/#tree"] if typeof tree is 'string'
+    _ tree .reduce do
+        (acc, branch) ->
+            if typeof branch is 'string'
+                acc.push "#root/#branch"
+            else
+                _.each branch, (v, k) ->
+                    acc.push.apply acc, joinTree "#root/#k", v
+            acc
+        []
+

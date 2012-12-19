@@ -1,0 +1,63 @@
+ko = require 'knockout'
+
+class exports.EditView
+    /**
+     * @constructor
+     * @param {View} view The view this object is watching and editing
+     */
+    (view) ->
+        @view = view
+        $(@view.el()).addClass '.edit'
+        
+        @editable = "edit-#{@__id__}"
+        @isEditable = ".#{@editable}"
+        @editing = "editing"
+        @isEditing = ".#{@editing}"
+        
+        @makeEditable()
+        @registerEvents()
+    
+    /**
+     * Declares what elements this editor will be watching for by adding a class unique among editors
+     * TODO: figure out how to not apply this class to subviews
+     */
+    makeEditable: ->
+        $('h4,h5,p', @view.el()).addClass @editable
+    
+    /**
+     * registers events in the scope of the view this is editing
+     */
+    registerEvents: ->
+        scope = @view.el()
+        $(scope).on 'click', @isEditable, (event) ~>
+            event.stopPropagation()
+            el = event.target
+            
+            editor = $(el).next()
+            unless editor.is @isEditing
+                editor = @createEditorFor el
+                $(el).after editor
+            
+            $(el).hide()
+            $(el).next().show().focus()
+        
+        $(scope).on 'blur', @isEditing, (event) ~>
+            event.stopPropagation()
+            el = event.target
+            
+            display = $(el).prev()
+            
+            $(el).hide()
+            display.show()
+    
+    createEditorFor: (el) ->
+        dataBindPlaceholder = '###'
+        editor = "<input #dataBindPlaceholder/>"
+        if $(el).is 'p'
+            editor = "<textarea #dataBindPlaceholder rows=3 cols=40></textarea>"
+        
+        editor = editor.replace dataBindPlaceholder, 'data-bind="' + $(el).data().bind.replace('text', 'value') + '"'
+        editor = $(editor).addClass @editing
+        data = ko.dataFor el
+        ko.applyBindings data, editor[0]
+        editor

@@ -1,0 +1,134 @@
+_      = require 'underscore'
+op     = require 'operator'
+moment = require 'moment'
+
+{ IndexIterator, ZipIterator, PipeIterator,
+} = require './iterator'
+
+
+DEFAULT_OPTIONS =
+    rows        : true  # row-major format
+    columns     : null  # keep only these columns -- null -> all
+    
+    timeStart   : null  # drop rows with date < this -- null -> -Infinity
+    timeEnd     : null  # drop rows with date > this -- null ->  Infinity
+    timeStep    : null  # normalize datapoints -- null -> no normalization
+    timeCol     : 0     # index/id of time column -- null -> first Date column
+    
+    # TODO (maybe): sorted, reversed, negated, fillNulls
+    # sorted      : false # sort output -- false -> off; true -> natural; fn -> cmp(a,b) -> 1|0|-1
+    # reversed    : false # reverse output
+    # negated     : false # negate all filters
+    # fillNulls   : null  # replace nulls with this value
+
+
+class exports.Query
+    /* * * *  Fluent Options  * * * {{{ */
+    
+    /**
+     * Generate fluent accessors for the query object.
+     * @private
+     */
+    @option = (name, key, fn) ->
+        [fn, key] = [key, name] if typeof key is 'function'
+        fn        = op.I    unless typeof fn  is 'function'
+        key      ?= name
+        
+        @::[name] = ->
+            return @options[key] if arguments.length is 0
+            @options[key] = fn ...
+            this
+    
+    @option 'rows'
+    @option 'columns', (...indexes) -> indexes
+    
+    @option 'timeCol'
+    @option 'step', 'timeStep'
+    timespan: (start, end) ->
+        if arguments.length is 0
+            return [@options.timeStart, @options.timeEnd]
+        @options.timeStart = moment(start).toDate() if start?
+        @options.timeEnd   = moment(end).toDate()   if end?
+        this
+    
+    # @option 'negated'
+    # @option 'reversed'
+    # @option 'sorted'
+    # @option 'key', 'sorted', (k) ->
+    #     (a, b) -> op.cmp a[k], b[k]
+    
+    # }}}
+    
+    
+    ->
+        return new Query() unless this instanceof Query
+        @options = _.extend {}, DEFAULT_OPTIONS
+    
+    
+    /**
+     * Converts the query into a filter function:
+     * 
+     *  `fn(row, idx) -> Boolean`
+     * 
+     * Note that sort options (`reversed`, `sorted`, `key`) and `timeStep`
+     * cannot be applied in filter mode.
+     * 
+     * @returns {Function} The query converted into a filter function.
+     */
+    filter: ->
+        (row, idx) ~> true
+    
+    
+    /**
+     * Apply this query to the given data in column-major format.
+     */
+    call: (...cols) ->
+        @_process new ZipIterator cols
+    
+    
+    /**
+     * Apply this query to the given data in row-major format.
+     */
+    apply: (rows) ->
+        @_process new IndexIterator rows
+    
+    
+    /**
+     * Executes the query on an iterator stream.
+     * 
+     * @private
+     * @param {Iterator} iter Data iterator, formatting all items like rows.
+     * @returns {Array<Array>} Processed data.
+     */
+    _process: (iter) ->
+        opts = _.extend {}, @options
+        
+        # TODO: normalize by timeStep
+        unless opts.timeStart == null == opts.timeEnd
+            timeCol   = opts.timeCol or 0 # ?  _.find( _.items(rows[1]), ([id, v]) -> v instanceof Date )[0]
+            timeStart = opts.timeStart ? -Infinity
+            timeEnd   = opts.timeEnd   ?  Infinity
+            
+            # convert to ms since the epoch
+            timeStart = moment(timeStart).valueOf() unless typeof timeStart is 'number' # if (timeStart instanceof Date) or moment.isMoment(timeStart)
+            timeEnd   = moment(timeEnd).valueOf()   unless typeof timeEnd   is 'number'
+            
+            filterTime = (row) ->
+                timeStart <= row?[timeCol] <= timeEnd
+        else
+            filterTime = op.K true
+        
+        if _.isArray opts.columns
+            pickCols = (row) ->
+                if _.isArray row
+                    _.map opts.columns, (col) -> row[col]
+                else
+                    _.pick row, ...opts.columns
+        else
+            pickCols = op.I
+        
+        result = iter.pipe pickCols, filterTime .toArray()
+        result = _.zip ...result unless opts.rows or result[0]?.length is 1
+        result
+    
+

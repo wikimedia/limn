@@ -1,0 +1,101 @@
+_  = require 'underscore'
+ko = require 'knockout'
+moment = require 'moment'
+
+{ GraphNode,
+} = require '../graph-node'
+
+Trait = require '../graph-node-trait'
+
+
+
+
+/**
+ * @class
+ * @extends GraphNode
+ */
+class exports.CalloutNode extends GraphNode
+    nodeType : 'callout'
+    traits   : [
+        Trait.CALLOUT_NODE # XXX: Hack
+        Trait.META_NODE
+        Trait.REQUIRES_METRIC_POINTER
+        Trait.METRIC_TIMESERIES
+        Trait.HTML
+        Trait.LEAF
+    ]
+    @registerType()
+    tagName  : 'section'
+    template : 'callout-node'
+    
+    
+    -> super ...
+    
+    
+    buildElement: (parentElement) ->
+        @el parentElement
+        @renderView parentElement
+    
+    
+    metric: @computed ->
+        return unless metrics = @root()?.metrics()
+        return unless typeof (ref = @model()?.metricRef()) is 'number'
+        metrics[ref]
+    
+    
+    data: @computed ->
+        return unless metric = @metric()
+        # return unless step   = metric.timespan.peek().get('step') # TODO
+        return unless (data = metric.data())?.length
+        
+        # Compare against latest non-null, non-NaN value
+        i = data.length
+        while --i > 0 and [date, value] = data[i]
+            break if value? and isFinite value
+        else return
+        
+        # TODO: accommodate timestep other than 1mo
+        last_year  = data[ i - 12 ]
+        last_month = data[ i - 1 ]
+        
+        step      : '1mo' # TODO
+        latest    : { date, value }
+        year      : 
+            dates : [ last_year[0],  date  ]
+            value : [ last_year[1],  value ]
+            delta : value - last_year[1]
+        month     : 
+            dates : [ last_month[0], date  ]
+            value : [ last_month[1], value ]
+            delta : value - last_month[1]
+    
+    
+    latestValue: @computed ->
+        return '' unless data = @data()?.latest
+        # TODO: options.precision etc
+        @numberFormatter data.value, 2, false .toString()
+    
+    datesFor: (span) ->
+        return '' unless data = @data()?[span]
+        # TODO: options.dateFormat = 'MMM YY'
+        _.map data.dates, -> moment(it).format('MMM YY')
+        .join ' &mdash; '
+    
+    valueFor: (span) ->
+        return '' unless data = @data()?[span]
+        frac = 100 * data.delta / data.value[0]
+        frac.toFixed(2) + '%'
+    
+    cssClassFor: (span) ->
+        return '' unless data = @data()?[span]
+        if data.delta < 0 then 'delta-negative' else 'delta-positive'
+    
+    yearDates     : @computed -> @datesFor      'year'
+    yearValue     : @computed -> @valueFor      'year'
+    yearCssClass  : @computed -> @cssClassFor   'year'
+    
+    monthDates    : @computed -> @datesFor      'month'
+    monthValue    : @computed -> @valueFor      'month'
+    monthCssClass : @computed -> @cssClassFor   'month'
+    
+    

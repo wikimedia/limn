@@ -1,0 +1,19 @@
+_  = require 'underscore'
+ko = require 'knockout'
+
+{ OrderedSet, OrderedMap,
+} = require '../collections'
+
+
+/**
+ * @class
+ * @extends OrderedMap
+ */
+class exports.ObservableMap extends OrderedMap
+    
+    ->
+        super ...
+        
+    
+
+

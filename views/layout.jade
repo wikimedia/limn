@@ -1,0 +1,78 @@
+include mixins/helpers
+
+!!! html
+html(lang="en", dir="ltr")
+    head
+        block head
+            meta(http-equiv="content-type", content="text/html; charset=utf-8")
+            meta(name="viewport", content="width=device-width, initial-scale=1.0")
+            
+            block vendor-styles
+                mixin css('/vendor/bootstrap/css/bootstrap.css')
+                mixin css('hicons.css')
+            block styles
+                mixin css('layout.css')
+            
+            link(type="image/ico", rel="icon", href="/favicon.ico")
+            link(type="image/x-icon", rel="shortcut icon", href="/favicon.ico")
+            
+            block title
+                title Limn
+    
+    body
+        block body
+            
+            section#content: .inner
+                block content
+            
+            footer
+                block footer
+                    include footer
+        
+        block defs
+            .templates
+                block jade-templates
+                    for f in glob.sync(TEMPLATE+'/**/*.@(jade|html)')
+                        - var template = getTemplate(f)
+                        - var id = path.basename(template.filename.replace(TEMPLATE+'/', '').replace(/\.[^\.]+$/, ''))
+                        script(id=id, data-template-name=template.name, type="text/html")
+                            !{ '\n'+template.text }
+            
+            .scripts
+                block scripts
+                    - var limn_config = { 'mount':mount, 'rev':version, 'env':NODE_ENV };
+                    script
+                        var VERSION = !{ JSON.stringify(version)  };
+                        var ENV     = !{ JSON.stringify(NODE_ENV) };
+                        var IS_DEV = ENV === 'development', IS_PROD = ENV === 'production';
+                        var limn_config = !{ JSON.stringify(limn_config) };
+                    
+                    block lib-scripts
+                        if IS_DEV
+                            //-
+                                FIXME:  grr! Can't get rid of modules.yaml because it has pointers to magic files like /vendor/browserify.js
+                                        that can't be easily introspected. Worse, loading order matters with vendor files.
+                            for src in sources()
+                                if _.startsWith(src, '/vendor')
+                                    script(src=path.join(mount, src))
+                            
+                            //- Discover all .co files in ./src and include them
+                            for src in findSources('src')
+                                script(src=path.join(mount, 'js/limn', src))
+                        else
+                            for src in sources()
+                                script(src=path.join(mount, src))
+                        
+                    
+                    block page-scripts
+                        script
+                            var limn = require('limn');
+                    block main-scripts
+            
+            block addenda
+                .rilke: blockquote
+                    p What we fight with is so small, and when we win, it makes us small.
+                    p What we want is to be defeated, decisively, by successively greater things.
+                    small Rainer Rilke
+            
+

@@ -21,7 +21,7 @@ _fn =
         m.__wraps__ = fn
         m
     
-    
 
-exports import _fn
+
+_.mixin exports import _fn
 

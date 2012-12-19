@@ -1,0 +1,29 @@
+{ Base,
+} = require './base'
+
+
+
+/**
+ * @class Root-class for all Models.
+ * @extends Base
+ */
+class exports.Model extends Base
+    -> super ...
+    
+    
+    /**
+     * @static
+     * @returns {Function} Factory function that creates new instances of this Model.
+     */
+    @factory = ->
+        ClassType = this
+        return (attributes) -> new ClassType attributes
+    
+    
+    /**
+     * Class used to create "plain" object containers via `@plainSubclass()`.
+     * @type Class<Model>
+     * @see Base#plainSubclass
+     */
+    @PlainObjectClass = Model
+

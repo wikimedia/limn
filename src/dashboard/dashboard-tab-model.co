@@ -1,0 +1,50 @@
+_  = require 'underscore'
+ko = require 'knockout'
+
+{ compareIds, OrderedSet, formatters,
+} = require '../util'
+{ Model,
+} = require '../base'
+{ Graph,
+} = require '../graph/graph-model'
+
+class exports.DashboardTab extends Model
+    
+    /**
+     * @constructor
+     */
+    -> super ...
+    
+    
+    defaults: ->
+        name        : ''
+        graphs      : []
+    
+    attributeTypes:
+        graphs      : Graph
+    
+    
+    canonicalize : (data) ->
+        data.graphs = _.map data.graph_ids, (id) -> {id}
+        delete data.graph_ids
+        data
+    
+    
+    /**
+     * Inform sub-objects its safe to begin their watchers.
+     */
+    watching: @computed ->
+        # console.log "#this.watching!"
+        @isWatching = true
+        @graphs()
+        ko.dependencyDetection.ignore ~>
+            _.invoke @graphs(), 'watching'
+    
+    
+    toJSON: ->
+        attrs = _.without @attributes, 'graphs'
+        graphs = @attributes.graphs.peek()
+        attrs.graph_ids = _.map graphs, -> it.id.peek()
+        attrs
+    
+

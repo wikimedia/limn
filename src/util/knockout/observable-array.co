@@ -1,0 +1,63 @@
+/**
+ * @fileOverview Extensions to the `ko.observableArray` prototype.
+ */
+ko = require 'knockout'
+
+
+extensions =
+    /**
+     * Patch `valueHasMutated()` to update proxy's length property. Maybe?
+     */
+    # valueHasMutated: ->
+    #     array = @peek()
+    #     @length = array.length
+    #     @notifySubscribers(array)
+    #     void
+    
+    
+    /**
+     * Insert `value` at `index`, shifting following elements to accommodate.
+     * 
+     * @param {*} value Value to insert.
+     * @param {Number} idx Index at which to insert value.
+     * @returns {this} The observable.
+     */
+    insert : (value, idx) ->
+        array = @peek()
+        unless typeof idx is 'number' and -1 < idx < array.length
+            throw new Error "Index out of bounds"
+        @splice idx, 0, value
+        this
+    
+    
+    /**
+     * Atomically moves an element from one index to another. No mutuation
+     * occurs if indices are the same or if either index is out of
+     * bounds (0 > idx >= length).
+     * 
+     * @param {Number} fromIdx
+     * @param {Number} toIdx
+     * @returns {this} The observable.
+     */
+    move : (fromIdx, toIdx) ->
+        array = @peek()
+        len = array.length
+        
+        return this unless do
+            typeof fromIdx is 'number' and -1 < fromIdx < len and
+            typeof toIdx   is 'number' and -1 < toIdx   < len and
+            fromIdx is not toIdx
+        
+        val = array[fromIdx]
+        @valueWillMutate()
+        array.splice fromIdx, 1
+        array.splice toIdx, 0, val
+        @valueHasMutated()
+        
+        this
+    
+    
+
+ko.observableArray.fn import extensions
+exports import extensions
+

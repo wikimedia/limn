@@ -1,1 +1,3 @@
-.tab-pane(id=tab_id, class=tab_cls, data-subview="GraphDisplayView")
+section.dashboard-tab
+    ol(data-bind="foreach: { data:graphs, as:'graph' }")
+        li(data-bind='subview: graph')

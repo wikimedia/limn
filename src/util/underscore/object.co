@@ -1,0 +1,52 @@
+_ = require 'underscore'
+
+
+# Save for override
+_pick = _.pick
+
+_obj =
+    
+    /**
+     * Aliases properties. Takes a hash of `src` -> `dest` pairs of property names
+     * and copies the value found at `src` to the key `dest`. Destination properties
+     * will be split on whitespace (and may even be an array), and the value will be
+     * copied to each.
+     * 
+     * @param {Object} obj The target object.
+     * @param {Map<String, String|Array>} names Hash of `src-dest` property pairs.
+     * @returns {obj} The target object.
+     */
+    alias : (obj, names) ->
+        _.each do
+            names
+            (dests, src) ->
+                dests .= split(/\s+/g) unless _.isArray dests
+                _.each dests, (dest) ~> obj[dest] = obj[src]
+        obj
+    
+    
+    /**
+     * As `_.pick()`, but also accepts a function to filter the object:
+     * 
+     *      `fn.call(obj, value, key, obj) -> Boolean`
+     * 
+     * ...in addition to a list of Strings whitelisting keys acceptable in the
+     * resulting object.
+     * 
+     * @param {Object} obj Object to filter.
+     * @param {Function|String} fn Function to filter by; otherwise
+     *  normal `_.pick()` behavior.
+     * @param {Object} [cxt=obj] Context object for the filter function.
+     * @returns {Object} Resulting filtered object.
+     */
+    pick: (obj, fn, cxt=obj) ->
+        if typeof fn is 'function'
+            _.reduce_ {}, (acc, v, k) ->
+                acc[k] = v if fn.call cxt, v, k, obj
+                acc
+        else
+            _pick ...
+    
+
+
+_.mixin exports import _obj
