@@ -114,21 +114,40 @@ _cls =
     
     
     /**
+     * Determines the superclass for the given class/object, and `undefined`
+     * otherwise.
+     * 
+     * Note this typically will not return `Object` or `Function` due to
+     * the prototype's constructor being set by the subclass.
+     * 
+     * @param {Class|Object} obj Class constructor or object to reflect upon.
+     * @returns {Class} Superclass for the given class/object.
+     */
+    getSuperClass: function getSuperClass(obj)
+        return unless obj
+        if obj.__superclass__ or obj.superclass or obj.__super__?.constructor
+            return that unless that is obj
+        if typeof obj is not 'function'
+            return getSuperClass obj.constructor
+    
+    
+    /**
+     * @param {Class|Object} obj Class constructor or object to reflect upon.
      * @returns {Array<Class>} The list of all superclasses for this class
      *  or object. Typically does not include Object or Function due to
      *  the prototype's constructor being set by the subclass.
      */
     getSuperClasses : function getSuperClasses(Cls)
-        return [] unless Cls
-        
-        if Cls.__superclass__ or Cls.superclass or Cls.__super__?.constructor
-            superclass = that unless that is Cls
-        unless superclass
-            Cls = Cls.constructor if typeof Cls is not 'function'
-            if Cls.__superclass__ or Cls.superclass or Cls.__super__?.constructor
-                superclass = that unless that is Cls
-        unless superclass then []
-        else [superclass].concat getSuperClasses superclass
+        # return [] unless Cls
+        # 
+        # if Cls.__superclass__ or Cls.superclass or Cls.__super__?.constructor
+        #     superclass = that unless that is Cls
+        # unless superclass
+        #     Cls = Cls.constructor if typeof Cls is not 'function'
+        #     if Cls.__superclass__ or Cls.superclass or Cls.__super__?.constructor
+        #         superclass = that unless that is Cls
+        return [] unless superclass = _.getSuperClass Cls
+        [superclass].concat getSuperClasses superclass
     
     
     /**

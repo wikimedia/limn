@@ -5,7 +5,7 @@ hasOwn = {}.hasOwnProperty
 /**
  * Sentinel for missing values.
  */
-MISSING = void
+MISSING = undefined
 
 /**
  * Tombstone for deleted, non-passthrough keys.
@@ -60,7 +60,7 @@ class exports.Cascade
     
     
     /**
-     * @returns {Cascade} A copy of the data and lookup chain.
+     * @returns {Cascade} A shallow copy of the data and lookup chain.
      */
     clone: ->
         new Cascade do
@@ -246,14 +246,14 @@ class exports.Cascade
     /**
      * @public
      * @name set
-     * @param {Object} values Map of pairs to set. No value may be `undefined`.
+     * @param {Object} values Map of key-value pairs to set. No value may be `undefined`.
      * @returns {this}
      */
     set : (values) ->
         # Handle @set(k, val)
         if arguments.length > 1 and typeof values is 'string'
             [key, val] = arguments
-            throw new Error("Value and key cannot be undefined!") if not key or val is void
+            throw new Error('Cannot set() an undefined key or value!') if not key or val is void
             values = { "#key": val }
         
         # Set and ensure the creation of missing intermediate objects.
@@ -297,8 +297,17 @@ class exports.Cascade
     
     ### Collection Methods ###
     
-    extend : ->
-        for o of arguments then @set o
+    /**
+     * Updates the Cascade's data with all key-value pairs found in the supplied
+     * objects in first-in-last-out order. No pair's value may be `undefined`, but
+     * non-object arguments are skipped.
+     * 
+     * @param {Object} ...values Any number of objects containing key-value pairs.
+     * @returns {this}
+     */
+    update: ->
+        for o of arguments
+            @set o if _.isObject o
         this
     
     /**
@@ -363,7 +372,7 @@ class exports.Cascade
 # Alias methods to alternate names
 _.alias Cascade::,
     # src        : dest
-    setTombstone : 'unset'
-    toObject     : 'collapse'
-    forEach      : 'each'
+    unset        : 'setTombstone'
+    collapse     : 'toObject'
+    each         : 'forEach'
 
