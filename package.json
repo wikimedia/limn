@@ -56,7 +56,8 @@
     "vows": ">= 0.6.4"
   },
   "scripts": {
-    "test": "vows test/coco.js test/*"
+    "test": "phantomjs test/phantom.runner.js http://localhost:8081/test",
+    "start": "coke server"
   },
   "repository": {
     "type": "git",

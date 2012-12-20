@@ -1,0 +1,5 @@
+# default: npm install
+# default: npm test
+language: node_js
+node_js:
+    0.8
