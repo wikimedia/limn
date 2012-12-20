@@ -2,10 +2,4 @@ language: node_js
 node_js:
     0.8
 # default: npm install
-before_script:
-    - "git clone https://gerrit.wikimedia.org/r/p/analytics/reportcard/data.git ../reportcard-data"
-    - "export LIMN_REPORTCARD=../../../../reportcard-data"
-    - "coke link_reportcard_data"
-script:
-    - "export LIMN_PORT=8081"
-    - "npm start & sleep 3 && npm test && killall node"
+script: test/run_headless
