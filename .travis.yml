@@ -3,7 +3,7 @@ node_js:
     0.8
 # default: npm install
 # default: npm test
-before-scripts:
+before_script:
     - "export LIMN_PORT=8081"
     - "npm start"
     - sleep 3
