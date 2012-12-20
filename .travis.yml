@@ -1,5 +1,9 @@
-# default: npm install
-# default: npm test
 language: node_js
 node_js:
     0.8
+# default: npm install
+# default: npm test
+before-scripts:
+    - "export LIMN_PORT=8081"
+    - "npm start"
+    - sleep 3
