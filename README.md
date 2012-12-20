@@ -56,7 +56,7 @@ Limn is open-source software, freely available under the MIT License.
 
 [limn]: https://github.com/wikimedia/limn "Limn on GitHub"
 [limn_sample_graph]: http://reportcard.wmflabs.org/graphs/sample_graph/edit "Limn Sample Graph"
-[limn_screenshot]: https://github.com/wikimedia/limn/master/blob/raw/static/img/limn-screenshot.png "Limn Screenshot"
+[limn_screenshot]: https://raw.github.com/wikimedia/limn/master/static/img/limn-screenshot.png "Limn Screenshot"
 [limn_issues]: https://github.com/wikimedia/limn/issues
 [limn_wiki]: https://github.com/wikimedia/limn/wiki "Limn Wiki"
 [limn_getting_started]: https://github.com/wikimedia/limn/wiki/Getting-Started "Getting Started with Limn"
