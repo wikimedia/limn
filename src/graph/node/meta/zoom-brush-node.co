@@ -19,6 +19,7 @@ class exports.ZoomBrushNode extends GraphNode
         Trait.VIS_NODE
         Trait.SVG
         Trait.LEAF
+        Trait.FG_LAYER
     ]
     @registerType()
     
@@ -36,26 +37,24 @@ class exports.ZoomBrushNode extends GraphNode
             .x scales.xScale
             .y scales.yScale
             .on 'brushend', ~>
-                @previousXDomain = @root().xScale.domain()
-                @previousYDomain = @root().yScale.domain()
+                @originalXDomain ?= @root().xScale.domain()
+                @originalYDomain ?= @root().yScale.domain()
                 @zooming.call this
-        root.sel.select 'svg'
-            .on 'dblclick', ~>
-                @hideTrackingCircles()
-                @root().changeDomains @previousXDomain, @previousYDomain
-                @$el .toggle true
-                window.getSelection?().removeAllRanges()
-                document.selection?.empty()
         
         @sel.call @brush
-        @sel.selectAll 'rect'
-            .attr 'height', root.viewportHeight()
+        @sel.select 'rect.background'
+            .attr 'pointer-events', 'all'
+            .on 'dblclick', ~>
+                console.log 'hi'
+                @hideTrackingCircles()
+                @root().changeDomains @originalXDomain, @originalYDomain
+                window.getSelection?().removeAllRanges()
+                document.selection?.empty()
     
     
     zooming: ->
         extent = d3.event.target.extent()
         if @extentIsSignificant extent
-            @$el .toggle false
             @root().changeDomains [extent[0][0], extent[1][0]], [extent[0][1], extent[1][1]]
         @brush.clear()
         @sel.call @brush

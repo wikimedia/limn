@@ -51,9 +51,9 @@ devDependencies                 :
     'knockout'                  : 'https://github.com/dsc/node-knockout/archive/2.2.0.tar.gz'
     'browserify'                : '== 1.9.4'
     'uglify-js'                 : '>= 1.2.x'
-    'vows'                      : '>= 0.6.4'
 
-scripts                         : test:'vows test/coco.js test/*'
+scripts                         : test:'phantomjs test/phantom.runner.js http://localhost:8081/test'
+                                : start:'coke server'
 repository                      : type:'git', url:'git://github.com/wikimedia/limn.git'
 
 engine                          : node:'>=0.8.x'
