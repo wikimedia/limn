@@ -20,6 +20,8 @@ asyncTest 'fetch tabs and graphs', ->
         ok dashboard.tabs().length > 0, 'The tabs were loaded'
         ok dashboard.tabs()[0] instanceof DashboardTab, 'The tabs are typed correctly'
         
+        start()
+        /* TODO: rewrite this test since fetchGraphs no longer exists
         initialFetch = JSON.stringify dashboard
         dashboard.fetchGraphs().done ->
             start()
@@ -30,3 +32,4 @@ asyncTest 'fetch tabs and graphs', ->
             serialized = JSON.stringify dashboard
             strictEqual initialFetch, serialized, 'round trip serialization works'
 
+        */

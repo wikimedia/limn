@@ -1,0 +1,10 @@
+#!/bin/bash
+
+# clone the reportcard-data project (TODO: replace with dummy data), link it to the limn installation
+git clone https://gerrit.wikimedia.org/r/p/analytics/reportcard/data.git ../reportcard-data
+export LIMN_REPORTCARD=../../../../reportcard-data
+coke link_reportcard_data
+
+# starts the server, gives it a sec to fire up, runs that file I linked with phantomjs, then cleans up the server process
+export LIMN_PORT=8081
+npm start & sleep 3 && npm test && killall node
