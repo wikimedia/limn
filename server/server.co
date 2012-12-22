@@ -22,7 +22,7 @@ limn = app.limn = LimnMiddleware do
     dataDir : './var/data'
     proxy :
         enabled   : true
-        whitelist : /.*/
+        whitelist : '*' #/.*/ throws an error in minimatch - does not support regex as assumed
 
 app.use limn
 # app.use '/vis', limn

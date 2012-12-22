@@ -142,7 +142,7 @@ application = limn.application =
         opx = opts.proxy = { enabled:opx } if typeof opx is 'boolean'
         opx.enabled = true if opx.enabled is false and (opx.whitelist or opx.blacklist)
         if opx.enabled
-            opx.whitelist or= [ /.*/ ]
+            opx.whitelist or= [ '*' ] #/.*/ throws an error in minimatch - does not support regex as assumed
             opx.blacklist or= []
         @set 'limn options', opts
         
