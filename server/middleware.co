@@ -183,8 +183,9 @@ application = limn.application =
         @configure 'development', ->
             opts = {varDir, dataDir} = @set 'limn options'
             
-            # turn on pretty-printing of views
+            # turn on pretty-printing
             @set('view options').pretty = true
+            @set('json spaces', 4)
             
             # import dev-only deps here, so prod users don't need them
             browserify = require 'browserify'

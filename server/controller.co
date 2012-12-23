@@ -125,7 +125,9 @@ class Controller extends Resource
     # GET /#{@name}/:id
     show: (req, res, next) ->
         return next() unless req.format is 'json'
-        return res.send that if req[@id]
+        if obj = req[@id]
+            return res.send JSON.stringify(obj, null, 4) if req.query.pretty
+            return res.send obj
         throw new Error "Resource retrieval unimplemented for '#{@name}'!"
     
     # GET /#{@name}/:id/edit
