@@ -1,1 +1,6 @@
-knockout = exports.knockout = require './knockout'
+# ordered_map = require './ordered-map'
+# ordered_set = require './ordered-set'
+# 
+# exports import ordered_map import ordered_set
+exports.knockout   = require './knockout'
+exports.underscore = require './underscore'

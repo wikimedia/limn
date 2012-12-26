@@ -1,0 +1,4 @@
+cls = require './class'
+
+exports import cls
+

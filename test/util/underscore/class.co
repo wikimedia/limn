@@ -1,0 +1,29 @@
+_    = require 'underscore'
+
+limn = require 'limn'
+
+
+QUnit.module '[util.underscore] class', do
+    setup: ->
+    teardown: ->
+
+class Animal
+    classification: ->
+        kingdom: 'animalia'
+
+class Mammal extends Animal
+    classification: ->
+        class: 'mammalia'
+
+class Llama extends Mammal
+    classification: ->
+        genus: 'lama'
+
+
+
+test 'collapseAllSuper', ->
+    o = new Llama()
+    
+    deepEqual o.classification(), { genus:'lama' }, 'Non-collapsed invocation only contains instance properties.'
+    deepEqual _.collapseAllSuper(o, 'classification'), { kingdom:'animalia', class:'mammalia', genus:'lama' }, 'Properties collapsed correctly.'
+

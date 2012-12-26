@@ -137,7 +137,7 @@ _cls =
      *  or object. Typically does not include Object or Function due to
      *  the prototype's constructor being set by the subclass.
      */
-    getSuperClasses : function getSuperClasses(Cls)
+    getSuperClasses: function getSuperClasses(Cls)
         # return [] unless Cls
         # 
         # if Cls.__superclass__ or Cls.superclass or Cls.__super__?.constructor
@@ -153,17 +153,17 @@ _cls =
     /**
      * Looks up an attribute on the prototype of each class in the class
      * hierarchy. Values from Object or Function are not typically included --
-     * see the note at `getSuperClasses()`.
+     * see the note at `getSuperClass()`.
      * 
      * @param {Object} obj Object on which to reflect.
      * @param {String} prop Property to nab.
      * @returns {Array} List of the values, from closest parent to furthest.
      */
-    pluckSuper : (obj, prop) ->
+    pluckSuper: (obj, prop) ->
         return [] unless obj
         _ _.getSuperClasses(obj) .chain()
             .pluck 'prototype'
-            .pluck prop 
+            .pluck prop
             .value()
     
     
@@ -175,9 +175,35 @@ _cls =
      * @returns {Array} List of the values, starting with the object's own
      *  value, and then moving from closest parent to furthest.
      */
-    pluckSuperAndSelf : (obj, prop) ->
+    pluckSuperAndSelf: (obj, prop) ->
         return [] unless obj
         [ obj[prop] ].concat _.pluckSuper(obj, prop)
+    
+    
+    /**
+     * Invokes the method found at `methodName` on the given object and each
+     * of its superclasses. The resulting objects' properties are collapsed
+     * into a single object, such that the properties from the most-super class
+     * are overridden by each newer result. Any non-methods at `methodName`
+     * are skipped, and non-object return values are not collapsed into the
+     * resulting object.
+     * 
+     * @param {Object} obj Object on which to perform the method-collapse.
+     * @param {String} methodName Name of the method to invoke.
+     * @param {*} ...args Arguments to pass to the method.
+     * @returns {Object} Results collapsed into a single object.
+     */
+    collapseAllSuper: (obj, methodName, ...args) ->
+        return {} unless obj and methodName
+        _.reduceRight do
+            _.pluckSuperAndSelf obj, methodName
+            (acc, method) ->
+                if typeof method is 'function'
+                    res = method.apply obj, args
+                    _.merge acc, res if _.isObject res
+                acc
+            {}
+        
     
 
 
