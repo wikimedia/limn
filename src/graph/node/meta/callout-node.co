@@ -2,11 +2,37 @@ _  = require 'underscore'
 ko = require 'knockout'
 moment = require 'moment'
 
+{ GraphNodeData,
+} = require '../graph-node-data'
 { GraphNode,
 } = require '../graph-node'
 
 Trait = require '../graph-node-trait'
 
+
+
+
+/**
+ * @class
+ * @extends GraphNodeData
+ */
+class exports.CalloutNodeData extends GraphNodeData
+    @registerType 'callout'
+    
+    defaults: ->
+        metricRef : 0
+        target    : 'latest'
+        steps     : <[ 1y 1M ]>
+        options :
+            dateFormat   : 'MMM YYYY'
+            valueFormat  : ',.2s'
+            deltaPercent : true
+            colorDelta   : true
+    
+    attributeTypes: ->
+        {}
+    
+    -> super ...
 
 
 

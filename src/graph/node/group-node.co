@@ -1,10 +1,30 @@
 _  = require 'underscore'
 ko = require 'knockout'
 
+{ GraphNodeData,
+} = require './graph-node-data'
 { GraphNode,
 } = require './graph-node'
 
 Trait = require './graph-node-trait'
+
+
+
+/**
+ * @class
+ * @extends GraphNodeData
+ */
+class exports.GroupNodeData extends GraphNodeData
+    @registerType 'group'
+    
+    defaults: ->
+        {}
+    
+    attributeTypes: ->
+        {}
+    
+    -> super ...
+
 
 
 /**

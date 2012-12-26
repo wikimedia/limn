@@ -129,7 +129,7 @@ class Classroom extends Model
         name     : ''
         teacher  : null
         students : []
-    attributeTypes :
+    attributeTypes: ->
         teacher  : Person
         students : Person
     
@@ -142,7 +142,7 @@ class TypicalClassroom extends Model
         name     : ''
         teacher  : null
         students : [ {name:'Goody Two-Shoes'} ]
-    attributeTypes :
+    attributeTypes: ->
         teacher  : Person
         students : Person
     

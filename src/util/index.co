@@ -63,6 +63,9 @@ exports import iterator
 query       = exports.query       = require './query'
 exports import query
 
+type_cache  = exports.type_cache  = require './type-cache'
+exports import type_cache
+
 collections = exports.collections = require './collections'
 exports import collections
 

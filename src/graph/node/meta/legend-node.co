@@ -6,10 +6,33 @@ moment = require 'moment'
 } = require '../../../util'
 { Base,
 } = require '../../../base'
+{ GraphNodeData,
+} = require '../graph-node-data'
 { GraphNode,
 } = require '../graph-node'
 
 Trait = require '../graph-node-trait'
+
+
+
+/**
+ * @class
+ * @extends GraphNodeData
+ */
+class exports.LegendNodeData extends GraphNodeData
+    @registerType 'legend'
+    
+    defaults: ->
+        label   : null
+        options : 
+            dateFormat  : 'MMM YYYY'
+            valueFormat : ',.2s'
+    
+    attributeTypes: ->
+        {}
+    
+    -> super ...
+
 
 
 /**

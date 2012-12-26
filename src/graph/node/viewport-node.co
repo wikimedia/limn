@@ -3,10 +3,10 @@ d3 = require 'd3'
 ko = require 'knockout'
 op = require 'operator'
 
-{ GraphNodeData,
-} = require './graph-node-data'
 { GraphNode,
 } = require './graph-node'
+{ GroupNode,
+} = require './group-node'
 
 Trait = require './graph-node-trait'
 
@@ -22,37 +22,19 @@ tuplesEqual = (a, b) ->
     cmpNumeric(a[1], b[1]) is 0
 
 
-
-
-
-/**
- * @class
- * @extends GraphNodeData
- */
-class exports.CanvasNodeData extends GraphNodeData
-    @registerType 'canvas'
-    
-    defaults: ->
-        width  : 'auto'
-        height : 500
-    
-    attributeTypes: ->
-        {}
-    
-    -> super ...
-
-
 /**
  * @class
  * @extends GraphNode
  */
-class exports.CanvasNode extends GraphNode
-    nodeType : 'canvas'
-    traits   : [ Trait.VIEWPORT ]
+class exports.ViewportNode extends GraphNode
+    nodeType : 'viewport'
+    traits   : [
+        Trait.VIEWPORT
+        Trait.SVG
+    ]
     @registerType()
     
-    tagName : 'section'
-    template: 'canvas-node'
+    tagName : 'g'
     
     
     /* * * *  Viewport Sizing  * * * {{{ */
@@ -101,11 +83,6 @@ class exports.CanvasNode extends GraphNode
      * @type d3.time.scale
      */
     xScale : null
-    
-    /**
-     * The x output range distance which is "close enough" to an xStep
-     */
-    dx : 0
     
     /**
      * The scale that translates y domain values into y output range values
@@ -180,9 +157,11 @@ class exports.CanvasNode extends GraphNode
         
         metrics
     
+    
     uniqueMetricDataLinks: @computed ->
         links = @metrics().map (metric) -> metric.source()?.get 'url' #FIXME: this is hiding behind .url()
         _.uniq links, false
+    
     
     /**
      * Changes the x and y domains of the graph and refreshes the this.scales observable
@@ -205,17 +184,8 @@ class exports.CanvasNode extends GraphNode
         @scales.peek()
     
     
-    logDomains: ->
-        xd = @xScale.domain().map -> if it instanceof Date then it.getTime() else it
-        console.log 'xScale.domain:', xd, '--', 'yScale.domain:', @yScale.domain()
-    
-    
     
     # }}}
-    
-    
-    zooming: (translate, scale) ->
-        @trigger 'zoom-graph', translate, scale, this
     
     
     /**
@@ -257,34 +227,6 @@ class exports.CanvasNode extends GraphNode
         @metrics()
     
     
-    /**
-     * register a handler for an event name so that child nodes can see parent events
-     * @param {string} eventName
-     * @param {Object} context the context to call the function in
-     * @param {Function} fn the handling function
-     */
-    #FIXME: this doesn't work because of the changing / overwriting of the GraphNode tree.  Move to dependency tracking instead of events
-    handle: (eventName, context, fn) ->
-        @handlers ?= {}
-        unless @handlers[eventName]
-            @handlers[eventName] = []
-            @on eventName, ~>
-                for handler of @handlers[eventName]
-                    handler.fn.apply handler.context, arguments
-        
-        existing = false
-        for handler of @handlers[eventName]
-            if handler.context is context
-                handler.fn = fn
-                existing = true
-                break
-        
-        unless existing
-            @handlers[eventName].push {fn, context}
-    
-    
-    viewportHover: ko.observable {}
-    
     buildElement: (parentElement) ->
         @renderView parentElement
         @el el = $(parentElement).find('.canvas-node.graph-node').0
@@ -325,6 +267,39 @@ class exports.CanvasNode extends GraphNode
                 @$ 'section.meta.fg' .0
             else
                 @$ 'section.meta.bg' .0
+    
+    
+    /**
+     * register a handler for an event name so that child nodes can see parent events
+     * @param {string} eventName
+     * @param {Object} context the context to call the function in
+     * @param {Function} fn the handling function
+     */
+    #FIXME: this doesn't work because of the changing / overwriting of the GraphNode tree.  Move to dependency tracking instead of events
+    handle: (eventName, context, fn) ->
+        @handlers ?= {}
+        unless @handlers[eventName]
+            @handlers[eventName] = []
+            @on eventName, ~>
+                for handler of @handlers[eventName]
+                    handler.fn.apply handler.context, arguments
+        
+        existing = false
+        for handler of @handlers[eventName]
+            if handler.context is context
+                handler.fn = fn
+                existing = true
+                break
+        
+        unless existing
+            @handlers[eventName].push {fn, context}
+    
+    
+    viewportHover: ko.observable {}
+    
+    
+    zooming: (translate, scale) ->
+        @trigger 'zoom-graph', translate, scale, this
     
     
     

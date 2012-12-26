@@ -2,6 +2,8 @@ _  = require 'underscore'
 ko = require 'knockout'
 d3 = require 'd3'
 
+{ GraphNodeData,
+} = require '../graph-node-data'
 { GraphNode,
 } = require '../graph-node'
 
@@ -26,6 +28,37 @@ multiTimeFormatter = timeFormat [
     [ d3.time.format(":%S"),   -> it.getSeconds() ],
     [ d3.time.format(".%L"),   -> it.getMilliseconds() ]
 ]
+
+
+
+/**
+ * @class
+ * @extends GraphNodeData
+ */
+class exports.AxisNodeData extends GraphNodeData
+    @registerType 'axis'
+    
+    defaults: ->
+        dimension : null # x | y
+        orient    : null # top|bottom | left|right
+        options   : 
+            ticks      : 4
+            tickFormat : 'MMM YY'
+            
+            label      : null
+            labelSize  : 10
+            labelColor : '#666666'
+            
+            stroke :
+                width   : 2
+                color   : '#CACACA'
+    
+    attributeTypes: ->
+        {}
+    
+    -> super ...
+
+
 
 /**
  * @class

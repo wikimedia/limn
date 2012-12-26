@@ -25,7 +25,7 @@ class exports.DashboardView extends View
         isDestroyed : false
         tabs        : []
     
-    attributeTypes:
+    attributeTypes: ->
         tabs        : (tab) -> new DashboardTabView this, tab
     
     

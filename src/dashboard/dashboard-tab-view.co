@@ -21,7 +21,7 @@ class exports.DashboardTabView extends View
         isDestroyed : false
         graphs      : []
     
-    attributeTypes:
+    attributeTypes: ->
         graphs      : GraphView
     
     tabId: @computed ->

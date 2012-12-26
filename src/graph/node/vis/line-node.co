@@ -2,11 +2,32 @@ _  = require 'underscore'
 ko = require 'knockout'
 d3 = require 'd3'
 
-{ TimeseriesNode,
+{ TimeseriesNode, TimeseriesNodeData,
 } = require './timeseries-node'
 
 Trait = require '../graph-node-trait'
 ProjectColors = require '../../project-colors'
+
+
+
+/**
+ * @class
+ * @extends TimeseriesNodeData
+ */
+class exports.LineNodeData extends TimeseriesNodeData
+    @registerType 'line'
+    
+    defaults: ->
+        options :
+            label    : null
+            color    : null
+            stroke   : null
+            noLegend : false
+    
+    attributeTypes: ->
+        {}
+    
+    -> super ...
 
 
 

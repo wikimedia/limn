@@ -73,7 +73,7 @@ class exports.DataSource extends StoredModel
          */
         columns       : []
     
-    attributeTypes :
+    attributeTypes: ->
         columns : ColumnDef
     
     

@@ -2,10 +2,34 @@ _  = require 'underscore'
 ko = require 'knockout'
 d3 = require 'd3'
 
+{ GraphNodeData,
+} = require '../graph-node-data'
 { GraphNode,
 } = require '../graph-node'
 
 Trait = require '../graph-node-trait'
+
+
+
+/**
+ * @class
+ * @extends GraphNodeData
+ */
+class exports.GridNodeData extends GraphNodeData
+    @registerType 'grid'
+    
+    defaults: ->
+        dimension : null # x | y
+        options   : 
+            ticks : null
+            stroke :
+                width   : 1
+                color   : '#CACACA'
+    
+    attributeTypes: ->
+        {}
+    
+    -> super ...
 
 
 

@@ -1,0 +1,53 @@
+_  = require 'underscore'
+ko = require 'knockout'
+d3 = require 'd3'
+
+{ GroupNode, GroupNodeData,
+} = require '../group-node'
+{ GeoMapMetric,
+} = require '../../../data/metric'
+
+Trait = require '../graph-node-trait'
+ProjectColors = require '../../project-colors'
+
+
+/**
+ * @class
+ * @extends GroupNodeData
+ */
+class exports.GeoMapNodeData extends GroupNodeData
+    @registerType 'geo-map'
+    
+    defaults: ->
+        options:
+            projection: 'mercator'
+    
+    attributeTypes: ->
+        metric: GeoMapMetric
+    
+    -> super ...
+
+
+
+/**
+ * @class
+ * @extends GroupNode
+ */
+class exports.GeoMapNode extends GroupNode
+    nodeType : 'geo-map'
+    traits   : [
+        Trait.VIS_NODE
+        Trait.REQUIRES_METRIC
+        Trait.METRIC_GEO_MAP
+        Trait.SVG
+    ]
+    @registerType()
+    
+    -> super ...
+    
+    
+    render: ->
+        
+    
+    
+    

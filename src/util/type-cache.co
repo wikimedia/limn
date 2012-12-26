@@ -1,4 +1,9 @@
 _  = require 'underscore'
+ko = require 'knockout'
+{
+    unwrapObservable : unwrap
+    peekObservable   : peek
+} = ko.utils
 
 
 
@@ -37,7 +42,7 @@ class exports.TypeCache
      */
     add: (id, Subclass) ->
         # console.log "#this.registerType(#Subclass)"
-        [Subclass, id] = [id, null] unless typeof id is 'string'
+        [Subclass, id] = [id, null] if not Subclass and typeof id is 'function'
         unless id or ( _.has(Subclass?::, @typeKey) and id = Subclass::[@typeKey] )
             throw new Error "Sub-types must declare a new, unique #{@typeKey} on the prototype! (got #{id or Subclass?::?[@typeKey]})"
         if @cache[id] and @cache[id] is not Subclass
@@ -59,8 +64,9 @@ class exports.TypeCache
     /**
      * Look up type by `id`.
      */
-    lookup: (id) ->
-        id = id[@typeKey] unless typeof id is 'string'
+    lookup: (obj) ->
+        id = obj
+        id = _.get obj, @typeKey unless typeof id is 'string'
         id = peek id
         unless Type = @cache[id]
             throw new Error "No type registered for #{@typeKey}='#id'!"

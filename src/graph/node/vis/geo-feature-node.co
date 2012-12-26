@@ -1,28 +1,32 @@
 _  = require 'underscore'
 ko = require 'knockout'
+d3 = require 'd3'
 
 { GraphNodeData,
 } = require '../graph-node-data'
 { GraphNode,
 } = require '../graph-node'
-{ TimeseriesMetric,
+{ GeoFeatureMetric,
 } = require '../../../data/metric'
 
 Trait = require '../graph-node-trait'
+ProjectColors = require '../../project-colors'
+
 
 
 /**
  * @class
  * @extends GraphNodeData
  */
-class exports.TimeseriesNodeData extends GraphNodeData
-    @registerType 'timeseries'
+class exports.GeoFeatureNodeData extends GraphNodeData
+    @registerType 'geo-feature'
     
     defaults: ->
-        metric : null
+        options:
+            valueFormat : ',.2s'
     
     attributeTypes: ->
-        metric : TimeseriesMetric
+        metric: GeoFeatureMetric
     
     -> super ...
 
@@ -32,25 +36,18 @@ class exports.TimeseriesNodeData extends GraphNodeData
  * @class
  * @extends GraphNode
  */
-class exports.TimeseriesNode extends GraphNode
-    nodeType : 'timeseries'
+class exports.GeoFeatureNode extends GraphNode
+    nodeType : 'geo-feature'
     traits   : [
         Trait.VIS_NODE
         Trait.REQUIRES_METRIC
-        Trait.METRIC_TIMESERIES
+        Trait.METRIC_GEO_FEATURE
         Trait.SVG
         Trait.LEAF
     ]
     @registerType()
     
+    
     -> super ...
-    
-    
-    /**
-     * Materialized timeseries data.
-     * @type ko.computed<Array<[Date, Value]>>
-     */
-    timeseriesData: @computedRequires 'model.metric', (metric) ->
-        metric.data()
     
     

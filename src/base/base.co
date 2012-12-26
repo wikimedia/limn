@@ -46,14 +46,6 @@ class exports.Base extends EventEmitter
     attributes : null
     
     /**
-     * Maps attribute keys to sub-objects.
-     * 
-     * @protected
-     * @type Map<Key, Class>
-     */
-    attributeTypes : null
-    
-    /**
      * Whether we've been signaled to start watchers.
      * @type Boolean
      */
@@ -67,11 +59,10 @@ class exports.Base extends EventEmitter
     (attributes={}) ->
         @__id__            = generateId()
         @attributes        = {}
-        @attributeTypes  or= {}
         
         # Merge class defaults and canonicalize.
         values = @_startingAttributes attributes
-        attrTypes = _.result this, 'attributeTypes'
+        attrTypes = _.collapseAllSuper this, 'attributeTypes'
         
         # Build and type attribute observers, but don't assign initial values
         # until we finish setting up the observables and subscriptions.
@@ -107,9 +98,21 @@ class exports.Base extends EventEmitter
      * of server-side global uniqueness!) -- so we can create the observables
      * fields.
      * 
-     * @returns {Object} Hash of default attribute values.
+     * @returns {Object} Map of default attribute values.
      */
     defaults: ->
+        {}
+    
+    
+    /**
+     * Invoked to acquire map of attribute keys to their types. Plain objects
+     * are allowed for typing nested attributes. Coercion of new values will
+     * be performed automatically by the attribute observables via
+     * `ko.coerciveObservable()`.
+     * 
+     * @returns Map<Key, Class> Map of attribute keys to types.
+     */
+    attributeTypes : ->
         {}
     
     
@@ -331,7 +334,8 @@ class exports.Base extends EventEmitter
      * @param {Object} [attributes={}] Hash of nascent attributes.
      */
     _startingAttributes: (attributes={}) ->
-        @canonicalize _.merge @defaults(), attributes
+        defs = _.collapseAllSuper this, 'defaults'
+        @canonicalize _.merge defs, attributes
     
     
     /**

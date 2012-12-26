@@ -3,34 +3,40 @@ ko = require 'knockout'
 
 { Model,
 } = require '../../base'
-{ compareIds, OrderedSet,
+{ compareIds, OrderedSet, TypeCache,
 } = require '../../util'
 { Metric,
 } = require '../../data/metric'
-{ GraphNodeDataDefaults,
-} = require './graph-node-data-defaults'
 
 
 
-class exports.GraphNodeData extends Model implements GraphNodeDataDefaults
-    
+/**
+ * Map of known GraphNodeData sub-types, keyed by type-name.
+ * @type TypeCache<GraphNodeData>
+ */
+NODE_DATA_TYPES = exports.NODE_DATA_TYPES = new TypeCache 'nodeType'
+
+
+/**
+ * @class Model for GraphNodes.
+ * @extends Model
+ */
+class exports.GraphNodeData extends Model
+    nodeType : 'node'
     
     defaults: ->
-        nodeType = @_nodeType
-        {
-            nodeType
-            label          : null
-            disabled       : false
-            metric         : null
-            options        : {}
-            children       : []
-        } import @collapseDefaults nodeType
+        nodeType : @nodeType
+        disabled : false
+        label    : null
+        metric   : null
+        options  : {}
+        children : []
     
-    attributeTypes: (nodeType) ->
-        {
-            metric   : Metric
-            children : GraphNodeData
-        } import @collapseAttributeTypes @_nodeType
+    attributeTypes: ->
+        metric   : Metric
+        children : GraphNodeData.create
+        # options  :
+        #     stroke : Stroke
     
     
     /**
@@ -79,7 +85,6 @@ class exports.GraphNodeData extends Model implements GraphNodeDataDefaults
      * @constructor
      */
     (attributes={}) ->
-        @_nodeType = attributes.nodeType
         super()
         
         # Decorate observers that need history tracking for state cleanup
@@ -224,10 +229,57 @@ class exports.GraphNodeData extends Model implements GraphNodeDataDefaults
         id        = @__id__
         Class     = @constructor
         className = Class.displayName or Class.name
-        nodeType  = @peek 'nodeType'
         nChildren = @children.peek().length
-        "#className(id=#id, nodeType=#nodeType, \#children=#nChildren)"
+        "#className(id=#id, \#children=#nChildren)"
     
+    
+    
+    /* * * *  Class Methods  * * * {{{ */
+    
+    
+    /**
+     * @static
+     * @param {Object} attributes Starting attribute values, requiring
+     *  a `nodeType` to be present.
+     * @returns {? extends GraphNodeData} A new instance of the appropriate
+     *  GraphNodeData type.
+     */
+    @create = (attributes) ->
+        return null unless attributes
+        unless nodeType = attributes?.nodeType
+            throw new Error "Cannot create GraphNodeData without a nodeType!"
+        GraphNodeDataType = GraphNodeData.lookupType nodeType
+        new GraphNodeDataType attributes
+    
+    
+    /**
+     * Register a new node type. Subclasses should only call this
+     * method *after* setting their `nodeType`:
+     * 
+     *  class AnotherGraphNode extends GraphNode
+     *      nodeType : 'another'
+     *      @registerType()
+     *      
+     *      -> ...
+     * 
+     * @static
+     * @see TypeCache#add
+     */
+    @registerType = (nodeType, Subclass=this) ->
+        # console.log "GraphNode.registerType(#Subclass)"
+        NODE_DATA_TYPES.add nodeType, Subclass
+    
+    
+    /**
+     * Look up a `GraphNode` by `nodeType`.
+     * @static
+     * @see TypeCache#lookup
+     */
+    @lookupType = (nodeType) ->
+        NODE_DATA_TYPES.lookup nodeType
+    
+    
+    # }}}
     
 
 

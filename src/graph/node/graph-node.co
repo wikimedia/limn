@@ -8,24 +8,17 @@ ko = require 'knockout'
 
 { Base,
 } = require '../../base/base'
-{ compareIds, OrderedSet, formatters,
+{ compareIds, OrderedSet, formatters, TypeCache,
 } = require '../../util'
 
 Trait = require './graph-node-trait'
 
 
 /**
- * Name of the property for a node subclass's type-name.
- * @constant
- * @type String
- */
-NODE_TYPENAME_KEY = exports.NODE_TYPENAME_KEY = 'nodeType'
-
-/**
  * Map of known GraphNode types, keyed by type-name.
- * @type Map<String, Class<GraphNode>>
+ * @type TypeCache<GraphNode>
  */
-NODE_TYPES = exports.NODE_TYPES = {}
+NODE_TYPES = exports.NODE_TYPES = new TypeCache 'nodeType'
 
 
 /**
@@ -48,8 +41,7 @@ class exports.GraphNode extends Base implements formatters
      * to provide the type for rendering:
      * 
      *  class AnotherGraphNode extends GraphNode
-     *      nodeType : 'another'
-     *      @registerType()
+     *      @registerType('another')
      *      -> ...
      * 
      * @type String
@@ -122,7 +114,7 @@ class exports.GraphNode extends Base implements formatters
         isDestroyed : false
     
     
-    attributeTypes :
+    attributeTypes: ->
         parent   : (nodeData) -> @graph.lookupNode nodeData
         children : (nodeData) -> @graph.lookupNode nodeData
     
@@ -579,6 +571,7 @@ class exports.GraphNode extends Base implements formatters
         "#className(id=#id, model=#model, \#children=#nChildren)"
     
     
+    
     /* * * *  Class Methods  * * * {{{ */
     
     
@@ -590,48 +583,13 @@ class exports.GraphNode extends Base implements formatters
      * from the parent node.
      * 
      * @static
-     * @param {GraphNode} parent
+     * @param {GraphView} graph
      * @param {GraphNodeData} model
-     * @param {GraphView} [graph=parent.graph]
      * @returns {? extends GraphNode} A new GraphNode instance.
      */
-    @create = (model, parent, graph) ->
+    @create = (graph, model) ->
         GraphNodeType = this
-        new GraphNodeType model, parent, graph
-    
-    
-    /**
-     * Register a new chart type. Subclasses should only call this
-     * method *after* setting their `nodeType`:
-     * 
-     *  class AnotherGraphNode extends GraphNode
-     *      nodeType : 'another'
-     *      @registerType()
-     *      
-     *      -> ...
-     * 
-     * @static
-     * @protected
-     */
-    @registerType = (Subclass=this) ->
-        # console.log "GraphNode.registerType(#Subclass)"
-        unless Subclass?::?.hasOwnProperty(NODE_TYPENAME_KEY) and nodeType = Subclass::[NODE_TYPENAME_KEY]
-            throw new Error "GraphNode sub-types must declare a new, unique nodeType on the prototype! (got #{Subclass?::?[NODE_TYPENAME_KEY]})"
-        if NODE_TYPES[nodeType]
-            throw new Error "Duplicate GraphNode nodeType! (got #nodeType)"
-        NODE_TYPES[nodeType] = Subclass
-    
-    
-    /**
-     * Look up a `GraphNode` by `nodeType`.
-     * @static
-     */
-    @lookupType = (nodeType) ->
-        nodeType = nodeType[NODE_TYPENAME_KEY]  unless typeof nodeType is 'string'
-        nodeType = nodeType.peek()              if ko.isObservable nodeType
-        unless GraphNodeType = NODE_TYPES[nodeType]
-            throw new Error "Unknown GraphNode type '#nodeType'!"
-        GraphNodeType
+        new GraphNodeType graph, model
     
     
     /**
@@ -649,6 +607,33 @@ class exports.GraphNode extends Base implements formatters
         return model if model instanceof GraphNode
         GraphNodeType = GraphNode.lookupType model
         new GraphNodeType graph, model
+    
+    
+    /**
+     * Register a new node type. Subclasses should only call this
+     * method *after* setting their `nodeType`:
+     * 
+     *  class AnotherGraphNode extends GraphNode
+     *      nodeType : 'another'
+     *      @registerType()
+     *      
+     *      -> ...
+     * 
+     * @static
+     * @see TypeCache#add
+     */
+    @registerType = (nodeType, Subclass=this) ->
+        # console.log "GraphNode.registerType(#Subclass)"
+        NODE_TYPES.add nodeType, Subclass
+    
+    
+    /**
+     * Look up a `GraphNode` by `nodeType`.
+     * @static
+     * @see TypeCache#lookup
+     */
+    @lookupType = (nodeType) ->
+        NODE_TYPES.lookup nodeType
     
     
     # }}}

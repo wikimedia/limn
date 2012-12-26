@@ -29,8 +29,8 @@ class exports.Graph extends StoredModel
             width     : 750
             height    : 500
     
-    attributeTypes :
-        root : GraphNodeData
+    attributeTypes: ->
+        root : GraphNodeData.create
     
     
     /**

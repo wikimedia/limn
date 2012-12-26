@@ -1,5 +1,4 @@
 _   = require 'underscore'
-Seq = require 'seq'
 
 { EventEmitter, ReadyEmitter
 } = require 'emitters'

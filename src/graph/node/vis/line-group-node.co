@@ -1,10 +1,35 @@
 _  = require 'underscore'
 ko = require 'knockout'
 
-{ GroupNode,
+{ GroupNode, GroupNodeData,
 } = require '../group-node'
 
 Trait = require '../graph-node-trait'
+
+
+/**
+ * @class
+ * @extends GraphNodeData
+ */
+class exports.LineGroupNodeData extends GroupNodeData
+    @registerType 'line-group'
+    
+    defaults: ->
+        options :
+            palettes    : <[ wmf_projects spectral ]>
+            scale       : 'log' # log | linear
+            dateFormat  : 'MMM YYYY'
+            valueFormat : ',.2s'
+            stroke :
+                width   : 5
+                pattern : 'solid'
+                opacity : 1
+    
+    attributeTypes: ->
+        {}
+    
+    -> super ...
+
 
 
 /**

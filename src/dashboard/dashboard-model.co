@@ -27,7 +27,7 @@ class exports.Dashboard extends StoredModel
         subhead     : ''
         tabs        : []
     
-    attributeTypes:
+    attributeTypes: ->
         tabs        : DashboardTab
     
     

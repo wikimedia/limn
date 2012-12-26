@@ -2,10 +2,31 @@ _  = require 'underscore'
 ko = require 'knockout'
 d3 = require 'd3'
 
+{ GraphNodeData,
+} = require '../graph-node-data'
 { GraphNode,
 } = require '../graph-node'
 
 Trait = require '../graph-node-trait'
+
+
+
+/**
+ * @class
+ * @extends GraphNodeData
+ */
+class exports.ZoomPanNodeData extends GraphNodeData
+    @registerType 'zoom-pan'
+    
+    defaults: ->
+        options :
+            min : 1
+            max : 10
+    
+    attributeTypes: ->
+        {}
+    
+    -> super ...
 
 
 

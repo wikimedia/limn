@@ -2,10 +2,31 @@ _  = require 'underscore'
 ko = require 'knockout'
 d3 = require 'd3'
 
+{ GraphNodeData,
+} = require '../graph-node-data'
 { GraphNode,
 } = require '../graph-node'
 
 Trait = require '../graph-node-trait'
+
+
+
+/**
+ * @class
+ * @extends GraphNodeData
+ */
+class exports.ZoomBrushNodeData extends GraphNodeData
+    @registerType 'zoom-brush'
+    
+    defaults: ->
+        options :
+            allowX : true
+            allowY : true
+    
+    attributeTypes: ->
+        {}
+    
+    -> super ...
 
 
 
@@ -45,8 +66,7 @@ class exports.ZoomBrushNode extends GraphNode
         @sel.select 'rect.background'
             .attr 'pointer-events', 'all'
             .on 'dblclick', ~>
-                console.log 'hi'
-                @hideTrackingCircles()
+                @hideTrackingCircles() # TODO: LineNode should listen for zoom event
                 @root().changeDomains @originalXDomain, @originalYDomain
                 window.getSelection?().removeAllRanges()
                 document.selection?.empty()
@@ -68,3 +88,4 @@ class exports.ZoomBrushNode extends GraphNode
     
     extentIsSignificant: (extent) ->
         moment(extent[1][0]).diff(moment(extent[0][0]), 'months') > 1
+    
