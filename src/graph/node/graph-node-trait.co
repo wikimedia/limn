@@ -68,6 +68,20 @@ exports import do
     
     
     /**
+     * Metric for associated GraphNodeData is geographic map data if defined.
+     * @constant
+     */
+    METRIC_GEO_MAP : 'metric-geo-map'
+    
+    
+    /**
+     * Metric for associated GraphNodeData is geographic content data if defined.
+     * @constant
+     */
+    METRIC_GEO_FEATURE : 'metric-geo-feature'
+    
+    
+    /**
      * Node cannot have children.
      * @constant
      */

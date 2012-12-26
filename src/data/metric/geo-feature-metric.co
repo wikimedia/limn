@@ -1,0 +1,23 @@
+_  = require 'underscore'
+ko = require 'knockout'
+
+{ DataSource,
+} = require '../datasource'
+{ Metric,
+} = require './metric'
+
+
+
+/**
+ * @class 
+ */
+class exports.GeoFeatureMetric extends Metric
+    -> super ...
+    
+    
+    defaults : ->
+        source_id  : null       # String
+        source_col : null       # String|Number
+        type       : 'int'      # String
+    
+    

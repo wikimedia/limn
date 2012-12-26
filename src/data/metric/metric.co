@@ -1,0 +1,65 @@
+{ Model,
+} = require '../../base'
+{ ParsingMixin,
+} = require '../../util'
+{ DataSource,
+} = require '../datasource'
+
+
+class exports.Metric extends Model
+    ParsingMixin.mix this
+    -> super ...
+    
+    
+    defaults : ->
+        source_id  : null # String
+        source_col : null       # String|Number
+        type       : 'int'      # String
+    
+    
+    /**
+     * Data source of the Metric.
+     * @type ko.computed<DataSource>
+     * @depends source_id
+     */
+    source : @asyncComputed ->
+        DataSource.lookup id if id = @get 'source_id'
+    
+    
+    /**
+     * The reified dataset (as (date, value) pairs) associated with this Metric.
+     * @type ko.computed<[Date, Value]>
+     * @depends source, query
+     */
+    data : @computed ->
+        source_col = @get 'source_col'
+        return unless source_col?
+        # FIXME
+        return unless query = @query()
+        return unless csv   = @source()?.data()
+        query
+            .rows true
+            .columns 0, source_col
+            .apply csv.getData()
+    
+    
+    /**
+     * The reified dataset associated with this Metric.
+     * @type ko.computed<ColumnDef>
+     * @depends source, source_col
+     */
+    columnDef : @computed ->
+        source_col = @get 'source_col'
+        return unless source_col?
+        @source()?.columns()?[source_col]
+    
+    
+    /**
+     * The reified dataset associated with this Metric.
+     * @type ko.computed<String>
+     * @depends columnDefinition
+     */
+    defaultLabel : @computed ->
+        @columnDef()?.get 'label'
+    
+    

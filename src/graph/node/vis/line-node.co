@@ -30,6 +30,7 @@ class exports.LineNode extends TimeseriesNode
         super ...
         @trackHover()
     
+    
     trackHover: @computed ->
         return unless viewportHover = @root().viewportHover()
         return unless @model().metric()?.data()?.length

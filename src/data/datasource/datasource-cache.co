@@ -1,0 +1,33 @@
+_  = require 'underscore'
+op = require 'operator'
+
+{ ReadyEmitter,
+} = require 'emitters'
+
+{ ModelCache,
+} = require '../../base'
+{ DataSource,
+} = require './datasource'
+
+
+
+ReadyEmitter.decorate DataSource
+
+ALL_SOURCES = exports.ALL_SOURCES = {}
+DataSourceCache = exports.DataSourceCache = new ModelCache DataSource, {-ready, cache:ALL_SOURCES}
+
+# Fetch all DataSources
+DataSource.fetchAll = exports.fetchAll = ->
+    limn = require '../../index'
+    
+    allDataURL = limn.mount('datasources/all')
+    $.getJSON allDataURL, (models) ->
+        _.each models, (data) ->
+            DataSourceCache.add new DataSource data
+        
+        # Trigger event when the DataSource TOC is ready
+        DataSourceCache.ready true
+        DataSource.ready true
+
+DataSource.getAllSources = exports.getAllSources = ->
+    _.map ALL_SOURCES, op.I

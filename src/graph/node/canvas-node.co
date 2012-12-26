@@ -119,7 +119,9 @@ class exports.CanvasNode extends GraphNode
      */
     metrics : @computed ->
         metrics = @walk [], (metrics, node) ->
-            if node.hasTrait(Trait.REQUIRES_METRIC) and metric = node.model()?.metric()
+            if      node.hasTrait(Trait.REQUIRES_METRIC) and
+                    node.hasTrait(Trait.METRIC_TIMESERIES) and
+                    metric = node.model()?.metric()
                 metrics.push metric
             metrics
         

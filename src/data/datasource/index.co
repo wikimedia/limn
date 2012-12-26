@@ -1,0 +1,5 @@
+datasource       = require './datasource'
+datasource_cache = require './datasource-cache'
+
+exports import datasource import datasource_cache
+

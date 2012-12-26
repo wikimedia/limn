@@ -1,6 +1,7 @@
-datasource_model        = require './datasource-model'
-graph_json_converter    = require './graph-json-converter'
-metric_model            = require './metric-model'
+graph_json_converter = require './graph-json-converter'
 
-exports import datasource_model import graph_json_converter import metric_model
+exports import graph_json_converter
 
+datasource = exports.datasource = require './datasource'
+metric     = exports.metric     = require './metric'
+exports import datasource import metric 

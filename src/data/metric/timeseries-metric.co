@@ -1,19 +1,16 @@
 _  = require 'underscore'
 ko = require 'knockout'
 
-{ Model, StoredModel, ModelCache,
-} = require '../base'
 { Query, ParsingMixin,
-} = require '../util'
+} = require '../../util'
 { DataSource,
-} = require './datasource-model'
+} = require '../datasource'
+{ Metric,
+} = require './metric'
 
 
-class exports.Metric extends Model
-    ParsingMixin.mix this
-    
-    
-    (attributes) -> super ...
+class exports.TimeseriesMetric extends Metric
+    -> super ...
     
     
     defaults : ->
@@ -24,29 +21,6 @@ class exports.Metric extends Model
             start  : null       # String -> Date
             end    : null       # String -> Date
             step   : null       # String -> moment.Duration
-    
-    
-    /**
-     * Data source of the Metric.
-     * @type ko.computed<DataSource>
-     * @depends source_id
-     */
-    source : @asyncComputed ->
-        DataSource.lookup id if id = @get 'source_id'
-    
-    
-    /**
-     * Query object for the parameters of this Metric.
-     * @type ko.computed<Query>
-     * @depends source_col, timespan
-     */
-    query : @computed ->
-        source_col = @get 'source_col'
-        timespan   = @get 'timespan'
-        return unless source_col? and timespan
-        Query()
-            .step       timespan.step()
-            .timespan   timespan.start(), timespan.end()
     
     
     /**
@@ -63,6 +37,20 @@ class exports.Metric extends Model
             .rows true
             .columns 0, source_col
             .apply csv.getData()
+    
+    
+    /**
+     * Query object for the parameters of this Metric.
+     * @type ko.computed<Query>
+     * @depends source_col, timespan
+     */
+    query : @computed ->
+        source_col = @get 'source_col'
+        timespan   = @get 'timespan'
+        return unless source_col? and timespan
+        Query()
+            .step       timespan.step()
+            .timespan   timespan.start(), timespan.end()
     
     
     /**
@@ -96,26 +84,6 @@ class exports.Metric extends Model
     
     
     /**
-     * The reified dataset associated with this Metric.
-     * @type ko.computed<ColumnDef>
-     * @depends source, source_col
-     */
-    columnDef : @computed ->
-        source_col = @get 'source_col'
-        return unless source_col?
-        @source()?.columns()?[source_col]
-    
-    
-    /**
-     * The reified dataset associated with this Metric.
-     * @type ko.computed<String>
-     * @depends columnDefinition
-     */
-    defaultLabel : @computed ->
-        @columnDef()?.get 'label'
-    
-    
-    /**
      * Find the entry with a date closest to the date specified
      * @param {Date} closestTo
      * @returns {numeric} the closest entry
@@ -129,3 +97,6 @@ class exports.Metric extends Model
                 closestDateDifference = dateDifference
                 closest = {date, value}
         closest
+    
+    
+
