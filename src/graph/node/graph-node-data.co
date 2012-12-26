@@ -6,24 +6,31 @@ ko = require 'knockout'
 { compareIds, OrderedSet,
 } = require '../../util'
 { Metric,
-} = require '../../data/metric-model'
+} = require '../../data/metric'
+{ GraphNodeDataDefaults,
+} = require './graph-node-data-defaults'
 
 
 
-class exports.GraphNodeData extends Model
+class exports.GraphNodeData extends Model implements GraphNodeDataDefaults
     
     
     defaults: ->
-        nodeType       : 'group'
-        label          : null
-        disabled       : false
-        metric         : null
-        options        : {}
-        children       : []
+        nodeType = @_nodeType
+        {
+            nodeType
+            label          : null
+            disabled       : false
+            metric         : null
+            options        : {}
+            children       : []
+        } import @collapseDefaults nodeType
     
-    attributeTypes :
-        metric   : Metric
-        children : GraphNodeData
+    attributeTypes: (nodeType) ->
+        {
+            metric   : Metric
+            children : GraphNodeData
+        } import @collapseAttributeTypes @_nodeType
     
     
     /**
@@ -62,7 +69,6 @@ class exports.GraphNodeData extends Model
             child.parent(null) if child.parent.peek() is this and not _.contains newChildren, child
         
         # Set the parent of objects that are children
-        # FIXME causes infinite loop:
         _.invoke newChildren, 'parent', this
         
         newChildren
@@ -73,6 +79,7 @@ class exports.GraphNodeData extends Model
      * @constructor
      */
     (attributes={}) ->
+        @_nodeType = attributes.nodeType
         super()
         
         # Decorate observers that need history tracking for state cleanup
@@ -84,6 +91,8 @@ class exports.GraphNodeData extends Model
         # Caller still needs to call `.watching()` once we return so we can begin
         # observing updates without causing a loop.
         @set attributes
+    
+    
     
     
     /**

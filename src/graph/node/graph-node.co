@@ -54,7 +54,7 @@ class exports.GraphNode extends Base implements formatters
      * 
      * @type String
      */
-    nodeType : 'graph'
+    nodeType : 'node'
     
     
     /**
