@@ -1,0 +1,111 @@
+_  = require 'underscore'
+
+
+
+/**
+ * @class Tracks classes by some identifier, useful for mapping known subtypes.
+ */
+class exports.TypeCache
+    
+    /**
+     * Map holding the cached values.
+     * @private
+     * @type Map<id, Model>
+     */
+    cache: null
+    
+    
+    
+    /**
+     * @constructor
+     * @param {String} [typeKey='type'] 
+     * @param {Object} [cache={}] 
+     */
+    (@typeKey='type', @cache={}) ->
+    
+    
+    /**
+     * Register a new type. On subclasses of a root type, call this
+     * method *after* setting their `typeKey`:
+     * 
+     *  cache = new TypeCache 'nodeType'
+     *  class AnotherGraphNode extends GraphNode
+     *      nodeType : 'another'
+     *      cache.add this
+     *      
+     *      -> ...
+     */
+    add: (id, Subclass) ->
+        # console.log "#this.registerType(#Subclass)"
+        [Subclass, id] = [id, null] unless typeof id is 'string'
+        unless id or ( _.has(Subclass?::, @typeKey) and id = Subclass::[@typeKey] )
+            throw new Error "Sub-types must declare a new, unique #{@typeKey} on the prototype! (got #{id or Subclass?::?[@typeKey]})"
+        if @cache[id] and @cache[id] is not Subclass
+            throw new Error "Duplicate #{@typeKey}! (got #id)"
+        Subclass::[@typeKey] ?= id
+        @cache[id] = Subclass
+    
+    
+    /**
+     * Synchronously check if a model is in the cache, returning it if so.
+     * 
+     * @param {String} id The type ID to get.
+     * @returns {Model}
+     */
+    get: (id) ->
+        @cache[id]
+    
+    
+    /**
+     * Look up type by `id`.
+     */
+    lookup: (id) ->
+        id = id[@typeKey] unless typeof id is 'string'
+        id = peek id
+        unless Type = @cache[id]
+            throw new Error "No type registered for #{@typeKey}='#id'!"
+        Type
+    
+    
+    /**
+     * Invalidate a model, removing it from the cache.
+     * 
+     * @param {String} id ID of the model to invalidate.
+     * @returns {this}
+     */
+    invalidate: (id) ->
+        return this unless id?
+        delete @cache[id]
+        this
+    
+    
+    /**
+     * Invalidates all cache entries.
+     * @returns {this}
+     */
+    purge: ->
+        _.each _.keys(@cache), @invalidate, this
+        this
+    
+    
+    /**
+     * Decorate an object with the cache methods:
+     *  - get
+     *  - lookup
+     *  - invalidate
+     *  - purge
+     * 
+     * This is automatically called on `ModelType` if supplied.
+     * 
+     * @param {Object} obj Object to decorate.
+     * @returns {obj} The supplied object.
+     */
+    decorate: (obj) ->
+        obj.__cache__ = this
+        # Bind the Cache methods to the class
+        for m of <[ get lookup invalidate purge ]>
+            obj[m] = @[m].bind this
+        obj
+    
+    
+
