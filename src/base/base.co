@@ -71,10 +71,11 @@ class exports.Base extends EventEmitter
         
         # Merge class defaults and canonicalize.
         values = @_startingAttributes attributes
+        attrTypes = _.result this, 'attributeTypes'
         
         # Build and type attribute observers, but don't assign initial values
         # until we finish setting up the observables and subscriptions.
-        @attributes = @_generateAttributes values, @attributeTypes
+        @attributes = @_generateAttributes values, attrTypes
         _.defaults this, @attributes
         
         # Build non-attribute observables and computed property instances.
