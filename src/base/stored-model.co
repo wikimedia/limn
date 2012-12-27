@@ -25,10 +25,13 @@ class exports.StoredModel extends Model
      * Root prepended to all resource requests
      * @type {String|Function}
      */
-    urlRoot : ->
+    resourceURLRoot : ->
         require('limn').mount()
     
-    link: @computed -> "#{@urlRoot()}#{@resource}/#{@slug()}"
+    
+    link: @computed ->
+        "#{@resourceURLRoot()}#{@resource}/#{@slug()}"
+    
     
     toString: ->
         cid       = @__id__
