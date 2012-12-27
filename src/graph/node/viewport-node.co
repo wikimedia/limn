@@ -157,7 +157,7 @@ class exports.ViewportNode extends GraphNode
     
     
     uniqueMetricDataLinks: @computed ->
-        links = @metrics().map (metric) -> metric.source()?.get 'url' #FIXME: this is hiding behind .url()
+        links = @metrics().map (metric) -> metric.source()?.url()
         _.uniq links, false
     
     
