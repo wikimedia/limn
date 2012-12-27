@@ -2,9 +2,9 @@ fieldset.controlGroup
     legend Add New Data Source
     form.form-horizontal(data-bind="submit: newDataSource, with: blankDataSource")
         .control-group
-            label.control-label(for="id") Unique Id
+            label.control-label(for="slug") Unique Id
             .controls
-                input(type="text", id="id", placeholder="unique id: must_look_like_this", data-bind="value: id", required, pattern="^[a-z0-9_]+$")
+                input(type="text", id="slug", placeholder="unique id: must_look_like_this", data-bind="value: slug", required, pattern="^[a-z0-9_]+$")
         .control-group
             label.control-label(for="name") Name
             .controls

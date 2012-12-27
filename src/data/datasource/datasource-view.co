@@ -30,7 +30,7 @@ class exports.DataSourceView extends View
             @model.push model
         else
             DataSource.fetchAll().done ~> @model(_.sortBy DataSource.getAllSources(), (d) -> d.name())
-            @blankDataSource = ko.observable new DataSource {+_isNew}
+            @blankDataSource = ko.observable new DataSource()
         
         @action action
         @message = ko.observable()
@@ -49,11 +49,11 @@ class exports.DataSourceView extends View
     
     newDataSource: (form) ->
         ds = _.clone @blankDataSource()
-        if ds.id()
+        if ds.slug()
             ds.save(options={url:'/datasources'})
                 .done ~>
                     @model.push ds
-                    @blankDataSource new DataSource {+_isNew}
+                    @blankDataSource new DataSource()
                     @message "Saved"
                 .fail (obj, msg, res) ~>
                     @message "Failed to Save: #{res.responseText}"

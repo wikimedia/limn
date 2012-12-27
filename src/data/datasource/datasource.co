@@ -56,6 +56,7 @@ class exports.DataSource extends StoredModel
     
     defaults : ->
         id            : null
+        slug          : null
         url           : ''
         
         name          : ''

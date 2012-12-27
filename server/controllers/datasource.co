@@ -75,10 +75,6 @@ class DataSourceController extends FileBackedController
     # POST /datasources
     create: (req, res, next) ->
         return unless data = @processBody req, res
-        
-        # TODO: remove this complication between client and server
-        delete data._isNew
-        
         Seq()
             .seq @findFile, data.id, Seq
             .seq (file) ->
