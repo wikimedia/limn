@@ -37,6 +37,7 @@ class limn.LimnApp
     VIEWS :
         'dashboards'    : limn.dashboard.DashboardView
         'graphs'        : limn.graph.GraphView
+        'datasources'   : limn.data.datasource.DataSourceView
         '404'           : limn.base.NotFoundView
         'loading'       : limn.base.LoadingView
     

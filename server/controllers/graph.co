@@ -39,9 +39,6 @@ class GraphController extends FileBackedController
     -> super ...
     
     
-    toFileSimple: (id) ->
-        "#{@dataDir}/#id.json"
-    
     # GET /graphs.:format?
     index: (req, res, next) ->
         return next() unless req.format is 'json'

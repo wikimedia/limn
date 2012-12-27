@@ -40,6 +40,9 @@ class FileBackedController extends Controller
     toFile: (id) ->
         "#{@dataDir}/**/#id.@(yaml|json)"
     
+    toFileSimple: (id) ->
+        "#{@dataDir}/#id.json"
+    
     /**
      * Finds the reified filepath for the resource `id`.
      * 

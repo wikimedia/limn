@@ -72,6 +72,33 @@ class DataSourceController extends FileBackedController
                 console.error that if err.stack
                 res.send { error:String(err), partial_data:data }, 500
     
+    # POST /datasources
+    create: (req, res, next) ->
+        return unless data = @processBody req, res
+        
+        # TODO: remove this complication between client and server
+        delete data._isNew
+        
+        Seq()
+            .seq @findFile, data.id, Seq
+            .seq (file) ->
+                res.send { result:"error", message:"DataSource '#{data.id}' already exists!" }, 409 # 409: Resource Conflict
+            .catch (err) ~>
+                fs.writeFile @toFileSimple(data.id), JSON.stringify(data), "utf8", @errorHandler(res, "Error writing datasource!")
+    
+    # PUT /datasources/:datasource
+    update: (req, res, next) ->
+        return unless data = @processBody req, res
+        if @PROTECT_DATASOURCES and _ @PROTECTED_DATASOURCE_IDS .contains data.id
+            return res.send {result:"error", message:"DataSource '#{data.id}' is read-only."}, 403 # 403: Forbidden
+        console.log "#this.update(#{data.id})"
+        Seq()
+            .seq_ (next) ~>
+                @findFile data.id, (err, file) ~>
+                    next.ok if err then @toFileSimple(data.id) else file
+            .seq (file) ~>
+                fs.writeFile file, JSON.stringify(data), "utf8", @errorHandler(res, "Error writing datasource!")
+    
 
 
 module.exports = exports = DataSourceController

@@ -75,7 +75,9 @@ class exports.Resource extends Mixin
      * @returns {Boolean} Whether the resource has been saved to the server.
      */
     isNew: ->
-        if typeof @_isNew is 'boolean' then @_isNew else not @getId()?
+        # TODO: maybe properties that start with underscores shouldn't be made into observables?
+        r = _.result this, '_isNew'
+        if typeof r is 'boolean' then r else not @getId()?
     
     
     /**

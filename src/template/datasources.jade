@@ -1,0 +1,28 @@
+fieldset.controlGroup
+    legend Add New Data Source
+    form.form-horizontal(data-bind="submit: newDataSource, with: blankDataSource")
+        .control-group
+            label.control-label(for="id") Unique Id
+            .controls
+                input(type="text", id="id", placeholder="unique id: must_look_like_this", data-bind="value: id", required, pattern="^[a-z0-9_]+$")
+        .control-group
+            label.control-label(for="name") Name
+            .controls
+                input(type="text", id="name", placeholder="name", data-bind="value: name", required)
+        .control-group
+            label.control-label(for="shortName") Short Name
+            .controls
+                input(type="text", id="shortName", placeholder="short name", data-bind="value: shortName")
+        .control-group
+            label.control-label(for="url") Datafile URL
+            .controls
+                input(type="text", id="url", placeholder="relative or absolute url", data-bind="value: get('url')", required)
+        .form-actions
+            button.btn.btn-primary(type="submit") Save
+            span.pull-right(data-bind="text: $parent.message")
+
+
+h3 Datasources by id and name
+dl.dl-horizontal(data-bind="foreach: model")
+    dt(data-bind="text: id")
+    dd(data-bind="text: name")
