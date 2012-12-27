@@ -16,7 +16,7 @@ fieldset.controlGroup
         .control-group
             label.control-label(for="url") Datafile URL
             .controls
-                input(type="text", id="url", placeholder="relative or absolute url", data-bind="value: get('url')", required)
+                input(type="text", id="url", placeholder="relative or absolute url", data-bind="value: url", required)
         .form-actions
             button.btn.btn-primary(type="submit") Save
             span.pull-right(data-bind="text: $parent.message")
