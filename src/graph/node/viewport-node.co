@@ -27,13 +27,11 @@ tuplesEqual = (a, b) ->
  * @extends GraphNode
  */
 class exports.ViewportNode extends GraphNode
-    nodeType : 'viewport'
-    traits   : [
+    @registerType 'viewport'
+    traits : [
         Trait.VIEWPORT
         Trait.SVG
     ]
-    @registerType()
-    
     tagName : 'g'
     
     

@@ -40,8 +40,8 @@ class exports.LegendNodeData extends GraphNodeData
  * @extends GraphNode
  */
 class exports.LegendNode extends GraphNode
-    nodeType : 'legend'
-    traits   : [
+    @registerType 'legend'
+    traits : [
         Trait.SECTION
         Trait.META_NODE
         Trait.REQUIRES_METRIC_POINTER
@@ -49,7 +49,6 @@ class exports.LegendNode extends GraphNode
         Trait.HTML
         Trait.LEAF
     ]
-    @registerType()
     tagName  : 'section'
     template : 'legend-node'
     

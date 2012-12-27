@@ -37,15 +37,14 @@ class exports.GeoFeatureNodeData extends GraphNodeData
  * @extends GraphNode
  */
 class exports.GeoFeatureNode extends GraphNode
-    nodeType : 'geo-feature'
-    traits   : [
+    @registerType 'geo-feature'
+    traits : [
         Trait.VIS_NODE
         Trait.REQUIRES_METRIC
         Trait.METRIC_GEO_FEATURE
         Trait.SVG
         Trait.LEAF
     ]
-    @registerType()
     
     
     -> super ...

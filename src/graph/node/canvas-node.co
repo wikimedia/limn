@@ -47,12 +47,10 @@ class exports.CanvasNodeData extends GraphNodeData
  * @extends GraphNode
  */
 class exports.CanvasNode extends GraphNode
-    nodeType : 'canvas'
+    @registerType 'canvas'
     traits   : [ Trait.VIEWPORT ]
-    @registerType()
-    
-    tagName : 'section'
-    template: 'canvas-node'
+    tagName  : 'section'
+    template : 'canvas-node'
     
     
     /* * * *  Viewport Sizing  * * * {{{ */

@@ -35,13 +35,12 @@ class exports.ZoomPanNodeData extends GraphNodeData
  * @extends GraphNode
  */
 class exports.ZoomPanNode extends GraphNode
-    nodeType : 'zoom-pan'
-    traits   : [
+    @registerType 'zoom-pan'
+    traits : [
         Trait.VIS_NODE
         Trait.SVG
         Trait.LEAF
     ]
-    @registerType()
     
     
     -> super ...

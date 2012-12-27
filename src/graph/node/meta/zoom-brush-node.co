@@ -35,14 +35,13 @@ class exports.ZoomBrushNodeData extends GraphNodeData
  * @extends GraphNode
  */
 class exports.ZoomBrushNode extends GraphNode
-    nodeType : 'zoom-brush'
-    traits   : [
+    @registerType 'zoom-brush'
+    traits : [
         Trait.VIS_NODE
         Trait.SVG
         Trait.LEAF
         Trait.FG_LAYER
     ]
-    @registerType()
     
     
     -> super ...

@@ -35,19 +35,19 @@ class exports.TypeCache
      * 
      *  cache = new TypeCache 'nodeType'
      *  class AnotherGraphNode extends GraphNode
-     *      nodeType : 'another'
-     *      cache.add this
-     *      
-     *      -> ...
+     *      cache.add 'another', this
+     *      -> super ...
      */
     add: (id, Subclass) ->
         # console.log "#this.registerType(#Subclass)"
-        [Subclass, id] = [id, null] if not Subclass and typeof id is 'function'
+        if not Subclass and typeof id is 'function'
+            [Subclass, id] = [id, null]
         unless id or ( _.has(Subclass?::, @typeKey) and id = Subclass::[@typeKey] )
             throw new Error "Sub-types must declare a new, unique #{@typeKey} on the prototype! (got #{id or Subclass?::?[@typeKey]})"
         if @cache[id] and @cache[id] is not Subclass
             throw new Error "Duplicate #{@typeKey}! (got #id)"
-        Subclass::[@typeKey] ?= id
+        unless _.has(Subclass?::, @typeKey) and Subclass::[@typeKey]
+            Subclass::[@typeKey] = id
         @cache[id] = Subclass
     
     

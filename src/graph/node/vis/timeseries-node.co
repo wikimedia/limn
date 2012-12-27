@@ -33,15 +33,14 @@ class exports.TimeseriesNodeData extends GraphNodeData
  * @extends GraphNode
  */
 class exports.TimeseriesNode extends GraphNode
-    nodeType : 'timeseries'
-    traits   : [
+    @registerType 'timeseries'
+    traits : [
         Trait.VIS_NODE
         Trait.REQUIRES_METRIC
         Trait.METRIC_TIMESERIES
         Trait.SVG
         Trait.LEAF
     ]
-    @registerType()
     
     -> super ...
     

@@ -32,12 +32,11 @@ class exports.GroupNodeData extends GraphNodeData
  * @extends GraphNode
  */
 class exports.GroupNode extends GraphNode
-    nodeType : 'group'
-    traits   : [
+    @registerType 'group'
+    traits : [
         Trait.VIS_NODE
         Trait.SVG
     ]
-    @registerType()
     -> super ...
     
     

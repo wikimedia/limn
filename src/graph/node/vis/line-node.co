@@ -36,15 +36,14 @@ class exports.LineNodeData extends TimeseriesNodeData
  * @extends TimeseriesNode
  */
 class exports.LineNode extends TimeseriesNode
-    nodeType : 'line'
-    traits   : [
+    @registerType 'line'
+    traits : [
         Trait.VIS_NODE
         Trait.REQUIRES_METRIC
         Trait.METRIC_TIMESERIES
         Trait.SVG
         Trait.LEAF
     ]
-    @registerType()
     
     
     ->

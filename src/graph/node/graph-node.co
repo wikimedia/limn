@@ -614,10 +614,8 @@ class exports.GraphNode extends Base implements formatters
      * method *after* setting their `nodeType`:
      * 
      *  class AnotherGraphNode extends GraphNode
-     *      nodeType : 'another'
-     *      @registerType()
-     *      
-     *      -> ...
+     *      @registerType('another')
+     *      -> super ...
      * 
      * @static
      * @see TypeCache#add

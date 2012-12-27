@@ -41,14 +41,13 @@ class exports.GuideNodeData extends GraphNodeData
  * @extends GraphNode
  */
 class exports.GuideNode extends GraphNode
-    nodeType : 'guide'
-    traits   : [
+    @registerType 'guide'
+    traits : [
         Trait.META_NODE
         Trait.BG_LAYER
         Trait.SVG
         Trait.LEAF
     ]
-    @registerType()
     
     
     -> super ...

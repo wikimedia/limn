@@ -65,14 +65,13 @@ class exports.AxisNodeData extends GraphNodeData
  * @extends GraphNode
  */
 class exports.AxisNode extends GraphNode
-    nodeType : 'axis'
-    traits   : [
+    @registerType 'axis'
+    traits : [
         Trait.META_NODE
         Trait.FG_LAYER
         Trait.SVG
         Trait.LEAF
     ]
-    @registerType()
     
     
     -> super ...

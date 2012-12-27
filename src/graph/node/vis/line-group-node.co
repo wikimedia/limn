@@ -37,11 +37,10 @@ class exports.LineGroupNodeData extends GroupNodeData
  * @extends GroupNode
  */
 class exports.LineGroupNode extends GroupNode
-    nodeType : 'line-group'
-    traits   : [
+    @registerType 'line-group'
+    traits : [
         Trait.VIS_NODE
         Trait.SVG
     ]
-    @registerType()
     
     -> super ...

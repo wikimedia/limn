@@ -41,8 +41,8 @@ class exports.CalloutNodeData extends GraphNodeData
  * @extends GraphNode
  */
 class exports.CalloutNode extends GraphNode
-    nodeType : 'callout'
-    traits   : [
+    @registerType 'callout'
+    traits : [
         Trait.CALLOUT_NODE # XXX: Hack
         Trait.META_NODE
         Trait.REQUIRES_METRIC_POINTER
@@ -50,7 +50,6 @@ class exports.CalloutNode extends GraphNode
         Trait.HTML
         Trait.LEAF
     ]
-    @registerType()
     tagName  : 'section'
     template : 'callout-node'
     
