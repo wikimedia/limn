@@ -179,7 +179,7 @@ class exports.CanvasNode extends GraphNode
         metrics
     
     uniqueMetricDataLinks: @computed ->
-        links = @metrics().map (metric) -> metric.source()?.get 'url' #FIXME: this is hiding behind .url()
+        links = @metrics().map (metric) -> metric.source()?.url()
         _.uniq links, false
     
     /**

@@ -82,16 +82,16 @@ class exports.Resource extends Mixin
      * Root prepended to all resource requests.
      * @type {String|Function}
      */
-    urlRoot : ->
+    resourceURLRoot : ->
         '/'
     
     
     /**
      * @returns {String} URL to this resource.
      */
-    url: ->
+    resourceURL: ->
         throw new Error "No Resource name found! (@resource=#{@resource}, model=#this)" unless @resource
-        root = _.result this, 'urlRoot'
+        root = _.result this, 'resourceURLRoot'
         id = encodeURIComponent(@getId() or '')
         id += '.json' if id
         _.compact [ root, @resource, id ]
@@ -232,9 +232,9 @@ class exports.Resource extends Mixin
         options = _.extend {}, DEFAULT_OPTIONS, options
         
         # Ensure that we have a URL.
-        params.url = options.url or _.result(model, 'url')
+        params.url = options.url or _.result(model, 'resourceURL')
         unless params.url
-            throw new Error "A 'url' property or function must be specified!"
+            throw new Error "A 'url'/'resourceURL' property or function must be specified!"
         
         # Store in-flight requests
         loading = @loading or= {}
