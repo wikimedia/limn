@@ -57,7 +57,6 @@ class exports.DataSource extends StoredModel
     defaults : ->
         id            : null
         url           : ''
-        format        : 'json'
         
         name          : ''
         shortName     : ''
@@ -82,8 +81,20 @@ class exports.DataSource extends StoredModel
      * @type ko.computed<Boolean>
      */
     isValid : @computed ->
-        !! @get('url') and _.contains @VALID_FORMATS, @get('format')
+        !! @dataUrl() and _.contains @VALID_FORMATS, @dataFormat()
     
+    dataFormat : @computed ->
+        format = @get('format')
+        unless format
+            url = @get('url')
+            format = if url.indexOf('.json') === url.length - 5 then 'json' else 'csv'
+        format
+    
+    dataUrl : @computed ->
+        url = @get('url')
+        if url.indexOf('http') == 0
+            url = "x/#url"
+        url
     
     /**
      * The reified dataset associated with this DataSource.
@@ -93,11 +104,11 @@ class exports.DataSource extends StoredModel
     data : @asyncComputed ->
         return unless @isValid()
         
-        format       = @get 'format'
+        format       = @dataFormat()
         DataFileType = if format is 'csv' then CSVData else TimeSeriesData
         
         xhr = $.ajax do
-            url      : @get 'url'
+            url      : @dataUrl()
             dataType : if format is 'csv' then 'text' else 'json'
         
         promise = xhr.pipe (data) -> new DataFileType data
