@@ -2,10 +2,6 @@ _  = require 'underscore'
 ko = require 'knockout'
 moment = require 'moment'
 
-{ guidFor, formatters,
-} = require '../../../util'
-{ Base,
-} = require '../../../base'
 { GraphNodeData,
 } = require '../graph-node-data'
 { GraphNode,

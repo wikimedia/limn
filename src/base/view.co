@@ -1,11 +1,11 @@
 _  = require 'underscore'
 ko = require 'knockout'
 
-{ Base,
-} = require './base'
+{ AttributesBase,
+} = require './attributes-base'
 
 
-class exports.View extends Base
+class exports.View extends AttributesBase
     
     /**
      * @type ko.observable<Model>

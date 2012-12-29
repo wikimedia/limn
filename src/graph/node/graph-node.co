@@ -4,8 +4,8 @@ ko = require 'knockout'
 
 { _, formatters, TypeCache,
 } = require '../../util'
-{ Base,
-} = require '../../base/base'
+{ AttributesBase,
+} = require '../../base/attributes-base'
 { NodeMixin,
 } = require './node-mixin'
 
@@ -22,10 +22,10 @@ NODE_TYPES = exports.NODE_TYPES = new TypeCache 'nodeType'
 
 /**
  * @class Handles the presentation of a specific type of visualization element in a Graph.
- * @extends Base
+ * @extends AttributesBase
  * @mixes NodeMixin
  */
-class exports.GraphNode extends Base implements formatters
+class exports.GraphNode extends AttributesBase implements formatters
     NodeMixin.mix this
     
     

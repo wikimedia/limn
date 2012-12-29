@@ -1,13 +1,13 @@
-{ Base,
-} = require './base'
+{ AttributesBase,
+} = require './attributes-base'
 
 
 
 /**
  * @class Root-class for all Models.
- * @extends Base
+ * @extends AttributesBase
  */
-class exports.Model extends Base
+class exports.Model extends AttributesBase
     -> super ...
     
     
@@ -23,7 +23,7 @@ class exports.Model extends Base
     /**
      * Class used to create "plain" object containers via `@plainSubclass()`.
      * @type Class<Model>
-     * @see Base#plainSubclass
+     * @see AttributesBase#plainSubclass
      */
     @PlainObjectClass = Model
 

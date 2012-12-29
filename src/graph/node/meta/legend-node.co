@@ -4,7 +4,7 @@ moment = require 'moment'
 
 { guidFor, formatters, OrderedMap,
 } = require '../../../util'
-{ Base,
+{ AttributesBase,
 } = require '../../../base'
 { GraphNodeData,
 } = require '../graph-node-data'
@@ -119,9 +119,9 @@ class exports.LegendNode extends GraphNode
 
 /**
  * @class
- * @extends Base
+ * @extends AttributesBase
  */
-class exports.LegendEntry extends Base implements formatters
+class exports.LegendEntry extends AttributesBase implements formatters
     
     defaults: ->
         value : null

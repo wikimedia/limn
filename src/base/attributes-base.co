@@ -1,0 +1,354 @@
+ko = require 'knockout'
+{
+    unwrapObservable : unwrap
+    peekObservable   : peek
+} = ko.utils
+
+_ = require '../util/underscore'
+{ Base,
+} = require './base'
+{ AttributesMixin,
+} = require './attributes-mixin'
+
+
+
+/**
+ * @class Root-class for classes using knockout for computed attributes.
+ * @extends Base
+ * @mixes AttributesMixin
+ */
+class exports.AttributesBase extends Base
+    AttributesMixin.mix this
+    
+    
+    /**
+     * Attribute data-members of the class. Individual properties are also aliased
+     * onto the instance itself if no property already exists.
+     * 
+     * @protected
+     * @type Map<Key, ko.observable>
+     */
+    attributes : null
+    
+    /**
+     * Whether we've been signaled to start watchers.
+     * @type Boolean
+     */
+    isWatching : false
+    
+    
+    
+    /**
+     * @constructor
+     */
+    (attributes={}) ->
+        @attributes = {}
+        
+        # Invoke `Base` constructor to set `__id__`, fire `new` event
+        super()
+        
+        # Merge class defaults and canonicalize.
+        values = @_startingAttributes attributes
+        attrTypes = _.collapseAllSuper(this, 'attributeTypes') or {}
+        
+        # Build and type attribute observers, but don't assign initial values
+        # until we finish setting up the observables and subscriptions.
+        @attributes = @_generateAttributes values, attrTypes
+        _.defaults this, @attributes
+        
+        # Build non-attribute observables and computed property instances.
+        @_setupObservables()
+        
+        # Subscribe to declarative observable changes.
+        @_setupSubscriptions()
+        
+        # ok, now assign starting attribute values
+        @set values
+        
+        this
+    
+    
+    
+    /* * * *  Initialization  * * * {{{ */
+    
+    
+    /**
+     * Gets the value of the id attribute.
+     * @returns {String} Instance's id.
+     */
+    getId: ->
+        @__id__
+    
+    
+    /**
+     * Invoked to acquire default attribute values.
+     * 
+     * Note that *all* known attributes of the Class should be included -- even
+     * if simply as `null` keys (even the `id` attribute, if the object has a concept
+     * of server-side global uniqueness!) -- so we can create the observables
+     * fields.
+     * 
+     * @returns {Object} Map of default attribute values.
+     */
+    defaults: ->
+        {}
+    
+    
+    /**
+     * Invoked to acquire map of attribute keys to their types. Plain objects
+     * are allowed for typing nested attributes. Coercion of new values will
+     * be performed automatically by the attribute observables via
+     * `ko.coerciveObservable()`.
+     * 
+     * @returns Map<Key, Class> Map of attribute keys to types.
+     */
+    attributeTypes : ->
+        {}
+    
+    
+    /**
+     * Invoked to transform raw attribute data into its "proper" form for
+     * this object, whatever that might be.
+     * 
+     * @param {Object} data Raw attributes to canonicalize.
+     * @returns {Object} Converted raw data.
+     */
+    canonicalize: (data) ->
+        data
+    
+    
+    /**
+     * Inform sub-objects its safe to begin their watchers.
+     * 
+     * Note that this function **must** be invoked by the object creator once
+     * construction is finished. It cannot be called automatically by the
+     * constructor without causing a loop, potentially triggering updates
+     * before anyone else can get a reference to the object.
+     * 
+     * This method must be idempotent; it should always be safe to call
+     * it multiple times.
+     */
+    watching: ->
+        # console.log "#this.watching!"
+        @isWatching = true
+        this
+    
+    
+    /**
+     * Merges the supplied attribute data with the class defaults, and then
+     * canonicalizes the resulting data.
+     * 
+     * @protected
+     * @param {Object} [attributes={}] Hash of nascent attributes.
+     */
+    _startingAttributes: (attributes={}) ->
+        defs = _.collapseAllSuper this, 'defaults'
+        @canonicalize _.merge defs, attributes
+    
+    
+    
+    # }}}
+    /* * * *  Knockout-Aware Accessors  * * * {{{ */
+    
+    
+    /**
+     * Retrieves the attribute value at `key`.
+     * 
+     * @param {String} key Key to get.
+     * @returns {*} Value at `key`.
+     */
+    get: (key) ->
+        unwrap @attributes?[key]
+    
+    
+    /**
+     * Gets the attribute value at `key`, circumventing dependency tracking.
+     * 
+     * @param {String} key Key to peek.
+     * @returns {*} Value at `key`.
+     */
+    peek: (key) ->
+        peek @attributes?[key]
+    
+    
+    /**
+     * Puts a single attribute value to `key`.
+     * 
+     * @protected
+     * @param {String} key Key to set.
+     * @param {*} val Value to set at `key`.
+     * @returns {this}
+     */
+    _set: (key, val) ->
+        return this unless key?
+        throw new Error "Attributes hash does not exist!" unless @attributes?
+        unless ko.isObservable obs = @attributes[key]
+            obs = @attributes[key] = @_generateAttribute val, @attributeTypes[key], key
+            @[key] ?= obs
+        obs val
+        this
+    
+    
+    /**
+     * Sets attribute values, taking either a single (key, value)-pair, or
+     * a map of them.
+     * 
+     * @param {String|Object} key The key to set. If an object is supplied here,
+     *  each key will be set with its value on the target object.
+     * @param {*} [value] Value to set at `key`. Omit this if an object of
+     *  KV-pairs was passed as `key`.
+     * @returns {this}
+     */
+    set: (key, val) ->
+        return this unless key?
+        if key and _.isObject(key)
+            values = key
+        else
+            values = { "#key": val }
+        for key, value in values
+            @_set key, value
+        this
+    
+    
+    /**
+     * Sets the attribute value at `key` to `undefined`.
+     * 
+     * @param {String} key Key to unset.
+     * @returns {this}
+     */
+    unset: (key) ->
+        @_set key, undefined
+    
+    
+    /**
+     * Sets the attribute value at `key` to `undefined`, and then removes
+     * the observable from both the attributes hash and the instance (if attached).
+     * 
+     * @param {String} key Key to remove.
+     * @returns {this}
+     */
+    remove: (key) ->
+        return this unless key?
+        throw new Error "Attributes hash does not exist!" unless @attributes?
+        
+        if ko.isObservable obs = @attributes[key]
+            obs undefined
+            obs.dispose?()
+            delete @[key] if obs is @[key]
+        
+        delete @attributes[key]
+        this
+    
+    
+    /**
+     * Updates object with new data such that it will only contain keys
+     * found in the new attributes (and existing attributes will be unset).
+     * 
+     * @param {Object} values Key-value pairs to update.
+     * @returns {this}
+     */
+    update: (values) ->
+        throw new Error "Attributes hash does not exist!" unless @attributes?
+        
+        # Update the given attributes
+        @set values
+        
+        # Then remove all missing keys
+        for k of _.keys(@attributes)
+            continue if k in values
+            @remove k
+        
+        this
+    
+    
+    /**
+     * Delete all attributes from the object.
+     * @returns {this}
+     */
+    clear: ->
+        @update {}
+    
+    
+    /**
+     * Clone this object.
+     * @returns {? extends AttributesBase} A new instance of this object, bearing the same attributes.
+     */
+    clone: ->
+        # TODO: @attributes might contain objects that need recursive cloning? 
+        #   ...hm. @toJS() should handle that.
+        json = @toJS @attributes
+        Class = @constructor
+        new Class json
+    
+    
+    
+    # }}}
+    /* * * *  Serialization  * * * {{{ */
+    
+    
+    /**
+     * Recursively unwrap any observables in the given attributes hash.
+     * Called by `toJSON()`.
+     * 
+     * @returns {Object} A plain JS object, suitable for serialization.
+     */
+    toJS: (attributes=@attributes) ->
+        # console.log "#{this}.toJS()", arguments
+        _.reduce do
+            attributes
+            (json, obs, key) ~>
+                val = peek obs
+                if typeof val?.toJS is 'function'
+                    val = val.toJS() ? val
+                else if typeof val?.toJSON is 'function'
+                    val = val.toJSON() ? val
+                else if _.isPlainObject val
+                    val = @toJS val
+                
+                # drop empty arrays/objects, nulls, and undefined keys
+                unless val!? or ( _.isObject(val) and _.isEmpty(val) )
+                    json[key] = val
+                
+                json
+            {}
+    
+    
+    toJSON: ->
+        @toJS @attributes
+    
+    
+    toString: ->
+        cid       = @__id__
+        Class     = @constructor
+        className = Class.displayName or Class.name
+        "#className(cid=#cid)"
+    
+    
+    
+    # }}}
+    /* * * *  Class Methods  * * * {{{ */
+    
+    
+    /**
+     * @static
+     * @param {Object} [attributes] Starting attribute values.
+     * @returns {? extends AttributesBase} A new instance of this class.
+     */
+    @create = (attributes) ->
+        ClassType = this
+        # _.instantiate ClassType, arguments
+        new ClassType attributes
+    
+    
+    /**
+     * @static
+     * @returns {Function} A factory function that creates new instances of this Model
+     *  without requiring the accursed `new` keyword.
+     */
+    @factory = ->
+        @create.bind this
+    
+    
+    # }}}
+
+

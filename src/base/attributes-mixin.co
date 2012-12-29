@@ -1,0 +1,403 @@
+ko = require 'knockout'
+{
+    unwrapObservable : unwrap
+    peekObservable   : peek
+} = ko.utils
+
+
+{ _, op, Mixin,
+} = require '../util'
+
+
+/**
+ * @class Adds machinery that performs the heavy-lifting for setting up
+ *  instance-level observers and computed properties, intended to be run
+ *  during the constructor.
+ * @extends Mixin
+ */
+class exports.AttributesMixin extends Mixin
+    
+    
+    /**
+     * Wraps the properties found in the `attributes` map with observables,
+     * applying types as specified in `attrTypes`.
+     * 
+     * @protected
+     * @param {Map} data Hash of nascent attributes.
+     * @param {Map<String, Class|Function>} [attrTypes={}] Types coercion functions by key.
+     * @param {Object} [target={}] Hash to which nascent attributes shall be attached.
+     * @returns {Map<String, ko.observable} Map from attribute names to observables.
+     */
+    _generateAttributes: (data, attrTypes={}, target={}) ->
+        return target unless data
+        return _.reduce_ data, target, (attributes, val, key) ~>
+            attributes[key] = @_generateAttribute val, attrTypes[key], key
+            attributes
+    
+    
+    /**
+     * Wraps a single attribute value with the appropriate observable machinery,
+     * auto-coercing incoming data to `ClassType` if provided.
+     * 
+     * @protected
+     * @param {*} val Initial value.
+     * @param {Function|Class|Object} [coerceFn] Function invoked to coerce incoming data into
+     *  the appropriate type. If the function appears to be a class constructor, it will
+     *  be wrapped to perform an instanceof check to prevent double-wrapping, and otherwise
+     *  invoke the class with `new`. If an object, it will be used for sub-lookups
+     *  of attrTypes.
+     * @param {String} [name] Attribute name.
+     * @returns {ko.observable} The new observable attribute. You should assign
+     *  this to the right place on `attributes`, bro.
+     */
+    _generateAttribute: (val, coerceFn, name) ->
+        if isArray = _.isArray val
+            obs = ko.observableArray()
+        else
+            obs = ko.observable()
+            
+            # Plain JS object? Generate an anonymous subclass of the class-designated
+            # container base-class (defaults to AttributesBase) to coerce it.
+            if typeof coerceFn is not 'function' and _.isPlainObject(val)
+                coerceFn = @..plainSubclass(coerceFn or {})
+        
+        obs = obs.coerce coerceFn, this, {isArray} if typeof coerceFn is 'function'
+        obs import { displayName:name, __owner__:this }
+        obs
+    
+    
+    /**
+     * Build observables and computed property instances.
+     * 
+     * @protected
+     * @param {Object} [target=this] Target object for processed properties.
+     * @param {Object} [source=this] Source object to process.
+     * @returns {Object} Target object.
+     */
+    _setupObservables: (target=this, source=this) ->
+        for name, fn in source
+            # We only care about functions
+            continue unless typeof fn is 'function'
+            
+            # Preserve attribute-observers
+            continue if fn is @attributes[name]
+            
+            # Build observables/computed properties
+            obs = @_setupObservable fn, name, target
+            target[name] = obs if obs is not fn
+        target
+    
+    
+    /**
+     * Build observable or computed property instance for a
+     * given (methodName, method) pair.
+     * 
+     * @protected
+     * @param {Function|T} fn Value at `name`, though we ignore non-functions.
+     * @param {String} name Property name.
+     * @param {Object} [owner=this] Owner-object for `ko.computed`.
+     * @returns {ko.computed|ko.observable|T} New property value.
+     */
+    _setupObservable: (fn, name, owner=this) ->
+        return fn unless typeof fn is 'function'
+        
+        # Preserve attribute-observers
+        return fn if fn is @attributes[name]
+        
+        # Info to add to the resulting observer for debugging
+        info = { name, displayName:name, __owner__:this }
+        
+        # Apply observer annotations
+        if decor = fn.__decorate__
+            { base, extender, options, wrapped } = decor
+            options = { read:fn, owner, ...options }
+            fn = fn() if wrapped
+            
+            if base is 'computed'
+                obs = ko.computed _.extend({}, options)
+            else
+                obs = ko[base]()
+            
+            obs import info
+            return obs if typeof obs[extender] is not 'function'
+            
+            if _ <[ typed model coerce ]> .contains extender
+                obs = obs[extender](fn, owner, options)
+            else
+                obs = obs[extender](options)
+            
+            obs import info
+            return obs
+        
+        # Re-wrap non-attribute observables and copy objects so neither causes shared state
+        if ko.isObservable fn
+            val = fn.peek()
+            if typeof val?.clone is 'function'
+                val = val.clone()
+            else if _.isArray val
+                val .= slice()
+            else if _.isObject val
+                val = _.merge {}, val
+            obs = ko.utils.toObservable val
+            obs import info
+            return obs
+        
+        fn
+    
+    
+    /**
+     * Register subscriptions.
+     * 
+     * @protected
+     * @param {Object} [target=this] Target object for processed properties.
+     * @param {Object} [source=this] Source object to process.
+     * @returns {Object} Target object.
+     */
+    _setupSubscriptions: (target=this, source=this) ->
+        for name, fn in source
+            # We only care about functions
+            continue unless typeof fn is 'function'
+            
+            # Preserve attribute-observers
+            continue if fn is @attributes[name]
+            
+            # Subscribe, replacing the method with the subscription
+            obs = @_setupSubscription fn, name, target
+            target[name] = obs if obs is not fn
+        target
+    
+    
+    /**
+     * Register subscriptions for a given `(methodName, method)` pair.
+     * 
+     * @protected
+     * @param {Function|T} fn Value at `name`, though we ignore non-functions.
+     * @param {String} name Property name.
+     * @returns {ko.subscription|T} New property value.
+     */
+    _setupSubscription: (fn, name, owner=this) ->
+        return fn unless typeof fn is 'function'
+        
+        if prop = fn.__onChange__
+            obs = _.getNested this, prop, null, {-ensure, getter:'\0'}
+            return fn unless ko.isObservable obs
+            return obs.onChange fn, owner
+        if fn.__onBuild__
+            owner.once 'watch-build', fn.bind(owner)
+        
+        fn
+    
+    
+    
+    # }}}
+    /* * * *  Class Definition Helpers  * * * {{{ */
+    /**
+     * @section Class Definition Helpers
+     * 
+     * Knockout was not designed for a declarative, class-oriented programming style.
+     * Observers are objects; this means attaching an observer to a class's prototype
+     * results in that observer being shared among all instances of the class!
+     * 
+     * The `AttributesMixin` provides several class methods (for convenience with `@`)
+     * to avoid this, for use when declaring instance methods on a new class. Instead of
+     * wrapping the method as a computed property immediately, they annotate it for
+     * processing later, when a new instance of the class is created. This allows us
+     * to declare observers and computed properties almost exactly as we would normally,
+     * but avoid sharing state.
+     * 
+     * @example
+     *  class Person
+     *      AttributesMixin.mix this
+     *      
+     *      defaults : ->
+     *          firstName : 'Bob'
+     *          lastName  : 'Smith'
+     *      
+     *      fullName : @computed ->
+     *          @firstName() + ' ' + @lastName()
+     *      
+     *      -> super ...
+     * 
+     */
+    
+    
+    /**
+     * Create a computed decorator function.
+     * 
+     * @private
+     * @static
+     * @param {String} decorator Name for the decorator we're creating.
+     * @param {String} [extender] Name of an extender to apply to the base.
+     * @param {String} [base='observable'] Base subscribable type;
+     *  usually 'observable' or 'computed'.
+     * @param {Boolean} [wrap=false] When true, wrap the method in an anonymous
+     *  function. This allows functions (like class constructors) to be passed to
+     *  the decorator without resulting in a mess of shared state.
+     */
+    @computedDecorator = (decorator, extender, base='observable', wrap) ->
+        Class     = this
+        eagerName = _.camelize "eager_#decorator"
+        
+        Class[decorator] = (options, method) ->
+            [method, options] = [options, {}] if typeof options is 'function'
+            method = op.K method if wrap
+            options = {+deferEvaluation} import options
+            method.__decorate__ = { decorator, base, extender, options, wrapped:!!wrap }
+            method
+        Class[eagerName] = (options, method) ->
+            [method, options] = [options, {}] if typeof options is 'function'
+            @[decorator] {-deferEvaluation} import options, method
+        
+        Class
+    
+    
+    # @computedDecorator() produces methods with this pair of signatures:
+    
+    /**
+     * Decorates a method when attached to the class prototype so that it
+     * becomes a computed property of the right type when the class is
+     * instantiated. By default, such properties are lazy, deferring evaluation
+     * until first read.
+     * 
+     * @static
+     * @name computed
+     * @param {Object} [options] Options to pass to the `ko.computed` type.
+     * @param {Boolean} [options.deferEvaluation=true] Whether to defer
+     *  calculation until first read.
+     * @param {Function} method Method to decorate.
+     * @returns {Function} Decorated method.
+     */
+    /**
+     * Identical to `@computed`, excepting that the property's value is
+     * immediately calculated upon instantiation (most likely in the class
+     * constructor).
+     * 
+     * @static
+     * @name eagerComputed
+     * @param {Object} [options] Options to pass to the `ko.computed` type.
+     * @param {Boolean} [options.deferEvaluation=false] Whether to defer
+     *  calculation until first read.
+     * @param {Function} method Method to decorate.
+     * @returns {Function} Decorated method.
+     * @see AttributesMixin.computed()
+     */
+    
+    @computedDecorator 'computed',              null,       'computed'
+    @computedDecorator 'asyncComputed',         'async',    'computed'
+    @computedDecorator 'typedObservable',       'typed',    'observable'
+    @computedDecorator 'modeledObservable',     'model',    'observable',   true
+    @computedDecorator 'coerciveObservable',    'coerce',   'observable',   true
+    
+    
+    /**
+     * Decorate a method to be notified of change events for the given
+     * property.
+     * 
+     * @param {String} prop Property to observe; attributes may be observed
+     *  unambiguously by using the dotted path into the attributes object
+     *  (ex. `attributes.parent`).
+     * @param {Function} method Method to decorate.
+     * @returns {Function} 
+     */
+    @onChange = (prop, method) ->
+        method.__onChange__ = prop
+        method
+    
+    
+    @onBuild = (method) ->
+        method.__onBuild__ = true
+        method
+    
+    
+    /**
+     * A computed wrapper that gets the given keys -- invoking observables
+     * found -- and uses those values as the arguments to invoke `method`
+     * so long as none of the values are `null` or `undefined`. Keys are
+     * inspected in the supplied order, but inspection short-circuits on
+     * the first `null` seen.
+     * 
+     * @param {String} ...keys Keys on the instance on which to depend.
+     * @param {Function} method Method to wrap.
+     * @returns {Function} Wrapped method.
+     * 
+     * @example
+     *  class Client
+     *      AttributesMixin.mix this
+     *      ->
+     *          super ...
+     *          # pretend there's async setup for @connection()
+     *      defaults: ->
+     *          connection: null
+     *      bytesSent : @computedRequires 'connection', (connection) ->
+     *          connection.bytesSent
+     */
+    @computedRequires = (...keys, method) ->
+        wrapper = @computed ->
+            args = []
+            for key of keys
+                val = this
+                for k of key.split('.')
+                    val = unwrap val[k]
+                    return unless val?
+                    return if _.isArray(val) and not val.length
+                else return
+                args.push val
+            method.apply this, args
+        wrapper.__compReq__ = { keys, method }
+        wrapper
+    
+    
+    /**
+     * Decorates the given method to prevent its actions from registering
+     * dependencies upward while it executes.
+     * 
+     * @param {Function} method 
+     * @returns {Function} Wrapped method.
+     */
+    @ignoreDeps = (method) ->
+        -> ko.dependencyDetection.ignore method, this, arguments
+    
+    
+    
+    # }}}
+    /* * * *  Class Methods  * * * {{{ */
+    
+    
+    /**
+     * Class used to create "plain" object containers via `@plainSubclass()`.
+     * @type Class<? extends AttributesMixin>
+     * @see AttributesMixin.plainSubclass()
+     */
+    @PlainObjectClass = null
+    
+    
+    /**
+     * Creates an instance of an anonymous subclass of the class found at the property
+     * `PlainObjectClass` on this class's constructor. If provided, the subclass's
+     * `attributeTypes` will be merged and overridden.
+     * 
+     * Note that this process triggers Coco's `@extended()` hook for the `PlainObjectClass`.
+     * 
+     * @param {Object} [attributeTypes={}] Attribute type overrides.
+     * @returns {T extends @PlainObjectClass} 
+     */
+    @plainSubclass = (attributeTypes={}) ->
+        PlainObjectClass = @PlainObjectClass or this
+        attributeTypes = _.merge {}, PlainObjectClass::attributeTypes, attributeTypes
+        _.subclass @PlainObjectClass, [], {attributeTypes}
+    
+    
+    /**
+     * When mixed into a new class, fill in default for `TargetClass.PlainObjectClass`
+     * (with the target class itself) if the mixin's target doesn't define it.
+     */
+    @on 'mix', (TargetClass, MixinClass) ->
+        return if typeof TargetClass is not 'function'
+        TargetClass.PlainObjectClass ?= TargetClass
+    
+    
+    # }}}
+    
+
+
+
