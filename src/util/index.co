@@ -1,13 +1,5 @@
-_    = exports._    = require './underscore'
-op   = exports.op   = require 'operator'
-guid = exports.guid = require './guid'
-exports import guid
-
 # Root object -- `window` in the browser, `global` in Node.
 root = exports.root = do -> this or eval('this')
-
-# Stub out console with empty methods
-root.console or= _ <[ log info warn error dir table group groupCollapsed groupEnd ]> .synthesize -> [it, op.nop]
 
 
 # Stub out CommonJS modules that might be included as normal JS globals
@@ -22,15 +14,27 @@ try require 'd3'        catch ex then moduleShim 'd3',       root.d3
 try require 'knockout'  catch ex then moduleShim 'knockout', root.ko
 try require 'page'      catch ex then moduleShim 'page',     root.page
 
+
+# Load core utilities and add them to our exports
+_    = exports._    = require './underscore'
+op   = exports.op   = require 'operator'
+guid = exports.guid = require './guid'
+exports import guid
+
+
+
+# Stub out console with empty methods
+root.console or= _ <[ log info warn error dir table group groupCollapsed groupEnd ]> .synthesize -> [it, op.nop]
+
 # Load Knockout Plugins
 exports.knockout = require './knockout'
 
-# watch css files for changes (only in dev mode)
+# LiveCSS: watch css files for changes (only in dev mode)
 # root.livecss?.watchAll?()
-
 if root.livecss?.watch?
     root.jQuery? 'head link.livecss' .each (i, el) ->
         root.livecss.watch el
+
 
 ### Extend jQuery with useful functions
 
@@ -49,6 +53,7 @@ root.jQuery?.fn.formData = ->
 root.jQuery?.fn.invoke = (method, ...args) ->
     for el, idx of this
         jQuery(el)[method] ...args
+
 
 
 emitters    = exports.emitters    = require './emitters'

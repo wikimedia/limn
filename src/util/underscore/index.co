@@ -11,6 +11,7 @@ _.mixin require './array'
 _.mixin require './object'
 _.mixin require './class'
 _.mixin require './string'
+_.mixin require './dom'
 
 
 /**

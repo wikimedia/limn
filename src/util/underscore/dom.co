@@ -1,0 +1,45 @@
+_  = require 'underscore'
+d3 = require 'd3'
+
+
+_dom =
+    
+    /**
+     * Unwrap an Element wrapped by jQuery or d3.
+     * 
+     * @param {jQuery|d3.selection|*} el A potentially wrapped element.
+     * @returns {Element|*} The unwrapped element if it was wrapped;
+     *  otherwise whatever we got.
+     */
+    toElement: (el) ->
+        el = el[0]      if el instanceof jQuery
+        el = el.node()  if el instanceof d3.selection
+        el
+    
+    
+    /**
+     * Creates elements with the correct namespace for both HTML and SVG tags.
+     */
+    createElement : (tagName, cssClass, attributes) ->
+        if _.isObject cssClass
+            [attributes, cssClass] = [cssClass, null]
+        if typeof cssClass is 'string'
+            (attributes or= {}).class = cssClass
+        
+        # range = document.createRange()
+        # range.selectNode document.body
+        # el = range.createContextualFragment("<#tagName/>").childNodes[0]
+        
+        name = d3.ns.qualify(tagName)
+        if name.local
+            el = document.createElementNS name.space, name.local
+        else
+            el = document.createElement name
+        
+        jQuery(el).attr attributes if attributes
+        el
+    
+    
+
+_.mixin exports import _dom
+
