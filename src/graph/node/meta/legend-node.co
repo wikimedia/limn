@@ -104,8 +104,8 @@ class exports.LegendNode extends GraphNode
         @entryCache.set node, entry
         
         # register for notification when the node is destroyed
-        destroySub = node.isDestroyed.subscribe (isDestroyed) ~>
-            throw new Error "WTF! node.isDestroyed false for #node!" unless isDestroyed
+        destroySub = node.isDisposed.subscribe (isDisposed) ~>
+            throw new Error "WTF! node.isDisposed false for #node!" unless isDisposed
             currentEntry = @entryCache.get node
             @entryCache.remove node if currentEntry is entry
             destroySub.dispose()

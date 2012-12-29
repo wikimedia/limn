@@ -14,7 +14,7 @@ class exports.DataSourceView extends View
     defaults: ->
         model  : null
         action : null
-        isDestroyed : false
+        isDisposed : false
     
     
     /**

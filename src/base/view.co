@@ -21,7 +21,7 @@ class exports.View extends Base
     defaults: ->
         model       : null
         action      : null
-        isDestroyed : false
+        isDisposed : false
     
     /**
      * DOM Element for this view. jQuery objects and d3 Selections
@@ -93,10 +93,10 @@ class exports.View extends Base
      * Call when disposing of this view.
      * @returns {this}
      */
-    destroy: ->
-        return this if @isDestroyed()
-        @isDestroyed true
-        @trigger 'destroy', this
+    dispose: ->
+        return this if @isDisposed()
+        @isDisposed true
+        @trigger 'dispose', this
         this
     
     
@@ -130,10 +130,12 @@ class exports.View extends Base
         "#className(cid=#cid, model=#model)"
 
 
+
 class exports.NotFoundView extends View
     template: 'notFound'
     message: ko.observable 'This does not exist'
     -> super ...
+
 
 
 class exports.LoadingView extends View

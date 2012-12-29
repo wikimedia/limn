@@ -18,7 +18,7 @@ class exports.DashboardTabView extends View
     
     defaults: ->
         model       : null
-        isDestroyed : false
+        isDisposed : false
         graphs      : []
     
     attributeTypes: ->

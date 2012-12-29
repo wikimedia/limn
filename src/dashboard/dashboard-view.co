@@ -22,7 +22,7 @@ class exports.DashboardView extends View
     defaults: ->
         model       : null
         action      : null
-        isDestroyed : false
+        isDisposed : false
         tabs        : []
     
     attributeTypes: ->
