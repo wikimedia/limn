@@ -1,15 +1,14 @@
 _  = require 'underscore'
 d3 = require 'd3'
 ko = require 'knockout'
-{
-    unwrapObservable : unwrap
-    peekObservable   : peek
-} = ko.utils
 
+{ _, formatters, TypeCache,
+} = require '../../util'
 { Base,
 } = require '../../base/base'
-{ compareIds, OrderedSet, formatters, TypeCache,
-} = require '../../util'
+{ NodeMixin,
+} = require './node-mixin'
+
 
 Trait = require './graph-node-trait'
 
@@ -24,8 +23,10 @@ NODE_TYPES = exports.NODE_TYPES = new TypeCache 'nodeType'
 /**
  * @class Handles the presentation of a specific type of visualization element in a Graph.
  * @extends Base
+ * @mixes NodeMixin
  */
 class exports.GraphNode extends Base implements formatters
+    NodeMixin.mix this
     
     
     /**
@@ -111,7 +112,7 @@ class exports.GraphNode extends Base implements formatters
         model       : null
         parent      : null
         children    : []
-        isDestroyed : false
+        isDisposed : false
     
     
     attributeTypes: ->
@@ -189,7 +190,7 @@ class exports.GraphNode extends Base implements formatters
      */
     el : @eagerCoerciveObservable (el) ->
         @$el = @sel = null
-        el   = @toElement el
+        el   = _.toElement el
         return el unless _.isElement el
         @$el = $ el
         @sel = d3.select el
@@ -216,6 +217,7 @@ class exports.GraphNode extends Base implements formatters
      * @type d3.selection
      */
     sparent : null
+    
     # }}}
     
     
@@ -228,11 +230,7 @@ class exports.GraphNode extends Base implements formatters
      */
     (@graph, model) ->
         super()
-        
-        # Decorate properties we need to clean up with history tracking
-        @parent  .= history({ -includeInitial })
-        @children = @attributes.children = @children.history({ -includeInitial })
-        @parent.equalityComparer = @children.equalityComparer = compareIds
+        @initMixin() # Notify NodeMixin to initialize this instance.
         
         # Useful for providing IDs to things that care, like text-inputs
         # so you can use label(for=id).
@@ -279,13 +277,13 @@ class exports.GraphNode extends Base implements formatters
      * @returns {Element} Newly constructed root element for this GraphNode.
      */
     build: @ignoreDeps (parentElement) ->
-        parentElement = @toElement(parentElement)
+        parentElement = _.toElement(parentElement)
         origEl = el = @el.peek()
         # console.log "#this.build! el:", el, 'parent:', parentElement
         
         # Do we lack a DOM element?
         unless _.isElement origEl
-            el = @toElement @buildElement parentElement
+            el = _.toElement @buildElement parentElement
             # Publish an event so most consumers can avoid overriding this or @buildElement
             if _.isElement el
                 @trigger 'build', el, parentElement, this   # for normal event handlers
@@ -316,7 +314,7 @@ class exports.GraphNode extends Base implements formatters
     buildElement: (parentElement) ->
         tagName  = _.result this, 'tagName'
         cssClass = _.result this, 'cssClass'
-        @el el = @createElement tagName, cssClass
+        @el el = _.createElement tagName, cssClass
         el
     
     
@@ -341,7 +339,7 @@ class exports.GraphNode extends Base implements formatters
      * @returns {Element} The target element.
      */
     renderView: (targetEl, view=this) ->
-        el = @toElement targetEl
+        el = _.toElement targetEl
         $ el .attr 'data-bind', 'template: { name:template, data:$data }'
         ko.applyBindings view, el
         targetEl
@@ -413,69 +411,12 @@ class exports.GraphNode extends Base implements formatters
     
     
     /**
-     * Performs a depth-first walk across the tree of GraphNodes, invoking an
-     * iteration function much like  `Array.reduce`, passing a custom "accumulator"
-     * value along with the current node: 
-     * 
-     *  `newAcc = fn.call(context || node, currentAcc, node, childIndex)`
-     * 
-     * The iterator's return becomes the new accumulator. If not specified, the
-     * iterator will be invoked with the node as the context.
-     * 
-     * @param {*} acc Starting accumulator value.
-     * @param {Object} [context] Execution context for the iteration function.
-     * @param {Function} fn Iteration function passed the current accumulator and current GraphNode.
-     * @returns {*} Final accumulator value.
-     */
-    walk: (acc, cxt, fn, idx=null) ->
-        [fn, cxt] = [cxt, null] unless typeof fn is 'function'
-        acc = fn.call(cxt or this, acc, this, idx)
-        for childNode, childIdx of @children().slice()
-            acc = childNode.walk acc, cxt, fn, childIdx
-        acc
-    
-    
-    /**
-     * As `Array.map()` but walking the tree of GraphNodes.
-     * Mapping function invoked with:
-     * 
-     *  `fn.call(context || node, node, childIndex) -> newValue`
-     * 
-     * @param {Object} [context] Execution context for the mapping function.
-     * @param {Function} fn Mapping function.
-     * @returns {Array} Mapped GraphNode children.
-     */
-    map: (cxt, fn) ->
-        [fn, cxt] = [cxt, null] unless typeof fn is 'function'
-        @walk [], cxt, (acc, node, childIdx) ->
-            acc.push fn.call this, node, childIdx
-            acc
-    
-    
-    /**
-     * As `Array.filter()` but walking the tree of GraphNodes.
-     * Filter function invoked with:
-     * 
-     *  `fn.call(context || node, node, childIndex) -> Boolean`
-     * 
-     * @param {Object} [context] Execution context for the filter function.
-     * @param {Function} fn Filter function.
-     * @returns {Array<GraphNode>} Matching GraphNode children.
-     */
-    filter: (cxt, fn) ->
-        [fn, cxt] = [cxt, null] unless typeof fn is 'function'
-        @walk [], cxt, (acc, node, childIdx) ->
-            acc.push node if fn.call this, node, childIdx
-            acc
-    
-    
-    /**
      * Walk the GraphNode tree and filter out all nodes that do not have
      * all the given traits.
      * 
      * @param {Trait|Array<Trait>} traits List of trait(s) which must
      *  be present to keep a node.
-     * @returns {Array<GraphNode>}
+     * @returns {Array<GraphNode>} List of matching nodes.
      */
     filterTraits: (traits) ->
         traits = [traits] unless _.isArray traits
@@ -483,14 +424,15 @@ class exports.GraphNode extends Base implements formatters
     
     
     /**
-     * Call when disposing of this node.
-     * @returns {this}
+     * Walk the GraphNode tree and return the first node matching all the given
+     * traits.
+     * 
+     * @param {Trait|Array<Trait>} traits List of trait(s) to match.
+     * @returns {GraphNode|null} First matching node, or null if none match.
      */
-    destroy: ->
-        return this if @isDestroyed()
-        @isDestroyed true
-        @trigger 'destroy', this
-        this
+    findTraits: (traits) ->
+        traits = [traits] unless _.isArray traits
+        @find (node) -> _.all traits, node.hasTrait, node
     
     
     
@@ -522,41 +464,6 @@ class exports.GraphNode extends Base implements formatters
      */
     selectAll: (selector) ->
         @sel?.selectAll selector
-    
-    
-    /**
-     * Unwrap an Element wrapped by jQuery or d3.
-     * 
-     * @param {jQuery|d3.selection|*} el A potentially wrapped element.
-     * @returns {Element|*} The unwrapped element if it was wrapped;
-     *  otherwise whatever we got.
-     */
-    toElement: (el) ->
-        el = el[0]      if el instanceof jQuery
-        el = el.node()  if el instanceof d3.selection
-        el
-    
-    
-    /**
-     * Creates elements with the correct namespace for both HTML and SVG tags.
-     */
-    createElement : (tagName, cssClass, attributes) ->
-        if _.isObject cssClass
-            [attributes, cssClass] = [cssClass, null]
-        if typeof cssClass is 'string'
-            (attributes or= {}).class = cssClass
-        # range = document.createRange()
-        # range.selectNode document.body
-        # el = range.createContextualFragment("<#tagName/>").childNodes[0]
-        
-        name = d3.ns.qualify(tagName)
-        if name.local
-            el = document.createElementNS name.space, name.local
-        else
-            el = document.createElement name
-        
-        $(el).attr attributes if attributes
-        el
     
     
     # }}}
