@@ -29,6 +29,10 @@ multiTimeFormatter = timeFormat [
     [ d3.time.format(".%L"),   -> it.getMilliseconds() ]
 ]
 
+log10 = (x) ->
+    v = Math.log(x) / Math.LN10
+    if Math.abs((r = Math.round(v)) - v) < 1e-6 then r else v
+
 
 
 /**
@@ -99,11 +103,12 @@ class exports.AxisNode extends GraphNode
             
             # TODO: handle different scale-types -- this only handles logscale
             # TODO: GridNode to apply the same scale calculations
-            ticks ?= 14
+            ticks ?= 10
             tickValues = scale.ticks()
             while 5 < tickValues.length > ticks + 2
                 tickValues .= filter (v, i) ->
                     L = tickValues.length
+                    # return true if log10(v) % 1 == 0
                     mod = Math.max 2, Math.round((L - 2) / (L - 2 - ticks))
                     i == 0 or i == (L - 1) or i % mod != 0
             axis.tickValues tickValues
