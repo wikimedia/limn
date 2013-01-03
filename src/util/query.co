@@ -120,10 +120,13 @@ class exports.Query
         
         if _.isArray opts.columns
             pickCols = (row) ->
-                if _.isArray row
-                    _.map opts.columns, (col) -> row[col]
-                else
-                    _.pick row, ...opts.columns
+                _.reduce do
+                    opts.columns
+                    (acc, col) ->
+                        acc.push(val = row[col])
+                        acc[col] = val if typeof col is 'string'
+                        acc
+                    []
         else
             pickCols = op.I
         

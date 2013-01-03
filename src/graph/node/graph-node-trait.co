@@ -61,6 +61,14 @@ exports import do
     
     
     /**
+     * Metric for associated GraphNodeData is content-data if defined, not
+     * scaffolding (like a geojson definition).
+     * @constant
+     */
+    METRIC_CONTENT_DATA : 'metric-content-data'
+    
+    
+    /**
      * Metric for associated GraphNodeData is timeseries data if defined.
      * @constant
      */

@@ -1,0 +1,8 @@
+dataset            = require './dataset'
+geo_json_dataset   = require './geo-json-dataset'
+series_dataset     = require './series-dataset'
+timeseries_dataset = require './timeseries-dataset'
+topo_json_dataset  = require './topo-json-dataset'
+
+exports import dataset import geo_json_dataset import series_dataset import timeseries_dataset import topo_json_dataset
+

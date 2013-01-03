@@ -1,0 +1,53 @@
+{ Dataset,
+} = require './dataset'
+
+
+/**
+ * @class
+ * @extends Dataset
+ */
+class exports.TimeseriesDataset extends Dataset
+    @registerType 'timeseries'
+    
+    
+    (source, rawData) ->
+        super ...
+    
+    
+    /**
+     * @returns {Array<Array>} List of rows, each of which includes all columns.
+     */
+    getData: ->
+        @data
+    
+    
+    /**
+     * @returns {Array<Array>} List of all columns (including date column).
+     */
+    getColumns: ->
+        @parsedData.getColumns()
+    
+    
+    /**
+     * @returns {Array<Date>} The date column.
+     */
+    getDateColumn: ->
+        @parsedData.getDateColumn()
+    
+    
+    /**
+     * @returns {Array<Array>} List of all columns except the date column.
+     */
+    getDataColumns: ->
+        @parsedData.getDataColumns()
+    
+    
+    /**
+     * @returns {Array<String>} List of column labels.
+     */
+    getLabels: ->
+        @parsedData.getLabels()
+    
+    
+
+

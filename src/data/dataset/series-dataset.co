@@ -1,0 +1,50 @@
+{ Dataset,
+} = require './dataset'
+
+
+/**
+ * @class
+ * @extends Dataset
+ */
+class exports.SeriesDataset extends Dataset
+    @registerType 'series'
+    
+    
+    
+    (source, rawData) ->
+        super ...
+        if _.isArray(@data) and _.isArray(@data[0])
+            @columns = _.zip ...@data
+    
+    
+    /**
+     * @returns {Array<Array>} List of rows, each of which includes all columns.
+     */
+    getData: ->
+        @data
+    
+    
+    /**
+     * @returns {Array<Array>} List of all columns (including ID column).
+     */
+    getColumns: ->
+        @columns
+    
+    
+    /**
+     * @param {Number} idx Index of column.
+     * @returns {Array} Column at `idx`.
+     */
+    getColumn: (idx) ->
+        @columns[idx]
+    
+    
+    /**
+     * @returns {Array<String>} List of column labels.
+     */
+    getLabels: ->
+        @labels
+    
+    
+
+

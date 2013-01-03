@@ -3,23 +3,32 @@ d3 = require 'd3'
 ko = require 'knockout'
 op = require 'operator'
 
+{ GraphNodeData,
+} = require './graph-node-data'
 { GraphNode,
 } = require './graph-node'
-{ GroupNode,
-} = require './group-node'
 
 Trait = require './graph-node-trait'
 
 
-cmpNumeric = (a, b) ->
-    a = a.getTime() if a instanceof Date
-    b = b.getTime() if b instanceof Date
-    op.cmp a, b
 
 
-tuplesEqual = (a, b) ->
-    cmpNumeric(a[0], b[0]) is 0 and
-    cmpNumeric(a[1], b[1]) is 0
+/**
+ * @class
+ * @extends GraphNodeData
+ */
+class exports.ViewportNodeData extends GraphNodeData
+    @registerType 'viewport'
+    
+    defaults: ->
+        width  : 'auto'
+        height : 500
+    
+    attributeTypes: ->
+        {}
+    
+    -> super ...
+
 
 
 /**
@@ -35,14 +44,28 @@ class exports.ViewportNode extends GraphNode
     tagName : 'g'
     
     
+    
+    /**
+     * @constructor
+     * @param {GraphView} graph
+     * @param {GraphNodeData} model
+     */
+    (graph, model) ->
+        super ...
+        
+        # Trigger resize whenever a child is added
+        @on 'child-built', @resize, this
+        $ window .resize _.debounce @resize.bind(this), 50ms
+    
+    
+    
+    
+    
     /* * * *  Viewport Sizing  * * * {{{ */
     
     # TODO: use a responsive algo to pick good numbers based on screen/device
     defaultWidth  : @computed -> 750
     defaultHeight : @computed -> 500
-    
-    _resizeProxy  : ko.observable {}
-    resize        : -> @_resizeProxy {} if @el.peek()
     
     fullWidth     : @computed -> @$el.innerWidth()  if @el() and @_resizeProxy()
     fullHeight    : @computed -> @$el.innerHeight() if @el() and @_resizeProxy()
@@ -69,171 +92,31 @@ class exports.ViewportNode extends GraphNode
     clipWidth  : @computed -> if (v = @viewportWidth())  > 0 then v else @defaultWidth()
     clipHeight : @computed -> if (v = @viewportHeight()) > 0 then v else @defaultHeight()
     
-    width  : @computed -> @viewportWidth()
-    height : @computed -> @viewportHeight()
+    width  : @computed -> @clipWidth()
+    height : @computed -> @clipHeight()
+    
+    center : @computed ->
+        [@width()/2, @height()/2]
     
     
     # }}}
-    /* * * *  Scales  * * * {{{ */
-    
-    /**
-     * The scale that translates x domain values into x output range values
-     * @type d3.time.scale
-     */
-    xScale : null
-    
-    /**
-     * The scale that translates y domain values into y output range values
-     */
-    yScale : null
-    
-    padding : 0.1
-    
-    applyPadding: ([min, max]) ->
-        min -= min * @padding
-        max += max * @padding
-        [min, max]
-    
-    
-    /**
-     * Observable for the contents of xScale and yScale, tracking their changes.
-     * @type ko.observable<Object>
-     */
-    scales : ko.observable null
-    
-    /**
-     * @returns {false|Object} The scales object if all are valid; false otherwise.
-     */
-    scalesIfValid: @computed ->
-        scales = @scales()
-        return scales if scales?.xValid and scales.yValid
-        false
-    
-    
-    /**
-     * Recomputes the scale values.
-     * @type Array<Metric>
-     */
-    metrics : @computed ->
-        metrics = @walk [], (metrics, node) ->
-            if      node.hasTrait(Trait.REQUIRES_METRIC) and
-                    node.hasTrait(Trait.METRIC_TIMESERIES) and
-                    metric = node.model()?.metric()
-                metrics.push metric
-            metrics
-        
-        _scales  = @scales.peek()
-        _xDomain = @xScale.domain()
-        _yDomain = @yScale.domain()
-        _width   = @xScale.range()[1]
-        _height  = @yScale.range()[0]
-        
-        # Update each scale using metrics
-        xs = _.compact _.flatten _.invoke metrics, 'dates'
-        xDomain = d3.extent xs
-        @xScale.domain xDomain if xs.length
-        
-        width = @viewportWidth()
-        @xScale.range [0, width]
-        
-        xValid = xs.length and width > 0
-        
-        ys = _.compact _.flatten _.invoke metrics, 'values'
-        yDomain = @applyPadding d3.extent ys
-        @yScale.domain yDomain if ys.length
-        
-        height = @viewportHeight()
-        @yScale.range [height, 0]
-        
-        yValid = ys.length and height > 0
-        
-        
-        # If anything changed, trigger a notification by setting the scales computed
-        unless  width  is _width  and tuplesEqual(xDomain, _xDomain) and
-                height is _height and tuplesEqual(yDomain, _yDomain)
-            @scales { @xScale, @yScale, @scaleLine, xValid, yValid }
-        
-        metrics
-    
-    
-    uniqueMetricDataLinks: @computed ->
-        links = @metrics().map (metric) -> metric.source()?.url()
-        _.uniq links, false
-    
-    
-    /**
-     * Changes the x and y domains of the graph and refreshes the this.scales observable
-     * @param {Array} xDomain an array with length 2: [startX, stopX]
-     * @param {Array} yDomain an array with length 2: [startY, stopY]
-     */
-    changeDomains: (xDomain, yDomain) ->
-        _xDomain = @xScale.domain()
-        xValid = xDomain?.length > 1 and xDomain[0]? and xDomain[1]?
-        @xScale.domain(xDomain)
-        
-        _yDomain = @yScale.domain()
-        yValid = yDomain?.length > 1 and yDomain[0]? and yDomain[1]?
-        @yScale.domain(yDomain)
-        
-        # If anything changed, trigger a notification by setting the scales computed
-        unless tuplesEqual(xDomain, _xDomain) and tuplesEqual(yDomain, _yDomain)
-            @scales { @xScale, @yScale, @scaleLine, xValid, yValid }
-        
-        @scales.peek()
-    
-    
-    
-    # }}}
-    
-    
-    /**
-     * @constructor
-     * @param {GraphView} graph
-     * @param {GraphNodeData} model
-     */
-    (graph, model) ->
-        super ...
-        @xScale = d3.time.scale().clamp(true)
-        # ko.utils.observeFluentMethod @xScale, 'domain'
-        
-        @yScale = d3.scale.log()
-        # ko.utils.observeFluentMethod @yScale, 'domain'
-        
-        @scaleLine = d3.svg.line()
-            .x ([date, val], i) ~> @xScale date
-            .y ([date, val], i) ~> @yScale val
-            .defined ([date, val], i) ~> isFinite @yScale val
-            .interpolate 'linear'
-        @scales { @xScale, @yScale, @scaleLine, -xValid, -yValid }
-        
-        # Trigger resize whenever a child is added
-        @on 'child-built', @resize, this
-        $ window .resize _.debounce @resize.bind(this), 50ms
-    
-    
-    
+    /* * * *  Watchers  * * * {{{ */
     
     watchDeps: ->
-        @filterTraits Trait.REQUIRES_METRIC
-            .forEach (node) -> node.model()?.get 'metric'
-    
-    
-    /**
-     * Hooks into the `@watching()` trigger.
-     */
     watchOthers: ->
-        @metrics()
+    
+    
+    
+    # }}}
+    /* * * *  Rendering  * * * {{{ */
     
     
     buildElement: (parentElement) ->
-        @renderView parentElement
-        @el el = $(parentElement).find('.canvas-node.graph-node').0
+        el = super ...
         
-        # TODO: factor this out into viewport-node
-        viewport = @sel.select 'g.viewport'
-        svg = d3.select(el).select 'svg'
+        svg = d3.select(_.toElement(@graph.$('svg'))).select 'svg'
         svg.on 'mousemove', ~>
-            [xOffset, yOffset] = d3.mouse(viewport[0][0])
+            [xOffset, yOffset] = d3.mouse(el)
             vh = @viewportHover.peek()
             if not vh?.hovering or vh.xOffset != xOffset or vh.yOffset != yOffset
                 @viewportHover { xOffset, yOffset, +hovering }
@@ -244,27 +127,36 @@ class exports.ViewportNode extends GraphNode
         el
     
     
-    determineDOMParentForChildNode: (node) ->
-        # SVG nodes
-        if node.hasTrait Trait.SVG
-            if node.hasTrait Trait.FG_LAYER
-                @$ 'svg > g > g.frame > g.fg' .0
-            else if node.hasTrait Trait.BG_LAYER
-                @$ 'svg > g > g.frame > g.content-frame > g.bg' .0
-            else
-                @$ 'svg > g > g.frame > g.content-frame > g.viewport' .0
-        
-        # HTML nodes
-        else
-            # XXX: Hack
-            if node.hasTrait Trait.CALLOUT_NODE
-                @graph.$ '.graph-name-row > section.callout' .0
-            else if node.hasTrait Trait.SECTION
-                @$el.parent().0
-            else if node.hasTrait Trait.FG_LAYER
-                @$ 'section.meta.fg' .0
-            else
-                @$ 'section.meta.bg' .0
+    /* * * *  Viewport Events  * * * {{{ */
+    
+    
+    /**
+     * Trigger recalculation of values that depend on window size.
+     */
+    resize : -> @_resizeProxy {} if @el.peek()
+    
+    
+    /**
+     * Observable used to recalculate on changes to window size.
+     * 
+     * @protected
+     * @type ko.observable<Object>
+     */
+    _resizeProxy : ko.observable {}
+    
+    
+    /**
+     * Current location of the cursor in the viewport.
+     * @type ko.observable<Object>
+     */
+    viewportHover: ko.observable {}
+    
+    
+    /**
+     * Broadcast a zoom event.
+     */
+    zooming: (translate, scale) ->
+        @trigger 'zoom-graph', translate, scale, this
     
     
     /**
@@ -293,13 +185,6 @@ class exports.ViewportNode extends GraphNode
             @handlers[eventName].push {fn, context}
     
     
-    viewportHover: ko.observable {}
-    
-    
-    zooming: (translate, scale) ->
-        @trigger 'zoom-graph', translate, scale, this
-    
-    
-    
+    # }}}
     
 

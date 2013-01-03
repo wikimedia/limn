@@ -2,6 +2,7 @@ graph_json_converter = require './graph-json-converter'
 
 exports import graph_json_converter
 
+dataset    = exports.dataset    = require './dataset'
 datasource = exports.datasource = require './datasource'
 metric     = exports.metric     = require './metric'
-exports import datasource import metric 
+exports import dataset import datasource import metric 

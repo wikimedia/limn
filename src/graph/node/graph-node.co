@@ -13,17 +13,12 @@ ko = require 'knockout'
 Trait = require './graph-node-trait'
 
 
-/**
- * Map of known GraphNode types, keyed by type-name.
- * @type TypeCache<GraphNode>
- */
-NODE_TYPES = exports.NODE_TYPES = new TypeCache 'nodeType'
-
 
 /**
  * @class Handles the presentation of a specific type of visualization element in a Graph.
  * @extends AttributesBase
  * @mixes NodeMixin
+ * @mixes TypeCache .hasType, .registerType, .lookupType, .invalidateType, .purgeCache
  */
 class exports.GraphNode extends AttributesBase implements formatters
     NodeMixin.mix this
@@ -88,18 +83,6 @@ class exports.GraphNode extends AttributesBase implements formatters
      */
     graph : null
     
-    /**
-     * The GraphNode that is root to the GraphNode tree
-     * @type GraphNode
-     */
-    root : -> @graph.rootNode()
-    
-    /**
-     * Model data for this node.
-     * @type ko.observable<GraphNodeData>
-     */
-    model : null
-    
     
     /**
      * Observable properties and their defaults.
@@ -121,66 +104,16 @@ class exports.GraphNode extends AttributesBase implements formatters
     
     
     /**
-     * Update parent GraphNode to match when model's parent GraphNodeData
-     * changes.
+     * @returns {GraphNode} Node at the root of the GraphNode tree.
      */
-    parentFromModel : @eagerComputed ->
-        return null unless parentModel = @model()?.parent()
-        @parent parentModel
-        @parent.peek()
+    root : -> @graph.rootNode()
     
     
     /**
-     * Ensure children Arrays are properly updated when parent changes.
-     * 
-     * Note: Knockout ignores cycles in deps, so the circular modification
-     * trigger between `parent` and `children` is benign.
+     * @returns {GraphNode} Viewport for this node (i.e., the closest
+     * parent-node that is a viewport).
      */
-    watchParent : @computed ->
-        oldParent = @parent.prev()
-        oldParent?.children.remove this
-        
-        newParent = @parent()
-        if newSiblings = newParent?.children()
-            newParent.children.push this unless _.contains newSiblings, this
-        
-        newParent
-    
-    
-    /**
-     * Ensure parents are properly set when child-nodes are added or removed.
-     * 
-     * Note: Knockout ignores cycles in deps, so the circular modification
-     * trigger between `parent` and `children` is benign.
-     */
-    watchChildren : @computed ->
-        oldNodes    = @children.prev()
-        childNodes  = @children()
-        
-        # unparent removed nodes that correspond to our children
-        _.each oldNodes, (node) ~>
-            node.parent(null) if node.parent.peek() is this and not _.contains childNodes, node
-        
-        # Set the parent of objects that are children
-        _.invoke childNodes, 'parent', this
-        
-        childNodes
-    
-    
-    watchModelChildren : @computed ->
-        oldNodes   = @children.prev()
-        newModels  = @model().children().slice()
-        
-        # unparent removed nodes that correspond to our children
-        _.each oldNodes, (node) ~>
-            data = node.model.peek()
-            node.parent(null) if node.parent.peek() is this and not _.contains newModels, data
-        
-        # Replace @children with new nodes, letting attribute type coercion
-        # ensure the models become nodes.
-        @children newModels
-        
-        newModels
+    viewport : -> @findUpTraits Trait.VIEWPORT
     
     
     /**
@@ -262,7 +195,56 @@ class exports.GraphNode extends AttributesBase implements formatters
     
     
     
-    /* * * *  GraphNode API  * * * {{{ */
+    /* * * *  Tree Traversal Methods  * * * {{{ */
+    
+    /**
+     * @param {String} trait Trait to test for membership.
+     * @returns {Boolean} Whether this node possesses the trait.
+     */
+    hasTrait: (trait) ->
+        _.contains @traits, trait
+    
+    
+    /**
+     * Walk the GraphNode tree and filter out all nodes that do not have
+     * all the given traits.
+     * 
+     * @param {Trait|Array<Trait>} traits List of trait(s) which must
+     *  be present to keep a node.
+     * @returns {Array<GraphNode>} List of matching nodes.
+     */
+    filterTraits: (traits) ->
+        traits = [traits] unless _.isArray traits
+        @filter (node) -> _.all traits, node.hasTrait, node
+    
+    
+    /**
+     * Walk the GraphNode tree and return the first node matching all the given
+     * traits.
+     * 
+     * @param {Trait|Array<Trait>} traits List of trait(s) to match.
+     * @returns {GraphNode|null} First matching node, or null if none match.
+     */
+    findTraits: (traits) ->
+        traits = [traits] unless _.isArray traits
+        @find (node) -> _.all traits, node.hasTrait, node
+    
+    
+    /**
+     * Walk up the tree through this node's parents (NOT including this node),
+     * returning the first node matching all the given traits.
+     * 
+     * @param {Trait|Array<Trait>} traits List of trait(s) to match.
+     * @returns {GraphNode|null} First matching node, or null if none match.
+     */
+    findUpTraits: (traits) ->
+        traits = [traits] unless _.isArray traits
+        @findUp (node) ~> node is not this and _.all traits, node.hasTrait, node
+    
+    
+    
+    # }}}
+    /* * * *  Rendering API  * * * {{{ */
     
     
     /**
@@ -346,6 +328,10 @@ class exports.GraphNode extends AttributesBase implements formatters
     
     
     
+    # }}}
+    /* * * *  Watchers  * * * {{{ */
+    
+    
     /**
      * Starts watching relevant properties and informs sub-objects its safe to
      * begin their watchers.
@@ -403,37 +389,66 @@ class exports.GraphNode extends AttributesBase implements formatters
     
     
     /**
-     * @param {String} trait Trait to test for membership.
-     * @returns {Boolean} Whether this node possesses the trait.
+     * Update parent GraphNode to match when model's parent GraphNodeData
+     * changes.
      */
-    hasTrait: (trait) ->
-        _.contains @traits, trait
+    parentFromModel : @eagerComputed ->
+        return null unless parentModel = @model()?.parent()
+        @parent parentModel
+        @parent.peek()
     
     
     /**
-     * Walk the GraphNode tree and filter out all nodes that do not have
-     * all the given traits.
+     * Ensure children Arrays are properly updated when parent changes.
      * 
-     * @param {Trait|Array<Trait>} traits List of trait(s) which must
-     *  be present to keep a node.
-     * @returns {Array<GraphNode>} List of matching nodes.
+     * Note: Knockout ignores cycles in deps, so the circular modification
+     * trigger between `parent` and `children` is benign.
      */
-    filterTraits: (traits) ->
-        traits = [traits] unless _.isArray traits
-        @filter (node) -> _.all traits, node.hasTrait, node
+    watchParent : @computed ->
+        oldParent = @parent.prev()
+        oldParent?.children.remove this
+        
+        newParent = @parent()
+        if newSiblings = newParent?.children()
+            newParent.children.push this unless _.contains newSiblings, this
+        
+        newParent
     
     
     /**
-     * Walk the GraphNode tree and return the first node matching all the given
-     * traits.
+     * Ensure parents are properly set when child-nodes are added or removed.
      * 
-     * @param {Trait|Array<Trait>} traits List of trait(s) to match.
-     * @returns {GraphNode|null} First matching node, or null if none match.
+     * Note: Knockout ignores cycles in deps, so the circular modification
+     * trigger between `parent` and `children` is benign.
      */
-    findTraits: (traits) ->
-        traits = [traits] unless _.isArray traits
-        @find (node) -> _.all traits, node.hasTrait, node
+    watchChildren : @computed ->
+        oldNodes    = @children.prev()
+        childNodes  = @children()
+        
+        # unparent removed nodes that correspond to our children
+        _.each oldNodes, (node) ~>
+            node.parent(null) if node.parent.peek() is this and not _.contains childNodes, node
+        
+        # Set the parent of objects that are children
+        _.invoke childNodes, 'parent', this
+        
+        childNodes
     
+    
+    watchModelChildren : @computed ->
+        oldNodes   = @children.prev()
+        newModels  = @model().children().slice()
+        
+        # unparent removed nodes that correspond to our children
+        _.each oldNodes, (node) ~>
+            data = node.model.peek()
+            node.parent(null) if node.parent.peek() is this and not _.contains newModels, data
+        
+        # Replace @children with new nodes, letting attribute type coercion
+        # ensure the models become nodes.
+        @children newModels
+        
+        newModels
     
     
     # }}}
@@ -517,29 +532,18 @@ class exports.GraphNode extends AttributesBase implements formatters
     
     
     /**
-     * Register a new node type. Subclasses should only call this
-     * method *after* setting their `nodeType`:
-     * 
-     *  class AnotherGraphNode extends GraphNode
-     *      @registerType('another')
-     *      -> super ...
+     * Map of known sub-types, keyed by type-name. Decorates this class to
+     * provide static methods for interacting with the cache:
+     *  - hasType
+     *  - lookupType
+     *  - registerType
+     *  - invalidateType
+     *  - purgeCache
      * 
      * @static
-     * @see TypeCache#add
+     * @type TypeCache
      */
-    @registerType = (nodeType, Subclass=this) ->
-        # console.log "GraphNode.registerType(#Subclass)"
-        NODE_TYPES.add nodeType, Subclass
-    
-    
-    /**
-     * Look up a `GraphNode` by `nodeType`.
-     * @static
-     * @see TypeCache#lookup
-     */
-    @lookupType = (nodeType) ->
-        NODE_TYPES.lookup nodeType
-    
+    @__cache__ = TypeCache.createFor this, 'nodeType'
     
     # }}}
     

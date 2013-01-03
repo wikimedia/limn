@@ -157,4 +157,13 @@ class exports.GraphView extends View
             new EditView this
     
     
+    uniqueMetricDataLinks: @computed ->
+        links = @rootNode()?.walk [], (links, node) ->
+            if      node.hasTrait(Trait.METRIC_CONTENT_DATA) and
+                    url = node.model()?.metric()?.source()?.url()
+                links.push url
+            links
+        _.uniq links, false
+    
+    
     

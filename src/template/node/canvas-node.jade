@@ -10,6 +10,7 @@ section.canvas-node.graph-node
                 g.frame
                     g.content-frame(data-bind='attr: { "clip-path":"url(#clip-"+graphId+")" }')
                         g.bg
+                            rect.bgcolor(data-bind='attr: { width: clipWidth, height:clipHeight }')
                         g.viewport
                     g.fg
     section.meta.bg

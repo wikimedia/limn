@@ -21,3 +21,19 @@ class exports.GeoFeatureMetric extends Metric
         type       : 'int'      # String
     
     
+    /**
+     * The reified dataset (as (id, value) pairs) associated with this Metric.
+     * @type ko.computed<[ID, Value]>
+     * @depends source
+     */
+    data : @computed ->
+        source_col = @get 'source_col'
+        return unless source_col?
+        return unless csv = @source()?.data()
+        Query()
+            .rows true
+            .columns 'id', source_col
+            .apply csv.getData()
+    
+    
+    

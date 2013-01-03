@@ -13,16 +13,10 @@ ko = require 'knockout'
 
 
 /**
- * Map of known GraphNodeData sub-types, keyed by type-name.
- * @type TypeCache<GraphNodeData>
- */
-NODE_DATA_TYPES = exports.NODE_DATA_TYPES = new TypeCache 'nodeType'
-
-
-/**
  * @class Model for GraphNodes.
  * @extends Model
  * @mixes NodeMixin
+ * @mixes TypeCache .hasType, .registerType, .lookupType, .invalidateType, .purgeCache
  */
 class exports.GraphNodeData extends Model
     NodeMixin.mix this
@@ -192,29 +186,18 @@ class exports.GraphNodeData extends Model
     
     
     /**
-     * Register a new node type. Subclasses should only call this
-     * method *after* setting their `nodeType`:
-     * 
-     *  class AnotherGraphNode extends GraphNode
-     *      @registerType('another')
-     *      -> super ...
+     * Map of known sub-types, keyed by type-name. Decorates this class to
+     * provide static methods for interacting with the cache:
+     *  - hasType
+     *  - lookupType
+     *  - registerType
+     *  - invalidateType
+     *  - purgeCache
      * 
      * @static
-     * @see TypeCache#add
+     * @type TypeCache
      */
-    @registerType = (nodeType, Subclass=this) ->
-        # console.log "GraphNode.registerType(#Subclass)"
-        NODE_DATA_TYPES.add nodeType, Subclass
-    
-    
-    /**
-     * Look up a `GraphNode` by `nodeType`.
-     * @static
-     * @see TypeCache#lookup
-     */
-    @lookupType = (nodeType) ->
-        NODE_DATA_TYPES.lookup nodeType
-    
+    @__cache__ = TypeCache.createFor this, 'nodeType'
     
     # }}}
     

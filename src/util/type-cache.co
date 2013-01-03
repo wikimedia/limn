@@ -23,11 +23,23 @@ class exports.TypeCache
     
     /**
      * @constructor
-     * @param {String} [typeKey='type'] 
-     * @param {Object} [cache={}] 
+     * @param {String} [typeKey='type'] Key of the ID property to lookup on
+     *  instances when an ID is not supplied.
+     * @param {Object} [cache={}] Cache object to use.
      */
     (@typeKey='type', @cache={}) ->
     
+    
+    
+    /**
+     * @param {String|Class} id ID to test, or a class to extract an ID from.
+     * @returns {Boolean} Whether the cache has an object at this ID.
+     */
+    has: (id) ->
+        if typeof id is 'function'
+            Subclass = id
+            id = Subclass::[@typeKey] if _.has(Subclass?::, @typeKey)
+        id and @cache[id]
     
     /**
      * Register a new type. On subclasses of a root type, call this
@@ -37,6 +49,11 @@ class exports.TypeCache
      *  class AnotherGraphNode extends GraphNode
      *      cache.add 'another', this
      *      -> super ...
+     * 
+     * @param {String|Class} [id] ID to cache Subclass under. If omitted, it
+     *  will be inferred from the Subclass using `typeKey`.
+     * @param {Class} Subclass Subclass to register.
+     * @returns {Class} The Subclass.
      */
     add: (id, Subclass) ->
         # console.log "#this.registerType(#Subclass)"
@@ -55,7 +72,7 @@ class exports.TypeCache
      * Synchronously check if a model is in the cache, returning it if so.
      * 
      * @param {String} id The type ID to get.
-     * @returns {Model}
+     * @returns {Class}
      */
     get: (id) ->
         @cache[id]
@@ -63,6 +80,9 @@ class exports.TypeCache
     
     /**
      * Look up type by `id`.
+     * 
+     * @param {Object} obj 
+     * @returns {this} 
      */
     lookup: (obj) ->
         id = obj
@@ -71,6 +91,12 @@ class exports.TypeCache
         unless Type = @cache[id]
             throw new Error "No type registered for #{@typeKey}='#id'!"
         Type
+    
+    
+    # fromData: (obj) ->
+    #     return null unless obj
+    #     Type = @lookup obj
+    #     new Type obj
     
     
     /**
@@ -96,22 +122,63 @@ class exports.TypeCache
     
     /**
      * Decorate an object with the cache methods:
-     *  - get
-     *  - lookup
-     *  - invalidate
-     *  - purge
-     * 
-     * This is automatically called on `ModelType` if supplied.
+     *  - hasType        -> TypeCache::has
+     *  - registerType   -> TypeCache::add
+     *  - lookupType     -> TypeCache::lookup
+     *  - invalidateType -> TypeCache::invalidate
+     *  - purgeCache     -> TypeCache::purge
      * 
      * @param {Object} obj Object to decorate.
+     * @param {Object} [mapping] Object mapping dest->src names for cache methods.
      * @returns {obj} The supplied object.
      */
-    decorate: (obj) ->
-        obj.__cache__ = this
-        # Bind the Cache methods to the class
-        for m of <[ get lookup invalidate purge ]>
-            obj[m] = @[m].bind this
-        obj
+    decorate: (target, mapping={}) ->
+        cache = this
+        target.__cache__ or= cache
+        
+        mapping = {
+            hasType        : 'has'
+            registerType   : 'add'
+            lookupType     : 'lookup'
+            # fromData       : 'fromData'
+            invalidateType : 'invalidate'
+            purgeCache     : 'purge'
+        } import mapping
+        
+        for dest, src in mapping
+            # if target is a class, let registerType default to current subclass
+            if dest is 'registerType' and typeof target is 'function'
+                target.registerType or= (id, Subclass=this) ->
+                    cache.add id, Subclass
+            # Bind the Cache methods to the class
+            else
+                target[dest] or= @[src].bind cache
+        
+        target
     
     
+    /**
+     * Creates a new TypeCache for a given class `Type`, and decorates it
+     * with cache methods as statics.
+     * 
+     * @see TypeCache#decorate
+     * @param {Class} Type Class to decorate.
+     * @param {String} typeKey Key used to infer missing IDs.
+     * @param {Object} [opts={}] Options:
+     * @param {Object} [opts.cache] Starting cache storage object. {@see TypeCache#constructor}
+     * @param {Object} [opts.mapping] Decoration mapping. {@see TypeCache#decorate}
+     * @returns {TypeCache} The new cache.
+     */
+    @createFor = (Type, typeKey, opts={}) ->
+        cache = new TypeCache typeKey, opts.cache
+        cache.decorate Type, opts.mapping
+        cache
+    
+
+
+/**
+ * @name SubtypeCacheMixin
+ * @namespace Static methods for interacting with a TypeCache for this class hierarchy.
+ */
+
 

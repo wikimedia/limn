@@ -17,7 +17,16 @@ class exports.GeoMapMetric extends Metric
     
     defaults : ->
         source_id  : null       # String
-        source_col : null       # String|Number
-        type       : 'int'      # String
     
     
+    /**
+     * The GeoJSON dataset associated with this Metric.
+     * @type ko.computed<Object>
+     * @depends source
+     */
+    data : @computed ->
+        return unless geojson = @source()?.data()
+        geojson.getData()
+    
+    
+

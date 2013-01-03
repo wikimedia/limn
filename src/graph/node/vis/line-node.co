@@ -25,7 +25,7 @@ class exports.LineNodeData extends TimeseriesNodeData
             noLegend : false
     
     attributeTypes: ->
-        {}
+        metric : TimeseriesMetric
     
     -> super ...
 
@@ -40,6 +40,7 @@ class exports.LineNode extends TimeseriesNode
     traits : [
         Trait.VIS_NODE
         Trait.REQUIRES_METRIC
+        Trait.METRIC_CONTENT_DATA
         Trait.METRIC_TIMESERIES
         Trait.SVG
         Trait.LEAF

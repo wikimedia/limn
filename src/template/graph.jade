@@ -19,7 +19,7 @@ section.graph.graph-display(data-bind="attr: { id:graphId }")
     .graph-raw-data-row.row
         .span7.offset3.ug
             h4 Raw Data used by this graph
-            ul(data-bind="foreach: rootNode().uniqueMetricDataLinks()")
+            ul(data-bind="foreach: uniqueMetricDataLinks()")
                 li
                     a(data-bind="text: $data, attr: {href: $data}", target="_blank")
     

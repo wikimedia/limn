@@ -3,10 +3,8 @@ d3 = require 'd3'
 ko = require 'knockout'
 op = require 'operator'
 
-{ GraphNodeData,
-} = require './graph-node-data'
-{ GraphNode,
-} = require './graph-node'
+{ ViewportNodeData, ViewportNode,
+} = require './viewport-node'
 
 Trait = require './graph-node-trait'
 
@@ -27,9 +25,9 @@ tuplesEqual = (a, b) ->
 
 /**
  * @class
- * @extends GraphNodeData
+ * @extends ViewportNodeData
  */
-class exports.CanvasNodeData extends GraphNodeData
+class exports.CanvasNodeData extends ViewportNodeData
     @registerType 'canvas'
     
     defaults: ->
@@ -42,56 +40,18 @@ class exports.CanvasNodeData extends GraphNodeData
     -> super ...
 
 
+
 /**
  * @class
- * @extends GraphNode
+ * @extends ViewportNode
  */
-class exports.CanvasNode extends GraphNode
+class exports.CanvasNode extends ViewportNode
     @registerType 'canvas'
     traits   : [ Trait.VIEWPORT ]
     tagName  : 'section'
     template : 'canvas-node'
     
     
-    /* * * *  Viewport Sizing  * * * {{{ */
-    
-    # TODO: use a responsive algo to pick good numbers based on screen/device
-    defaultWidth  : @computed -> 750
-    defaultHeight : @computed -> 500
-    
-    _resizeProxy  : ko.observable {}
-    resize        : -> @_resizeProxy {} if @el.peek()
-    
-    fullWidth     : @computed -> @$el.innerWidth()  if @el() and @_resizeProxy()
-    fullHeight    : @computed -> @$el.innerHeight() if @el() and @_resizeProxy()
-    
-    margin : { top:30, right:60, bottom:30, left:60 }
-    
-    frameWidth : @computed ->
-        return unless model = @model()
-        width = model.width()
-        if width is 'auto'
-            width = @fullWidth()
-        width
-    
-    frameHeight : @computed ->
-        return unless model = @model()
-        height = model.height()
-        if height is 'auto'
-            height = @fullHeight()
-        height
-    
-    viewportWidth  : @computed -> @frameWidth()  - @margin.left - @margin.right
-    viewportHeight : @computed -> @frameHeight() - @margin.top  - @margin.bottom
-    
-    clipWidth  : @computed -> if (v = @viewportWidth())  > 0 then v else @defaultWidth()
-    clipHeight : @computed -> if (v = @viewportHeight()) > 0 then v else @defaultHeight()
-    
-    width  : @computed -> @viewportWidth()
-    height : @computed -> @viewportHeight()
-    
-    
-    # }}}
     /* * * *  Scales  * * * {{{ */
     
     /**
@@ -100,22 +60,11 @@ class exports.CanvasNode extends GraphNode
      */
     xScale : null
     
-    /**
-     * The x output range distance which is "close enough" to an xStep
-     */
-    dx : 0
     
     /**
      * The scale that translates y domain values into y output range values
      */
     yScale : null
-    
-    padding : 0.1
-    
-    applyPadding: ([min, max]) ->
-        min -= min * @padding
-        max += max * @padding
-        [min, max]
     
     
     /**
@@ -123,6 +72,7 @@ class exports.CanvasNode extends GraphNode
      * @type ko.observable<Object>
      */
     scales : ko.observable null
+    
     
     /**
      * @returns {false|Object} The scales object if all are valid; false otherwise.
@@ -178,9 +128,6 @@ class exports.CanvasNode extends GraphNode
         
         metrics
     
-    uniqueMetricDataLinks: @computed ->
-        links = @metrics().map (metric) -> metric.source()?.url()
-        _.uniq links, false
     
     /**
      * Changes the x and y domains of the graph and refreshes the this.scales observable
@@ -203,6 +150,19 @@ class exports.CanvasNode extends GraphNode
         @scales.peek()
     
     
+    /**
+     * Percentage (expressed as a fraction) to expand the extrema of the y-scale.
+     * @type Number
+     */
+    padding : 0.1
+    
+    
+    applyPadding: ([min, max]) ->
+        min -= min * @padding
+        max += max * @padding
+        [min, max]
+    
+    
     logDomains: ->
         xd = @xScale.domain().map -> if it instanceof Date then it.getTime() else it
         console.log 'xScale.domain:', xd, '--', 'yScale.domain:', @yScale.domain()
@@ -212,17 +172,14 @@ class exports.CanvasNode extends GraphNode
     # }}}
     
     
-    zooming: (translate, scale) ->
-        @trigger 'zoom-graph', translate, scale, this
-    
-    
     /**
      * @constructor
      * @param {GraphView} graph
-     * @param {GraphNodeData} model
+     * @param {ViewportNodeData} model
      */
     (graph, model) ->
         super ...
+        
         @xScale = d3.time.scale().clamp(true)
         # ko.utils.observeFluentMethod @xScale, 'domain'
         
@@ -235,10 +192,6 @@ class exports.CanvasNode extends GraphNode
             .defined ([date, val], i) ~> isFinite @yScale val
             .interpolate 'linear'
         @scales { @xScale, @yScale, @scaleLine, -xValid, -yValid }
-        
-        # Trigger resize whenever a child is added
-        @on 'child-built', @resize, this
-        $ window .resize _.debounce @resize.bind(this), 50ms
     
     
     
@@ -254,34 +207,6 @@ class exports.CanvasNode extends GraphNode
     watchOthers: ->
         @metrics()
     
-    
-    /**
-     * register a handler for an event name so that child nodes can see parent events
-     * @param {string} eventName
-     * @param {Object} context the context to call the function in
-     * @param {Function} fn the handling function
-     */
-    #FIXME: this doesn't work because of the changing / overwriting of the GraphNode tree.  Move to dependency tracking instead of events
-    handle: (eventName, context, fn) ->
-        @handlers ?= {}
-        unless @handlers[eventName]
-            @handlers[eventName] = []
-            @on eventName, ~>
-                for handler of @handlers[eventName]
-                    handler.fn.apply handler.context, arguments
-        
-        existing = false
-        for handler of @handlers[eventName]
-            if handler.context is context
-                handler.fn = fn
-                existing = true
-                break
-        
-        unless existing
-            @handlers[eventName].push {fn, context}
-    
-    
-    viewportHover: ko.observable {}
     
     buildElement: (parentElement) ->
         @renderView parentElement
@@ -325,6 +250,12 @@ class exports.CanvasNode extends GraphNode
                 @$ 'section.meta.bg' .0
     
     
-    
+    background: (color) ->
+        bg = @$ 'svg g.bg rect.bgcolor'
+        if color
+            bg.css 'fill', color
+            this
+        else
+            bg.css 'fill'
     
 

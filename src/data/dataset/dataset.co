@@ -1,0 +1,121 @@
+_ = require 'underscore'
+{ CSVData,
+} = require 'timeseries'
+
+{ AttributesBase,
+} = require '../../base'
+{ TypeCache,
+} = require '../../util'
+
+
+
+/**
+ * @class Parses a dataset type and exports data under a common interface.
+ * @extends PlainBase
+ */
+class exports.Dataset extends AttributesBase
+    /**
+     * Type of the contents of the dataset.
+     * 
+     * Register a new type by creating a subclass:
+     * 
+     *      class LOLDataset extends Dataset
+     *          @registerType 'lol'
+     *          -> super ...
+     * 
+     * @type String
+     */
+    type : null
+    
+    
+    /**
+     * Encoding of the data.
+     * @type String
+     */
+    format : 'json'
+    
+    
+    formatParsers :
+        csv   : (rawData) -> new CSVData rawData
+        tsv   : (rawData) -> new CSVData rawData, { colSep:'\t' }
+        json  : (rawData) -> rawData
+        jsonp : (rawData) -> rawData
+        xml   : (rawData) -> rawData
+    
+    
+    
+    /**
+     * @constructor
+     */
+    (@source, @rawData) ->
+        super()
+        @format = @source.dataFormat()
+        @data = @canonicalize @parse rawData, @format
+    
+    
+    
+    /**
+     * Parses the raw data into an object representation.
+     * 
+     * @param {*} rawData Raw data.
+     * @param {String} format Data format.
+     * @returns {Object} Parsed data.
+     */
+    parse: (rawData, format) ->
+        unless format in @formatParsers
+            throw new Error "Unknown format '#format'!"
+        @parsedData = @formatParsers[format] rawData
+        if typeof @parsedData?.getData is 'function'
+            data = @parsedData.getData()
+            
+            # Annotate rows (Arrays) with their column values by the column's ID
+            colIds = _.invoke @source.columns(), 'id'
+            _.each data, (row) ->
+                for idx, id of colIds
+                    row[id] = row[idx]
+            
+            data
+        else
+            @parsedData
+    
+    
+    /**
+     * Invoked to transform parsed data into its "proper" form for this dataset,
+     * whatever that might be.
+     * 
+     * @param {Object} data Parsed data to canonicalize.
+     * @returns {Object} Converted data.
+     */
+    canonicalize: (data) ->
+        data
+    
+    
+    /**
+     * @returns {Object} The parsed and transformed data.
+     */
+    getData : ->
+        @data
+    
+    
+    /**
+     * @returns {Array<String>} List of column labels.
+     */
+    getLabels: ->
+        @labels
+    
+    
+    /**
+     * Map of known sub-types, keyed by type-name. Decorates this class to
+     * provide static methods for interacting with the cache:
+     *  - hasType
+     *  - lookupType
+     *  - registerType
+     *  - invalidateType
+     *  - purgeCache
+     * 
+     * @static
+     * @type TypeCache
+     */
+    @__cache__ = TypeCache.createFor this, 'type'
+    
+

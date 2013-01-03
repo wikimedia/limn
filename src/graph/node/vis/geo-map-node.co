@@ -45,8 +45,34 @@ class exports.GeoMapNode extends GroupNode
     -> super ...
     
     
+    features : ko.observable null
+    
     render: ->
+        return unless mapData  = @model().metric().data()
+        return unless viewport = @viewport()
+        return unless width    = viewport.width()
+        return unless height   = viewport.height()
         
+        projection = d3.geo.mercator()
+            .scale width
+            .translate viewport.center()
+        
+        path = d3.geo.path()
+            .projection projection
+        
+        @root().background '#BFBFBF'
+        
+        features = @sel.selectAll '.feature'
+            .data mapData.features
+                .enter().append 'path'
+        
+        features
+            .attr  'class',  'feature'
+            .attr  'id',     (d) -> d.id
+            .attr  'd',      path
+            .style 'fill',   'white'
+        
+        @features features
     
     
     

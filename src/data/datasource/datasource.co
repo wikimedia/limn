@@ -5,13 +5,13 @@ Seq     = require 'seq'
 
 { ReadyEmitter,
 } = require 'emitters'
-{ TimeSeriesData, CSVData,
-} = require 'timeseries'
 
 { Model, StoredModel, ModelCache,
 } = require '../../base'
 { ParsingMixin,
 } = require '../../util'
+{ Dataset,
+} = require '../dataset'
 
 
 
@@ -39,6 +39,7 @@ class exports.ColumnDef extends Model
      */
     parse: (value) ->
         @parseValue value, @get 'type'
+    
 
 
 /**
@@ -46,35 +47,39 @@ class exports.ColumnDef extends Model
  * a web service endpoint.
  */
 class exports.DataSource extends StoredModel
-    VALID_FORMATS : <[ json csv ]>
-    
-    (attributes={}) -> super attributes
+    -> super ...
     
     
     resource : 'datasources'
     getId    : -> @get 'id'
     
+    formatContentTypes :
+        # format    : Content-Type for AJAX request
+        csv         : 'text'
+        tsv         : 'text'
+        json        : 'json'
+        jsonp       : 'jsonp'
+        xml         : 'xml'
+    
     defaults : ->
         id            : null
         slug          : null
+        
+        format        : 'json'          # := csv | tsv | json | jsonp | xml                 ContentType/serialization/encoding of the dataset response.
+        type          : 'timeseries'    # := series | timeseries | geojson | topojson       Type of the contents of the dataset.
         url           : ''
         
         name          : ''
         shortName     : ''
-        title         : ''
-        subtitle      : ''
         desc          : ''
         notes         : ''
         
-        timespan      : { start:null, end:null, step:'1mo' }
-        
-        /**
-         * @type ColumnDef[]
-         */
         columns       : []
+        timespan      : { start:null, end:null, step:'1mo' }
     
     attributeTypes: ->
         columns : ColumnDef
+    
     
     
     /**
@@ -82,20 +87,39 @@ class exports.DataSource extends StoredModel
      * @type ko.computed<Boolean>
      */
     isValid : @computed ->
-        !! @dataUrl() and _.contains @VALID_FORMATS, @dataFormat()
+        !! @dataUrl() and @get('format') in @formatContentTypes
     
-    dataFormat : @computed ->
-        format = @get('format')
-        unless format
-            url = @get('url')
-            format = if url.indexOf('.json') === url.length - 5 then 'json' else 'csv'
-        format
     
-    dataUrl : @computed ->
-        url = @get('url')
+    /**
+     * URL for the data.
+     * @type ko.computed<String>
+     */
+    dataUrl : @computedRequires 'url', (url) ->
         if url.indexOf('http') == 0
             url = "x/#url"
         url
+    
+    
+    /**
+     * Encoding of the dataset response.
+     * @type ko.computed<String>
+     */
+    dataFormat : @computed ->
+        format = @get('format')
+        unless format
+            return format unless url = @get('url')
+            # format = /\.([^\.]+)$/.exec(url)?[1] or 'csv'
+            format = if url.indexOf('.json') === url.length - 5 then 'json' else 'csv'
+        format
+    
+    
+    /**
+     * Dataset class wrapping the data.
+     * @type ko.computed<Dataset>
+     */
+    datasetType : @computedRequires 'type', (type) ->
+        Dataset.lookupType type
+    
     
     /**
      * The reified dataset associated with this DataSource.
@@ -104,23 +128,20 @@ class exports.DataSource extends StoredModel
      */
     data : @asyncComputed ->
         return unless @isValid()
-        
-        format       = @dataFormat()
-        DataFileType = if format is 'csv' then CSVData else TimeSeriesData
+        return unless format      = @dataFormat()
+        return unless DatasetType = @datasetType()
         
         xhr = $.ajax do
             url      : @dataUrl()
-            dataType : if format is 'csv' then 'text' else 'json'
+            dataType : @formatContentTypes[format]
         
-        promise = xhr.pipe (data) -> new DataFileType data
+        promise = xhr.pipe (data) ~> new DatasetType this, data
         promise.then do
             (data) ~> @trigger 'data-load',  this, data
             (err)  ~> @trigger 'data-error', this
         promise.xhr = xhr
         
         promise
-    
-    
     
     
     /**
@@ -132,16 +153,16 @@ class exports.DataSource extends StoredModel
      * @returns {Object} Converted raw data.
      */
     canonicalize : (data) ->
+        data.slug         or= data.id
         data.shortName    or= data.name
-        data.title        or= data.name
-        data.subtitle     or= ''
         
         cols = data.columns
         if _.isArray cols
             data.columns = _.map cols, (col, idx) ->
                 if _.isArray col
                     [label, type] = col
-                    {idx, label, type or 'int'}
+                    id = _.str.underscored(label.toLowerCase())
+                    {id, label, type or 'int'}
                 else
                     col.type or= 'int'
                     col
@@ -155,24 +176,3 @@ class exports.DataSource extends StoredModel
     
     
 
-
-### DataSource Cache
-
-ReadyEmitter.decorate DataSource
-
-ALL_SOURCES = {}
-DataSourceCache = exports.DataSourceCache = new ModelCache DataSource, {-ready, cache:ALL_SOURCES}
-
-# Fetch all DataSources
-DataSource.fetchAll = ->
-    limn = require '../../index'
-    $.getJSON limn.mount('datasources/all'), (models) ->
-        _.each models, (data) ->
-            DataSourceCache.add new DataSource data
-        
-        # Trigger event when the DataSource TOC is ready
-        DataSourceCache.ready true
-        DataSource.ready true
-
-DataSource.getAllSources = ->
-    _.map ALL_SOURCES, op.I

@@ -1,0 +1,27 @@
+{ Dataset,
+} = require './dataset'
+
+
+/**
+ * @class
+ * @extends Dataset
+ */
+class exports.GeoJSONDataset extends Dataset
+    @registerType 'geojson'
+    
+    
+    (source, rawData) ->
+        super ...
+    
+    
+    /**
+     * @returns {Array<Array>} List of rows, each of which includes all columns.
+     */
+    # getData: ->
+    #     @rows
+    
+    
+    
+    
+
+

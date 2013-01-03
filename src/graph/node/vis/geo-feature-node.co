@@ -41,6 +41,7 @@ class exports.GeoFeatureNode extends GraphNode
     traits : [
         Trait.VIS_NODE
         Trait.REQUIRES_METRIC
+        Trait.METRIC_CONTENT_DATA
         Trait.METRIC_GEO_FEATURE
         Trait.SVG
         Trait.LEAF
@@ -48,5 +49,23 @@ class exports.GeoFeatureNode extends GraphNode
     
     
     -> super ...
+    
+    
+    render: ->
+        return unless featureData = @model().metric().data()
+        # return unless @parent().el() and parentSel = @parent().sel
+        return unless (features = @parent().features())?[0]?.length
+        
+        dataById = _.generate featureData
+        fillColors = @options().get('fill')
+        
+        if _.isArray(fillColors)
+            extent = d3.extent _.pluck(featureData, 1)
+            extent[0] = Math.max 1, extent[0]
+            fill = d3.scale.log()
+               .domain extent
+               .range fillColors
+            features.style 'fill', (d) -> fill dataById[d.id]
+        
     
     

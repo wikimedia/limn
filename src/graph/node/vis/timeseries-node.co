@@ -37,6 +37,7 @@ class exports.TimeseriesNode extends GraphNode
     traits : [
         Trait.VIS_NODE
         Trait.REQUIRES_METRIC
+        Trait.METRIC_CONTENT_DATA
         Trait.METRIC_TIMESERIES
         Trait.SVG
         Trait.LEAF
