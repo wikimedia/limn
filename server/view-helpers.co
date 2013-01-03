@@ -62,7 +62,7 @@ sources = exports.sources = (node_env=SOURCES_ENV, modulesFile="#WWW/modules.yam
  */
 findSources = exports.findSources = (srcDirs=<[ src ]>, opts={}) ->
     srcDirs = [ srcDirs ] unless _.isArray srcDirs
-    opts    = { +dropSrcDir, ext:'.mod.js', ...opts }
+    opts    = { +dropSrcDir, ext:'.mod.js', pre:'', ...opts }
     return _ srcDirs .chain()
         .map (srcDir) ->
             srcDir = _.str.rtrim srcDir, '/'
@@ -73,7 +73,7 @@ findSources = exports.findSources = (srcDirs=<[ src ]>, opts={}) ->
                 cwd = path.join cwd, srcDir
             glob.sync pat, { +nosort, cwd }
         .flatten()
-        .map (f) -> f.replace /\.co$/, opts.ext
+        .map (f) -> opts.pre + f.replace /\.co$/, opts.ext
         .sort indexSorter
         .value()
 

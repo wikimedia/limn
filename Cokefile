@@ -19,9 +19,11 @@ task \install 'Install project dependencies.' ->
 task \setup 'Ensure project is set up for development.' ->
     err <- sh 'npm install', {-verbose, +errors, +die}
     throw err if err
+    invoke \update_version
+
+task \update_version ->
     err, version <- writeVersionFile 'src/version.js'
     throw err if err
-
 
 task \server 'Start dev server' ->
     run './server/server.co'
@@ -43,13 +45,13 @@ task \build 'Build coco sources' ->
     invoke \setup
     coco <[ -bjc package.co ]>
     
-    {sources}  = require './src/server/view-helpers'
-    browserify = require 'browserify'
-    Coco       = require 'coco'
-    Jade       = require 'jade'
-    Stylus     = require 'stylus'
-    nib        = require 'nib'
-    yaml       = require 'js-yaml'
+    {sources, findSources}  = require './src/server/view-helpers'
+    browserify              = require 'browserify'
+    Coco                    = require 'coco'
+    Jade                    = require 'jade'
+    Stylus                  = require 'stylus'
+    nib                     = require 'nib'
+    yaml                    = require 'js-yaml'
     
     matchExt = /((?:\.min)?)\.mod((?:\.min)?)\.js$/i
     fullExt  = /(\.(min|mod|amd|jade))*\.js$/i
@@ -139,11 +141,9 @@ task \bundle 'Build application and vendor bundles' ->
     invoke \bundle_combine
 
 task \bundle_app 'Build application bundle' ->
-    {sources} = require './src/server/view-helpers'
+    {findSources} = require './server/view-helpers'
+    app_sources = findSources null, {pre:'var/js/limn/'}
     
-    app_sources = sources 'development', 'www/modules.yaml'
-        .filter -> not _.startsWith it, '/vendor'
-        .map -> it.slice 1 .replace /js\/limn/, 'lib'
     mkdirp dirname APP_BUNDLE_PATH
     bundle_js APP_BUNDLE_PATH, app_sources, {-minify}
     
@@ -213,35 +213,25 @@ task \cleanup_tests 'Removes compiled tests' ->
 
 task \clean 'Clean up environment and artifacts' ->
     invoke \cleanup_tests
-    remove ['lib', 'var', 'dist'], {+ignoreMissing, +verbose}
+    remove ['var', 'dist'], {+ignoreMissing, +verbose}
 
+task \clean_js 'Clean up environment and artifacts' ->
+    remove ['var/js'], {+ignoreMissing, +verbose}
 
 
 task \list_all 'Print a list of all source-file paths.' ->
-    {sources} = require './server/view-helpers'
-    say do
-        sources 'development', 'www/modules.yaml'
-            .map -> it.slice 1
-            .join '\n'
+    invoke \list_vendor
+    invoke \list_sources
 
 task \list_sources 'Print a list of limn source-file paths.' ->
-    {sources} = require './server/view-helpers'
+    {findSources}  = require './server/view-helpers'
     say do
-        sources 'development', 'www/modules.yaml'
-            .filter -> it.slice(0, 3) is '/js'
-            .map -> it.slice 1
+        findSources null, {pre:'js/limn/'}
             .join '\n'
 
 task \list_vendor 'Print a list of vendor source-file paths.' ->
-    {sources} = require './server/view-helpers'
+    {sources}  = require './server/view-helpers'
     say do
         sources 'development', 'www/modules.yaml'
-            .filter -> it.slice(0, 7) is '/vendor'
             .map -> it.slice 1
             .join '\n'
-
-# backwards compat
-task \source_list 'Print a list of all source file paths.' ->
-    invoke \list_all
-
-
