@@ -57,8 +57,8 @@ class exports.GeoFeatureNode extends GraphNode
         return unless (features = @parent().features())?[0]?.length
         
         dataById = _.generate featureData
-        fillColors = @options().get('fill')
         
+        fillColors = @options().get('fill')
         if _.isArray(fillColors)
             extent = d3.extent _.pluck(featureData, 1)
             extent[0] = Math.max 1, extent[0]
