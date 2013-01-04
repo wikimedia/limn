@@ -71,7 +71,7 @@ class exports.Dataset extends AttributesBase
             # Annotate rows (Arrays) with their column values by the column's ID
             colIds = _.invoke @source.columns(), 'id'
             _.each data, (row) ->
-                for idx, id of colIds
+                for id, idx of colIds
                     row[id] = row[idx]
             
             data
