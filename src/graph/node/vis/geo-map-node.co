@@ -18,14 +18,36 @@ ProjectColors = require '../../project-colors'
 class exports.GeoMapNodeData extends GroupNodeData
     @registerType 'geo-map'
     
+    VALID_PROJECTIONS : <[
+        albers albersUsa
+        azimuthal azimuthalEqualArea azimuthalEquidistant
+        equirectangular gnomonic
+        mercator orthographic stereographic
+    ]>
+    
+    
     defaults: ->
         options:
-            projection: 'mercator'
+            projection      : 'mercator'
+            featuresColor   : '#FFFFFF'
+            backgroundColor : '#BFBFBF'
     
     attributeTypes: ->
         metric: GeoMapMetric
     
+    
     -> super ...
+    
+    
+    /**
+     * The d3 projection operator for this map.
+     * @type ko.computed<d3.geo.projection>
+     */
+    projectionOp : @computedRequires 'options.projection', (proj) ->
+        if _.contains(@VALID_PROJECTIONS, proj) and projection = d3.geo[proj]
+            return projection
+        null
+    
 
 
 
@@ -48,29 +70,31 @@ class exports.GeoMapNode extends GroupNode
     features : ko.observable null
     
     render: ->
-        return unless mapData  = @model().metric().data()
+        return unless mapData  = @model()?.metric()?.data()
+        return unless options  = @model().options()
+        return unless d3Proj   = @model().projectionOp()
         return unless viewport = @viewport()
         return unless width    = viewport.width()
         return unless height   = viewport.height()
         
-        projection = d3.geo.mercator()
+        if bgColor = options.get('backgroundColor')
+            @root().background bgColor
+        
+        @projection = d3Proj()
             .scale width
             .translate viewport.center()
         
         path = d3.geo.path()
-            .projection projection
-        
-        @root().background '#BFBFBF'
+            .projection @projection
         
         features = @sel.selectAll '.feature'
             .data mapData.features
                 .enter().append 'path'
-        
         features
             .attr  'class',  'feature'
-            .attr  'id',     (d) -> d.id
+            .attr  'id',     (d) ~> "#{@nodeId}_#{d.id}"
             .attr  'd',      path
-            .style 'fill',   'white'
+            .style 'fill',   options.get('featuresColor')
         
         @features features
     
