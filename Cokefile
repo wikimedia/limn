@@ -45,7 +45,7 @@ task \build 'Build coco sources' ->
     invoke \setup
     coco <[ -bjc package.co ]>
     
-    {sources, findSources}  = require './src/server/view-helpers'
+    {sources, findSources}  = require './server/view-helpers'
     browserify              = require 'browserify'
     Coco                    = require 'coco'
     Jade                    = require 'jade'
@@ -153,12 +153,19 @@ task \bundle_app 'Build application bundle' ->
     say 'ok.\n'
 
 task \bundle_vendor 'Build vendor bundle' ->
-    {sources} = require './src/server/view-helpers'
+    {sources} = require './server/view-helpers'
     
     VENDOR_BUNDLE_PATH = 'var/vendor/vendor-bundle.js'
-    vendor_sources = sources 'development', 'www/modules.yaml'
-        .filter -> _.startsWith it, '/vendor'
+    # FIXME: including vendor dependencies is quite a mess.  Clean this up and add browserify
+    vendor_sources_no_browserify = sources 'development', 'www/modules.yaml'
+        .filter -> it.indexOf('browserify') === -1
+    vendor_sources_static = vendor_sources_no_browserify
+        .filter -> it.indexOf('mod.js') === -1
         .map -> "static#it"
+    vendor_sources_var = vendor_sources_no_browserify
+        .filter -> it.indexOf('mod.js') !== -1
+        .map -> "var#it"
+    vendor_sources = _.flatten [vendor_sources_static, vendor_sources_var]
     mkdirp dirname VENDOR_BUNDLE_PATH
     bundle_js VENDOR_BUNDLE_PATH, vendor_sources, {-minify}
     
@@ -216,7 +223,7 @@ task \clean 'Clean up environment and artifacts' ->
     remove ['var', 'dist'], {+ignoreMissing, +verbose}
 
 task \clean_js 'Clean up environment and artifacts' ->
-    remove ['var/js'], {+ignoreMissing, +verbose}
+    remove ['var/js','var/vendor'], {+ignoreMissing, +verbose}
 
 
 task \list_all 'Print a list of all source-file paths.' ->
