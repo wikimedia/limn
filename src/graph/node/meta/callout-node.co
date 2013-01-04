@@ -77,9 +77,10 @@ class exports.CalloutNode extends GraphNode
         i = data.length
         while --i > 0 and [date, value] = data[i]
             break if value? and isFinite value
-        return if i === 0
+        else return
         
         # TODO: accommodate timestep other than 1mo
+        return if i < 12
         last_year  = data[ i - 12 ]
         last_month = data[ i - 1 ]
         
