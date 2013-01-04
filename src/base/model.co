@@ -1,3 +1,7 @@
+ko = require 'knockout'
+{ unwrapObservable, peekObservable,
+} = ko.utils
+
 { AttributesBase,
 } = require './attributes-base'
 
@@ -9,6 +13,74 @@
  */
 class exports.Model extends AttributesBase
     -> super ...
+    
+    
+    
+    /* * * *  Knockout-Aware Accessors (with Nesting)  * * * {{{ */
+    
+    
+    /**
+     * Retrieves the attribute value at `key`, also accepting a dotted keypath
+     * to perform a nested lookup.
+     * 
+     * If called by a computed observable, this function creates a dependency
+     * on the accessed attribute (provided it exists) unless `peek=true`
+     * is passed.
+     * 
+     * @protected
+     * @param {String} key Key to get (including dotted keypaths).
+     * @param {Boolean} [peek=false] If true, use `ko.utils.peekObservable()`
+     *  to access the value, circumventing dependency tracking.
+     * @returns {*} Value at `key`.
+     */
+    _get: (key, peek=false) ->
+        return unless key and @attributes?
+        unwrapper = if peek then peekObservable else unwrapObservable
+        
+        val = @attributes
+        parts = key.split('.')
+        while parts.length
+            # Models recursively handle their own gets (as we're doing now), so
+            # defer to our sub-model.
+            return val.get parts.join('.') if val instanceof Model
+            
+            val = unwrapper val[ parts.shift() ]
+            return unless val?
+        
+        val
+    
+    
+    /**
+     * Retrieves the attribute value at `key`, also accepting a dotted
+     * keypath to perform a nested lookup.
+     * 
+     * If called by a computed observable, this function creates a dependency
+     * on the accessed attribute (provided it exists).
+     * 
+     * @param {String} key Key to get (including dotted keypaths).
+     * @returns {*} Value at `key`.
+     */
+    get: (key) ->
+        @_get key, false
+    
+    
+    /**
+     * Retrieves the attribute value at `key`, also accepting a dotted
+     * keypath to perform a nested lookup.
+     * 
+     * Even if called by a computed observable, this function does **not**
+     * create a dependency on the accessed attribute.
+     * 
+     * @param {String} key Key to peek (including dotted keypaths).
+     * @returns {*} Value at `key`.
+     */
+    peek: (key) ->
+        @_get key, true
+    
+    
+    
+    # }}}
+    /* * * *  Class Methods  * * * */
     
     
     /**
@@ -26,4 +98,7 @@ class exports.Model extends AttributesBase
      * @see AttributesBase#plainSubclass
      */
     @PlainObjectClass = Model
+    
+    # }}}
+    
 

@@ -154,6 +154,9 @@ class exports.AttributesBase extends Base
     /**
      * Retrieves the attribute value at `key`.
      * 
+     * If called by a computed observable, this function creates a dependency
+     * on the accessed attribute (provided it exists).
+     * 
      * @param {String} key Key to get.
      * @returns {*} Value at `key`.
      */
@@ -162,7 +165,10 @@ class exports.AttributesBase extends Base
     
     
     /**
-     * Gets the attribute value at `key`, circumventing dependency tracking.
+     * Retrieves the attribute value at `key`.
+     * 
+     * Even if called by a computed observable, this function does **not**
+     * create a dependency on the accessed attribute.
      * 
      * @param {String} key Key to peek.
      * @returns {*} Value at `key`.

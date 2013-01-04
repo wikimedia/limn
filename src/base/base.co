@@ -1,3 +1,10 @@
+ko = require 'knockout'
+{
+    unwrapObservable : unwrap
+    peekObservable   : peek
+} = ko.utils
+
+
 { EventEmitter,
 } = require 'emitters'
 

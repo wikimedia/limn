@@ -1,0 +1,167 @@
+{ Model,
+} = require '../../base'
+
+
+
+/**
+ * @class
+ * @extends Model
+ */
+class exports.NodeOptions extends Model
+    
+    /**
+     * GraphNodeData to which these options belong.
+     * @type GraphNodeData
+     */
+    owner : null
+    
+    attributeTypes: ->
+        {}
+        # stroke : Stroke
+    
+    
+    /**
+     * @constructor
+     * @param {GraphNodeData} owner GraphNodeData to which these options belong.
+     * @param {Object} [attributes={}] Option values.
+     */
+    (@owner, attributes) ->
+        # import GraphNodeData here to avoid a potentially broken circular dependency
+        { GraphNodeData,
+        } = require './graph-node-data'
+        unless @owner instanceof GraphNodeData
+            throw new Error "Owner of GraphNodeOptions must be a GraphNodeData object! (got #{@owner})"
+        
+        super attributes
+    
+    
+    
+    /* * * *  Knockout-Aware Accessors (with Nesting and Cascading)  * * * {{{ */
+    
+    
+    /**
+     * Retrieves the attribute value at `key`, also accepting a dotted
+     * keypath to perform a nested lookup. If the key is not found on this
+     * object, it will be recursively looked up in the parent's options.
+     * 
+     * If called by a computed observable, this function creates a dependency
+     * on the accessed attribute (provided it exists).
+     * 
+     * @param {String} key Key to get (including dotted keypaths).
+     * @returns {*} Value at `key`.
+     */
+    get: (key) ->
+        val = super key
+        return val if val?
+        @owner.parent()?.get('options')?.get key
+    
+    
+    /**
+     * Retrieves the attribute value at `key`, also accepting a dotted keypath
+     * to perform a nested lookup. Unlike `get()`, if the key is not found on
+     * this object, it will **not** be recursively looked up in the parent's
+     * options.
+     * 
+     * If called by a computed observable, this function creates a dependency
+     * on the accessed attribute (provided it exists).
+     * 
+     * @param {String} key Key to get (including dotted keypaths).
+     * @returns {*} The value at `key` (ignoring parent lookup).
+     */
+    getOwn: (key) ->
+        Model::get.call this, key
+    
+    
+    /**
+     * Retrieves the attribute value at `key`, also accepting a dotted
+     * keypath to perform a nested lookup. If the key is not found on this
+     * object, it will be recursively looked up in the parent's options.
+     * 
+     * Even if called by a computed observable, this function does **not**
+     * create a dependency on the accessed attribute.
+     * 
+     * @param {String} key Key to peek (including dotted keypaths).
+     * @returns {*} Value at `key`.
+     */
+    peek: (key) ->
+        val = super key
+        return val if val?
+        @owner.parent()?.peek('options')?.peek key
+    
+    
+    /**
+     * Retrieves the attribute value at `key`, also accepting a dotted keypath
+     * to perform a nested lookup. Unlike `peek()`, if the key is not found on
+     * this object, it will **not** be recursively looked up in the parent's
+     * options.
+     * 
+     * Even if called by a computed observable, this function does **not**
+     * create a dependency on the accessed attribute.
+     * 
+     * @param {String} key Key to peek (including dotted keypaths).
+     * @returns {*} The value at `key` (ignoring parent lookup).
+     */
+    peekOwn: (key) ->
+        Model::peek.call this, key
+    
+    
+    /**
+     * Tests whether `key` is defined on this object (and thus not inherited
+     * from a parent).
+     * 
+     * @param {String} key Key to test (including dotted keypaths).
+     * @param {Boolean} [peek=false] If true, uses `peekOwn()` (instead of
+     *  `getOwn`) to access the value, circumventing dependency tracking.
+     * @returns {Boolean} True if `key` is defined on this object (and thus not
+     * inherited from a parent).
+     */
+    isOwn: (key, peek=false) ->
+        own = if peek then @peekOwn(key) else @getOwn(key)
+        own?
+    
+    
+    /**
+     * Tests whether the value at `key` is the same as that inherited from a parent.
+     * 
+     * @param {String} key Key to test (including dotted keypaths).
+     * @param {Boolean} [peek=false] If true, uses `peek()` and `peekOwn()`
+     *  (instead of `get` and `getOwn`) to access the values, circumventing
+     *  dependency tracking.
+     * @param {Function} [isEqual=_.isEqual] Equality comparator; defaults to
+     *  a deep structural comparison via <a href="http://underscorejs.org/#isEqual" target="_blank">Underscore's `isEqual`</a>.
+     * @returns {Boolean} True if the value at `key` is the same as that
+     *  inherited from a parent.
+     */
+    isInherited: (key, peek=false, isEqual=_.isEqual) ->
+        if peek
+            own = @peekOwn(key)
+            val = @peek(key)
+        else
+            own = @getOwn(key)
+            val = @get(key)
+        isEqual own, val
+    
+    
+    # }}}
+    
+    /**
+     * @static
+     * @param {GraphNodeData} owner GraphNodeData to which these options belong.
+     * @param {Object} [attributes={}] Option values.
+     * @returns {NodeOptions} A new instance.
+     */
+    @create = (owner, attributes) ->
+        ClassType = this
+        new ClassType owner, attributes
+    
+    
+    /**
+     * @static
+     * @returns {Function} Factory function that creates new instances of this Model.
+     */
+    @factory = ->
+        ClassType = this
+        return (owner, attributes) -> new ClassType owner, attributes
+    
+    
+

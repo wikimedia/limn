@@ -9,6 +9,8 @@ ko = require 'knockout'
 } = require '../../data/metric'
 { NodeMixin,
 } = require './node-mixin'
+{ NodeOptions,
+} = require './node-options'
 
 
 
@@ -35,8 +37,7 @@ class exports.GraphNodeData extends Model
     attributeTypes: ->
         metric   : Metric
         children : GraphNodeData.create
-        # options  :
-        #     stroke : Stroke
+        options  : (options) -> new NodeOptions this, options
     
     
     /**
@@ -152,7 +153,7 @@ class exports.GraphNodeData extends Model
     
     /* * * *  Property Cascading  * * * {{{ */
     
-    # TODO
+    
     
     
     # }}}
