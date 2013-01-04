@@ -35,10 +35,12 @@ task \link_reportcard_data 'Link to reportcard data from environment variable LI
     sh 'mkdir -p ./var/data/datafiles'
     sh 'mkdir -p ./var/data/datasources'
     sh 'mkdir -p ./var/data/graphs'
+    sh 'mkdir -p ./var/data/geo'
     sh 'ln -sn $LIMN_REPORTCARD/dashboards ./var/data/dashboards/rc'
     sh 'ln -sn $LIMN_REPORTCARD/datafiles ./var/data/datafiles/rc'
     sh 'ln -sn $LIMN_REPORTCARD/datasources ./var/data/datasources/rc'
     sh 'ln -sn $LIMN_REPORTCARD/graphs ./var/data/graphs/rc'
+    sh 'ln -sn $LIMN_REPORTCARD/geo ./var/data/geo/rc'
 
 
 task \build 'Build coco sources' ->
