@@ -50,28 +50,28 @@ class exports.ZoomPanNode extends GraphNode
         return unless root = @root()
         return unless scales = root.scalesIfValid()
         
-        # FIXME: because of limitations in d3, this does not generate a new behavior, it just overrides the CURRENT behavior for the PAGE
+        self = this
         @behavior ?= d3.behavior.zoom()
             .x scales.xScale
             .y scales.yScale
             .scaleExtent [1,10]
-            .on 'zoom', ~> @zooming.call this
+            .on 'zoom', -> self.zooming.call this, self
         
-        d3.select('svg').call @behavior
+        d3.select(@root().el()).select('g.content-frame').call @behavior
     
     
-    zooming: ->
+    zooming: (self) ->
         scale = d3.event.scale
         # FIXME: this still isn't zooming or clipping quite right - the scales are consistent on zoomin/zoomout but they're off by maybe the offset?
-        frame = d3.select 'g.content-frame'
+        frame = d3.select this
         
         # special case, if they zoom all the way out, bring them back to normal
         if scale is 1
-            @behavior.translate([0,0])
-            @behavior.scale(scale)
+            self.behavior.translate([0,0])
+            self.behavior.scale(scale)
             frame = frame.transition(100)
         
         frame.attr do
-            transform: "translate(#{@behavior.translate()}) scale(#{@behavior.scale()})"
+            transform: "translate(#{self.behavior.translate()}) scale(#{self.behavior.scale()})"
         
-        @root().zooming @behavior.translate(), @behavior.scale()
+        self.root().zooming self.behavior.translate(), self.behavior.scale()
