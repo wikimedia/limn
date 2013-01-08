@@ -3,8 +3,10 @@ ko     = require 'knockout'
 moment = require 'moment'
 
 limn = require 'limn'
-{ DataSource, Metric,
+{ DataSource,
 } = limn.data
+{ TimeseriesMetric,
+} = limn.data.metric
 { Query,
 } = limn.util
 
@@ -25,11 +27,11 @@ QUnit.module '[data] Metric', do
         _.invoke @subs, 'dispose'
 
 
-asyncTest 'Empty Metric', ->
+asyncTest 'Empty TimeseriesMetric', ->
     expect 29
     start()
     
-    metric = new Metric()
+    metric = new TimeseriesMetric()
     
     equal metric.source_id(), null, 'source_id is null (but no error)'
     equal metric.source(),    null, 'source is null (but no error)'

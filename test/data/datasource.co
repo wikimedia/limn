@@ -1,8 +1,7 @@
 limn = require 'limn'
 DataSource = limn.data.DataSource
+TimeseriesDataset = limn.data.dataset.TimeseriesDataset
 
-{ TimeSeriesData, CSVData,
-} = require 'timeseries'
 
 
 # XXX: Hear ye.
@@ -64,5 +63,5 @@ asyncTest 'lazy-load DataSource data', ->
             start()
             
             ok ds.data(), "DataSource.data() now defined"
-            ok ds.data() instanceof CSVData, "DataSource.data() instanceof CSVData"
+            ok ds.data() instanceof TimeseriesDataset, "DataSource.data() instanceof TimeseriesDataset"
 
