@@ -142,23 +142,25 @@ task \bundle 'Build application and vendor bundles' ->
     invoke \bundle_vendor
     invoke \bundle_combine
 
-task \bundle_app 'Build application bundle' ->
+task \bundle_sources 'Build application bundle' ->
     {findSources} = require './server/view-helpers'
     app_sources = findSources null, {pre:'var/js/limn/'}
     
     mkdirp dirname APP_BUNDLE_PATH
     bundle_js APP_BUNDLE_PATH, app_sources, {-minify}
     
+    /* TODO: fix minify
     APP_BUNDLE_MIN_PATH = APP_BUNDLE_PATH.replace /\.js$/, '.min.js'
     print 'Minifying into', APP_BUNDLE_MIN_PATH.magenta.bold, '... '
     write APP_BUNDLE_MIN_PATH, minify read APP_BUNDLE_PATH
+    */
     say 'ok.\n'
 
 task \bundle_vendor 'Build vendor bundle' ->
     {sources} = require './server/view-helpers'
     
     VENDOR_BUNDLE_PATH = 'var/vendor/vendor-bundle.js'
-    # FIXME: including vendor dependencies is quite a mess.  Clean this up and add browserify
+    # FIXME: including vendor dependencies is quite a mess.  Clean this up
     vendor_sources_no_browserify = sources 'development', 'www/modules.yaml'
         .filter -> it.indexOf('browserify') === -1
     vendor_sources_static = vendor_sources_no_browserify
@@ -167,13 +169,15 @@ task \bundle_vendor 'Build vendor bundle' ->
     vendor_sources_var = vendor_sources_no_browserify
         .filter -> it.indexOf('mod.js') !== -1
         .map -> "var#it"
-    vendor_sources = _.flatten [vendor_sources_static, vendor_sources_var]
+    vendor_sources = _.flatten [vendor_sources_static, 'static/todo-regenerate/browserify.js', vendor_sources_var]
     mkdirp dirname VENDOR_BUNDLE_PATH
     bundle_js VENDOR_BUNDLE_PATH, vendor_sources, {-minify}
     
+    /* TODO: fix minify
     VENDOR_BUNDLE_MIN_PATH = VENDOR_BUNDLE_PATH.replace /\.js$/, '.min.js'
     print 'Minifying into', VENDOR_BUNDLE_MIN_PATH.magenta.bold, '... '
     write VENDOR_BUNDLE_MIN_PATH, minify read VENDOR_BUNDLE_PATH
+    */
     say 'ok.\n'
 
 task \bundle_combine 'Combine bundles into dist file' ->
