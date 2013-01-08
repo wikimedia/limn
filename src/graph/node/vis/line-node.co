@@ -4,6 +4,8 @@ d3 = require 'd3'
 
 { TimeseriesNode, TimeseriesNodeData,
 } = require './timeseries-node'
+{ TimeseriesMetric,
+} = require '../../../data/metric'
 
 Trait = require '../graph-node-trait'
 ProjectColors = require '../../project-colors'

@@ -147,7 +147,13 @@ task \bundle_sources 'Build application bundle' ->
     app_sources = findSources null, {pre:'var/js/limn/'}
     
     mkdirp dirname APP_BUNDLE_PATH
-    bundle_js APP_BUNDLE_PATH, app_sources, {-minify}
+    #FIXME: jquery is broken because there's no separation between vendor sections
+    #bundle_js APP_BUNDLE_PATH, app_sources, {-minify}
+    #FIXME: using this hack instead
+    say 'Bundling...'.magenta.bold
+    Seq(app_sources)
+        .seqEach (s) ->
+            fs.appendFile APP_BUNDLE_PATH, "\n#{read s};\n", ~> @ok()
     
     /* TODO: fix minify
     APP_BUNDLE_MIN_PATH = APP_BUNDLE_PATH.replace /\.js$/, '.min.js'
@@ -159,7 +165,6 @@ task \bundle_sources 'Build application bundle' ->
 task \bundle_vendor 'Build vendor bundle' ->
     {sources} = require './server/view-helpers'
     
-    VENDOR_BUNDLE_PATH = 'var/vendor/vendor-bundle.js'
     # FIXME: including vendor dependencies is quite a mess.  Clean this up
     vendor_sources_no_browserify = sources 'development', 'www/modules.yaml'
         .filter -> it.indexOf('browserify') === -1
@@ -171,10 +176,15 @@ task \bundle_vendor 'Build vendor bundle' ->
         .map -> "var#it"
     vendor_sources = _.flatten [vendor_sources_static, 'static/todo-regenerate/browserify.js', vendor_sources_var]
     mkdirp dirname VENDOR_BUNDLE_PATH
-    bundle_js VENDOR_BUNDLE_PATH, vendor_sources, {-minify}
+    #FIXME: jquery is broken because there's no separation between vendor sections
+    #bundle_js VENDOR_BUNDLE_PATH, vendor_sources, {-minify}
+    #FIXME: using this hack instead
+    say 'Bundling...'.magenta.bold
+    Seq(vendor_sources)
+        .seqEach (s) ->
+            fs.appendFile VENDOR_BUNDLE_PATH, "\n#{read s};\n", ~> @ok()
     
     /* TODO: fix minify
-    VENDOR_BUNDLE_MIN_PATH = VENDOR_BUNDLE_PATH.replace /\.js$/, '.min.js'
     print 'Minifying into', VENDOR_BUNDLE_MIN_PATH.magenta.bold, '... '
     write VENDOR_BUNDLE_MIN_PATH, minify read VENDOR_BUNDLE_PATH
     */

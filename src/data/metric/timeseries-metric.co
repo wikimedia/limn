@@ -1,7 +1,7 @@
 _  = require 'underscore'
 ko = require 'knockout'
 
-{ Query, ParsingMixin,
+{ Query,
 } = require '../../util'
 { DataSource,
 } = require '../datasource'

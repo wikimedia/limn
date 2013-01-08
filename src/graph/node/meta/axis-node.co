@@ -1,6 +1,7 @@
 _  = require 'underscore'
 ko = require 'knockout'
 d3 = require 'd3'
+moment = require 'moment'
 
 { GraphNodeData,
 } = require '../graph-node-data'
