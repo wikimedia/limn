@@ -48,7 +48,7 @@ class exports.ZoomPanNode extends GraphNode
     
     render: ->
         return unless root = @root()
-        return unless scales = root.scalesIfValid()
+        return unless scales = root.scales()
         
         self = this
         @behavior ?= d3.behavior.zoom()
@@ -62,7 +62,7 @@ class exports.ZoomPanNode extends GraphNode
     
     zooming: (self) ->
         scale = d3.event.scale
-        # FIXME: this still isn't zooming or clipping quite right - the scales are consistent on zoomin/zoomout but they're off by maybe the offset?
+        # FIXME: this still isn't clipping quite right
         frame = d3.select this
         
         # special case, if they zoom all the way out, bring them back to normal
@@ -71,7 +71,9 @@ class exports.ZoomPanNode extends GraphNode
             self.behavior.scale(scale)
             frame = frame.transition(100)
         
+        # FIXME: the zooming works as expected but panning is weird, it pans less than the mouse moves
         frame.attr do
             transform: "translate(#{self.behavior.translate()}) scale(#{self.behavior.scale()})"
         
+        # FIXME: the tracking circles aren't displaying properly
         self.root().zooming self.behavior.translate(), self.behavior.scale()
