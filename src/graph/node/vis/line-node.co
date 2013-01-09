@@ -86,9 +86,12 @@ class exports.LineNode extends TimeseriesNode
     
     
     color: @computedRequires 'model.options', (options) ->
-        return that if options?.get('color')
-        label = @model().label() or @model().metric()?.defaultLabel() or '(no label)'
-        ProjectColors.lookup(label) or 'black'
+        strokeColor = options?.stroke?().color?()
+        unless strokeColor
+            label = @model().label() or @model().metric()?.defaultLabel() or '(no label)'
+            strokeColor = ProjectColors.lookup(label) or 'black'
+        strokeColor
+        
     
     
     /**
@@ -109,15 +112,18 @@ class exports.LineNode extends TimeseriesNode
         return null unless scales = @root().scales()
         
         options = model.options()
-        stroke  = options?.get('stroke')
+        strokeWidth = options?.stroke?().width?()
+        strokeWidth ?= '3'
+        strokeColor = options?.stroke?().color?()
+        strokeColor ?= @color()
         
         line.enter()
             .append 'path'
                 .classed 'metric-line', true
                 .attr  'vector-effect', 'non-scaling-stroke'
                 .style 'fill',          'none'
-                .style 'stroke-width',  stroke.width()
-                .style 'stroke',        @color()
+                .style 'stroke-width',  strokeWidth
+                .style 'stroke',        strokeColor
         line.transition()
             .attr 'd', scales.scaleLine
         line
