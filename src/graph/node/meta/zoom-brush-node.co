@@ -86,6 +86,8 @@ class exports.ZoomBrushNode extends GraphNode
                 cx: -10
                 cy: -10
     
-    extentIsSignificant: (extent) ->
-        moment(extent[1][0]).diff(moment(extent[0][0]), 'months') > 1
+    extentIsSignificant: (extent) -> true
+        # TODO: is there a way to handle different time steps?
+        # Especially since two different time steps could be on the same graph!
+        # moment(extent[1][0]).diff(moment(extent[0][0]), 'months') > 1
     

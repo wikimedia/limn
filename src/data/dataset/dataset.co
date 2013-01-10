@@ -7,6 +7,8 @@ _ = require 'underscore'
 { TypeCache,
 } = require '../../util'
 
+# FIXME: monkey-patching timeseries module to parse dates better
+CSVData.prototype.parseDate = (s) -> moment(s, "YYYY-MM-DD_HH").toDate()
 
 
 /**

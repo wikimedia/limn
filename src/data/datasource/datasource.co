@@ -96,7 +96,7 @@ class exports.DataSource extends StoredModel
      */
     dataUrl : @computedRequires 'url', (url) ->
         if url.indexOf('http') == 0
-            url = "x/#url"
+            url = "/x/#url"
         url
     
     
