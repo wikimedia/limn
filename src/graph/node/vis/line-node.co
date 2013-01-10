@@ -88,11 +88,13 @@ class exports.LineNode extends TimeseriesNode
     color: @computedRequires 'model.options', (options) ->
         strokeColor = options?.stroke?().color?()
         unless strokeColor
-            label = @model().label() or @model().metric()?.defaultLabel() or '(no label)'
+            label = options.label?() or @model().metric()?.defaultLabel() or '(no label)'
             strokeColor = ProjectColors.lookup(label) or 'black'
         strokeColor
-        
     
+    width: @computedRequires 'model.options', (options) ->
+        width = options?.stroke?().width?()
+        width ?= 3
     
     /**
      * Update selection representing the SVG path element for the line.
@@ -112,18 +114,14 @@ class exports.LineNode extends TimeseriesNode
         return null unless scales = @root().scales()
         
         options = model.options()
-        strokeWidth = options?.stroke?().width?()
-        strokeWidth ?= '3'
-        strokeColor = options?.stroke?().color?()
-        strokeColor ?= @color()
         
         line.enter()
             .append 'path'
                 .classed 'metric-line', true
                 .attr  'vector-effect', 'non-scaling-stroke'
                 .style 'fill',          'none'
-                .style 'stroke-width',  strokeWidth
-                .style 'stroke',        strokeColor
+                .style 'stroke-width',  @width()
+                .style 'stroke',        @color()
         line.transition()
             .attr 'd', scales.scaleLine
         line
