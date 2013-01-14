@@ -91,13 +91,20 @@ class exports.DataSource extends StoredModel
     
     
     /**
+     * Generates a random number of length around 10
+     */
+    generateRandom: -> 999999999 + Math.floor(Math.random() * 999999999)
+    
+    
+    /**
      * URL for the data.
      * @type ko.computed<String>
      */
     dataUrl : @computedRequires 'url', (url) ->
         if url.indexOf('http') == 0
             url = "/x/#url"
-        url
+        cacheBuster = @generateRandom()
+        "#url?cache-bust-with-#cacheBuster"
     
     
     /**
