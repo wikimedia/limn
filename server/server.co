@@ -24,6 +24,7 @@ limn = app.limn = LimnMiddleware do
         enabled   : true
         whitelist : '*' #/.*/ throws an error in minimatch - does not support regex as assumed
 
+# app.use express.compress()
 app.use limn
 # app.use '/vis', limn
 
