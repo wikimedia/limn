@@ -1,4 +1,5 @@
 _  = require 'underscore'
+op = require 'operator'
 ko = require 'knockout'
 moment = require 'moment'
 
@@ -71,17 +72,17 @@ class exports.SmoothNode extends GraphNode
                         setValue = -> new Date(it)
                     
                     aggregatedData = []
-
+                    
                     while data.length
-
+                    
                         avgX = 0
                         avgY = 0
                         slice = data.splice(0, @factor())
-
-                        slice.forEach (d) ->
-                            avgX += getValue(d[0]) / slice.length
-                            avgY += d[1] / slice.length
-
+                        
+                        slice.forEach ([date, val]) ->
+                            avgX += getValue(date) / slice.length
+                            avgY += val / slice.length
+                        
                         aggregatedData.push [setValue(avgX), avgY]
                     
                     aggregatedData]

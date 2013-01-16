@@ -10,9 +10,7 @@ ko = require 'knockout'
 
 
 class exports.TimeseriesMetric extends Metric
-    ->
-        super ...
-        @transform = ko.observableArray []
+    -> super ...
     
     
     defaults : ->
@@ -23,6 +21,13 @@ class exports.TimeseriesMetric extends Metric
             start  : null       # String -> Date
             end    : null       # String -> Date
             step   : null       # String -> moment.Duration
+    
+    
+    /**
+     * Array of data-transformation functions.
+     * @type ko.observableArray<Function>
+     */
+    transform : ko.observableArray []
     
     
     /**
