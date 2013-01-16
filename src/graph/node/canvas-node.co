@@ -192,6 +192,19 @@ class exports.CanvasNode extends ViewportNode
             .defined ([date, val], i) ~> isFinite @yScale val
             .interpolate 'linear'
         @scales { @xScale, @yScale, @scaleLine, -xValid, -yValid }
+        
+        /* this implements a crude way of line smoothing with interpolation
+        @scaleLineTension = ko.observable()
+        @scaleLine = d3.svg.line()
+            .x ([date, val], i) ~> @xScale date
+            .y ([date, val], i) ~> @yScale val
+            .defined ([date, val], i) ~> isFinite @yScale val
+            .interpolate 'bundle'
+        @scaleLineTension.subscribe ~>
+            @scaleLine.tension @scaleLineTension()
+            @scales { @xScale, @yScale, @scaleLine, -xValid, -yValid }
+        @scaleLineTension 1
+        */
     
     
     

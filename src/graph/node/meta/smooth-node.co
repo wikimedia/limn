@@ -1,0 +1,87 @@
+_  = require 'underscore'
+ko = require 'knockout'
+moment = require 'moment'
+
+{ GraphNodeData,
+} = require '../graph-node-data'
+{ GraphNode,
+} = require '../graph-node'
+Trait = require '../graph-node-trait'
+
+
+
+/**
+ * @class
+ * @extends GraphNodeData
+ */
+class exports.SmoothNodeData extends GraphNodeData
+    @registerType 'smooth'
+    
+    defaults: ->
+        factor: 1
+    
+    attributeTypes: ->
+    
+    -> super ...
+
+
+
+/**
+ * @class
+ * @extends GraphNode
+ */
+class exports.SmoothNode extends GraphNode
+    @registerType 'smooth'
+    traits : [
+        Trait.SECTION
+        Trait.META_NODE
+        Trait.HTML
+        Trait.LEAF
+    ]
+    tagName  : 'section'
+    template : 'smooth-node'
+    
+    
+    ->
+        super ...
+        @smoothedNodes()
+    
+    
+    buildElement: (parentElement) ->
+        el = super ...
+        $ parentElement .prepend el
+        @renderView el
+    
+    
+    nodes: @computed ->
+        @root().filterTraits [Trait.VIS_NODE, Trait.REQUIRES_METRIC]
+    
+    
+    smoothedNodes: @computedRequires 'nodes', (nodes) ->
+        nodes
+            .filter (node) ->
+                not (node.get('disabled') or node.options()?.get('noLegend'))
+            .map (node) ~>
+                node.metric().transform.push (data) ~>
+                    getValue = -> it
+                    setValue = -> it
+                    
+                    if data[0][0] instanceof Date
+                        getValue = -> it.getTime()
+                        setValue = -> new Date(it)
+                    
+                    aggregatedData = []
+
+                    while data.length
+
+                        avgX = 0
+                        avgY = 0
+                        slice = data.splice(0, @factor())
+
+                        slice.forEach (d) ->
+                            avgX += getValue(d[0]) / slice.length
+                            avgY += d[1] / slice.length
+
+                        aggregatedData.push [setValue(avgX), avgY]
+                    
+                    aggregatedData

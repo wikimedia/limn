@@ -10,7 +10,9 @@ ko = require 'knockout'
 
 
 class exports.TimeseriesMetric extends Metric
-    -> super ...
+    ->
+        super ...
+        @transform = ko.observableArray []
     
     
     defaults : ->
@@ -33,11 +35,13 @@ class exports.TimeseriesMetric extends Metric
         return unless source_col?
         return unless query = @query()
         return unless csv   = @source()?.data()
-        query
+        original = query
             .rows true
             .columns 0, source_col
             .apply csv.getData()
-    
+        for transform of @transform()
+            original = transform(original)
+        original
     
     /**
      * Query object for the parameters of this Metric.
