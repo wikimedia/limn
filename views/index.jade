@@ -12,11 +12,3 @@ append styles
 
 block content
     section.page(data-bind="subview: currentView")
-
-
-append main-scripts
-    if IS_DEV
-        script
-            jQuery(function(){
-                window.limn && limn.expose && limn.expose();
-            });
