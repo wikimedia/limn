@@ -62,7 +62,7 @@ class exports.SmoothNode extends GraphNode
             .filter (node) ->
                 not (node.get('disabled') or node.options()?.get('noLegend'))
             .map (node) ~>
-                node.metric().transform.push (data) ~>
+                node.metric().transform [(data) ~>
                     getValue = -> it
                     setValue = -> it
                     
@@ -84,4 +84,4 @@ class exports.SmoothNode extends GraphNode
 
                         aggregatedData.push [setValue(avgX), avgY]
                     
-                    aggregatedData
+                    aggregatedData]
