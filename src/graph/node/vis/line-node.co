@@ -92,6 +92,9 @@ class exports.LineNode extends TimeseriesNode
     width: @computedRequires 'model.options', (options) ->
         options?.stroke?().width?() or 3
     
+    dasharray: @computedRequires 'model.options', (options) ->
+        options?.stroke?().dashed?() or 'none'
+    
     /**
      * Update selection representing the SVG path element for the line.
      * @type ko.computed<d3.selection.update>
@@ -109,15 +112,14 @@ class exports.LineNode extends TimeseriesNode
         return null unless model  = @model()
         return null unless scales = @root().scales()
         
-        options = model.options()
-        
         line.enter()
             .append 'path'
-                .classed 'metric-line', true
-                .attr  'vector-effect', 'non-scaling-stroke'
-                .style 'fill',          'none'
-                .style 'stroke-width',  @width()
-                .style 'stroke',        @color()
+                .classed 'metric-line',     true
+                .attr  'vector-effect',     'non-scaling-stroke'
+                .style 'fill',              'none'
+                .style 'stroke-dasharray',  @dasharray()
+                .style 'stroke-width',      @width()
+                .style 'stroke',            @color()
         line.style 'visibility', if @disabled() then "hidden" else "visible"
         line.transition()
             .attr 'd', scales.scaleLine
