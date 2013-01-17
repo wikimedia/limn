@@ -82,6 +82,12 @@ class exports.LegendNode extends GraphNode
         el = super ...
         $ parentElement .prepend el
         @renderView el
+        
+        # handle toggling of legend entries
+        $('li.legend-entry', @$el).on 'click', ->
+            node = ko.dataFor(this).node
+            node.disabled(!node.disabled())
+            $(this).css('opacity', if node.disabled() then 0.3 else 1)
     
     
     nodes: @computed ->

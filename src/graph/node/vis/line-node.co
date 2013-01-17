@@ -69,7 +69,7 @@ class exports.LineNode extends TimeseriesNode
         cx = -10
         cy = -10
         
-        if viewportHover.hovering
+        if viewportHover.hovering and not @disabled()
             date = @root().xScale.invert viewportHover.xOffset
             closest = @model().metric().findClosest date
             
@@ -118,6 +118,7 @@ class exports.LineNode extends TimeseriesNode
                 .style 'fill',          'none'
                 .style 'stroke-width',  @width()
                 .style 'stroke',        @color()
+        line.style 'visibility', if @disabled() then "hidden" else "visible"
         line.transition()
             .attr 'd', scales.scaleLine
         line

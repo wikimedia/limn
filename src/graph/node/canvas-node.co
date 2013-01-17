@@ -91,6 +91,7 @@ class exports.CanvasNode extends ViewportNode
         metrics = @walk [], (metrics, node) ->
             if      node.hasTrait(Trait.REQUIRES_METRIC) and
                     node.hasTrait(Trait.METRIC_TIMESERIES) and
+                    not node.disabled() and
                     metric = node.model()?.metric()
                 metrics.push metric
             metrics
