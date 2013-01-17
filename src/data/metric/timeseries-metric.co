@@ -27,7 +27,7 @@ class exports.TimeseriesMetric extends Metric
      * Array of data-transformation functions.
      * @type ko.observableArray<Function>
      */
-    transform : ko.observableArray []
+    transforms : ko.observableArray []
     
     
     /**
@@ -40,13 +40,13 @@ class exports.TimeseriesMetric extends Metric
         return unless source_col?
         return unless query = @query()
         return unless csv   = @source()?.data()
-        original = query
+        data = query
             .rows true
             .columns 0, source_col
             .apply csv.getData()
-        for transform of @transform()
-            original = transform(original)
-        original
+        for transform of @transforms()
+            data = transform(data)
+        data
     
     /**
      * Query object for the parameters of this Metric.

@@ -45,6 +45,7 @@ class exports.SmoothNode extends GraphNode
     
     ->
         super ...
+        @smooth .= bind this
         @smoothedNodes()
     
     
@@ -52,6 +53,31 @@ class exports.SmoothNode extends GraphNode
         el = super ...
         $ parentElement .prepend el
         @renderView el
+    
+    
+    smooth : (data) ->
+        getValue = op.noop
+        setValue = op.noop
+        
+        if data[0][0] instanceof Date
+            getValue = -> it.getTime()
+            setValue = -> new Date(it)
+        
+        factor = @factor()
+        aggregatedData = []
+        
+        while data.length
+            avgX = 0
+            avgY = 0
+            slice = data.splice(0, factor)
+            
+            for [date, val] of slice
+                avgX += getValue(date) / slice.length
+                avgY += val / slice.length
+            
+            aggregatedData.push [ setValue(avgX), avgY ]
+        
+        aggregatedData
     
     
     nodes: @computed ->
@@ -63,26 +89,10 @@ class exports.SmoothNode extends GraphNode
             .filter (node) ->
                 not (node.get('disabled') or node.options()?.get('noLegend'))
             .map (node) ~>
-                node.metric().transform [(data) ~>
-                    getValue = -> it
-                    setValue = -> it
-                    
-                    if data[0][0] instanceof Date
-                        getValue = -> it.getTime()
-                        setValue = -> new Date(it)
-                    
-                    aggregatedData = []
-                    
-                    while data.length
-                    
-                        avgX = 0
-                        avgY = 0
-                        slice = data.splice(0, @factor())
-                        
-                        slice.forEach ([date, val]) ->
-                            avgX += getValue(date) / slice.length
-                            avgY += val / slice.length
-                        
-                        aggregatedData.push [setValue(avgX), avgY]
-                    
-                    aggregatedData]
+                transforms = node.metric().transforms()
+                unless _.contains transforms, @smooth
+                    node.metric().transforms.push @smooth
+                node
+    
+    
+
