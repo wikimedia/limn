@@ -9,11 +9,10 @@ op = require 'operator'
 Trait = require './graph-node-trait'
 
 
-cmpNumeric = (a, b) ->
-    a = a.getTime() if a instanceof Date
-    b = b.getTime() if b instanceof Date
-    op.cmp a, b
+toNumeric = -> +it
 
+cmpNumeric = (a, b) ->
+    op.cmp +a, +b
 
 tuplesEqual = (a, b) ->
     cmpNumeric(a[0], b[0]) is 0 and
@@ -151,6 +150,14 @@ class exports.CanvasNode extends ViewportNode
         @scales.peek()
     
     
+    isDataInView: ([date, val], i) ->
+        [xMin, xMax] = @xScale.domain().map toNumeric
+        [yMin, yMax] = @yScale.domain().map toNumeric
+        return  xMin <= +date <= xMax   and
+                isFinite(@yScale(val))  and
+                yMin <= +val  <= yMax
+    
+    
     /**
      * Percentage (expressed as a fraction) to expand the extrema of the y-scale.
      * @type Number
@@ -190,7 +197,7 @@ class exports.CanvasNode extends ViewportNode
         @scaleLine = d3.svg.line()
             .x ([date, val], i) ~> @xScale date
             .y ([date, val], i) ~> @yScale val
-            .defined ([date, val], i) ~> isFinite @yScale val
+            .defined @isDataInView.bind this
             .interpolate 'linear'
         @scales { @xScale, @yScale, @scaleLine, -xValid, -yValid }
         
