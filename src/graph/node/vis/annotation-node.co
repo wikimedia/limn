@@ -1,0 +1,87 @@
+_  = require 'underscore'
+ko = require 'knockout'
+d3 = require 'd3'
+
+{ GraphNodeData,
+} = require '../graph-node-data'
+{ GraphNode,
+} = require '../graph-node'
+
+Trait = require '../graph-node-trait'
+
+
+
+/**
+ * @class
+ * @extends GraphNodeData
+ */
+class exports.AnnotationNodeData extends GraphNodeData
+    @registerType 'annotation'
+    
+    defaults: ->
+        x: 0
+        y: 0
+        options:
+            label   : null
+            desc    : null
+            width   : 16
+            height  : 16
+    
+    attributeTypes: ->
+        x: (x) ->
+            ret = new Date(x)
+            if ret == 'Invalid Date'
+                ret = x
+            ret
+        y: parseInt
+    
+    -> super ...
+
+
+
+/**
+ * @class
+ * @extends GraphNode
+ */
+class exports.AnnotationNode extends GraphNode
+    @registerType 'annotation'
+    traits : [
+        Trait.VIS_NODE
+        Trait.SVG
+        Trait.LEAF
+    ]
+    
+    
+    ->
+        super ...
+        #@$el.on 'hover', ~> alert @desc()
+    
+    
+    disabled: -> false # TODO: link to parent's disabled
+    
+    
+    /**
+     * Update selection representing the SVG path element for the annotation.
+     * @type ko.computed<d3.selection.update>
+     */
+    render: ->
+        return null unless model  = @model()
+        return null unless scales = @root().scalesIfValid()
+        return null if @disabled()
+        
+        width = model.options().width()
+        height = model.options().height()
+        
+        @rect ?= @sel.append 'rect'
+            .classed    'metric-annotation',    true
+            .style      'fill',                 'white'
+            .style      'stroke',               'black'
+            .attr       'width',                width
+            .attr       'height',               height
+        
+        x = scales.xScale(model.x()) - width / 2
+        y = scales.yScale(model.y()) - height / 2
+        
+        @rect.transition()
+            .attr       'x',                    x
+            .attr       'y',                    y

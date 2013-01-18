@@ -1,0 +1,121 @@
+_  = require 'underscore'
+ko = require 'knockout'
+d3 = require 'd3'
+
+{ TimeseriesNode, TimeseriesNodeData,
+} = require './timeseries-node'
+{ TimeseriesMetric,
+} = require '../../../data/metric'
+
+Trait = require '../graph-node-trait'
+
+
+
+/**
+ * @class
+ * @extends TimeseriesNodeData
+ */
+class exports.AnnotationNodeData extends TimeseriesNodeData
+    @registerType 'annotation'
+    
+    defaults: ->
+        options :
+            label   : null
+            desc    : null
+            width   : 10
+            height  : 10
+    
+    attributeTypes: ->
+    
+    -> super ...
+
+
+
+/**
+ * @class
+ * @extends TimeseriesNode
+ */
+class exports.AnnotationNode extends TimeseriesNode
+    @registerType 'annotation'
+    traits : [
+        Trait.VIS_NODE
+        Trait.SVG
+        Trait.LEAF
+    ]
+    
+    
+    ->
+        super ...
+        @trackHover()
+    
+    
+    disabled: -> false # TODO: link to parent's disabled
+    
+    
+    closeEnough: (from, to) ->
+        x = _.result 'xOffset', from
+        y = _.result 'xOffset', from
+        x1 = _.result 'xOffset', to
+        y1 = _.result 'xOffset', to
+    
+    
+    trackHover: @computed ->
+        return unless viewportHover = @root().viewportHover()
+        return unless @sel
+        
+        if viewportHover.hovering
+            and not @disabled()
+            and closeEnough viewportHover, this
+            closest = @model().metric().findClosest date
+            
+            cx = @root().xScale closest.date
+            cy = @root().yScale closest.value
+            
+            unless isFinite cx and isFinite cy
+                cx = -10
+                cy = -10
+        
+        @trackingCircle.attr do
+            cx: cx
+            cy: cy
+    
+    
+    color: @computedRequires 'model.options', (options) ->
+        label = options.label?() or @model().metric()?.defaultLabel() or '(no label)'
+        ProjectColors.lookup(label) or options?.stroke?().color?() or 'black'
+    
+    width: @computedRequires 'model.options', (options) ->
+        options?.stroke?().width?() or 3
+    
+    dasharray: @computedRequires 'model.options', (options) ->
+        options?.stroke?().dashed?() or 'none'
+    
+    /**
+     * Update selection representing the SVG path element for the annotation.
+     * @type ko.computed<d3.selection.update>
+     */
+    render: ->
+        data = if @timeseriesData() then [that] else []
+        
+        # create selection
+        line = @selectAll 'path.metric-line' .data data
+        
+        # always exit() to remove existing nodes if data has changed and become invalid
+        line.exit().remove()
+        
+        return line unless data.length
+        return null unless model  = @model()
+        return null unless scales = @root().scales()
+        
+        line.enter()
+            .append 'path'
+                .classed 'metric-line',     true
+                .attr  'vector-effect',     'non-scaling-stroke'
+                .style 'fill',              'none'
+                .style 'stroke-dasharray',  @dasharray()
+                .style 'stroke-width',      @width()
+                .style 'stroke',            @color()
+        line.style 'visibility', if @disabled() then "hidden" else "visible"
+        line.transition()
+            .attr 'd', scales.scaleLine
+        line
