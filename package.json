@@ -29,6 +29,7 @@
     "operator": "== 0.1.x",
     "emitters": "== 0.1.x",
     "seq": "== 0.3.5",
+    "lru-cache": "== 2.2.2",
     "async-cache": "== 0.0.2",
     "d3": "== 2.9.x",
     "timeseries": "== 0.1.x",

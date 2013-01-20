@@ -24,6 +24,7 @@ dependencies                    :
     'operator'                  : '== 0.1.x'
     'emitters'                  : '== 0.1.x'
     'seq'                       : '== 0.3.5'
+    'lru-cache'                 : '== 2.2.2'
     'async-cache'               : '== 0.0.2'
     
     'd3'                        : '== 2.9.x'
@@ -52,8 +53,9 @@ devDependencies                 :
     'browserify'                : '== 1.9.4'
     'uglify-js'                 : '>= 1.2.x'
 
-scripts                         : test:'phantomjs test/phantom.runner.js http://localhost:8081/test'
-                                : start:'coke server'
+scripts                         : 
+    test                        : 'phantomjs test/phantom.runner.js http://localhost:8081/test'
+    start                       : 'coke server'
 repository                      : type:'git', url:'git://github.com/wikimedia/limn.git'
 
 engine                          : node:'>=0.8.x'
