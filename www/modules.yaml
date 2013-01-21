@@ -11,8 +11,8 @@ development:
     paths:
     - vendor:
         - es5-shim.min
-        - modernizr.min
-        - json2.min
+        # - modernizr.min
+        # - json2.min
         - jquery
         - bootstrap.min
         - knockout-2.2.0
@@ -34,4 +34,6 @@ development:
         # - bootstrap-colorpicker
         # - bootstrap-datepicker
         # - jade.runtime.min
+        
+        # For Debugging
         # - livecss
