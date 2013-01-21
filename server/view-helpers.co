@@ -54,7 +54,7 @@ SOURCES_ENV = if process.env.LIMN_FORCE_BUNDLES then 'production' else NODE_ENV
 sources = exports.sources = (node_env=SOURCES_ENV, modulesFile="#WWW/modules.yaml") ->
     return that if MOD_FILE_CACHE.get modulesFile
     
-    console.log "[#{now()}] sources(): cache miss '#modulesFile'" if IS_DEV
+    # console.log "[#{now()}] sources(): cache miss '#modulesFile'" if IS_DEV
     mods     = yaml.load fs.readFileSync modulesFile, 'utf8'
     modlist  = (mods.all or []).concat (mods[node_env] or [])
     
@@ -81,7 +81,7 @@ findSources = exports.findSources = (srcDirs=<[ src ]>, opts={}) ->
     
     key = JSON.stringify [ srcDirs, opts ]
     return that if FIND_SRC_CACHE.get key
-    console.log "[#{now()}] findSources(): cache miss: #key" if IS_DEV
+    # console.log "[#{now()}] findSources(): cache miss: #key" if IS_DEV
     
     srcs = _ srcDirs .chain()
         .map (srcDir) ->
