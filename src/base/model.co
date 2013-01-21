@@ -2,6 +2,8 @@ ko = require 'knockout'
 { unwrapObservable, peekObservable,
 } = ko.utils
 
+{ _,
+} = require '../util'
 { AttributesBase,
 } = require './attributes-base'
 
@@ -35,6 +37,7 @@ class exports.Model extends AttributesBase
      */
     _get: (key, peek=false) ->
         return unless key and @attributes?
+        getterKey = if peek then 'peek' else 'get'
         unwrapper = if peek then peekObservable else unwrapObservable
         
         val = @attributes
@@ -42,7 +45,7 @@ class exports.Model extends AttributesBase
         while parts.length
             # Models recursively handle their own gets (as we're doing now), so
             # defer to our sub-model.
-            return val.get parts.join('.') if val instanceof Model
+            return val[getterKey] parts.join('.') if val instanceof Model
             
             val = unwrapper val[ parts.shift() ]
             return unless val?
@@ -76,6 +79,34 @@ class exports.Model extends AttributesBase
      */
     peek: (key) ->
         @_get key, true
+    
+    
+    /**
+     * Puts a single attribute value to `key`.
+     * 
+     * If the current value is a Model and the value to set is an object, a
+     * recursive set is instead performed on the current value; a recursive
+     * set in this way does not create a dependency on the observable at `key`.
+     * 
+     * @protected
+     * @param {String} key Key to set.
+     * @param {*} val Value to set at `key`.
+     * @returns {this}
+     */
+    _set: (key, val) ->
+        return this unless key?
+        throw new Error "Attributes hash does not exist!" unless @attributes?
+        
+        unless ko.isObservable obs = @attributes[key]
+            obs = @attributes[key] = @_generateAttribute val, @attributeTypes[key], key
+            @[key] ?= obs
+        
+        if (current = obs.peek()) instanceof Model and _.isPlainObject(val)
+            current.set val
+        else
+            obs val
+        
+        this
     
     
     
