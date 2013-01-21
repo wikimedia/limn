@@ -87,13 +87,15 @@ class exports.Model extends AttributesBase
      * If the current value is a Model and the value to set is an object, a
      * recursive set is instead performed on the current value; a recursive
      * set in this way does not create a dependency on the observable at `key`.
+     * This behavior is disabled by setting `force`.
      * 
      * @protected
      * @param {String} key Key to set.
      * @param {*} val Value to set at `key`.
+     * @param {Boolean} [force=false] Whether to force-put the key.
      * @returns {this}
      */
-    _set: (key, val) ->
+    _set: (key, val, force=false) ->
         return this unless key?
         throw new Error "Attributes hash does not exist!" unless @attributes?
         
@@ -101,11 +103,33 @@ class exports.Model extends AttributesBase
             obs = @attributes[key] = @_generateAttribute val, @attributeTypes[key], key
             @[key] ?= obs
         
-        if (current = obs.peek()) instanceof Model and _.isPlainObject(val)
+        if not force and (current = obs.peek()) instanceof Model and _.isPlainObject(val)
             current.set val
         else
             obs val
         
+        this
+    
+    
+    /**
+     * Sets attribute values, taking either a single (key, value)-pair, or
+     * a map of them. Unlike `set()`, existing sub-Models will not have values
+     * merged into them.
+     * 
+     * @param {String|Object} key The key to set. If an object is supplied here,
+     *  each key will be set with its value on the target object.
+     * @param {*} [value] Value to set at `key`. Omit this if an object of
+     *  KV-pairs was passed as `key`.
+     * @returns {this}
+     */
+    put: (key, val) ->
+        return this unless key?
+        if key and _.isObject(key)
+            values = key
+        else
+            values = { "#key": val }
+        for key, value in values
+            @_set key, value, true
         this
     
     
