@@ -56,8 +56,8 @@ class exports.SmoothNode extends GraphNode
     
     
     smooth : (data) ->
-        getValue = op.noop
-        setValue = op.noop
+        getValue = op.I
+        setValue = op.I
         
         if data[0][0] instanceof Date
             getValue = -> it.getTime()
