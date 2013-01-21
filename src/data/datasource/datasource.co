@@ -182,4 +182,17 @@ class exports.DataSource extends StoredModel
         data
     
     
+    /**
+     * Looks up a column definition.
+     * 
+     * @param {Number|String} id Identifier of the column, by index or id.
+     * @returns {ColumnDef}
+     */
+    getColumnDef: (id) ->
+        if typeof id is 'number'
+            @columns()?[id]
+        else
+            _.find @columns(), -> it.id.peek() is id
+    
+    
 

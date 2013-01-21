@@ -113,17 +113,7 @@ class exports.ViewportNode extends GraphNode
     
     buildElement: (parentElement) ->
         el = super ...
-        
-        svg = d3.select(_.toElement(@graph.$('svg'))).select 'svg'
-        svg.on 'mousemove', ~>
-            [xOffset, yOffset] = d3.mouse(el)
-            vh = @viewportHover.peek()
-            if not vh?.hovering or vh.xOffset != xOffset or vh.yOffset != yOffset
-                @viewportHover { xOffset, yOffset, +hovering }
-        
-        svg.on 'mouseout', ~>
-            @viewportHover { -hovering }
-        
+        @trackCursor()
         el
     
     
@@ -149,7 +139,25 @@ class exports.ViewportNode extends GraphNode
      * Current location of the cursor in the viewport.
      * @type ko.observable<Object>
      */
-    viewportHover: ko.observable {}
+    cursor: ko.observable null
+    
+    
+    trackCursor: ->
+        return if @cursor.peek() # only initialize once
+        return unless el  = @el.peek()
+        return unless svg = _.toElement @graph.$('svg')
+        svg = d3.select svg
+        
+        svg.on 'mousemove', ~>
+            [x, y] = d3.mouse(el)
+            cur = @cursor.peek()
+            if not cur?.hovering or cur.x != x or cur.y != y
+                @cursor { +hovering, x, y }
+        
+        svg.on 'mouseout', ~>
+            @cursor { -hovering }
+        
+        this
     
     
     /**

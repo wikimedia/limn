@@ -309,7 +309,11 @@ class exports.GraphNode extends AttributesBase implements formatters
      * @returns {Element}
      */
     determineDOMParentForChildNode: (node) ->
-        @el()
+        elementType = if _.contains(node.traits, Trait.SVG) then Trait.SVG else Trait.HTML
+        return @el() if _.contains @traits, elementType
+        unless parent = @parent()
+            throw new Error "Unable to determine DOM parent for child node! #node"
+        parent.determineDOMParentForChildNode node
     
     
     /**

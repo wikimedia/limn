@@ -55,7 +55,7 @@ class exports.LineNode extends TimeseriesNode
     
     
     trackHover: @computed ->
-        return unless viewportHover = @root().viewportHover()
+        return unless cursor = @root().cursor()
         return unless @model().metric()?.data()?.length
         return unless @sel
         
@@ -69,8 +69,8 @@ class exports.LineNode extends TimeseriesNode
         cx = -10
         cy = -10
         
-        if viewportHover.hovering and not @disabled()
-            date = @root().xScale.invert viewportHover.xOffset
+        if cursor.hovering and not @disabled()
+            date = @root().xScale.invert cursor.x
             closest = @model().metric().findClosest date
             
             cx = @root().xScale closest.date

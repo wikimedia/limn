@@ -1,7 +1,6 @@
-_  = require 'underscore'
 ko = require 'knockout'
 
-{ Query, ParsingMixin,
+{ _, Query, ParsingMixin,
 } = require '../../util'
 { DataSource,
 } = require '../datasource'
@@ -37,5 +36,9 @@ class exports.GeoFeatureMetric extends Metric
             .columns 'id', source_col
             .apply csv.getData()
     
+    
+    dataById: @computed ->
+        return unless (data = @data())?
+        _.generate data
     
     

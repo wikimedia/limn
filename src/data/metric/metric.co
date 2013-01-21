@@ -51,7 +51,7 @@ class exports.Metric extends Model
     columnDef : @computed ->
         source_col = @get 'source_col'
         return unless source_col?
-        @source()?.columns()?[source_col]
+        @source()?.getColumnDef source_col
     
     
     /**

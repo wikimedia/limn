@@ -72,10 +72,10 @@ class exports.LegendNode extends GraphNode
      * Track hover events and change the legend date.  This can be used by legend entries
      */
     trackHover: @computed ->
-        return unless viewportHover = @root().viewportHover()
+        return unless cursor = @root().cursor()
         
-        if viewportHover.hovering
-            @date @root().xScale.invert viewportHover.xOffset
+        if cursor.hovering
+            @date @root().xScale.invert cursor.x
     
     
     buildElement: (parentElement) ->

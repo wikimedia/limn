@@ -6,19 +6,6 @@ section.graph
         height: 100%
         position: relative
         
-        .meta
-            width 18%
-            padding 10px 24px 10px 10px
-            display inline-block
-            vertical-align top
-            
-            .btn.edit
-                position: absolute
-                top: 4px
-                right: 0px
-                width: 40px
-                height: 20px
-        
         .bgcolor
             fill none
     
@@ -70,18 +57,12 @@ section.graph
     section.legend-node ~ section.canvas-node
         margin-left 17.385em
     
+    
     section.legend-node
         li.legend-entry
             cursor pointer
             &:hover
                 background-color #f5f5f5
-    
-    section.smooth-node
-        position absolute
-        width 230px
-        margin-top 420px
-        input
-            width 50px
     
     section.legend-node
         absolute top left
@@ -117,6 +98,34 @@ section.graph
                 text-align left
             .suffix
                 text-align left
+    
+    
+    section.infobox-node
+        display none
+        absolute top left
+        pointer-events none
+        
+        min-width 300px
+        padding 1em
+        border 1px solid $light
+        background-color #fff
+        border-radius 5px
+        
+        table
+            margin 0.75em 0 0 0
+            tr:first-child td
+                border-top 0
+        
+        .entry-value
+            text-align right
+    
+    
+    section.smooth-node
+        position absolute
+        width 230px
+        margin-top 420px
+        input
+            width 50px
     
     
     g.zoom-brush-node

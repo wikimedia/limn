@@ -40,6 +40,7 @@ class exports.GeoFeatureNodeData extends GraphNodeData
      */
     defaults: ->
         options:
+            label       : null
             scale       : 'linear'
             valueFormat : ',.2s'
     
@@ -70,12 +71,12 @@ class exports.GeoFeatureNode extends GraphNode
     
     
     render: ->
-        featureData = @model().metric().data()
+        metric      = @model().metric()
+        featureData = metric?.data()
         features    = @parent().features()
-        # return unless @parent().el() and parentSel = @parent().sel
-        return unless featureData and features?[0]?.length
+        return unless metric and featureData and features?[0]?.length
         
-        dataById  = _.generate featureData
+        dataById  = metric.dataById()
         extent    = d3.extent _.pluck(featureData, 1)
         extent[0] = Math.max 1, extent[0]
         
@@ -97,4 +98,5 @@ class exports.GeoFeatureNode extends GraphNode
                     .domain extent
                     .range  val
                 features.style style, (d) -> optScale dataById[d.id]
+    
     
