@@ -83,16 +83,21 @@ class limn.LimnApp
             
             if ViewType = @VIEWS[view]
                 @currentView new ViewType id, action
-                window.scrollTo 0,0
+                @scrollTo 0, 0
             else
                 next()
         
         page '*', ~>
             @currentView new @VIEWS['404']()
-            window.scrollTo 0,0
+            @scrollTo 0, 0
         
         page()
     
+    
+    scrollTo: (x=0, y=0) ->
+        return false if window.scrollX is x and window.scrollY is y
+        window.scrollTo x, y
+        true
     
     
     /**
