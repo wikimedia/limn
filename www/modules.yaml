@@ -16,7 +16,7 @@ development:
         - jquery
         - bootstrap.min
         - knockout-2.2.0
-        - d3.v2
+        - d3.v3
         
         ### CommonJS Support Starts Here
         ### (this means Browserify must come before any .mod files)
