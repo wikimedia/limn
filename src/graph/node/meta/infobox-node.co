@@ -22,8 +22,7 @@ class exports.InfoboxNodeData extends GraphNodeData
     @registerType 'infobox'
     
     defaults: ->
-        options : 
-            valueFormat : ',.2s'
+        options : {}
     
     attributeTypes: ->
         {}
