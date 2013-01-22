@@ -2,13 +2,17 @@ _      = require 'underscore'
 op     = require 'operator'
 
 
+# Signal Constants
 STOP_ITERATION = exports.STOP_ITERATION = {}
+CONTINUE       = exports.CONTINUE = {}
+HAS_NEXT       = exports.HAS_NEXT = {}
+
 
 /**
+ * @abstract
  * @class A stream Iterator, implementing the typical iteration interface (`hasNext`, `next`).
  */
 class exports.Iterator
-    @STOP_ITERATION = STOP_ITERATION
     
     /**
      * Number of values returned.
@@ -51,10 +55,10 @@ class exports.Iterator
     
     
     /**
-     * Advance the iterator and return either `Iterator.STOP_ITERATION`
+     * Advance the iterator and return either `STOP_ITERATION`
      * or the next value.
      * 
-     * @returns {*|Iterator.STOP_ITERATION}
+     * @returns {*|STOP_ITERATION}
      */
     next: ->
         return STOP_ITERATION unless @hasNext()
@@ -64,15 +68,28 @@ class exports.Iterator
     
     /**
      * Wrap this iterator in a `PipeIterator`, filtering and/or transforming each value with
-     * the given `transform` function before it is returned.
+     * the given `map` function before it is returned.
      * 
-     * @param {Function} [transform] Function invoked to transform values.
+     * @param {Options} [options] Options:
+     * @param {Function} [options.map] Function invoked to transform values.
+     * @param {Function} [options.filter] Function invoked to filter values.
+     * @returns {PipeIterator} Wrap this iterator in a `PipeIterator`,
+     *  transforming each value before it is returned.
+     */
+    /**
+     * Wrap this iterator in a `PipeIterator`, filtering and/or transforming each value with
+     * the given `map` function before it is returned.
+     * 
+     * @param {Function} [map] Function invoked to transform values.
      * @param {Function} [filter] Function invoked to filter values.
      * @returns {PipeIterator} Wrap this iterator in a `PipeIterator`,
      *  transforming each value before it is returned.
      */
-    pipe : (transform, filter) ->
-        new PipeIterator this, {transform, filter}
+    pipe : (options) ->
+        if typeof options is 'function'
+            [ map, filter ] = arguments
+            options = { map, filter }
+        new PipeIterator this, options
     
     
     /**
@@ -95,27 +112,28 @@ class exports.Iterator
  * @extends Iterator
  */
 class exports.IndexIterator extends Iterator
-    (@data) ->
-        @index = 0
+    (@data, @start=0, @end=null, @step=1) ->
+        @index = @start
         super ...
     
     /**
      * Advances the iterator's index.
      * @returns {Number} Current index.
      */
-    nextIndex : -> @index++
+    nextIndex : -> @index += @step
+    
+    getNext   : -> @data[ @nextIndex() ]
+    hasNext   : -> @index < (@end ? @data.length - 1)
     
     /**
      * @returns {Number} Iterator's length normalized to index iteration.
      */
-    size      : -> @data.length
-    
-    getNext   : -> @data[ @nextIndex() ]
-    hasNext   : -> @index < _.result this, 'size'
+    size : ->
+        Math.floor( ((@end ? @data.length - 1) - @start) / @step )
     
     clone : ->
         IteratorClass = @constructor
-        it = new IteratorClass @data
+        it = new IteratorClass @data, @start, @end, @step
         it.index = @index
         it.count = @count
         it
@@ -128,24 +146,24 @@ class exports.IndexIterator extends Iterator
  */
 class exports.ZipIterator extends IndexIterator
     
-    (@data) ->
-        @size = _.max _.pluck @data, 'length'
-        super ...
+    (data) ->
+        end = _.max _.pluck @data, 'length'
+        super data, 0, end, 1
     
     getNext : -> _.pluck @data, @nextIndex()
 
 
 /**
  * @class Iterator which wraps another, transforming each value with
- * the given `transform` function before it is returned.
+ * the given `map` function before it is returned.
  * @extends Iterator
  */
 class exports.PipeIterator extends Iterator
     
     (@iter, opts={}) ->
-        {transform, filter} = opts
-        @transform = transform if typeof transform is 'function'
-        @filter    = filter    if typeof filter    is 'function'
+        {map, filter} = opts
+        @map    = map       if typeof map    is 'function'
+        @filter = filter    if typeof filter is 'function'
         super ...
     
     /**
@@ -153,12 +171,14 @@ class exports.PipeIterator extends Iterator
      * will be passed both `STOP_ITERATION` responses and normal values as
      * they occur. It may return whatever it pleases.
      * 
-     * @param {*|STOP_ITERATION} val Value provided by `getNext()`.
-     * @param {Boolean} isNextCheck `true` when invoked as part of `hasNext()`.
+     * @param {*|STOP_ITERATION|HAS_NEXT} val Either the value provided by 
+     *  `getNext()` or a signal; `HAS_NEXT` will be sent to allow the mapper
+     *  to overrule the `hasNext()` call of the backing iterator.
      * @returns {*|STOP_ITERATION} Transformed value, including
      *  `STOP_ITERATION` when appropriate.
      */
-    transform: (val, isNextCheck) ->
+    map: (val) ->
+        return false if val is HAS_NEXT
         val
     
     /**
@@ -178,7 +198,7 @@ class exports.PipeIterator extends Iterator
             val = @iter.getNext()
             break if val is STOP_ITERATION or @filter val
             val = STOP_ITERATION
-        val = @transform val, false if val is not STOP_ITERATION
+        val = @map val if val is not STOP_ITERATION
         val
     
     hasNext: ->
@@ -186,7 +206,56 @@ class exports.PipeIterator extends Iterator
     
     clone: ->
         IteratorClass = @constructor
-        it = new IteratorClass @iter, @transform, @filter
+        it = new IteratorClass @iter, {@map, @filter}
+        it.count = @count
+        it
+    
+
+
+/**
+ * @class Iterator which wraps another, offering values from the backing
+ * stream until an aggregated value is produced. This allows streams to be
+ * transformed into non-isometric forms.
+ * @extends Iterator
+ */
+class exports.AggregationIterator extends Iterator
+    
+    (@iter, opts={}) ->
+        {offer} = opts
+        @offer = offer if typeof offer is 'function'
+        super ...
+    
+    /**
+     * Override to consider each value for aggregation, returning an aggregated
+     * value or a signal to stop (`STOP_ITERATION`) or continue (`CONTINUE`).
+     * 
+     * `HAS_NEXT` will be sent so the function may control the injection of
+     * synthetic elements into the stream even once the backing iterator is
+     * exhausted.
+     * 
+     * @abstract
+     * @param {*|STOP_ITERATION|HAS_NEXT} val
+     * @returns {*|STOP_ITERATION|CONTINUE} An aggregated value, or a signal.
+     */
+    offer: (val) ->
+        switch val
+        case HAS_NEXT       then false
+        default             then val
+    
+    getNext: ->
+        # Loop until an aggregated value is ready or we run out.
+        val = STOP_ITERATION
+        while @hasNext()
+            val = @offer @iter.next()
+            break unless val is CONTINUE
+        val
+    
+    hasNext: ->
+        @iter.hasNext() or @offer(HAS_NEXT)
+    
+    clone: ->
+        IteratorClass = @constructor
+        it = new IteratorClass @iter, {@offer}
         it.count = @count
         it
     

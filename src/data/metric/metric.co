@@ -1,3 +1,5 @@
+_ = require 'underscore'
+
 { Model,
 } = require '../../base'
 { ParsingMixin,
@@ -18,6 +20,13 @@ class exports.Metric extends Model
     
     
     /**
+     * Array of data-transformation functions.
+     * @type ko.observableArray<Function>
+     */
+    transforms : ko.observableArray []
+    
+    
+    /**
      * Data source of the Metric.
      * @type ko.computed<DataSource>
      * @depends source_id
@@ -27,20 +36,47 @@ class exports.Metric extends Model
     
     
     /**
-     * The reified dataset (as (date, value) pairs) associated with this Metric.
-     * @type ko.computed<[Date, Value]>
-     * @depends source, query
+     * Query object for the parameters of this Metric.
+     * @type ko.computed<Query>
+     * @depends source_col
      */
-    data : @computed ->
+    query : @computed ->
         source_col = @get 'source_col'
         return unless source_col?
-        # FIXME
+        Query()
+            .columns 0, source_col
+    
+    
+    /**
+     * The reified dataset (as (date, value) pairs) associated with this Metric.
+     * @protected
+     * @type ko.computed<{rows, columns}>
+     * @depends source, query, transforms
+     */
+    materialized: @computed ->
+        source_col = @get 'source_col'
+        return unless source_col?
         return unless query = @query()
         return unless csv   = @source()?.data()
-        query
-            .rows true
-            .columns 0, source_col
+        {rows, columns} = query
+            .materialize 'both'
             .apply csv.getData()
+        
+        # FIXME!! Change transform signature to use an iterator
+        for transform of @transforms()
+            rows = transform(rows)
+        columns = _.zip ...rows
+        
+        {rows, columns}
+    
+    
+    /**
+     * The reified dataset (as (date, value) pairs) associated with this Metric.
+     * @type ko.computed<[Date, Value]>
+     * @depends materialized
+     */
+    data : @computed ->
+        @materialized()?.rows
     
     
     /**

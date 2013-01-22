@@ -7,19 +7,19 @@ moment = require 'moment'
 
 
 DEFAULT_OPTIONS =
-    rows        : true  # row-major format
-    columns     : null  # keep only these columns -- null -> all
+    materialize : 'rows'    # shape of the output data -- rows | columns | both -> {rows, columns} | iter -> Iterator representing the transform.
+    columns     : null      # keep only these columns -- null -> all
     
-    timeStart   : null  # drop rows with date < this -- null -> -Infinity
-    timeEnd     : null  # drop rows with date > this -- null ->  Infinity
-    timeStep    : null  # normalize datapoints -- null -> no normalization
-    timeCol     : 0     # index/id of time column -- null -> first Date column
+    timeStart   : null      # drop rows with date < this -- null -> -Infinity
+    timeEnd     : null      # drop rows with date > this -- null ->  Infinity
+    timeStep    : null      # normalize datapoints -- null -> no normalization
+    timeCol     : 0         # index/id of time column -- null -> first Date column
     
     # TODO (maybe): sorted, reversed, negated, fillNulls
-    # sorted      : false # sort output -- false -> off; true -> natural; fn -> cmp(a,b) -> 1|0|-1
-    # reversed    : false # reverse output
-    # negated     : false # negate all filters
-    # fillNulls   : null  # replace nulls with this value
+    # sorted      : false   # sort output -- false -> off; true -> natural; fn -> cmp(a,b) -> 1|0|-1
+    # reversed    : false   # reverse output
+    # negated     : false   # negate all filters
+    # fillNulls   : null    # replace nulls with this value
 
 
 class exports.Query
@@ -39,7 +39,7 @@ class exports.Query
             @options[key] = fn ...
             this
     
-    @option 'rows'
+    @option 'materialize'
     @option 'columns', (...indexes) -> indexes
     
     @option 'timeCol'
@@ -115,8 +115,8 @@ class exports.Query
             
             filterTime = (row) ->
                 timeStart <= row?[timeCol] <= timeEnd
-        else
-            filterTime = op.K true
+            
+            iter .= pipe filter:filterTime
         
         if _.isArray opts.columns
             pickCols = (row) ->
@@ -127,11 +127,30 @@ class exports.Query
                         acc[col] = val if typeof col is 'string'
                         acc
                     []
-        else
-            pickCols = op.I
+            
+            iter .= pipe map:pickCols
         
-        result = iter.pipe pickCols, filterTime .toArray()
-        result = _.zip ...result unless opts.rows or result[0]?.length is 1
-        result
+        unless opts.materialize is 'rows'
+            columns = []
+            materializeCols = (row) ->
+                for idx, val of row
+                    col = (columns[idx] or= [])
+                    col.push val
+                row
+            
+            iter .= pipe map:materializeCols
+        
+        # return early to avoid advancing the iterator
+        if opts.materialize is 'iter'
+            return iter
+        
+        rows = iter.toArray()
+        switch opts.materialize
+        case 'both'
+            return { rows, columns }
+        case 'columns'
+            return columns
+        default # everything else except "iter" (above) gets the rows
+            return rows
     
 
