@@ -117,7 +117,6 @@ class exports.InfoboxNode extends GraphNode
         self = this
         features.on 'mouseover.infobox', (d) ->
             currentId = self.featureId.peek()
-            console.log "#self.mouseover!", currentId, '->', d.id
             return if currentId is d.id
             self.label d.properties.name
             self.featureId d.id
