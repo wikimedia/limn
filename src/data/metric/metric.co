@@ -60,12 +60,8 @@ class exports.Metric extends Model
         return unless csv   = @source()?.data()
         {rows, columns} = query
             .materialize 'both'
-            .apply csv.getData()
-        
-        # FIXME!! Change transform signature to use an iterator
-        for transform of @transforms()
-            rows = transform(rows)
-        columns = _.zip ...rows
+            .transforms @transforms()
+            .process csv.getData()
         
         {rows, columns}
     

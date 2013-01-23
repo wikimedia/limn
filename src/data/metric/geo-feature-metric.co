@@ -44,7 +44,7 @@ class exports.GeoFeatureMetric extends Metric
         return unless csv = @source()?.data()
         query
             .materialize 'rows'
-            .apply csv.getData()
+            .process csv.getData()
     
     
     dataById: @computed ->
