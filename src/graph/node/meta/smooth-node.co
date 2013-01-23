@@ -3,6 +3,9 @@ op = require 'operator'
 ko = require 'knockout'
 moment = require 'moment'
 
+{ AggregationIterator, STOP_ITERATION, CONTINUE,
+} = require '../../../util/iterator'
+
 { GraphNodeData,
 } = require '../graph-node-data'
 { GraphNode,
@@ -43,9 +46,15 @@ class exports.SmoothNode extends GraphNode
     template : 'smooth-node'
     
     
+    /**
+     * @type SmoothingIterator
+     */
+    transform : null
+    
+    
     ->
         super ...
-        @smooth .= bind this
+        @transform = new SmoothingIterator null, @factor
         @smoothedNodes()
     
     
@@ -53,31 +62,6 @@ class exports.SmoothNode extends GraphNode
         el = super ...
         $ parentElement .prepend el
         @renderView el
-    
-    
-    smooth : (data) ->
-        getValue = op.I
-        setValue = op.I
-        
-        if data[0][0] instanceof Date
-            getValue = -> it.getTime()
-            setValue = -> new Date(it)
-        
-        factor = @factor()
-        aggregatedData = []
-        
-        while data.length
-            avgX = 0
-            avgY = 0
-            slice = data.splice(0, factor)
-            
-            for [date, val] of slice
-                avgX += getValue(date) / slice.length
-                avgY += val / slice.length
-            
-            aggregatedData.push [ setValue(avgX), avgY ]
-        
-        aggregatedData
     
     
     nodes: @computed ->
@@ -90,9 +74,75 @@ class exports.SmoothNode extends GraphNode
                 not (node.get('disabled') or node.options()?.get('noLegend'))
             .map (node) ~>
                 transforms = node.metric().transforms()
-                unless _.contains transforms, @smooth
-                    node.metric().transforms.push @smooth
+                unless _.contains transforms, @transform
+                    node.metric().transforms.push @transform
                 node
     
     
+
+
+/**
+ * @class Iterator transform which aggregates values into `factor`-sized averages.
+ * @extends AggregationIterator
+ */
+class exports.SmoothingIterator extends AggregationIterator
+    
+    /**
+     * @constructor
+     * @param {ko.observable<Number>} factor Observable for the smoothing factor.
+     */
+    (iter, factor) ->
+        @chunk = []
+        if typeof factor is 'function'
+            options = {factor}
+        else
+            [factor, options] = [factor.factor, factor]
+        @factor = factor
+        
+        # when used with Query via SmoothNode, @iter will be set by Iterator#compose
+        super iter, options
+    
+    
+    hasNext: ->
+        @iter.hasNext() or @chunk.length > 0
+    
+    /**
+     * Consume rows, queuing until we have enough to generate an average.
+     */
+    offer: (row) ->
+        return @flush() if row is STOP_ITERATION
+        
+        @chunk.push row
+        @isDate ?= row.map -> it instanceof Date
+        
+        return @flush() if @chunk.length >= @factor()
+        CONTINUE
+    
+    
+    /**
+     * Consume up to `@factor` of the buffer.
+     */
+    flush: ->
+        return STOP_ITERATION unless @chunk.length > 0
+        rows = @chunk.splice 0, @factor()
+        
+        avgs = [0] * rows[0].length
+        for row of rows
+            for v, idx of row
+                # avgs[idx] ?= 0
+                avgs[idx] += (+v) / rows.length
+        
+        avgs.map @coerce, this
+    
+    
+    /**
+     * Restore Date-type to data after interpolation.
+     */
+    coerce: (v, idx) ->
+        if @isDate?[idx] then new Date(v) else v
+    
+    
+    
+
+
 
