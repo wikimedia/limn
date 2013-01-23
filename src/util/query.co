@@ -15,6 +15,8 @@ DEFAULT_OPTIONS =
     timeStep    : null      # normalize datapoints -- null -> no normalization
     timeCol     : 0         # index/id of time column -- null -> first Date column
     
+    transforms  : null      # list of `ComposableIterator`s to apply to the data after filtering
+    
     # TODO (maybe): sorted, reversed, negated, fillNulls
     # sorted      : false   # sort output -- false -> off; true -> natural; fn -> cmp(a,b) -> 1|0|-1
     # reversed    : false   # reverse output
@@ -51,6 +53,16 @@ class exports.Query
         @options.timeEnd   = moment(end).toDate()   if end?
         this
     
+    @option 'transforms', -> it.slice()
+    
+    /**
+     * Adds a single transform.
+     * @returns {this}
+     */
+    transform: (it) ->
+        @options.transforms.push it
+        this
+    
     # @option 'negated'
     # @option 'reversed'
     # @option 'sorted'
@@ -62,34 +74,21 @@ class exports.Query
     
     ->
         return new Query() unless this instanceof Query
-        @options = _.extend {}, DEFAULT_OPTIONS
+        @options = {} import DEFAULT_OPTIONS import { transforms:[] }
     
-    
-    /**
-     * Converts the query into a filter function:
-     * 
-     *  `fn(row, idx) -> Boolean`
-     * 
-     * Note that sort options (`reversed`, `sorted`, `key`) and `timeStep`
-     * cannot be applied in filter mode.
-     * 
-     * @returns {Function} The query converted into a filter function.
-     */
-    filter: ->
-        (row, idx) ~> true
     
     
     /**
      * Apply this query to the given data in column-major format.
      */
-    call: (...cols) ->
+    processCols: (...cols) ->
         @_process new ZipIterator cols
     
     
     /**
      * Apply this query to the given data in row-major format.
      */
-    apply: (rows) ->
+    process: (rows) ->
         @_process new IndexIterator rows
     
     
@@ -101,8 +100,9 @@ class exports.Query
      * @returns {Array<Array>} Processed data.
      */
     _process: (iter) ->
-        opts = _.extend {}, @options
+        opts = {} import @options
         
+        # apply timespan filter
         # TODO: normalize by timeStep
         unless opts.timeStart == null == opts.timeEnd
             timeCol   = opts.timeCol or 0 # ?  _.find( _.items(rows[1]), ([id, v]) -> v instanceof Date )[0]
@@ -110,14 +110,16 @@ class exports.Query
             timeEnd   = opts.timeEnd   ?  Infinity
             
             # convert to ms since the epoch
-            timeStart = moment(timeStart).valueOf() unless typeof timeStart is 'number' # if (timeStart instanceof Date) or moment.isMoment(timeStart)
-            timeEnd   = moment(timeEnd).valueOf()   unless typeof timeEnd   is 'number'
+            timeStart = +timeStart
+            timeEnd   = +timeEnd
             
             filterTime = (row) ->
-                timeStart <= row?[timeCol] <= timeEnd
+                v = +(row?[timeCol])
+                timeStart <= v <= timeEnd
             
             iter .= pipe filter:filterTime
         
+        # select out only the desired columns
         if _.isArray opts.columns
             pickCols = (row) ->
                 _.reduce do
@@ -130,10 +132,15 @@ class exports.Query
             
             iter .= pipe map:pickCols
         
-        unless opts.materialize is 'rows'
+        # send data through the transforms
+        for tr of opts.transforms
+            iter .= compose tr.clone()
+        
+        # finally, materialize the transpose of the data if necessary
+        if opts.materialize is not 'rows'
             columns = []
             materializeCols = (row) ->
-                for idx, val of row
+                for val, idx of row
                     col = (columns[idx] or= [])
                     col.push val
                 row

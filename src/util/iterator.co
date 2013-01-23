@@ -3,16 +3,19 @@ op     = require 'operator'
 
 
 # Signal Constants
-STOP_ITERATION = exports.STOP_ITERATION = {}
-CONTINUE       = exports.CONTINUE = {}
-HAS_NEXT       = exports.HAS_NEXT = {}
+STOP_ITERATION = exports.STOP_ITERATION = toString: -> 'STOP_ITERATION'
+CONTINUE       = exports.CONTINUE       = toString: -> 'CONTINUE'
 
 
 /**
- * @abstract
- * @class A stream Iterator, implementing the typical iteration interface (`hasNext`, `next`).
+ * @class A stream Iterator, providing a typical iteration interface (`hasNext`, `next`).
  */
 class exports.Iterator
+    /**
+     * Whether the stream is exhausted.
+     * @type Boolean
+     */
+    exhausted : false
     
     /**
      * Number of values returned.
@@ -23,54 +26,83 @@ class exports.Iterator
     
     /**
      * @constructor
+     * @see Iterator#getNext
+     * @see Iterator#hasNext
+     * @param {Function} getNext Overrides Iterator#getNext()
+     * @param {Function} [hasNext] Overrides Iterator#hasNext()
      */
-    ->
-        @count = 0
+    /**
+     * @constructor
+     * @see Iterator#getNext
+     * @see Iterator#hasNext
+     * @param {Object} [options={}] Options:
+     * @param {Function} [options.getNext] Overrides Iterator#getNext()
+     * @param {Function} [options.hasNext] Overrides Iterator#hasNext()
+     */
+    (options={}) ->
+        if typeof options is 'function'
+            with arguments then options = { getNext:&0, hasNext:&1 }
+        @options ?= options
+        {getNext, hasNext} = options
+        @getNext = getNext if typeof getNext is 'function'
+        @hasNext = hasNext if typeof hasNext is 'function'
     
     
     /**
-     * Called to advance the iterator and fetch the next value.
+     * Called to advance the iterator and fetch the next value, or
+     * `STOP_ITERATION` to indicate the end of the stream.
+     * 
      * @abstract
      * @protected
-     * @returns {*}
+     * @returns {STOP_ITERATION|*}
      */
-    getNext : -> ...
+    getNext: -> ...
     
     
     /**
      * Called to check whether the iterator is exhausted. Calls should not
      * mutate the iterator's state.
      * 
-     * @abstract
      * @returns {Boolean}
      */
-    hasNext : -> ...
+    hasNext: ->
+        not @exhausted
+    
+    
+    /**
+     * Advance the iterator and return either `STOP_ITERATION` or the next
+     * value.
+     * 
+     * Most implementers will not find it necessary to override this method;
+     * see @{link getNext} and @{link hasNext} instead.
+     * 
+     * @see Iterator#getNext
+     * @see Iterator#hasNext
+     * @returns {STOP_ITERATION|*}
+     */
+    next: ->
+        return STOP_ITERATION if @exhausted or= not @hasNext()
+        unless @exhausted = (val = @getNext()) is STOP_ITERATION
+            @count++
+        val
     
     
     /**
      * @abstract
      * @returns {Iterator} A copy of this iterator, with independent state.
      */
-    clone: -> ...
-    
-    
-    /**
-     * Advance the iterator and return either `STOP_ITERATION`
-     * or the next value.
-     * 
-     * @returns {*|STOP_ITERATION}
-     */
-    next: ->
-        return STOP_ITERATION unless @hasNext()
-        @count++
-        @getNext()
+    clone: ->
+        IteratorClass = @constructor
+        it = new IteratorClass {} import @options
+        it import {@exhausted, @count}
+        it
     
     
     /**
      * Wrap this iterator in a `PipeIterator`, filtering and/or transforming each value with
      * the given `map` function before it is returned.
      * 
-     * @param {Options} [options] Options:
+     * @param {Object} [options] Options:
      * @param {Function} [options.map] Function invoked to transform values.
      * @param {Function} [options.filter] Function invoked to filter values.
      * @returns {PipeIterator} Wrap this iterator in a `PipeIterator`,
@@ -85,24 +117,44 @@ class exports.Iterator
      * @returns {PipeIterator} Wrap this iterator in a `PipeIterator`,
      *  transforming each value before it is returned.
      */
-    pipe : (options) ->
+    pipe: (options) ->
         if typeof options is 'function'
-            [ map, filter ] = arguments
-            options = { map, filter }
+            with arguments then options = { map:&0, filter:&1 }
         new PipeIterator this, options
+    
+    
+    /**
+     * Connects the output of this iterator to the input of the given composable iterator.
+     * 
+     * @param {ComposableIterator} sink
+     * @returns {ComposableIterator} The supplied composable iterator.
+     */
+    compose: (sink) ->
+        sink.iter = this
+        sink
     
     
     /**
      * Exhausts the Iterator from its current position, returning an array of its values.
      * @returns {Array} The values.
      */
-    toArray : ->
+    toArray: ->
         out = []
-        while @hasNext()
-            val = @next()
-            break if val is STOP_ITERATION
+        while (val = @next()) is not STOP_ITERATION
             out.push val
         out
+    
+    
+    toJSON: ->
+        @toArray()
+    
+    
+    toString: ->
+        className = @..displayName or @..name or 'Iterator'
+        {count, exhausted} = this
+        "#className(exhausted=#exhausted, count=#count)"
+    
+
 
 
 /**
@@ -112,31 +164,56 @@ class exports.Iterator
  * @extends Iterator
  */
 class exports.IndexIterator extends Iterator
-    (@data, @start=0, @end=null, @step=1) ->
+    index : 0
+    start : 0
+    end   : null
+    step  : 1
+    
+    /**
+     * @constructor
+     * @param {Array|Array-like} data Indexable data.
+     * @param {Object} [options={}] Options:
+     * @param {Number} [options.start=0]
+     * @param {Number} [options.end=data.length]
+     * @param {Number} [options.step=1]
+     */
+    (@data, @options={}) ->
         @index = @start
-        super ...
+        { @start ? 0, @end, @step ? 1 } = @options
+        super()
     
     /**
      * Advances the iterator's index.
      * @returns {Number} Current index.
      */
-    nextIndex : -> @index += @step
+    nextIndex : ->
+        idx     = @index
+        @index += @step
+        idx
     
     getNext   : -> @data[ @nextIndex() ]
-    hasNext   : -> @index < (@end ? @data.length - 1)
+    hasNext   : -> @index <= ((@end ? @data.length) - 1)
     
     /**
-     * @returns {Number} Iterator's length normalized to index iteration.
+     * @returns {Number} Iterator's length normalized against index iteration.
      */
     size : ->
-        Math.floor( ((@end ? @data.length - 1) - @start) / @step )
+        ( ((@end ? @data.length) - 1 - @start) / @step ) | 0 # drop fraction
+    
     
     clone : ->
         IteratorClass = @constructor
-        it = new IteratorClass @data, @start, @end, @step
-        it.index = @index
-        it.count = @count
+        it = new IteratorClass @data, {} import @options
+        it import {@exhausted, @index, @count}
         it
+    
+    
+    toString: ->
+        className = @..displayName or @..name
+        {index, exhausted, start, end, step, count} = this
+        "#className(@#index, exhausted=#exhausted, start=#start, end=#end, step=#step, count=#count)"
+    
+
 
 
 /**
@@ -147,10 +224,39 @@ class exports.IndexIterator extends Iterator
 class exports.ZipIterator extends IndexIterator
     
     (data) ->
-        end = _.max _.pluck @data, 'length'
-        super data, 0, end, 1
+        end = _.max _.pluck data, 'length'
+        super data, { start:0, end, step:1 }
     
     getNext : -> _.pluck @data, @nextIndex()
+
+
+/**
+ * @abstract
+ * @class Wraps another Iterator.
+ * @extends Iterator
+ */
+class exports.ComposableIterator extends Iterator
+    
+    (iter, options) ->
+        if arguments.length < 2 and iter not instanceof Iterator
+            [options, iter] = [iter or {}, null]
+        this import {iter, options or {}}
+        super()
+    
+    
+    clone: ->
+        IteratorClass = @constructor
+        it = new IteratorClass @iter, {} import @options
+        it import {@exhausted, @count}
+        it
+    
+    
+    toString: ->
+        className = @..displayName or @..name
+        {exhausted, count, iter} = this
+        "#iter\n\t| #className(exhausted=#exhausted, count=#count)"
+    
+
 
 
 /**
@@ -158,57 +264,58 @@ class exports.ZipIterator extends IndexIterator
  * the given `map` function before it is returned.
  * @extends Iterator
  */
-class exports.PipeIterator extends Iterator
+class exports.PipeIterator extends ComposableIterator
     
-    (@iter, opts={}) ->
-        {map, filter} = opts
-        @map    = map       if typeof map    is 'function'
-        @filter = filter    if typeof filter is 'function'
+    (iter, options) ->
         super ...
+        {map, filter, context} = @options
+        @map     = map       if typeof map    is 'function'
+        @filter  = filter    if typeof filter is 'function'
+        @context = context or this
     
     /**
-     * Override to transform values before they are returned; this function
-     * will be passed both `STOP_ITERATION` responses and normal values as
-     * they occur. It may return whatever it pleases.
+     * Override to transform values emitted by the underlying iterator before
+     * passing them upstream.
      * 
-     * @param {*|STOP_ITERATION|HAS_NEXT} val Either the value provided by 
-     *  `getNext()` or a signal; `HAS_NEXT` will be sent to allow the mapper
-     *  to overrule the `hasNext()` call of the backing iterator.
-     * @returns {*|STOP_ITERATION} Transformed value, including
-     *  `STOP_ITERATION` when appropriate.
+     * Note this function will not be passed `STOP_ITERATION`, even when sent
+     * by the backing iterator, however you may still return it to terminate
+     * iteration.
+     * 
+     * @abstract
+     * @param {*} val
+     * @returns {STOP_ITERATION|*} Signal or transformed value.
      */
     map: (val) ->
-        return false if val is HAS_NEXT
         val
+    
     
     /**
      * Invoked prior to transform to test whether a value should be
      * transformed and then included in the output stream.
      * 
-     * @param {*|STOP_ITERATION} val Value provided by `getNext()`.
+     * @param {STOP_ITERATION|*} val Value provided by `getNext()`.
      * @returns {Boolean} Whether to include the value in the stream.
      */
     filter: (val) ->
         true
     
+    
     getNext: ->
-        val = STOP_ITERATION
         # Loop until we either find in acceptable value, or run out.
-        while @iter.hasNext()
-            val = @iter.getNext()
-            break if val is STOP_ITERATION or @filter val
+        val = STOP_ITERATION
+        while @hasNext()
+            val = @iter.next()
+            
+            if val is STOP_ITERATION
+                break
+            
+            if @filter.call @context, val
+                val = @map.call @context, val
+                break
+            
             val = STOP_ITERATION
-        val = @map val if val is not STOP_ITERATION
         val
     
-    hasNext: ->
-        @iter.hasNext()
-    
-    clone: ->
-        IteratorClass = @constructor
-        it = new IteratorClass @iter, {@map, @filter}
-        it.count = @count
-        it
     
 
 
@@ -216,48 +323,51 @@ class exports.PipeIterator extends Iterator
  * @class Iterator which wraps another, offering values from the backing
  * stream until an aggregated value is produced. This allows streams to be
  * transformed into non-isometric forms.
- * @extends Iterator
+ * @extends ComposableIterator
  */
-class exports.AggregationIterator extends Iterator
+class exports.AggregationIterator extends ComposableIterator
     
-    (@iter, opts={}) ->
-        {offer} = opts
-        @offer = offer if typeof offer is 'function'
+    
+    /**
+     * @constructor
+     * @param {Iterator} iter Backing iterator.
+     * @param {Object} [options={}] Options:
+     * @param {Function} [options.offer] See AggregationIterator#offer()
+     * @param {Object} [options.context=this] Function context for `offer`.
+     */
+    (iter, options) ->
         super ...
+        {offer, context} = @options
+        @offer   = offer if typeof offer is 'function'
+        @context = context or this
+    
     
     /**
      * Override to consider each value for aggregation, returning an aggregated
-     * value or a signal to stop (`STOP_ITERATION`) or continue (`CONTINUE`).
+     * value or a signal to continue without emitting a value upstream (via
+     * `CONTINUE`), or to indicate no further values (via `STOP_ITERATION`).
      * 
      * `HAS_NEXT` will be sent so the function may control the injection of
      * synthetic elements into the stream even once the backing iterator is
      * exhausted.
      * 
      * @abstract
-     * @param {*|STOP_ITERATION|HAS_NEXT} val
-     * @returns {*|STOP_ITERATION|CONTINUE} An aggregated value, or a signal.
+     * @param {STOP_ITERATION|*} val
+     * @param {Object} state State object for optionally tracking progress.
+     * @returns {CONTINUE|STOP_ITERATION|*} An aggregated value, or a signal.
      */
     offer: (val) ->
-        switch val
-        case HAS_NEXT       then false
-        default             then val
+        val
+    
     
     getNext: ->
         # Loop until an aggregated value is ready or we run out.
         val = STOP_ITERATION
         while @hasNext()
-            val = @offer @iter.next()
+            val = @offer.call @context, @iter.next()
             break unless val is CONTINUE
         val
     
-    hasNext: ->
-        @iter.hasNext() or @offer(HAS_NEXT)
-    
-    clone: ->
-        IteratorClass = @constructor
-        it = new IteratorClass @iter, {@offer}
-        it.count = @count
-        it
     
 
 
