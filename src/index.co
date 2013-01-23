@@ -120,7 +120,11 @@ class limn.LimnApp
     
 
 
-/**
- * Run main() on DOMReady
- */
-root.jQuery? LimnApp.main
+# Set up domReady observable
+limn.domReady = ko.observable false
+root.jQuery? ($) ->
+    limn.$ = $
+    limn.domReady true
+
+
+LimnApp.main()

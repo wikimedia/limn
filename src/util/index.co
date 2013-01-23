@@ -1,6 +1,15 @@
 # Root object -- `window` in the browser, `global` in Node.
 root = exports.root = do -> this or eval('this')
 
+# polyfill for window.requestAnimationFrame(timestamp)
+root.requestAnimationFrame or= 
+    root.webkitRequestAnimationFrame
+    || root.mozRequestAnimationFrame
+    || root.oRequestAnimationFrame
+    || root.msRequestAnimationFrame
+    || -> setTimeout it, 17
+
+
 
 # Stub out CommonJS modules that might be included as normal JS globals
 moduleShim = (name, mod) ->
