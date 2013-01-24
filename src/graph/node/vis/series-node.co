@@ -1,0 +1,53 @@
+_  = require 'underscore'
+ko = require 'knockout'
+
+{ GraphNodeData,
+} = require '../graph-node-data'
+{ GraphNode,
+} = require '../graph-node'
+{ Metric,
+} = require '../../../data/metric'
+
+Trait = require '../graph-node-trait'
+
+
+/**
+ * @class
+ * @extends GraphNodeData
+ */
+class exports.SeriesNodeData extends GraphNodeData
+    @registerType 'series'
+    
+    defaults: ->
+        metric : null
+    
+    attributeTypes: ->
+        metric : Metric
+    
+    -> super ...
+
+
+
+/**
+ * @class
+ * @extends GraphNode
+ */
+class exports.SeriesNode extends GraphNode
+    @registerType 'series'
+    traits : [
+        Trait.VIS_NODE
+        Trait.REQUIRES_METRIC
+        Trait.METRIC_CONTENT_DATA
+        Trait.SVG
+        Trait.LEAF
+    ]
+    
+    -> super ...
+    
+    
+    /**
+     * Materialized series data.
+     * @type ko.computed<Array<[Index, Value]>>
+     */
+    seriesData: @computedRequires 'model.metric', (metric) ->
+        metric.data()

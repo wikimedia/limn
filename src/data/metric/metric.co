@@ -2,7 +2,7 @@ _ = require 'underscore'
 
 { Model,
 } = require '../../base'
-{ ParsingMixin,
+{ ParsingMixin, Query,
 } = require '../../util'
 { DataSource,
 } = require '../datasource'

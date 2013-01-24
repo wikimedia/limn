@@ -1,0 +1,42 @@
+_  = require 'underscore'
+ko = require 'knockout'
+
+{ GroupNode, GroupNodeData,
+} = require '../group-node'
+
+Trait = require '../graph-node-trait'
+
+
+/**
+ * @class
+ * @extends GraphNodeData
+ */
+class exports.BarGroupNodeData extends GroupNodeData
+    @registerType 'bar-group'
+    
+    defaults: ->
+        options :
+            palettes    : <[ wmf_projects spectral ]>
+            scale       : 'log' # log | linear
+            stroke :
+                width   : 40
+                opacity : 1
+    
+    attributeTypes: ->
+    
+    -> super ...
+
+
+
+/**
+ * @class
+ * @extends GroupNode
+ */
+class exports.BarGroupNode extends GroupNode
+    @registerType 'bar-group'
+    traits : [
+        Trait.VIS_NODE
+        Trait.SVG
+    ]
+    
+    -> super ...

@@ -2,9 +2,11 @@ geo_feature_node        = require './geo-feature-node'
 geo_map_node            = require './geo-map-node'
 line_group_node         = require './line-group-node'
 line_node               = require './line-node'
+bar_group_node          = require './bar-group-node'
+bar_node                = require './bar-node'
 timeseries_node         = require './timeseries-node'
 annotation_group_node   = require './annotation-group-node'
 annotation_node         = require './annotation-node'
 
-exports import geo_feature_node import geo_map_node import line_group_node import line_node import timeseries_node import annotation_group_node import annotation_node
+exports import geo_feature_node import geo_map_node import line_group_node import line_node import bar_group_node import bar_node import timeseries_node import annotation_group_node import annotation_node
 
