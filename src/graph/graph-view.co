@@ -1,6 +1,7 @@
 _  = require 'underscore'
 ko = require 'knockout'
 
+limn = require '../' # yes, you actually need the trailing slash
 { View,
 } = require '../base/view'
 { OrderedMap,
