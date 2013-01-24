@@ -26,6 +26,9 @@ class exports.SeriesDataset extends Dataset
     formatParsers:
         csv: @parser d3.csv
         tsv: @parser d3.tsv
+        json  : (rawData) -> rawData
+        jsonp : (rawData) -> rawData
+        xml   : (rawData) -> rawData
     
     (source, rawData) ->
         super ...
