@@ -65,7 +65,7 @@ class exports.GraphView extends View
     watchDOM: @computed ->
         node = @rootNode()
         el   = @el()
-        return null unless limn.domReady() and node and el
+        return null unless limn?.domReady() and node and el
         return null unless nodeParentEl = @$('.graph-canvas-row > .inner').0
         node.build nodeParentEl
         nodeParentEl
