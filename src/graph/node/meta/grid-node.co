@@ -6,7 +6,8 @@ d3 = require 'd3'
 } = require '../graph-node-data'
 { GraphNode,
 } = require '../graph-node'
-
+{ CanvasNode,
+} = require '../canvas-node'
 Trait = require '../graph-node-trait'
 
 
@@ -51,16 +52,18 @@ class exports.GridNode extends GraphNode
     
     
     render: ->
-        scales = @root().scales()
-        dimension = @options().dimension()
-        # console.log "#this.grid!"
+        options = @model().options()
+        return unless scales    = @root().scalesIfValid()
+        return unless dimension = options.get('dimension')
+        return unless scale     = scales[ dimension+'Scale' ]
+        
+        isTimeseries = @root() instanceof CanvasNode
         
         @sel.classed dimension+'-grid', true
         
         switch dimension
             case 'x'
-                ticks = scales.xScale.ticks(20)
-                scale = scales.xScale
+                ticks = if isTimeseries then scale.ticks(20) else scale.domain()
                 size = @root().height()
                 enter =
                     y1: -1 * size
@@ -70,8 +73,7 @@ class exports.GridNode extends GraphNode
                     x2: scale
             
             case 'y'
-                ticks = scales.yScale.ticks()
-                scale = scales.yScale
+                ticks = scale.ticks()
                 size = @root().width()
                 enter =
                     x1: -1 * size

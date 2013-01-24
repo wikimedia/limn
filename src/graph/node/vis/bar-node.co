@@ -62,7 +62,7 @@ class exports.BarNode extends SeriesNode
      * @type ko.computed<d3.selection.update>
      */
     render: ->
-        data = if @seriesData() then that else []
+        data = if @seriesData() then that[0] else []
         
         # create selection
         bar = @selectAll 'rect.metric-bar' .data data
@@ -81,10 +81,8 @@ class exports.BarNode extends SeriesNode
                 .style 'stroke', @color()
                 .attr 'width', @width()
         bar.style 'visibility', if @disabled() then "hidden" else "visible"
-        val = data[1]
-        label = data[0]
         bar.transition()
-            .attr 'height', scales.yScale(val)
-            .attr 'x', scales.xScale(label)
-            .attr 'y', scales.yScale(val)
+            .attr 'height', scales.yScale
+            .attr 'x', scales.xScale(@label()) - @width()/2
+            .attr 'y', scales.yScale
         bar

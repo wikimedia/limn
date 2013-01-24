@@ -1,4 +1,5 @@
 _ = require 'underscore'
+d3 = require 'd3'
 { Dataset,
 } = require './dataset'
 
@@ -10,7 +11,9 @@ _ = require 'underscore'
 class exports.SeriesDataset extends Dataset
     @registerType 'series'
     
-    
+    formatParsers :
+        csv   : (rawData) -> d3.csv.parseRows(rawData).slice(1)
+        tsv   : (rawData) -> d3.tsv.parseRows(rawData).slice(1)
     
     (source, rawData) ->
         super ...

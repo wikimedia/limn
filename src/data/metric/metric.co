@@ -44,7 +44,7 @@ class exports.Metric extends Model
         source_col = @get 'source_col'
         return unless source_col?
         Query()
-            .columns 0, source_col
+            .columns source_col
     
     
     /**

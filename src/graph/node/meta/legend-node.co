@@ -65,7 +65,10 @@ class exports.LegendNode extends GraphNode
         @entryCache = new OrderedMap()
         super ...
         @date = ko.observable()
-        @trackHover()
+        # FIXME: this should stop tracking for scales that can't invert
+        # FIXME:   but it evidences an ugly problem: @root is always CanvasNode here
+        if @root().xScale?.invert
+            @trackHover()
     
     
     /**
@@ -73,9 +76,10 @@ class exports.LegendNode extends GraphNode
      */
     trackHover: @computed ->
         return unless cursor = @root().cursor()
+        return unless invert = @root().xScale.invert
         
         if cursor.hovering
-            @date @root().xScale.invert cursor.x
+            @date invert cursor.x
     
     
     buildElement: (parentElement) ->

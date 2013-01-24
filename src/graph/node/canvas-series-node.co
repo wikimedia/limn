@@ -26,8 +26,8 @@ tuplesEqual = (a, b) ->
  * @class
  * @extends ViewportNodeData
  */
-class exports.CanvasNodeData extends ViewportNodeData
-    @registerType 'canvas'
+class exports.CanvasSeriesNodeData extends ViewportNodeData
+    @registerType 'canvas-series'
     
     defaults: ->
         width  : 'auto'
@@ -44,8 +44,8 @@ class exports.CanvasNodeData extends ViewportNodeData
  * @class
  * @extends ViewportNode
  */
-class exports.CanvasNode extends ViewportNode
-    @registerType 'canvas'
+class exports.CanvasSeriesNode extends ViewportNode
+    @registerType 'canvas-series'
     traits   : [ Trait.VIEWPORT ]
     tagName  : 'section'
     template : 'canvas-node'
@@ -87,15 +87,20 @@ class exports.CanvasNode extends ViewportNode
      * @type Array<Metric>
      */
     metrics : @computed ->
+        metricLabels = []
         metrics = @walk [], (metrics, node) ->
             if      node.hasTrait(Trait.REQUIRES_METRIC) and
-                    node.hasTrait(Trait.METRIC_TIMESERIES) and
+                    node.hasTrait(Trait.METRIC_CONTENT_DATA) and
                     not node.disabled() and
                     metric = node.model()?.metric()
                 metrics.push metric
+                metricLabels[metric.__id__] = node.label()
             metrics
         
         return unless metrics.length
+        metricLabels = metrics.map -> metricLabels[it.__id__]
+        metricData = _.compact _.flatten _.invoke metrics, 'data'
+        return unless metricData.length and metricData.length is metricLabels.length
         
         _scales  = @scales.peek()
         _xDomain = @xScale.domain()
@@ -104,29 +109,27 @@ class exports.CanvasNode extends ViewportNode
         _height  = @yScale.range()[0]
         
         # Update each scale using metrics
-        xs = _.compact _.flatten _.invoke metrics, 'dates'
-        xDomain = d3.extent xs
-        @xScale.domain xDomain if xs.length
+        xDomain = metricLabels
+        @xScale.domain xDomain if metricLabels.length
         
         width = @viewportWidth()
-        @xScale.range [0, width]
+        @xScale.rangePoints [0, width], 1
         
-        xValid = xs.length and width > 0
+        xValid = metricLabels.length and width > 0
         
-        ys = _.compact _.flatten _.invoke metrics, 'values'
-        yDomain = @applyPadding d3.extent ys
-        @yScale.domain yDomain if ys.length
+        yDomain = @applyPadding d3.extent metricData
+        @yScale.domain yDomain if metricData.length
         
         height = @viewportHeight()
         @yScale.range [height, 0]
         
-        yValid = ys.length and height > 0
+        yValid = metricData.length and height > 0
         
         
         # If anything changed, trigger a notification by setting the scales computed
         unless  width  is _width  and tuplesEqual(xDomain, _xDomain) and
                 height is _height and tuplesEqual(yDomain, _yDomain)
-            @scales { @xScale, @yScale, @scaleLine, xValid, yValid }
+            @scales { @xScale, @yScale, xValid, yValid }
         
         metrics
     
@@ -190,33 +193,9 @@ class exports.CanvasNode extends ViewportNode
     (graph, model) ->
         super ...
         
-        @xScale = d3.time.scale().clamp(true)
-        # ko.utils.observeFluentMethod @xScale, 'domain'
-        
+        @xScale = d3.scale.ordinal()
         @yScale = d3.scale.log()
-        # ko.utils.observeFluentMethod @yScale, 'domain'
-        
-        @scaleLine = d3.svg.line()
-            .x ([date, val], i) ~> @xScale date
-            .y ([date, val], i) ~> @yScale val
-            .defined @isDataInView.bind this
-            .interpolate 'linear'
-        @scales { @xScale, @yScale, @scaleLine, -xValid, -yValid }
-        
-        /* this implements a crude way of line smoothing with interpolation
-        @scaleLineTension = ko.observable()
-        @scaleLine = d3.svg.line()
-            .x ([date, val], i) ~> @xScale date
-            .y ([date, val], i) ~> @yScale val
-            .defined ([date, val], i) ~> isFinite @yScale val
-            .interpolate 'bundle'
-        @scaleLineTension.subscribe ~>
-            @scaleLine.tension @scaleLineTension()
-            @scales { @xScale, @yScale, @scaleLine, -xValid, -yValid }
-        @scaleLineTension 1
-        */
-    
-    
+        @scales { @xScale, @yScale, -xValid, -yValid }
     
     
     watchDeps: ->
