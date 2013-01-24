@@ -11,9 +11,21 @@ d3 = require 'd3'
 class exports.SeriesDataset extends Dataset
     @registerType 'series'
     
-    formatParsers :
-        csv   : (rawData) -> d3.csv.parseRows(rawData).slice(1)
-        tsv   : (rawData) -> d3.tsv.parseRows(rawData).slice(1)
+    @parser = (d3Parser) ->
+        (rawData) ->
+            parsedData = d3Parser.parseRows rawData
+            ignoreHeader = parsedData.slice(1)
+            ignoreHeader.map ->
+                it.map ->
+                    tryParse = parseFloat it
+                    tryParse = parseInt it if isNaN tryParse
+                    tryParse = new Date it if isNaN tryParse
+                    tryParse = it if tryParse == 'Invalid Date'
+                    tryParse
+    
+    formatParsers:
+        csv: @parser d3.csv
+        tsv: @parser d3.tsv
     
     (source, rawData) ->
         super ...

@@ -52,10 +52,10 @@ class exports.BarNode extends SeriesNode
         options.label?() or @model().metric()?.defaultLabel() or '(no label)'
     
     color: @computedRequires 'model.options', (options) ->
-        ProjectColors.lookup(@label()) or options?.stroke?().color?() or 'black'
+        ProjectColors.lookup(@label()) or options.stroke?()?.color or 'black'
     
     width: @computedRequires 'model.options', (options) ->
-        options?.stroke?().width?() or 40
+        options.stroke?()?.width?() or 40
     
     /**
      * Represent the data as the bar (SVG rectangle) height
@@ -73,6 +73,7 @@ class exports.BarNode extends SeriesNode
         return bar unless data.length
         return null unless model  = @model()
         return null unless scales = @root().scales()
+        disabled = @disabled()
         
         bar.enter()
             .append 'rect'
@@ -80,9 +81,13 @@ class exports.BarNode extends SeriesNode
                 .style 'fill', @color()
                 .style 'stroke', @color()
                 .attr 'width', @width()
-        bar.style 'visibility', if @disabled() then "hidden" else "visible"
+        bar.style 'visibility', if disabled then "hidden" else "visible"
         bar.transition()
-            .attr 'height', scales.yScale
+            .attr 'height', (d) ->
+                if disabled
+                    0
+                else
+                    scales.yScale.range()[0] - scales.yScale d
             .attr 'x', scales.xScale(@label()) - @width()/2
             .attr 'y', scales.yScale
         bar

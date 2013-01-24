@@ -87,13 +87,14 @@ class exports.LineNode extends TimeseriesNode
     
     color: @computedRequires 'model.options', (options) ->
         label = options.label?() or @model().metric()?.defaultLabel() or '(no label)'
-        ProjectColors.lookup(label) or options?.stroke?().color?() or 'black'
+        # FIXME: why is the color not converted into an observable?
+        ProjectColors.lookup(label) or options.stroke?()?.color or 'black'
     
     width: @computedRequires 'model.options', (options) ->
-        options?.stroke?().width?() or 3
+        options.stroke?()?.width?() or 3
     
     dasharray: @computedRequires 'model.options', (options) ->
-        options?.stroke?().dashed?() or 'none'
+        options.stroke?()?.dashed?() or 'none'
     
     /**
      * Update selection representing the SVG path element for the line.
