@@ -9,6 +9,16 @@ limn.{ _, op, emitters, guidFor, compareIds,
 } = limn.util = require './util'
 
 
+# This must come after requiring util in case it wasn't a module
+ko = require 'knockout'
+
+# Set up domReady observable
+limn.domReady = ko.observable false
+root.jQuery? ($) ->
+    limn.$ = $
+    limn.domReady true
+
+
 # Decorate root limn namespace object with EventEmitter methods
 emitter = limn.__emitter__ = new emitters.ReadyEmitter()
 for k of <[ on addListener off removeListener emit trigger once removeAllListeners ]>
@@ -120,11 +130,6 @@ class limn.LimnApp
     
 
 
-# Set up domReady observable
-limn.domReady = ko.observable false
-root.jQuery? ($) ->
-    limn.$ = $
-    limn.domReady true
 
 
 LimnApp.main()
