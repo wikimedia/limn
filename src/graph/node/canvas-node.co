@@ -126,7 +126,7 @@ class exports.CanvasNode extends ViewportNode
         # If anything changed, trigger a notification by setting the scales computed
         unless  width  is _width  and tuplesEqual(xDomain, _xDomain) and
                 height is _height and tuplesEqual(yDomain, _yDomain)
-            @scales { @xScale, @yScale, @scaleLine, xValid, yValid }
+            @scales { @xScale, @yScale, @scaleShape, xValid, yValid }
         
         metrics
     
@@ -147,7 +147,7 @@ class exports.CanvasNode extends ViewportNode
         
         # If anything changed, trigger a notification by setting the scales computed
         unless tuplesEqual(xDomain, _xDomain) and tuplesEqual(yDomain, _yDomain)
-            @scales { @xScale, @yScale, @scaleLine, xValid, yValid }
+            @scales { @xScale, @yScale, @scaleShape, xValid, yValid }
         
         @scales.peek()
     
@@ -196,7 +196,7 @@ class exports.CanvasNode extends ViewportNode
         @yScale = d3.scale.log()
         # ko.utils.observeFluentMethod @yScale, 'domain'
         
-        @scaleLine = (shape) ~>
+        @scaleShape = (shape) ~>
             switch shape
                 case 'area'
                     d3.svg.area()
@@ -211,22 +211,7 @@ class exports.CanvasNode extends ViewportNode
                         .y ([date, val], i) ~> @yScale val
                         .defined @isDataInView.bind this
                         .interpolate 'linear'
-        @scales { @xScale, @yScale, @scaleLine, -xValid, -yValid }
-        
-        /* this implements a crude way of line smoothing with interpolation
-        @scaleLineTension = ko.observable()
-        @scaleLine = d3.svg.line()
-            .x ([date, val], i) ~> @xScale date
-            .y ([date, val], i) ~> @yScale val
-            .defined ([date, val], i) ~> isFinite @yScale val
-            .interpolate 'bundle'
-        @scaleLineTension.subscribe ~>
-            @scaleLine.tension @scaleLineTension()
-            @scales { @xScale, @yScale, @scaleLine, -xValid, -yValid }
-        @scaleLineTension 1
-        */
-    
-    
+        @scales { @xScale, @yScale, @scaleShape, -xValid, -yValid }
     
     
     watchDeps: ->

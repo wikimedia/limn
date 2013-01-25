@@ -129,7 +129,7 @@ class exports.LineNode extends TimeseriesNode
         
         line.style 'visibility', if @disabled() then "hidden" else "visible"
         line.transition()
-            .attr 'd', scales.scaleLine(shape)
+            .attr 'd', scales.scaleShape(shape)
         line
     
     
