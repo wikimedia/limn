@@ -196,11 +196,21 @@ class exports.CanvasNode extends ViewportNode
         @yScale = d3.scale.log()
         # ko.utils.observeFluentMethod @yScale, 'domain'
         
-        @scaleLine = d3.svg.line()
-            .x ([date, val], i) ~> @xScale date
-            .y ([date, val], i) ~> @yScale val
-            .defined @isDataInView.bind this
-            .interpolate 'linear'
+        @scaleLine = (shape) ~>
+            switch shape
+                case 'area'
+                    d3.svg.area()
+                        .x ([date, val], i) ~> @xScale date
+                        .y0 ([date, val], i) ~> @yScale val
+                        .y1 @yScale.range()[1]
+                        .defined @isDataInView.bind this
+                        .interpolate 'linear'
+                default
+                    d3.svg.line()
+                        .x ([date, val], i) ~> @xScale date
+                        .y ([date, val], i) ~> @yScale val
+                        .defined @isDataInView.bind this
+                        .interpolate 'linear'
         @scales { @xScale, @yScale, @scaleLine, -xValid, -yValid }
         
         /* this implements a crude way of line smoothing with interpolation

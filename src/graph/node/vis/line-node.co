@@ -113,7 +113,8 @@ class exports.LineNode extends TimeseriesNode
         return null unless model  = @model()
         return null unless scales = @root().scales()
         
-        line.enter()
+        shape = @parent().shape?()
+        path = line.enter()
             .append 'path'
                 .classed 'metric-line',     true
                 .attr  'vector-effect',     'non-scaling-stroke'
@@ -121,9 +122,14 @@ class exports.LineNode extends TimeseriesNode
                 .style 'stroke-dasharray',  @dasharray()
                 .style 'stroke-width',      @width()
                 .style 'stroke',            @color()
+        if shape is 'area'
+            path
+                .style 'fill',              @color()
+                .style 'opacity',           0.4
+        
         line.style 'visibility', if @disabled() then "hidden" else "visible"
         line.transition()
-            .attr 'd', scales.scaleLine
+            .attr 'd', scales.scaleLine(shape)
         line
     
     
