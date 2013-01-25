@@ -150,7 +150,7 @@ class exports.CanvasSeriesNode extends ViewportNode
         
         # If anything changed, trigger a notification by setting the scales computed
         unless tuplesEqual(xDomain, _xDomain) and tuplesEqual(yDomain, _yDomain)
-            @scales { @xScale, @yScale, @scaleLine, xValid, yValid }
+            @scales { @xScale, @yScale, xValid, yValid }
         
         @scales.peek()
     
