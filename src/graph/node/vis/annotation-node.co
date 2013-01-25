@@ -54,7 +54,21 @@ class exports.AnnotationNode extends GraphNode
     
     ->
         super ...
-        #@$el.on 'hover', ~> alert @desc()
+        @trackHover()
+    
+    trackHover: @computed ->
+        return unless cursor = @root().cursor()
+        return unless @rect and @popup
+        
+        if cursor.hovering
+            dx = Math.abs(cursor.x - @rect.attr('x'))
+            dy = Math.abs(cursor.y - @rect.attr('y'))
+            if dx < @options().width() and dy < @options().height()
+                @rect.style 'fill', 'black'
+                @popup.style 'visibility', 'visible'
+            else
+                @rect.style 'fill', 'white'
+                @popup.style 'visibility', 'hidden'
     
     
     disabled: -> false # TODO: link to parent's disabled
@@ -72,16 +86,43 @@ class exports.AnnotationNode extends GraphNode
         width = model.options().width()
         height = model.options().height()
         
-        @rect ?= @sel.append 'rect'
-            .classed    'metric-annotation',    true
-            .style      'fill',                 'white'
-            .style      'stroke',               'black'
-            .attr       'width',                width
-            .attr       'height',               height
+        # TODO: move CSS out to stylesheet
+        unless @rect
+            @rect = @sel.append 'rect'
+                .classed 'metric-annotation', true
+                .style 'fill', 'white'
+                .style 'stroke', 'black'
+                .attr 'width', width
+                .attr 'height', height
+            
+            @popup = @sel.append 'g'
+                .classed 'metric-annotation-box', true
+                .style 'visibility', 'hidden'
+            
+            @popup.append 'rect'
+                .style 'fill', '#fee'
+                .style 'stroke', 'black'
+            
+            @popup.append 'text'
+                .style 'text-anchor', 'left'
         
         x = scales.xScale(model.x()) - width / 2
         y = scales.yScale(model.y()) - height / 2
         
         @rect.transition()
-            .attr       'x',                    x
-            .attr       'y',                    y
+            .attr 'x', x
+            .attr 'y', y
+        @popup.selectAll('text').remove()
+        textLines = @note().split('\n')
+        _.each textLines, (text, index) ~>
+            @popup.append 'text'
+                .text text
+                .transition()
+                    .attr 'x', x + width
+                    .attr 'y', y + height + index*16
+        rectSize = @popup.node().getBBox()
+        @popup.select('rect').transition()
+            .attr 'x', x
+            .attr 'y', y
+            .attr 'width', rectSize.width + width*2
+            .attr 'height', textLines.length*16 + height
