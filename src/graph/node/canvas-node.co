@@ -154,7 +154,8 @@ class exports.CanvasNode extends ViewportNode
     
     isDataInView: ([date, val], i) ->
         [xMin, xMax] = @xScale.domain().map toNumeric
-        return  xMin <= +date <= xMax
+        return  xMin <= +date <= xMax and
+            isFinite @yScale val
     
     
     /**
@@ -190,7 +191,7 @@ class exports.CanvasNode extends ViewportNode
         @xScale = d3.time.scale().clamp(true)
         # ko.utils.observeFluentMethod @xScale, 'domain'
         
-        @yScale = d3.scale.log()
+        @yScale = if @scaling?() is 'linear' then d3.scale.linear() else d3.scale.log()
         # ko.utils.observeFluentMethod @yScale, 'domain'
         
         @scaleShape = (shape) ~>

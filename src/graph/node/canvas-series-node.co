@@ -155,14 +155,6 @@ class exports.CanvasSeriesNode extends ViewportNode
         @scales.peek()
     
     
-    isDataInView: ([date, val], i) ->
-        [xMin, xMax] = @xScale.domain().map toNumeric
-        [yMin, yMax] = @yScale.domain().map toNumeric
-        return  xMin <= +date <= xMax   and
-                isFinite(@yScale(val))  and
-                yMin <= +val  <= yMax
-    
-    
     /**
      * Percentage (expressed as a fraction) to expand the extrema of the y-scale.
      * @type Number
@@ -174,11 +166,6 @@ class exports.CanvasSeriesNode extends ViewportNode
         min -= min * @padding
         max += max * @padding
         [min, max]
-    
-    
-    logDomains: ->
-        xd = @xScale.domain().map -> if it instanceof Date then it.getTime() else it
-        console.log 'xScale.domain:', xd, '--', 'yScale.domain:', @yScale.domain()
     
     
     
@@ -194,7 +181,7 @@ class exports.CanvasSeriesNode extends ViewportNode
         super ...
         
         @xScale = d3.scale.ordinal()
-        @yScale = d3.scale.log()
+        @yScale = if @scaling?() is 'linear' then d3.scale.linear() else d3.scale.log()
         @scales { @xScale, @yScale, -xValid, -yValid }
     
     
