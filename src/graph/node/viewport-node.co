@@ -21,8 +21,13 @@ class exports.ViewportNodeData extends GraphNodeData
     @registerType 'viewport'
     
     defaults: ->
-        width  : 'auto'
-        height : 500
+        width     : 'auto'
+        minWidth  : 750
+        maxWidth  : null
+        
+        height    : 500
+        minHeight : 500
+        maxHeight : null
     
     attributeTypes: ->
         {}
@@ -64,39 +69,44 @@ class exports.ViewportNode extends GraphNode
     /* * * *  Viewport Sizing  * * * {{{ */
     
     # TODO: use a responsive algo to pick good numbers based on screen/device
-    defaultWidth  : @computed -> 750
-    defaultHeight : @computed -> 500
+    defaultWidth     : @computed -> 750
+    defaultMinWidth  : @computed -> 750
+    defaultMaxWidth  : @computed -> Infinity
+    defaultHeight    : @computed -> 500
+    defaultMinHeight : @computed -> 500
+    defaultMaxHeight : @computed -> Infinity
     
-    fullWidth     : @computed -> @$el.innerWidth()  if @el() and @_resizeProxy()
-    fullHeight    : @computed -> @$el.innerHeight() if @el() and @_resizeProxy()
-    
-    margin : { top:30, right:60, bottom:30, left:60 }
+    fullWidth  : @computed -> if @el() and @_resizeProxy() and (w = @$el.innerWidth())  > 0 then w else @defaultWidth()
+    fullHeight : @computed -> if @el() and @_resizeProxy() and (h = @$el.innerHeight()) > 0 then h else @defaultHeight()
     
     frameWidth : @computed ->
         return unless model = @model()
-        width = model.width()
-        if width is 'auto'
-            width = @fullWidth()
-        width
+        v = model.width()
+        if not v? or v is 'auto'
+            min = model.minWidth() ? @defaultMinWidth()
+            max = model.maxWidth() ? @defaultMaxWidth()
+            v   = min >? @fullWidth() <? max
+        v
     
     frameHeight : @computed ->
         return unless model = @model()
-        height = model.height()
-        if height is 'auto'
-            height = @fullHeight()
-        height
+        v = model.height()
+        if not v? or v is 'auto'
+            min = model.minHeight() ? @defaultMinHeight()
+            max = model.maxHeight() ? @defaultMaxHeight()
+            v   = min >? @fullHeight() <? max
+        v
     
+    margin         : { top:30, right:60, bottom:30, left:60 }
     viewportWidth  : @computed -> @frameWidth()  - @margin.left - @margin.right
     viewportHeight : @computed -> @frameHeight() - @margin.top  - @margin.bottom
     
-    clipWidth  : @computed -> if (v = @viewportWidth())  > 0 then v else @defaultWidth()
-    clipHeight : @computed -> if (v = @viewportHeight()) > 0 then v else @defaultHeight()
+    clipWidth      : @computed -> if (v = @viewportWidth())  > 0 then v else @defaultWidth()
+    clipHeight     : @computed -> if (v = @viewportHeight()) > 0 then v else @defaultHeight()
     
-    width  : @computed -> @clipWidth()
-    height : @computed -> @clipHeight()
-    
-    center : @computed ->
-        [@width()/2, @height()/2]
+    width          : @computed -> @clipWidth()
+    height         : @computed -> @clipHeight()
+    center         : @computed -> [ @width()/2, @height()/2 ]
     
     
     # }}}
