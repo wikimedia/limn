@@ -1,2 +1,4 @@
-exports.parsers = require './parsers'
-exports import    require './parsing-mixin'
+parsers = require './parsers'
+parsing_mixin = require './parsing-mixin'
+
+exports import parsers import parsing_mixin

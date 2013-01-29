@@ -23,7 +23,8 @@ DataSource.fetchAll = exports.fetchAll = ->
     allDataURL = limn.mount('datasources/all')
     $.getJSON allDataURL, (models) ->
         _.each models, (data) ->
-            DataSourceCache.add new DataSource data
+            unless DataSourceCache.get data.id
+                DataSourceCache.add new DataSource data
         
         # Trigger event when the DataSource TOC is ready
         DataSourceCache.ready true

@@ -3,8 +3,10 @@ ko = require 'knockout'
 
 { View,
 } = require '../../base/view'
-{ DataSource,
+{ DataSource, ColumnDef,
 } = require './datasource'
+{ ParsingMixin,
+} = require '../../util'
 
 
 
@@ -16,6 +18,8 @@ class exports.DataSourceView extends View
         action : null
         isDisposed : false
     
+    # Apply Parser mixin
+    ParsingMixin.mix this
     
     /**
      * @constructor
@@ -30,33 +34,62 @@ class exports.DataSourceView extends View
             @model.push model
         else
             DataSource.fetchAll().done ~> @model(_.sortBy DataSource.getAllSources(), (d) -> d.name())
-            @blankDataSource = ko.observable new DataSource()
+            @blankDataSource = ko.observable()
+            @initializeAddForm()
         
         @action action
         @message = ko.observable()
+    
+    
+    initializeAddForm: -> @blankDataSource new DataSource()
     
     
     /**
      * Called by Knockout once the DataSource template has finished rendering.
      */
     afterRender: (element) ->
-        # console.log "#this.afterRender()"
         @el element
         
         if @action() is 'edit'
             new EditView this
+        
+        @blankDataSource().url.subscribe ~>
+            saveButton = @$el.find 'button.save'
+            saveButton.attr 'disabled', true
+            enableButton = -> saveButton.attr 'disabled', false
+            
+            # attempt to load datafile
+            @blankDataSource().data()
+            @blankDataSource().determineFormat()
+            # in order to parse out its columns
+            self = this
+            @blankDataSource().data.task()
+                .done (dataset) ->
+                    self.blankDataSource().columns []
+                    dataset.getLabels().map (label, i) ->
+                        type = self.getTypeFromExample dataset.data[0][i]
+                        self.blankDataSource().columns.push new ColumnDef {label, type}
+                .fail -> throw 'failed to retrieve datafile'
+                .always enableButton
     
+    
+    addMetric: (link) -> @columns.push new ColumnDef {label:'', type:''}
+    
+    removeMetricFrom: (datasource) -> (link) -> datasource.columns.remove link
     
     newDataSource: (form) ->
+        # refresh the indices of the columns to match the order they were entered
+        for column, i of @blankDataSource().columns()
+            column.index i
+        
         ds = _.clone @blankDataSource()
         if ds.slug()
             ds.save(options={url:'/datasources'})
                 .done ~>
                     @model.push ds
-                    @blankDataSource new DataSource()
+                    @initializeAddForm()
                     @message "Saved"
                 .fail (obj, msg, res) ~>
                     @message "Failed to Save: #{res.responseText}"
         else
             @message "Failed to Save: Invalid"
-    

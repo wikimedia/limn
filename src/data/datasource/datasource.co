@@ -53,7 +53,7 @@ class exports.DataSource extends StoredModel
     resource : 'datasources'
     getId    : -> @get 'id'
     
-    formatContentTypes :
+    formatContentTypes:
         # format    : Content-Type for AJAX request
         csv         : 'text'
         tsv         : 'text'
@@ -61,7 +61,7 @@ class exports.DataSource extends StoredModel
         jsonp       : 'jsonp'
         xml         : 'xml'
     
-    defaults : ->
+    defaults: ->
         id            : null
         slug          : null
         
@@ -78,7 +78,7 @@ class exports.DataSource extends StoredModel
         timespan      : { start:null, end:null, step:'1mo' }
     
     attributeTypes: ->
-        columns : ColumnDef
+        columns: ColumnDef
     
     
     
@@ -86,7 +86,7 @@ class exports.DataSource extends StoredModel
      * Whether this DataSource is valid, and thus ready to load data.
      * @type ko.computed<Boolean>
      */
-    isValid : @computed ->
+    isValid: @computed ->
         !! @dataUrl() and @get('format') in @formatContentTypes
     
     
@@ -100,8 +100,9 @@ class exports.DataSource extends StoredModel
      * URL for the data.
      * @type ko.computed<String>
      */
-    dataUrl : @computedRequires 'url', (url) ->
+    dataUrl: @computedRequires 'url', (url) ->
         if url.indexOf('http') == 0
+            # TODO: no need to stream this through proxy, use CORS instead
             url = "/x/#url"
         cacheBuster = @generateRandom()
         "#url?#cacheBuster"
@@ -111,20 +112,24 @@ class exports.DataSource extends StoredModel
      * Encoding of the dataset response.
      * @type ko.computed<String>
      */
-    dataFormat : @computed ->
-        format = @get('format')
+    dataFormat: @computed ->
+        format = @format()
         unless format
-            return format unless url = @get('url')
-            # format = /\.([^\.]+)$/.exec(url)?[1] or 'csv'
-            format = if url.indexOf('.json') === url.length - 5 then 'json' else 'csv'
+            return @defaults.format unless @url()
+            @determineFormat()
         format
+    
+    
+    determineFormat: ->
+        # XXX: work on a regex for this -  format = /\.([^\.]+)$/.exec(url)?[1] or 'csv'
+        @format if @url().indexOf('.json') === @url().length - 5 then 'json' else 'csv'
     
     
     /**
      * Dataset class wrapping the data.
      * @type ko.computed<Dataset>
      */
-    datasetType : @computedRequires 'type', (type) ->
+    datasetType: @computedRequires 'type', (type) ->
         Dataset.lookupType type
     
     
@@ -133,7 +138,7 @@ class exports.DataSource extends StoredModel
      * @type ko.asyncComputed<TimeSeriesData|CSVData>
      * @depends url, format
      */
-    data : @asyncComputed ->
+    data: @asyncComputed ->
         return unless @isValid()
         return unless format      = @dataFormat()
         return unless DatasetType = @datasetType()
@@ -159,7 +164,7 @@ class exports.DataSource extends StoredModel
      * @param {Object} data Raw DataSource attributes to canonicalize.
      * @returns {Object} Converted raw data.
      */
-    canonicalize : (data) ->
+    canonicalize: (data) ->
         data.slug         or= data.id
         data.shortName    or= data.name
         
