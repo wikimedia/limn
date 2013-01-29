@@ -40,4 +40,8 @@ class exports.ParsingMixin extends Mixin implements parsers
         else
             @getParser 'Object'
     
-
+    getTypeFromExample: (v) ->
+        parser = @getParserFromExample v
+        for key in this
+            if this[key] is parser
+                return key.replace /parse/, ''

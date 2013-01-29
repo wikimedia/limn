@@ -17,12 +17,34 @@ fieldset.controlGroup
             label.control-label(for="url") Datafile URL
             .controls
                 input(type="text", id="url", placeholder="relative or absolute url", data-bind="value: url", required)
+        .control-group(data-bind="if: columns().length > 0")
+            h4 Metrics in Datafile
+            a.btn(data-bind="click: $parent.addMetric") Add Metric
+            .control-group(data-bind="foreach: columns")
+                .controls.controls-row
+                    span(data-bind="text: $index")
+                    input.span3(type="text", required, placeholder="column heading", data-bind="value: label")
+                    input.span2(type="text", required, placeholder="data type (int, Date, float)", data-bind="value: type")
+                    a.btn(data-bind="click: $parents[1].removeMetricFrom($parent)") Remove
         .form-actions
-            button.btn.btn-primary(type="submit") Save
+            button.btn.btn-primary.save(type="submit") Save
             span.pull-right(data-bind="text: $parent.message")
 
 
 h3 Datasources by id and name
-dl.dl-horizontal(data-bind="foreach: model")
-    dt(data-bind="text: id")
-    dd(data-bind="text: name")
+dl(data-bind="foreach: model")
+    dt
+        p
+            a.btn(data-bind="click: $parent.visualize, text: 'Visualize ' + id()")
+    dd
+        p.offset1(data-bind="text: name")
+
+
+.modal.hide#visualizeDialog(data-backdrop="false")
+    .modal-header
+        button.close(data-dismiss="modal", aria-hidden="true") &times;
+        h3 Quick Peek
+    .modal-body
+        section(data-bind="subview: visualizeDialog")
+    .modal-footer
+        a.btn.btn-primary(data-dismiss="modal") Close

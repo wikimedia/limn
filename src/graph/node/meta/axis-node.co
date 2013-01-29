@@ -48,7 +48,7 @@ class exports.AxisNodeData extends GraphNodeData
     defaults: ->
         dimension : null # x | y
         orient    : null # top|bottom | left|right
-        options   : 
+        options   :
             ticks      : 4
             tickFormat : 'MMM YY'
             

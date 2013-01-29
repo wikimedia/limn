@@ -17,6 +17,7 @@ class exports.SeriesDataset extends Dataset
             ignoreHeader = parsedData.slice(1)
             ignoreHeader.map ->
                 it.map ->
+                    # TODO: use the types defined in the datasource
                     tryParse = parseFloat it
                     tryParse = parseInt it if isNaN tryParse
                     tryParse = new Date it if isNaN tryParse
