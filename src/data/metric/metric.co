@@ -32,7 +32,7 @@ class exports.Metric extends Model
      * @depends source_id
      */
     source : @asyncComputed ->
-        DataSource.lookup id if id = @get 'source_id'
+        limn.data.datasource.DataSource.lookup id if id = @get 'source_id'
     
     
     /**

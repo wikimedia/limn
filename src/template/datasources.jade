@@ -38,3 +38,13 @@ dl(data-bind="foreach: model")
             a.btn(data-bind="click: $parent.visualize, text: 'Visualize ' + id()")
     dd
         p.offset1(data-bind="text: name")
+
+
+.modal.hide#visualizeDialog(data-backdrop="false")
+    .modal-header
+        button.close(data-dismiss="modal", aria-hidden="true") &times;
+        h3 Quick Peek
+    .modal-body
+        section(data-bind="subview: visualizeDialog")
+    .modal-footer
+        a.btn.btn-primary(data-dismiss="modal") Close

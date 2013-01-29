@@ -9,6 +9,8 @@ ko = require 'knockout'
 } = require '../../util'
 { GraphView, Graph,
 } = require '../../graph'
+{ CanvasNodeData, CanvasSeriesNodeData, ViewportNodeData, GraphNodeData,
+} = require '../../graph/node'
 
 
 class exports.DataSourceView extends View
@@ -40,6 +42,7 @@ class exports.DataSourceView extends View
         
         @action action
         @message = ko.observable()
+        @visualizeDialog = ko.observable()
     
     
     initializeAddForm: -> @blankDataSource new DataSource()
@@ -57,7 +60,7 @@ class exports.DataSourceView extends View
         @blankDataSource().url.subscribe ~>
             saveButton = @$el.find 'button.save'
             saveButton.attr 'disabled', true
-            @message "Attempting to analyze #{@url()}"
+            @message "Attempting to analyze #{@blankDataSource().url()}"
             enableButton = -> saveButton.attr 'disabled', false
             
             # attempt to load datafile
@@ -71,10 +74,10 @@ class exports.DataSourceView extends View
                     dataset.getLabels().map (label, i) ->
                         type = self.getTypeFromExample dataset.data[0][i]
                         self.blankDataSource().columns.push new ColumnDef {label, type}
-                    @message "Metrics detected, please verify"
+                    self.message "Metrics detected, please verify"
                 
                 .fail ->
-                    @message "Failed to retrieve datafile"
+                    self.message "Failed to retrieve datafile"
                 
                 .always enableButton
     
@@ -100,17 +103,37 @@ class exports.DataSourceView extends View
         else
             @message "Failed to Save: Invalid"
     
+    
+    /**
+     * Invoked via Knockout in the context of a datasource
+     * Dynamically creates a new GraphView and loads all the metrics from the datasource into it
+     */
     visualize: ->
         @fetch().done ~>
+            viewportNodeType = do
+                geojson: 'viewport'
+                series: 'canvas-series'
+                timeseries: 'canvas'
+            nodeType = viewportNodeType[@type()]
+            
             newGraphView = new GraphView new Graph do
-                name: "Temporary Graph for #{@name()}"
+                name: "All Metrics in #{@name()}"
+                # FIXME: problem with passing in a root: new GraphNodeData {nodeType}
+            
+            columns = @columns()
+            switch nodeType
+                case 'canvas'
+                    columns = columns.slice(1)
+            
             newGraphView.model().root().children [
                 {nodeType: 'axis', options: {dimension: 'x', orient: 'bottom'}}
                 {nodeType: 'axis', options: {dimension: 'y', orient: 'left'}}
                 {nodeType: 'grid', options: {dimension: 'x'}}
                 {nodeType: 'grid', options: {dimension: 'y'}}
                 {nodeType: 'legend', options: {dateFormat: 'HH:mm on MMM DD, YYYY'}}
-                {nodeType: 'line-group', children: @columns().map ~> {
+                {nodeType: 'zoom-brush'}
+                {nodeType: 'smooth'}
+                {nodeType: 'line-group', children: columns.map ~> {
                     nodeType: 'line'
                     metric: {
                         source_id: @id()
@@ -123,5 +146,5 @@ class exports.DataSourceView extends View
                 }}
             ]
             
-            limn.app.currentView newGraphView
-            limn.app.scrollTo 0, 0
+            limn.view.visualizeDialog newGraphView
+            limn.view.$('#visualizeDialog').modal()
