@@ -43,6 +43,17 @@ class exports.DataSourceView extends View
         @action action
         @message = ko.observable()
         @visualizeDialog = ko.observable()
+        @filter = ko.observable()
+        @filteredModel = ko.computed ~>
+            if @filter()?.length
+                filter = @filter().toLowerCase()
+                @model().filter ~>
+                    id = it.id().toLowerCase()
+                    name = it.name().toLowerCase()
+                    return id.indexOf(filter) >= 0 or
+                         name.indexOf(filter) >= 0
+            else
+                @model()
     
     
     initializeAddForm: -> @blankDataSource new DataSource()

@@ -31,13 +31,21 @@ fieldset.controlGroup
             span.pull-right(data-bind="text: $parent.message")
 
 
-h3 Datasources by id and name
-dl(data-bind="foreach: model")
-    dt
-        p
-            a.btn(data-bind="click: $parent.visualize, text: 'Visualize ' + id()")
-    dd
-        p.offset1(data-bind="text: name")
+h3 Search Datasources
+.navbar
+    .navbar-inner
+        .navbar-search
+            input.search-query(data-bind="value: filter", placeholder="filter by id or name")
+
+table.table.table-striped
+    tbody(data-bind="foreach: filteredModel")
+        tr
+            td
+                a.btn(data-bind="click: $parent.visualize") Visualize
+            td
+                span(data-bind="text: id")
+            td
+                span(data-bind="text: name")
 
 
 .modal.hide#visualizeDialog(data-backdrop="false")
