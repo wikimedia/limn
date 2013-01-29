@@ -116,35 +116,38 @@ class exports.DataSourceView extends View
                 timeseries: 'canvas'
             nodeType = viewportNodeType[@type()]
             
-            newGraphView = new GraphView new Graph do
-                name: "All Metrics in #{@name()}"
-                # FIXME: problem with passing in a root: new GraphNodeData {nodeType}
-            
             columns = @columns()
             switch nodeType
                 case 'canvas'
                     columns = columns.slice(1)
             
-            newGraphView.model().root().children [
-                {nodeType: 'axis', options: {dimension: 'x', orient: 'bottom'}}
-                {nodeType: 'axis', options: {dimension: 'y', orient: 'left'}}
-                {nodeType: 'grid', options: {dimension: 'x'}}
-                {nodeType: 'grid', options: {dimension: 'y'}}
-                {nodeType: 'legend', options: {dateFormat: 'HH:mm on MMM DD, YYYY'}}
-                {nodeType: 'zoom-brush'}
-                {nodeType: 'smooth'}
-                {nodeType: 'line-group', children: columns.map ~> {
-                    nodeType: 'line'
-                    metric: {
-                        source_id: @id()
-                        source_col: it.index()
-                        type: it.type()
-                    }
-                    options: {
-                        label: it.label()
-                    }
-                }}
-            ]
+            graph = do
+                name: "All Metrics in #{@name()}"
+                root:
+                    nodeType: nodeType
+                    children: [
+                        {nodeType: 'axis', options: {dimension: 'x', orient: 'bottom'}}
+                        {nodeType: 'axis', options: {dimension: 'y', orient: 'left'}}
+                        {nodeType: 'grid', options: {dimension: 'x'}}
+                        {nodeType: 'grid', options: {dimension: 'y'}}
+                        {nodeType: 'legend', options: {dateFormat: 'HH:mm on MMM DD, YYYY'}}
+                        {nodeType: 'zoom-brush'}
+                        {nodeType: 'smooth'}
+                        {nodeType: 'line-group', children: columns.map ~> {
+                            nodeType: 'line'
+                            metric: {
+                                source_id: @id()
+                                source_col: it.index()
+                                type: it.type()
+                            }
+                            options: {
+                                label: it.label()
+                            }
+                        }}
+                    ]
             
-            limn.view.visualizeDialog newGraphView
+            # XXX: crazy: saving this to a file and loading it as a graph works fine
+            console.log JSON.stringify(graph)
+            
+            limn.view.visualizeDialog new GraphView graph
             limn.view.$('#visualizeDialog').modal()

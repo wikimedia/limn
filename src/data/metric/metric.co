@@ -32,6 +32,7 @@ class exports.Metric extends Model
      * @depends source_id
      */
     source : @asyncComputed ->
+        # FIXME: shouldn't have to go to the global limn variable to get DataSource
         limn.data.datasource.DataSource.lookup id if id = @get 'source_id'
     
     
