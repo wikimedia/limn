@@ -21,10 +21,10 @@ fieldset.controlGroup
             h4 Metrics in Datafile
             a.btn(data-bind="click: $parent.addMetric") Add Metric
             .control-group(data-bind="foreach: columns")
-                .controls
+                .controls.controls-row
                     span(data-bind="text: $index")
-                    input(type="text", required, placeholder="column heading", data-bind="value: label")
-                    input(type="text", required, placeholder="data type (int, Date, float)", data-bind="value: type")
+                    input.span3(type="text", required, placeholder="column heading", data-bind="value: label")
+                    input.span2(type="text", required, placeholder="data type (int, Date, float)", data-bind="value: type")
                     a.btn(data-bind="click: $parents[1].removeMetricFrom($parent)") Remove
         .form-actions
             button.btn.btn-primary.save(type="submit") Save
@@ -32,6 +32,9 @@ fieldset.controlGroup
 
 
 h3 Datasources by id and name
-dl.dl-horizontal(data-bind="foreach: model")
-    dt(data-bind="text: id")
-    dd(data-bind="text: name")
+dl(data-bind="foreach: model")
+    dt
+        p
+            a.btn(data-bind="click: $parent.visualize, text: 'Visualize ' + id()")
+    dd
+        p.offset1(data-bind="text: name")

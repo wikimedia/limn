@@ -34,7 +34,6 @@ class exports.CanvasNodeData extends ViewportNodeData
         height : 500
     
     attributeTypes: ->
-        {}
     
     -> super ...
 
@@ -49,6 +48,38 @@ class exports.CanvasNode extends ViewportNode
     traits   : [ Trait.VIEWPORT ]
     tagName  : 'section'
     template : 'canvas-node'
+    
+    
+    /**
+     * @constructor
+     * @param {GraphView} graph
+     * @param {ViewportNodeData} model
+     */
+    (graph, model) ->
+        super ...
+        
+        @xScale = d3.time.scale().clamp(true)
+        # ko.utils.observeFluentMethod @xScale, 'domain'
+        
+        @yScale = if @scaling?() is 'linear' then d3.scale.linear() else d3.scale.log()
+        # ko.utils.observeFluentMethod @yScale, 'domain'
+        
+        @scaleShape = (shape) ~>
+            switch shape
+                case 'area'
+                    d3.svg.area()
+                        .x ([date, val], i) ~> @xScale date
+                        .y1 ([date, val], i) ~> @yScale val
+                        .y0 @yScale.range()[0]
+                        .defined @isDataInView.bind this
+                        .interpolate 'linear'
+                default
+                    d3.svg.line()
+                        .x ([date, val], i) ~> @xScale date
+                        .y ([date, val], i) ~> @yScale val
+                        .defined @isDataInView.bind this
+                        .interpolate 'linear'
+        @scales { @xScale, @yScale, @scaleShape, -xValid, -yValid }
     
     
     /* * * *  Scales  * * * {{{ */
@@ -178,38 +209,6 @@ class exports.CanvasNode extends ViewportNode
     
     
     # }}}
-    
-    
-    /**
-     * @constructor
-     * @param {GraphView} graph
-     * @param {ViewportNodeData} model
-     */
-    (graph, model) ->
-        super ...
-        
-        @xScale = d3.time.scale().clamp(true)
-        # ko.utils.observeFluentMethod @xScale, 'domain'
-        
-        @yScale = if @scaling?() is 'linear' then d3.scale.linear() else d3.scale.log()
-        # ko.utils.observeFluentMethod @yScale, 'domain'
-        
-        @scaleShape = (shape) ~>
-            switch shape
-                case 'area'
-                    d3.svg.area()
-                        .x ([date, val], i) ~> @xScale date
-                        .y1 ([date, val], i) ~> @yScale val
-                        .y0 @yScale.range()[0]
-                        .defined @isDataInView.bind this
-                        .interpolate 'linear'
-                default
-                    d3.svg.line()
-                        .x ([date, val], i) ~> @xScale date
-                        .y ([date, val], i) ~> @yScale val
-                        .defined @isDataInView.bind this
-                        .interpolate 'linear'
-        @scales { @xScale, @yScale, @scaleShape, -xValid, -yValid }
     
     
     watchDeps: ->

@@ -7,7 +7,8 @@ ko = require 'knockout'
 } = require './datasource'
 { ParsingMixin,
 } = require '../../util'
-
+{ GraphView, Graph,
+} = require '../../graph'
 
 
 class exports.DataSourceView extends View
@@ -56,6 +57,7 @@ class exports.DataSourceView extends View
         @blankDataSource().url.subscribe ~>
             saveButton = @$el.find 'button.save'
             saveButton.attr 'disabled', true
+            @message "Attempting to analyze #{@url()}"
             enableButton = -> saveButton.attr 'disabled', false
             
             # attempt to load datafile
@@ -69,7 +71,11 @@ class exports.DataSourceView extends View
                     dataset.getLabels().map (label, i) ->
                         type = self.getTypeFromExample dataset.data[0][i]
                         self.blankDataSource().columns.push new ColumnDef {label, type}
-                .fail -> throw 'failed to retrieve datafile'
+                    @message "Metrics detected, please verify"
+                
+                .fail ->
+                    @message "Failed to retrieve datafile"
+                
                 .always enableButton
     
     
@@ -93,3 +99,29 @@ class exports.DataSourceView extends View
                     @message "Failed to Save: #{res.responseText}"
         else
             @message "Failed to Save: Invalid"
+    
+    visualize: ->
+        @fetch().done ~>
+            newGraphView = new GraphView new Graph do
+                name: "Temporary Graph for #{@name()}"
+            newGraphView.model().root().children [
+                {nodeType: 'axis', options: {dimension: 'x', orient: 'bottom'}}
+                {nodeType: 'axis', options: {dimension: 'y', orient: 'left'}}
+                {nodeType: 'grid', options: {dimension: 'x'}}
+                {nodeType: 'grid', options: {dimension: 'y'}}
+                {nodeType: 'legend', options: {dateFormat: 'HH:mm on MMM DD, YYYY'}}
+                {nodeType: 'line-group', children: @columns().map ~> {
+                    nodeType: 'line'
+                    metric: {
+                        source_id: @id()
+                        source_col: it.index()
+                        type: it.type()
+                    }
+                    options: {
+                        label: it.label()
+                    }
+                }}
+            ]
+            
+            limn.app.currentView newGraphView
+            limn.app.scrollTo 0, 0
