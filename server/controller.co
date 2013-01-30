@@ -126,6 +126,7 @@ class Controller extends Resource
     show: (req, res, next) ->
         return next() unless req.format is 'json'
         if obj = req[@id]
+            res.contentType 'application/json'
             return res.send JSON.stringify(obj, null, 4) if req.query.pretty
             return res.send obj
         throw new Error "Resource retrieval unimplemented for '#{@name}'!"
