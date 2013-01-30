@@ -8,6 +8,8 @@ limn = require '../' # yes, you actually need the trailing slash
 } = require '../util'
 { Graph,
 } = require './graph-model'
+{ TableView,
+} = require './table-view'
 { GraphNode,
 } = require './node/graph-node'
 { EditView,
@@ -24,6 +26,30 @@ class exports.GraphView extends View
         model  : null
         action : null
         isDisposed : false
+    
+    
+    /**
+     * @constructor
+     * @param {Graph} model Graph model for this view.
+     * @param {string} action the action this view was created to respond to
+     */
+    (model, action) ->
+        @nodeCache = new OrderedMap()
+        super()
+        @graphId = 'graph-' + @__id__
+        
+        if model instanceof Graph
+            model.fetch()
+        else if typeof model is 'string'
+            model = Graph.load { id:model }
+        else
+            model = new Graph model
+        
+        @action action
+        @model model
+        @tabularizeDialog = ko.observable()
+        
+        @watching()
     
     /**
      * The `GraphNode` cache.
@@ -81,29 +107,6 @@ class exports.GraphView extends View
         @notesMarkdown = model.notes.markdown()
         model
     
-    
-    
-    /**
-     * @constructor
-     * @param {Graph} model Graph model for this view.
-     * @param {string} action the action this view was created to respond to
-     */
-    (model, action) ->
-        @nodeCache = new OrderedMap()
-        super()
-        @graphId = 'graph-' + @__id__
-        
-        if model instanceof Graph
-            model.fetch()
-        else if typeof model is 'string'
-            model = Graph.load { id:model }
-        else
-            model = new Graph model
-        
-        @action action
-        @model model
-        
-        @watching()
     
     
     /**
@@ -168,4 +171,6 @@ class exports.GraphView extends View
         _.uniq links, false
     
     
-    
+    tabularize: ->
+        @tabularizeDialog new TableView @model(), @rootNode()
+        @$el.find '.tabularizeDialog' .modal 'show'

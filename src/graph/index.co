@@ -2,7 +2,8 @@ graph_display_view = require './graph-display-view'
 graph_edit_view    = require './graph-edit-view'
 graph_model        = require './graph-model'
 graph_view         = require './graph-view'
+table_view         = require './table-view'
 project_colors     = require './project-colors'
 
-exports import graph_display_view import graph_edit_view import graph_model import graph_view import project_colors
+exports import graph_display_view import graph_edit_view import graph_model import graph_view import table_view import project_colors
 exports.node = require './node'

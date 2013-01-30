@@ -43,6 +43,17 @@ class exports.DataSourceView extends View
         @action action
         @message = ko.observable()
         @visualizeDialog = ko.observable()
+        @filter = ko.observable()
+        @filteredModel = ko.computed ~>
+            if @filter()?.length
+                filter = @filter().toLowerCase()
+                @model().filter ~>
+                    id = it.id().toLowerCase()
+                    name = it.name().toLowerCase()
+                    return id.indexOf(filter) >= 0 or
+                         name.indexOf(filter) >= 0
+            else
+                @model()
     
     
     initializeAddForm: -> @blankDataSource new DataSource()
@@ -95,7 +106,8 @@ class exports.DataSourceView extends View
         if ds.slug()
             ds.save(options={url:'/datasources'})
                 .done ~>
-                    @model.push ds
+                    ds.id ds.slug()
+                    @model.insert ds, 0
                     @initializeAddForm()
                     @message "Saved"
                 .fail (obj, msg, res) ~>
@@ -114,7 +126,13 @@ class exports.DataSourceView extends View
                 geojson: 'viewport'
                 series: 'canvas-series'
                 timeseries: 'canvas'
+            metricNodeType = do
+                geojson: 'geo-feature'
+                series: 'bar'
+                timeseries: 'line'
+            
             nodeType = viewportNodeType[@type()]
+            metricType = metricNodeType[@type()]
             
             columns = @columns()
             switch nodeType
@@ -133,8 +151,8 @@ class exports.DataSourceView extends View
                         {nodeType: 'legend', options: {dateFormat: 'HH:mm on MMM DD, YYYY'}}
                         {nodeType: 'zoom-brush'}
                         {nodeType: 'smooth'}
-                        {nodeType: 'line-group', children: columns.map ~> {
-                            nodeType: 'line'
+                        {nodeType: "#{metricType}-group", children: columns.map ~> {
+                            nodeType: metricType
                             metric: {
                                 source_id: @id()
                                 source_col: it.index()
@@ -146,8 +164,6 @@ class exports.DataSourceView extends View
                         }}
                     ]
             
-            # XXX: crazy: saving this to a file and loading it as a graph works fine
-            console.log JSON.stringify(graph)
-            
             limn.view.visualizeDialog new GraphView graph
-            limn.view.$('#visualizeDialog').modal()
+            limn.view.$('> .visualizeDialog').modal()
+            limn.view.visualizeDialog().resize()

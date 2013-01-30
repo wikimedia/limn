@@ -1,6 +1,10 @@
 fieldset.controlGroup
-    legend Add New Data Source
-    form.form-horizontal(data-bind="submit: newDataSource, with: blankDataSource")
+    legend.accordion-toggle(data-toggle="collapse", data-target="form.form-horizontal") Add New Data Source
+    form.form-horizontal.collapse.out(data-bind="submit: newDataSource, with: blankDataSource")
+        .control-group
+            label.control-label(for="url") Datafile URL
+            .controls
+                input(type="text", id="url", placeholder="relative or absolute url", data-bind="value: url", required)
         .control-group
             label.control-label(for="slug") Unique Id
             .controls
@@ -13,10 +17,6 @@ fieldset.controlGroup
             label.control-label(for="shortName") Short Name
             .controls
                 input(type="text", id="shortName", placeholder="short name", data-bind="value: shortName")
-        .control-group
-            label.control-label(for="url") Datafile URL
-            .controls
-                input(type="text", id="url", placeholder="relative or absolute url", data-bind="value: url", required)
         .control-group(data-bind="if: columns().length > 0")
             h4 Metrics in Datafile
             a.btn(data-bind="click: $parent.addMetric") Add Metric
@@ -31,16 +31,24 @@ fieldset.controlGroup
             span.pull-right(data-bind="text: $parent.message")
 
 
-h3 Datasources by id and name
-dl(data-bind="foreach: model")
-    dt
-        p
-            a.btn(data-bind="click: $parent.visualize, text: 'Visualize ' + id()")
-    dd
-        p.offset1(data-bind="text: name")
+h3 Search Datasources
+.navbar
+    .navbar-inner
+        .navbar-search
+            input.search-query(data-bind="value: filter", placeholder="filter by id or name")
+
+table.table.table-striped
+    tbody(data-bind="foreach: filteredModel")
+        tr
+            td
+                a.btn(data-bind="click: $parent.visualize") Visualize
+            td
+                span(data-bind="text: id")
+            td
+                span(data-bind="text: name")
 
 
-.modal.hide#visualizeDialog(data-backdrop="false")
+.modal.hide.visualizeDialog(data-backdrop="false", data-bind="if: visualizeDialog")
     .modal-header
         button.close(data-dismiss="modal", aria-hidden="true") &times;
         h3 Quick Peek

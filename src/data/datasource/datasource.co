@@ -174,7 +174,7 @@ class exports.DataSource extends StoredModel
                 if _.isArray col
                     [label, type] = col
                     id = _.str.underscored(label.toLowerCase())
-                    {id, label, type or 'int'}
+                    {id, index: idx, label, type or 'int'}
                 else
                     col.type or= 'int'
                     col
@@ -183,7 +183,7 @@ class exports.DataSource extends StoredModel
             data.columns = _.map cols.labels, (label, idx) ->
                 id   = cols.ids[idx]   or _.str.underscored(label.toLowerCase())
                 type = cols.types[idx] or 'int'
-                {id, idx, label, type}
+                {id, index: idx, label, type}
         data
     
     
