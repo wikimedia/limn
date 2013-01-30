@@ -125,7 +125,13 @@ class exports.DataSourceView extends View
                 geojson: 'viewport'
                 series: 'canvas-series'
                 timeseries: 'canvas'
+            metricNodeType = do
+                geojson: 'geo-feature'
+                series: 'bar'
+                timeseries: 'line'
+            
             nodeType = viewportNodeType[@type()]
+            metricType = metricNodeType[@type()]
             
             columns = @columns()
             switch nodeType
@@ -144,8 +150,8 @@ class exports.DataSourceView extends View
                         {nodeType: 'legend', options: {dateFormat: 'HH:mm on MMM DD, YYYY'}}
                         {nodeType: 'zoom-brush'}
                         {nodeType: 'smooth'}
-                        {nodeType: 'line-group', children: columns.map ~> {
-                            nodeType: 'line'
+                        {nodeType: "#{metricType}-group", children: columns.map ~> {
+                            nodeType: metricType
                             metric: {
                                 source_id: @id()
                                 source_col: it.index()
