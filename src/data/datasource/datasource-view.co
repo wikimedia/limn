@@ -168,3 +168,4 @@ class exports.DataSourceView extends View
             
             limn.view.visualizeDialog new GraphView graph
             limn.view.$('#visualizeDialog').modal()
+            limn.view.visualizeDialog().resize()
