@@ -28,19 +28,30 @@ task \update_version ->
 task \server 'Start dev server' ->
     run './server/server.co'
 
-
-task \link_reportcard_data 'Link to reportcard data from environment variable LIMN_REPORTCARD' ->
+task \link_data 'Link to data passed in as an argument' ->
+    from = it.$args[1]
+    to = it.$args[2]
+    unless from and to
+        console.log 'USAGE: coke link_data path-to-data name-of-links'
+        console.log '  path-to-data:  can be absolute or relative to var/data/*/'
+        console.log '  name-of-links: used like var/data/*/name-of-links'
+        console.log ''
+        console.log '  (* stands for any of: dashboards,datafiles,datasources,graphs,geo)'
+        return
+    
     sh 'mkdir -p ./var/data'
     sh 'mkdir -p ./var/data/dashboards'
     sh 'mkdir -p ./var/data/datafiles'
     sh 'mkdir -p ./var/data/datasources'
     sh 'mkdir -p ./var/data/graphs'
     sh 'mkdir -p ./var/data/geo'
-    sh 'ln -sn $LIMN_REPORTCARD/dashboards ./var/data/dashboards/rc'
-    sh 'ln -sn $LIMN_REPORTCARD/datafiles ./var/data/datafiles/rc'
-    sh 'ln -sn $LIMN_REPORTCARD/datasources ./var/data/datasources/rc'
-    sh 'ln -sn $LIMN_REPORTCARD/graphs ./var/data/graphs/rc'
-    sh 'ln -sn $LIMN_REPORTCARD/geo ./var/data/geo/rc'
+    sh "ln -sn #from/dashboards ./var/data/dashboards/#to"
+    sh "ln -sn #from/datafiles ./var/data/datafiles/#to"
+    sh "ln -sn #from/datasources ./var/data/datasources/#to"
+    sh "ln -sn #from/graphs ./var/data/graphs/#to"
+    sh "ln -sn #from/geo ./var/data/geo/#to"
+    
+    say 'ok (ignore "no such task" error).\n'
 
 
 task \build 'Build coco sources' ->
