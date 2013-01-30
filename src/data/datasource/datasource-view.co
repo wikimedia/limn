@@ -163,9 +163,6 @@ class exports.DataSourceView extends View
                         }}
                     ]
             
-            # XXX: crazy: saving this to a file and loading it as a graph works fine
-            console.log JSON.stringify(graph)
-            
             limn.view.visualizeDialog new GraphView graph
             limn.view.$('> .visualizeDialog').modal()
             limn.view.visualizeDialog().resize()
