@@ -106,6 +106,7 @@ class exports.DataSourceView extends View
         if ds.slug()
             ds.save(options={url:'/datasources'})
                 .done ~>
+                    ds.id ds.slug()
                     @model.push ds
                     @initializeAddForm()
                     @message "Saved"
