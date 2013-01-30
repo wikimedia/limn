@@ -167,5 +167,5 @@ class exports.DataSourceView extends View
             console.log JSON.stringify(graph)
             
             limn.view.visualizeDialog new GraphView graph
-            limn.view.$('#visualizeDialog').modal()
+            limn.view.$('> .visualizeDialog').modal()
             limn.view.visualizeDialog().resize()
