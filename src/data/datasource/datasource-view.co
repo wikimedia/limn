@@ -124,48 +124,87 @@ class exports.DataSourceView extends View
      */
     visualize: ->
         @fetch().done ~>
-            viewportNodeType = do
-                geojson: 'viewport'
-                series: 'canvas-series'
-                timeseries: 'canvas'
             metricNodeType = do
                 geojson: 'geo-feature'
                 series: 'bar'
                 timeseries: 'line'
             
-            nodeType = viewportNodeType[@type()]
             metricType = metricNodeType[@type()]
             
-            columns = @columns()
-            switch nodeType
-                case 'canvas'
+            columns = _.clone @columns()
+            # filter out columns that aren't meant to be visualized
+            switch @type()
+                case 'timeseries'
                     columns = columns.slice(1)
+                case 'geojson'
+                    columns = columns.filter -> it.id() is not 'id' and it.id() is not 'name'
             
-            graph = do
-                name: "All Metrics in #{@name()}"
-                root:
-                    nodeType: nodeType
-                    scaling: 'linear'
-                    children: [
-                        {nodeType: 'axis', options: {dimension: 'x', orient: 'bottom'}}
-                        {nodeType: 'axis', options: {dimension: 'y', orient: 'left'}}
-                        {nodeType: 'grid', options: {dimension: 'x'}}
-                        {nodeType: 'grid', options: {dimension: 'y'}}
-                        {nodeType: 'legend', options: {dateFormat: 'HH:mm on MMM DD, YYYY'}}
-                        {nodeType: 'zoom-brush'}
-                        {nodeType: 'smooth'}
-                        {nodeType: "#{metricType}-group", children: columns.map ~> {
-                            nodeType: metricType
-                            metric: {
-                                source_id: @id()
-                                source_col: it.index()
-                                type: it.type()
-                            }
-                            options: {
-                                label: it.label()
-                            }
-                        }}
-                    ]
+            switch @type()
+                # TODO: make work for other maps besides map-world_countries
+                case 'geojson'
+                    worldMapChildren = columns.map ~>
+                        nodeType: 'geo-feature'
+                        metric:
+                            source_id: @id()
+                            source_col: it.id()
+                        options:
+                            label: it.label()
+                            scale : 'log'
+                            fill  : ['#D4E7ED', '#0A3A4B']
+                        stroke :
+                            width   : 3.0
+                            color   : '#FFFFFF'
+                            opacity : [0, 1.0]
+                            
+                    worldMapChildren.push {nodeType: 'zoom-pan'}
+                    worldMapChildren.push {nodeType: 'infobox'}
+                    
+                    graph = do
+                        name: "All Metrics in #{@name()}"
+                        root:
+                            nodeType: 'canvas'
+                            width: 'auto'
+                            height: 750
+                            children: [
+                                nodeType: 'geo-map'
+                                metric:
+                                    source_id: 'map-world_countries'
+                                options:
+                                    projection: 'mercator'
+                                    backgroundColor: 'white'
+                                    featuresColor: '#EEEEEE'
+                                children: worldMapChildren
+                            ]
+                default
+                    viewportNodeType = do
+                        series: 'canvas-series'
+                        timeseries: 'canvas'
+                    nodeType = viewportNodeType[@type()]
+                    graph = do
+                        name: "All Metrics in #{@name()}"
+                        root:
+                            nodeType: nodeType
+                            scaling: 'linear'
+                            children: [
+                                {nodeType: 'axis', options: {dimension: 'x', orient: 'bottom'}}
+                                {nodeType: 'axis', options: {dimension: 'y', orient: 'left'}}
+                                {nodeType: 'grid', options: {dimension: 'x'}}
+                                {nodeType: 'grid', options: {dimension: 'y'}}
+                                {nodeType: 'legend', options: {dateFormat: 'HH:mm on MMM DD, YYYY'}}
+                                {nodeType: 'zoom-brush'}
+                                {nodeType: 'smooth'}
+                                {nodeType: "#{metricType}-group", children: columns.map ~> {
+                                    nodeType: metricType
+                                    metric: {
+                                        source_id: @id()
+                                        source_col: it.index()
+                                        type: it.type()
+                                    }
+                                    options: {
+                                        label: it.label()
+                                    }
+                                }}
+                            ]
             
             limn.view.visualizeDialog new GraphView graph
             limn.view.$('> .visualizeDialog').modal()
