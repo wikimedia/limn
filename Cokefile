@@ -28,15 +28,20 @@ task \update_version ->
 task \server 'Start dev server' ->
     run './server/server.co'
 
-task \link_data 'Link to data passed in as an argument' ->
-    from = it.$args[1]
-    to = it.$args[2]
+
+option \from 'absolute or relative path to data repository, from var/data/*/' \DIR
+option \to 'name of subdirectory to link to, like this: var/data/*/name-of-links' \DIR
+
+task \link_data 'Link to data passed in as an argument' (options) ->
+    from = options.from
+    to = options.to
     unless from and to
-        console.log 'USAGE: coke link_data path-to-data name-of-links'
-        console.log '  path-to-data:  can be absolute or relative to var/data/*/'
-        console.log '  name-of-links: used like var/data/*/name-of-links'
-        console.log ''
+        console.log 'USAGE: coke --from path-to-data --to name-of-links link_data'
+        console.log options.toString()
         console.log '  (* stands for any of: dashboards,datafiles,datasources,graphs,geo)'
+        console.log ''
+        console.log 'coke understood your command like this:'
+        console.log options
         return
     
     sh 'mkdir -p ./var/data'
@@ -51,7 +56,7 @@ task \link_data 'Link to data passed in as an argument' ->
     sh "ln -sn #from/graphs ./var/data/graphs/#to"
     sh "ln -sn #from/geo ./var/data/geo/#to"
     
-    say 'ok (ignore "no such task" error).\n'
+    say 'ok\n'
 
 
 task \build 'Build coco sources' ->
