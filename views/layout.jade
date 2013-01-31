@@ -42,9 +42,10 @@ html(lang="en", dir="ltr")
                 block scripts
                     - var limn_config = { 'mount':mount, 'rev':version, 'env':NODE_ENV };
                     script
-                        var VERSION = !{ JSON.stringify(version)  };
-                        var ENV     = !{ JSON.stringify(NODE_ENV) };
-                        var IS_DEV = ENV === 'development', IS_PROD = ENV === 'production';
+                        var VERSION     = !{ JSON.stringify(version)  };
+                        var ENV         = !{ JSON.stringify(NODE_ENV) };
+                        var IS_DEV      = ENV === 'development';
+                        var IS_PROD     = ENV === 'production';
                         var limn_config = !{ JSON.stringify(limn_config) };
                     
                     block lib-scripts
@@ -60,7 +61,7 @@ html(lang="en", dir="ltr")
                                 script(src=path.join(mount, 'js/limn', src))
                         else
                             for src in sources()
-                                script(src=path.join(mount, src))
+                                script(src=path.join(mount, src)+'?'+version)
                         
                     
                     block page-scripts

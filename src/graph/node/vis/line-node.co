@@ -55,7 +55,7 @@ class exports.LineNode extends TimeseriesNode
     
     
     trackHover: @computed ->
-        return unless viewportHover = @root().viewportHover()
+        return unless cursor = @root().cursor()
         return unless @model().metric()?.data()?.length
         return unless @sel
         
@@ -69,8 +69,8 @@ class exports.LineNode extends TimeseriesNode
         cx = -10
         cy = -10
         
-        if viewportHover.hovering
-            date = @root().xScale.invert viewportHover.xOffset
+        if cursor.hovering and not @disabled()
+            date = @root().xScale.invert cursor.x
             closest = @model().metric().findClosest date
             
             cx = @root().xScale closest.date
@@ -84,13 +84,15 @@ class exports.LineNode extends TimeseriesNode
             cx: cx
             cy: cy
     
-    
     color: @computedRequires 'model.options', (options) ->
-        label = options.label?() or @model().metric()?.defaultLabel() or '(no label)'
-        ProjectColors.lookup(label) or options?.stroke?().color?() or 'black'
+        # FIXME: why is the color not converted into an observable?
+        ProjectColors.lookup(@label()) or options.stroke?()?.color or 'black'
     
     width: @computedRequires 'model.options', (options) ->
-        options?.stroke?().width?() or 3
+        options.stroke?()?.width?() or 3
+    
+    dasharray: @computedRequires 'model.options', (options) ->
+        options.stroke?()?.dashed?() or 'none'
     
     /**
      * Update selection representing the SVG path element for the line.
@@ -109,17 +111,23 @@ class exports.LineNode extends TimeseriesNode
         return null unless model  = @model()
         return null unless scales = @root().scales()
         
-        options = model.options()
-        
-        line.enter()
+        shape = @parent().shape?()
+        path = line.enter()
             .append 'path'
-                .classed 'metric-line', true
-                .attr  'vector-effect', 'non-scaling-stroke'
-                .style 'fill',          'none'
-                .style 'stroke-width',  @width()
-                .style 'stroke',        @color()
+                .classed 'metric-line',     true
+                .attr  'vector-effect',     'non-scaling-stroke'
+                .style 'fill',              'none'
+                .style 'stroke-dasharray',  @dasharray()
+                .style 'stroke-width',      @width()
+                .style 'stroke',            @color()
+        if shape is 'area'
+            path
+                .style 'fill',              @color()
+                .style 'opacity',           0.4
+        
+        line.style 'visibility', if @disabled() then "hidden" else "visible"
         line.transition()
-            .attr 'd', scales.scaleLine
+            .attr 'd', scales.scaleShape(shape)
         line
     
     

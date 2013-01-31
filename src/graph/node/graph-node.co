@@ -181,13 +181,16 @@ class exports.GraphNode extends AttributesBase implements formatters
         # Trigger the grid computed to auto-update
         # once we build for the first time.
         if typeof @render is 'function'
+            @render .= bind this
             @renderWrap = ko.computed do
                 owner: this
                 deferEvaluation: true
                 read: ->
-                    return null unless @el() and @sel
-                    return null unless @model().options()
-                    @render.call this
+                    return unless @el() and @sel
+                    return unless @model().options()
+                    return if _.contains(@traits, Trait.REQUIRES_METRIC) and not @model().metric()?.data()
+                    # window.requestAnimationFrame @render
+                    @render()
             
             @once 'watch-build', @renderWrap
         
@@ -309,7 +312,11 @@ class exports.GraphNode extends AttributesBase implements formatters
      * @returns {Element}
      */
     determineDOMParentForChildNode: (node) ->
-        @el()
+        elementType = if _.contains(node.traits, Trait.SVG) then Trait.SVG else Trait.HTML
+        return @el() if _.contains @traits, elementType
+        unless parent = @parent()
+            throw new Error "Unable to determine DOM parent for child node! #node"
+        parent.determineDOMParentForChildNode node
     
     
     /**

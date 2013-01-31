@@ -29,18 +29,34 @@ task \server 'Start dev server' ->
     run './server/server.co'
 
 
-task \link_reportcard_data 'Link to reportcard data from environment variable LIMN_REPORTCARD' ->
+option \from 'absolute or relative path to data repository, from var/data/*/' \DIR
+option \to 'name of subdirectory to link to, like this: var/data/*/name-of-links' \DIR
+
+task \link_data 'Link to data passed in as an argument' (options) ->
+    from = options.from
+    to = options.to
+    unless from and to
+        console.log 'USAGE: coke --from path-to-data --to name-of-links link_data'
+        console.log options.toString()
+        console.log '  (* stands for any of: dashboards,datafiles,datasources,graphs,geo)'
+        console.log ''
+        console.log 'coke understood your command like this:'
+        console.log options
+        return
+    
     sh 'mkdir -p ./var/data'
     sh 'mkdir -p ./var/data/dashboards'
     sh 'mkdir -p ./var/data/datafiles'
     sh 'mkdir -p ./var/data/datasources'
     sh 'mkdir -p ./var/data/graphs'
     sh 'mkdir -p ./var/data/geo'
-    sh 'ln -sn $LIMN_REPORTCARD/dashboards ./var/data/dashboards/rc'
-    sh 'ln -sn $LIMN_REPORTCARD/datafiles ./var/data/datafiles/rc'
-    sh 'ln -sn $LIMN_REPORTCARD/datasources ./var/data/datasources/rc'
-    sh 'ln -sn $LIMN_REPORTCARD/graphs ./var/data/graphs/rc'
-    sh 'ln -sn $LIMN_REPORTCARD/geo ./var/data/geo/rc'
+    sh "ln -sn #from/dashboards ./var/data/dashboards/#to"
+    sh "ln -sn #from/datafiles ./var/data/datafiles/#to"
+    sh "ln -sn #from/datasources ./var/data/datasources/#to"
+    sh "ln -sn #from/graphs ./var/data/graphs/#to"
+    sh "ln -sn #from/geo ./var/data/geo/#to"
+    
+    say 'ok\n'
 
 
 task \build 'Build coco sources' ->
@@ -147,18 +163,14 @@ task \bundle_sources 'Build application bundle' ->
     app_sources = findSources null, {pre:'var/js/limn/'}
     
     mkdirp dirname APP_BUNDLE_PATH
-    #FIXME: jquery is broken because there's no separation between vendor sections
-    #bundle_js APP_BUNDLE_PATH, app_sources, {-minify}
-    #FIXME: using this hack instead
+    bundle_js APP_BUNDLE_PATH, app_sources, {-minify}
+    print 'Minifying into', APP_BUNDLE_MIN_PATH.magenta.bold, '... '
+    write APP_BUNDLE_MIN_PATH, minify read APP_BUNDLE_PATH
+    /** old fix, remove when minify is validated
     say 'Bundling...'.magenta.bold
     Seq(app_sources)
         .seqEach (s) ->
             fs.appendFile APP_BUNDLE_PATH, "\n#{read s};\n", ~> @ok()
-    
-    /* TODO: fix minify
-    APP_BUNDLE_MIN_PATH = APP_BUNDLE_PATH.replace /\.js$/, '.min.js'
-    print 'Minifying into', APP_BUNDLE_MIN_PATH.magenta.bold, '... '
-    write APP_BUNDLE_MIN_PATH, minify read APP_BUNDLE_PATH
     */
     say 'ok.\n'
 
@@ -176,17 +188,14 @@ task \bundle_vendor 'Build vendor bundle' ->
         .map -> "var#it"
     vendor_sources = _.flatten [vendor_sources_static, 'static/todo-regenerate/browserify.js', vendor_sources_var]
     mkdirp dirname VENDOR_BUNDLE_PATH
-    #FIXME: jquery is broken because there's no separation between vendor sections
-    #bundle_js VENDOR_BUNDLE_PATH, vendor_sources, {-minify}
-    #FIXME: using this hack instead
+    bundle_js VENDOR_BUNDLE_PATH, vendor_sources, {-minify}
+    print 'Minifying into', VENDOR_BUNDLE_MIN_PATH.magenta.bold, '... '
+    write VENDOR_BUNDLE_MIN_PATH, minify read VENDOR_BUNDLE_PATH
+    /** old fix, remove when minify is validated
     say 'Bundling...'.magenta.bold
     Seq(vendor_sources)
         .seqEach (s) ->
             fs.appendFile VENDOR_BUNDLE_PATH, "\n#{read s};\n", ~> @ok()
-    
-    /* TODO: fix minify
-    print 'Minifying into', VENDOR_BUNDLE_MIN_PATH.magenta.bold, '... '
-    write VENDOR_BUNDLE_MIN_PATH, minify read VENDOR_BUNDLE_PATH
     */
     say 'ok.\n'
 

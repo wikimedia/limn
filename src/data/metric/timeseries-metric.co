@@ -24,22 +24,6 @@ class exports.TimeseriesMetric extends Metric
     
     
     /**
-     * The reified dataset (as (date, value) pairs) associated with this Metric.
-     * @type ko.computed<[Date, Value]>
-     * @depends source, query
-     */
-    data : @computed ->
-        source_col = @get 'source_col'
-        return unless source_col?
-        return unless query = @query()
-        return unless csv   = @source()?.data()
-        query
-            .rows true
-            .columns 0, source_col
-            .apply csv.getData()
-    
-    
-    /**
      * Query object for the parameters of this Metric.
      * @type ko.computed<Query>
      * @depends source_col, timespan
@@ -51,36 +35,25 @@ class exports.TimeseriesMetric extends Metric
         Query()
             .step       timespan.step()
             .timespan   timespan.start(), timespan.end()
+            .columns 0, source_col
     
     
     /**
      * The reified dates for the dataset associated with this Metric.
      * @type ko.computed<Array<Date>>
-     * @depends source, query
+     * @depends materialized
      */
     dates : @computed ->
-        return unless query = @query()
-        return unless csv   = @source()?.data()
-        query
-            .rows false
-            .columns 0
-            .call csv.getDateColumn()
+        @materialized()?.columns[0]
     
     
     /**
      * The reified dataset values associated with this Metric.
      * @type ko.computed<Array<Value>>
-     * @depends source, query, source_col
+     * @depends materialized
      */
     values : @computed ->
-        source_col = @get 'source_col'
-        return unless source_col?
-        return unless query = @query()
-        return unless csv   = @source()?.data()
-        query
-            .rows false
-            .columns source_col
-            .apply csv.getData()
+        @materialized()?.columns[1]
     
     
     /**

@@ -9,7 +9,7 @@ moment = require 'moment'
 } = require '../../util'
 
 # FIXME: monkey-patching timeseries module to parse dates better
-CSVData.prototype.parseDate = (s) -> moment(s, "YYYY-MM-DD_HH").toDate()
+CSVData.prototype.parseDate = (s) -> moment(s, "YYYY.MM.DD.HH.mm.ss").toDate()
 
 
 /**

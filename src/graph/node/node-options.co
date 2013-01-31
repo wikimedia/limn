@@ -10,8 +10,9 @@
 class exports.NodeOptions extends Model
     
     /**
-     * GraphNodeData to which these options belong.
-     * @type GraphNodeData
+     * Object to which these options belong; usually a GraphNodeData,
+     * but accepts any Model with a parent() property.
+     * @type GraphNodeData|Model
      */
     owner : null
     
@@ -26,12 +27,9 @@ class exports.NodeOptions extends Model
      * @param {Object} [attributes={}] Option values.
      */
     (@owner, attributes) ->
-        # import GraphNodeData here to avoid a potentially broken circular dependency
-        { GraphNodeData,
-        } = require './graph-node-data'
-        unless @owner instanceof GraphNodeData
-            throw new Error "Owner of GraphNodeOptions must be a GraphNodeData object! (got #{@owner})"
-        
+        parent = @owner?.parent
+        unless parent and (typeof parent is 'function' or parent instanceof Model)
+            throw new Error "Owner of NodeOptions must have a parent observer or Model! (got owner=#{@owner}, parent=#parent)"
         super attributes
     
     

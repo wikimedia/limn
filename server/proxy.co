@@ -31,7 +31,9 @@ ProxyMiddleware = (options={}) ->
         res.header 'X-Accel-Buffering', 'no'
         
         console.log "[Proxy] #targetUrl" if options.verbose
-        request.get targetUrl .pipe res
+        request.get targetUrl
+            .on 'error', (error) -> res.send { error }
+            .pipe res
 
 
 module.exports = exports = ProxyMiddleware

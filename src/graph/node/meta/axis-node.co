@@ -7,6 +7,8 @@ moment = require 'moment'
 } = require '../graph-node-data'
 { GraphNode,
 } = require '../graph-node'
+{ CanvasNode,
+} = require '../canvas-node'
 
 Trait = require '../graph-node-trait'
 
@@ -46,7 +48,7 @@ class exports.AxisNodeData extends GraphNodeData
     defaults: ->
         dimension : null # x | y
         orient    : null # top|bottom | left|right
-        options   : 
+        options   :
             ticks      : 4
             tickFormat : 'MMM YY'
             
@@ -91,28 +93,35 @@ class exports.AxisNode extends GraphNode
         orient = options.get('orient')
         ticks  = options.get('ticks')
         axis   = d3.svg.axis().scale scale
+        isTimeseries = @root() instanceof CanvasNode
         
         switch dimension
-        case 'x'
-            axis.tickFormat multiTimeFormatter # @dateFormatterFor 'MMM YY'
-                .orient(orient or= 'bottom')
-            ticks ?= 3
-            axis.ticks d3.time.months, ticks if ticks > 0
-        case 'y'
-            axis.tickFormat @numberFormatterFor 2
-                .orient(orient or= 'left')
+            case 'x'
+                axis.orient(orient or= 'bottom')
+                ticks ?= 3
+                if isTimeseries
+                    axis.tickFormat multiTimeFormatter # @dateFormatterFor 'MMM YY'
+                    axis.ticks d3.time.months, ticks if ticks > 0
+                else
+                    axis.ticks scale.domain()
             
-            # TODO: handle different scale-types -- this only handles logscale
-            # TODO: GridNode to apply the same scale calculations
-            ticks ?= 10
-            tickValues = scale.ticks()
-            while 5 < tickValues.length > ticks + 2
-                tickValues .= filter (v, i) ->
-                    L = tickValues.length
-                    # return true if log10(v) % 1 == 0
-                    mod = Math.max 2, Math.round((L - 2) / (L - 2 - ticks))
-                    i == 0 or i == (L - 1) or i % mod != 0
-            axis.tickValues tickValues
+            case 'y'
+                axis.tickFormat @numberFormatterFor 2
+                    .orient(orient or= 'left')
+                
+                # TODO: GridNode to apply the same scale calculations
+                ticks ?= 10
+                if @root().scaling?() is 'log'
+                    tickValues = scale.ticks()
+                    while 5 < tickValues.length > ticks + 2
+                        tickValues .= filter (v, i) ->
+                            L = tickValues.length
+                            # return true if log10(v) % 1 == 0
+                            mod = Math.max 2, Math.round((L - 2) / (L - 2 - ticks))
+                            i == 0 or i == (L - 1) or i % mod != 0
+                else
+                    tickValues = scale.ticks(ticks)
+                axis.tickValues tickValues
         
         @sel.classed dimension+'-axis axis', true
         @sel.call axis

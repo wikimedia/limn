@@ -5,7 +5,7 @@ ko = require 'knockout'
 } = require '../graph-node-data'
 { GraphNode,
 } = require '../graph-node'
-{ TimeseriesMetric,
+{ Metric,
 } = require '../../../data/metric'
 
 Trait = require '../graph-node-trait'
@@ -15,14 +15,14 @@ Trait = require '../graph-node-trait'
  * @class
  * @extends GraphNodeData
  */
-class exports.TimeseriesNodeData extends GraphNodeData
-    @registerType 'timeseries'
+class exports.SeriesNodeData extends GraphNodeData
+    @registerType 'series'
     
     defaults: ->
         metric : null
     
     attributeTypes: ->
-        metric : TimeseriesMetric
+        metric : Metric
     
     -> super ...
 
@@ -32,13 +32,12 @@ class exports.TimeseriesNodeData extends GraphNodeData
  * @class
  * @extends GraphNode
  */
-class exports.TimeseriesNode extends GraphNode
-    @registerType 'timeseries'
+class exports.SeriesNode extends GraphNode
+    @registerType 'series'
     traits : [
         Trait.VIS_NODE
         Trait.REQUIRES_METRIC
         Trait.METRIC_CONTENT_DATA
-        Trait.METRIC_TIMESERIES
         Trait.SVG
         Trait.LEAF
     ]
@@ -47,10 +46,10 @@ class exports.TimeseriesNode extends GraphNode
     
     
     /**
-     * Materialized timeseries data.
-     * @type ko.computed<Array<[Date, Value]>>
+     * Materialized series data.
+     * @type ko.computed<Array<[Index, Value]>>
      */
-    timeseriesData: @computedRequires 'model.metric', (metric) ->
+    seriesData: @computedRequires 'model.metric', (metric) ->
         metric.data()
     
     
@@ -63,4 +62,3 @@ class exports.TimeseriesNode extends GraphNode
      */
     label: @computedRequires 'model.options', (options) ->
         options.label?() or @model().metric()?.defaultLabel() or '(no label)'
-    

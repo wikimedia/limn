@@ -1,0 +1,19 @@
+section.table-view
+    
+    .graph-name-row.row-fluid
+        h2(data-bind="text: model().name")
+    
+    .graph-canvas-row.row-fluid: .inner
+        table.table.table-striped
+            thead
+                tr(data-bind="foreach: tableColumns")
+                    th(data-bind="text: label")
+            tbody(data-bind="foreach: tableRows")
+                tr(data-bind="foreach: $data")
+                    td(data-bind="html: $data")
+    
+    .graph-details-row.row
+        .span7.offset3.ug.graph-desc(data-bind='html: model().desc')
+    
+    .graph-notes-row.row
+        .span7.offset3.ug.graph-notes(data-bind='html: model().notes')

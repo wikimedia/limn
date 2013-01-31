@@ -3,9 +3,14 @@ ko = require 'knockout'
 
 { View,
 } = require '../../base/view'
-{ DataSource,
+{ DataSource, ColumnDef,
 } = require './datasource'
-
+{ ParsingMixin,
+} = require '../../util'
+{ GraphView, Graph,
+} = require '../../graph'
+{ CanvasNodeData, CanvasSeriesNodeData, ViewportNodeData, GraphNodeData,
+} = require '../../graph/node'
 
 
 class exports.DataSourceView extends View
@@ -16,6 +21,8 @@ class exports.DataSourceView extends View
         action : null
         isDisposed : false
     
+    # Apply Parser mixin
+    ParsingMixin.mix this
     
     /**
      * @constructor
@@ -29,34 +36,137 @@ class exports.DataSourceView extends View
         if model and model instanceof DataSource
             @model.push model
         else
-            DataSource.fetchAll().done ~> @model(_.sortBy DataSource.getAllSources(), (d) -> d.name())
-            @blankDataSource = ko.observable new DataSource()
+            DataSource.fetchAll().done ~>
+                @model(_.sortBy DataSource.getAllSources(), (d) -> d.name())
+                @$('.datasourceSearch').typeahead({source: @model().map -> it.name()})
+            @blankDataSource = ko.observable()
+            @initializeAddForm()
         
         @action action
         @message = ko.observable()
+        @visualizeDialog = ko.observable()
+        @filter = ko.observable()
+        @filteredModel = ko.computed ~>
+            if @filter()?.length
+                filter = @filter().toLowerCase()
+                @model().filter ~>
+                    id = it.id().toLowerCase()
+                    name = it.name().toLowerCase()
+                    return id.indexOf(filter) >= 0 or
+                         name.indexOf(filter) >= 0
+            else
+                @model()
+    
+    
+    initializeAddForm: -> @blankDataSource new DataSource()
     
     
     /**
      * Called by Knockout once the DataSource template has finished rendering.
      */
     afterRender: (element) ->
-        # console.log "#this.afterRender()"
         @el element
         
         if @action() is 'edit'
             new EditView this
+        
+        @blankDataSource().url.subscribe ~>
+            saveButton = @$el.find 'button.save'
+            saveButton.attr 'disabled', true
+            @message "Attempting to analyze #{@blankDataSource().url()}"
+            enableButton = -> saveButton.attr 'disabled', false
+            
+            # attempt to load datafile
+            @blankDataSource().data()
+            @blankDataSource().determineFormat()
+            # in order to parse out its columns
+            self = this
+            @blankDataSource().data.task()
+                .done (dataset) ->
+                    self.blankDataSource().columns []
+                    dataset.getLabels().map (label, i) ->
+                        type = self.getTypeFromExample dataset.data[0][i]
+                        self.blankDataSource().columns.push new ColumnDef {label, type}
+                    self.message "Metrics detected, please verify"
+                
+                .fail ->
+                    self.message "Failed to retrieve datafile"
+                
+                .always enableButton
     
+    
+    addMetric: (link) -> @columns.push new ColumnDef {label:'', type:''}
+    
+    removeMetricFrom: (datasource) -> (link) -> datasource.columns.remove link
     
     newDataSource: (form) ->
+        # refresh the indices of the columns to match the order they were entered
+        for column, i of @blankDataSource().columns()
+            column.index i
+        
         ds = _.clone @blankDataSource()
         if ds.slug()
             ds.save(options={url:'/datasources'})
                 .done ~>
-                    @model.push ds
-                    @blankDataSource new DataSource()
+                    ds.id ds.slug()
+                    @model.insert ds, 0
+                    @initializeAddForm()
                     @message "Saved"
                 .fail (obj, msg, res) ~>
                     @message "Failed to Save: #{res.responseText}"
         else
             @message "Failed to Save: Invalid"
     
+    
+    /**
+     * Invoked via Knockout in the context of a datasource
+     * Dynamically creates a new GraphView and loads all the metrics from the datasource into it
+     */
+    visualize: ->
+        @fetch().done ~>
+            viewportNodeType = do
+                geojson: 'viewport'
+                series: 'canvas-series'
+                timeseries: 'canvas'
+            metricNodeType = do
+                geojson: 'geo-feature'
+                series: 'bar'
+                timeseries: 'line'
+            
+            nodeType = viewportNodeType[@type()]
+            metricType = metricNodeType[@type()]
+            
+            columns = @columns()
+            switch nodeType
+                case 'canvas'
+                    columns = columns.slice(1)
+            
+            graph = do
+                name: "All Metrics in #{@name()}"
+                root:
+                    nodeType: nodeType
+                    scaling: 'linear'
+                    children: [
+                        {nodeType: 'axis', options: {dimension: 'x', orient: 'bottom'}}
+                        {nodeType: 'axis', options: {dimension: 'y', orient: 'left'}}
+                        {nodeType: 'grid', options: {dimension: 'x'}}
+                        {nodeType: 'grid', options: {dimension: 'y'}}
+                        {nodeType: 'legend', options: {dateFormat: 'HH:mm on MMM DD, YYYY'}}
+                        {nodeType: 'zoom-brush'}
+                        {nodeType: 'smooth'}
+                        {nodeType: "#{metricType}-group", children: columns.map ~> {
+                            nodeType: metricType
+                            metric: {
+                                source_id: @id()
+                                source_col: it.index()
+                                type: it.type()
+                            }
+                            options: {
+                                label: it.label()
+                            }
+                        }}
+                    ]
+            
+            limn.view.visualizeDialog new GraphView graph
+            limn.view.$('> .visualizeDialog').modal()
+            limn.view.visualizeDialog().resize()

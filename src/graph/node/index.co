@@ -1,10 +1,11 @@
-node_mixin       = require './node-mixin'
-graph_node       = require './graph-node'
-graph_node_data  = require './graph-node-data'
-group_node       = require './group-node'
-canvas_node      = require './canvas-node'
+node_mixin          = require './node-mixin'
+graph_node          = require './graph-node'
+graph_node_data     = require './graph-node-data'
+group_node          = require './group-node'
+canvas_node         = require './canvas-node'
+canvas_series_node  = require './canvas-series-node'
 
-exports import node_mixin import graph_node import graph_node_data import group_node import canvas_node
+exports import node_mixin import graph_node import graph_node_data import group_node import canvas_node import canvas_series_node
 exports.Trait = require './graph-node-trait'
 exports.meta  = require './meta'
 exports.vis   = require './vis'

@@ -77,6 +77,7 @@ class exports.GraphJSONConverter
                 
                 out.root = {
                     nodeType: 'canvas'
+                    scaling: if graph.options?.logscale then 'log' else 'linear'
                     graph.width
                     height : Math.max graph.height, 500 # we were ignoring this in the old world
                     children: children = []
@@ -179,9 +180,8 @@ class exports.GraphJSONConverter
                     ### Line Group
                     out.root.children.push lines =
                         nodeType : 'line-group'
-                        options  : 
+                        options  :
                             palettes    : <[ wmf_projects spectral ]>
-                            scale       : if &logscale then 'log' else 'linear'
                             dateFormat  : 'MMM YYYY'
                             valueFormat : ",.#{&digitsAfterDecimal}s"
                             stroke : 

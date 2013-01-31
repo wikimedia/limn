@@ -1,6 +1,8 @@
+_ = require 'underscore'
+
 { Model,
 } = require '../../base'
-{ ParsingMixin,
+{ ParsingMixin, Query,
 } = require '../../util'
 { DataSource,
 } = require '../datasource'
@@ -18,29 +20,60 @@ class exports.Metric extends Model
     
     
     /**
+     * Array of data-transformation functions.
+     * @type ko.observableArray<Function>
+     */
+    transforms : ko.observableArray []
+    
+    
+    /**
      * Data source of the Metric.
      * @type ko.computed<DataSource>
      * @depends source_id
      */
     source : @asyncComputed ->
-        DataSource.lookup id if id = @get 'source_id'
+        # FIXME: shouldn't have to go to the global limn variable to get DataSource
+        limn.data.datasource.DataSource.lookup id if id = @get 'source_id'
+    
+    
+    /**
+     * Query object for the parameters of this Metric.
+     * @type ko.computed<Query>
+     * @depends source_col
+     */
+    query : @computed ->
+        source_col = @get 'source_col'
+        return unless source_col?
+        Query()
+            .columns source_col
+    
+    
+    /**
+     * The reified dataset (as (date, value) pairs) associated with this Metric.
+     * @protected
+     * @type ko.computed<{rows, columns}>
+     * @depends source, query, transforms
+     */
+    materialized: @computed ->
+        source_col = @get 'source_col'
+        return unless source_col?
+        return unless query = @query()
+        return unless csv   = @source()?.data()
+        {rows, columns} = query
+            .materialize 'both'
+            .transforms @transforms()
+            .process csv.getData()
+        
+        {rows, columns}
     
     
     /**
      * The reified dataset (as (date, value) pairs) associated with this Metric.
      * @type ko.computed<[Date, Value]>
-     * @depends source, query
+     * @depends materialized
      */
     data : @computed ->
-        source_col = @get 'source_col'
-        return unless source_col?
-        # FIXME
-        return unless query = @query()
-        return unless csv   = @source()?.data()
-        query
-            .rows true
-            .columns 0, source_col
-            .apply csv.getData()
+        @materialized()?.rows
     
     
     /**
@@ -51,7 +84,7 @@ class exports.Metric extends Model
     columnDef : @computed ->
         source_col = @get 'source_col'
         return unless source_col?
-        @source()?.columns()?[source_col]
+        @source()?.getColumnDef source_col
     
     
     /**

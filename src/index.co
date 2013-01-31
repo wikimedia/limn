@@ -9,6 +9,16 @@ limn.{ _, op, emitters, guidFor, compareIds,
 } = limn.util = require './util'
 
 
+# This must come after requiring util in case it wasn't a module
+ko = require 'knockout'
+
+# Set up domReady observable
+limn.domReady = ko.observable false
+root.jQuery? ($) ->
+    limn.$ = $
+    limn.domReady true
+
+
 # Decorate root limn namespace object with EventEmitter methods
 emitter = limn.__emitter__ = new emitters.ReadyEmitter()
 for k of <[ on addListener off removeListener emit trigger once removeAllListeners ]>
@@ -83,16 +93,21 @@ class limn.LimnApp
             
             if ViewType = @VIEWS[view]
                 @currentView new ViewType id, action
-                window.scrollTo 0,0
+                @scrollTo 0, 0
             else
                 next()
         
         page '*', ~>
             @currentView new @VIEWS['404']()
-            window.scrollTo 0,0
+            @scrollTo 0, 0
         
         page()
     
+    
+    scrollTo: (x=0, y=0) ->
+        return false if window.scrollX is x and window.scrollY is y
+        window.scrollTo x, y
+        true
     
     
     /**
@@ -117,29 +132,4 @@ class limn.LimnApp
 
 
 
-/**
- * DEBUG-ONLY!! BECAUSE DAVE IS LAZY AND HATES TYPING.
- * (It dumps all classes, functions, and constants into the global scope.)
- */
-limn.expose = ->
-    exposed = {}
-    for name of <[ base data graph graph.node dashboard util ]>
-        limnMod = _.getNested limn, name
-        for k, v in limnMod
-            continue unless _.isClass(v) or _.isFunction(v) or /^[A-Z_]+$/.test(k)
-            window[k] = exposed[k] = v
-    
-    for name of <[ _ op emitters ]>
-        window[name] = exposed[name] = limn[name]
-    
-    for mod of <[ moment seq timeseries events ]>
-        window[mod] = exposed[mod] = require mod
-    
-    exposed
-
-
-
-/**
- * Run main() on DOMReady
- */
-root.jQuery? LimnApp.main
+LimnApp.main()

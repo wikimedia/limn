@@ -106,22 +106,58 @@ class exports.Resource extends Mixin
      * 
      * Fires a "before-fetch" event prior to execution, and a "fetch" event upon completion.
      * 
+     * @protected
+     * @param {Function} [cb] Called on fetch success: `cb(model)`
+     * @param {Boolean} [force=false] Whether a successful fetch should force-override,
+     *  rather than merge in, new values.
+     * @param {Object} [options={}] Options passed to `sync()`.
+     * @returns {Promise} Promise for the result of the Ajax request. Note that callbacks can
+     *  still be attached with no chance of missing events.
+     */
+    _fetch: (cb, force=false, options={}) ->
+        [options, cb] = [cb, null] unless typeof cb is 'function'
+        
+        # Fetch data from the server...
+        promise = @fetch.promise = @sync 'read', 'fetch', options
+        
+        # ...Update the model with the result, force-overriding if option is set
+        # and otherwise preserving defaults and local additions.
+        promise.done (model, data) ~>
+            updater = if force then 'update' else 'set'
+            @[updater] @canonicalize data
+        
+        if cb then promise.done ~> cb ...
+        promise
+    
+    
+    /**
+     * Fetch the model from the server. Values are merged into the existing data,
+     * overriding any extant keys, but preserving additions.
+     * 
+     * Fires a "before-fetch" event prior to execution, and a "fetch" event upon completion.
+     * 
      * @param {Function} [cb] Called on fetch success: `cb(model)`
      * @param {Object} [options={}] Options passed to `sync()`.
      * @returns {Promise} Promise for the result of the Ajax request. Note that callbacks can
      *  still be attached with no chance of missing events.
      */
     fetch: (cb, options={}) ->
-        [options, cb] = [cb, null] unless typeof cb is 'function'
-        
-        # Fetch data from the server...
-        promise = @fetch.promise = @sync 'read', 'fetch', options
-        
-        # ...Update the model with the result, overriding any local changes
-        promise.done (model, data) ~> @update @canonicalize data
-        
-        if cb then promise.done ~> cb ...
-        promise
+        @_fetch cb, false, options
+    
+    
+    /**
+     * Fetch the model from the server. Values completely replace the existing
+     * data, overriding extant keys and removing any local additions.
+     * 
+     * Fires a "before-fetch" event prior to execution, and a "fetch" event upon completion.
+     * 
+     * @param {Function} [cb] Called on fetch success: `cb(model)`
+     * @param {Object} [options={}] Options passed to `sync()`.
+     * @returns {Promise} Promise for the result of the Ajax request. Note that callbacks can
+     *  still be attached with no chance of missing events.
+     */
+    reload: (cb, options={}) ->
+        @_fetch cb, true, options
     
     
     /**

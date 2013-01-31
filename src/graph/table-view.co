@@ -1,0 +1,67 @@
+_  = require 'underscore'
+ko = require 'knockout'
+moment = require 'moment'
+
+{ View,
+} = require '../base/view'
+{ ColumnDef,
+} = require '../data/datasource'
+Trait = require './node/graph-node-trait'
+
+
+
+class exports.TableView extends View
+    template: 'table'
+    
+    defaults: ->
+        model: null
+        rootNode: null
+        columnDefs: []
+        columns: []
+        rows: []
+        tableColumns: null
+        tableRows: null
+    
+    
+    /**
+     * @constructor
+     * @param {Graph} model Graph model for this view.
+     * @param {GraphNode} rootNode The root node that was rendering the Graph model
+     */
+    (model, rootNode) ->
+        super ...
+        @rootNode rootNode
+        @model model
+        
+        # TODO: this is awful and should be replaced with scales mapping to column/row indices
+        distinctDates = {}
+        
+        # TODO: make work for non-timeseries data
+        @rootNode().walk [], (columns, node) ~>
+            if      node.hasTrait(Trait.METRIC_CONTENT_DATA) and
+                    columnDef = node.model()?.metric()?.columnDef()
+                column = {}
+                column.label = node.options().label()# FIXME: rc_comscore_region_uv and probably other datasources are labeled incorrectly, such that this is not true: columnDef.label() === node.options().label()
+                for row of node.model().metric().materialized().rows
+                    column[row[0]] = row[1]
+                    distinctDates[row[0]] = true
+                @columns.push column
+        
+        firstColumn = []
+        for date in distinctDates
+            firstColumn.push new Date(date)
+        for date of firstColumn.sort((a,b) ->
+            return -1 if a > b
+            return 1 if a < b
+            return 0
+        )
+            row = []
+            row.push moment(date).format('YYYY-MM-DD HH:mm')
+            for column, i of @columns()
+                row.push column[date]
+            @rows.push row
+        
+        @columns.insert [], 0
+        @columns()[0].label = 'Date'
+        @tableColumns @columns()
+        @tableRows @rows()

@@ -1,0 +1,6 @@
+h3.infobox-label(data-bind='visible: label, text: label')
+table.table
+    tbody(data-bind="foreach: { data:entries, as:'entry' }")
+        tr.infobox-entry(data-bind="attr: { id: 'infobox-entry-' + entry.nodeId() }")
+            td.entry-label(data-bind='text: entry.label')
+            td.entry-value(data-bind='text: entry.value')

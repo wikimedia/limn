@@ -1,5 +1,6 @@
 /**
  * Generate unique IDs.
+ * TODO: generateId, guidFor, and compareIds do not deal with *Globally* unique identifiers, they should be moved elsewhere
  */
 
 UUID        = 0
@@ -42,4 +43,3 @@ guidFor = exports.guidFor = (obj) ->
 
 compareIds = exports.compareIds = (a, b) ->
     guidFor(a) is guidFor(b)
-

@@ -1,0 +1,173 @@
+_  = require 'underscore'
+ko = require 'knockout'
+
+{ guidFor, OrderedMap,
+} = require '../../../util'
+{ AttributesBase,
+} = require '../../../base'
+{ GraphNodeData,
+} = require '../graph-node-data'
+{ GraphNode,
+} = require '../graph-node'
+
+Trait = require '../graph-node-trait'
+
+
+
+/**
+ * @class
+ * @extends GraphNodeData
+ */
+class exports.InfoboxNodeData extends GraphNodeData
+    @registerType 'infobox'
+    
+    defaults: ->
+        options : {}
+    
+    attributeTypes: ->
+        {}
+    
+    -> super ...
+
+
+
+/**
+ * @class
+ * @extends GraphNode
+ */
+class exports.InfoboxNode extends GraphNode
+    @registerType 'infobox'
+    traits : [
+        Trait.META_NODE
+        Trait.FG_LAYER
+        Trait.REQUIRES_METRIC_POINTER
+        Trait.METRIC_GEO_FEATURE
+        Trait.HTML
+        Trait.LEAF
+    ]
+    tagName  : 'section'
+    cssClass : -> super(...) + ' well span4'
+    template : 'infobox-node'
+    
+    
+    /**
+     * The `InfoboxEntry` cache.
+     * @protected
+     * @type OrderedMap<GraphNode, InfoboxEntry>
+     */
+    entryCache : null
+    
+    /**
+     * ID of the feature currently being hovered over.
+     * @type ko.observable<String>
+     */
+    featureId : ko.observable null
+    
+    /**
+     * @type ko.observable<String>
+     */
+    label : ko.observable null
+    
+    
+    ->
+        @entryCache = new OrderedMap()
+        super ...
+        @trackHover()
+    
+    
+    
+    buildElement: (parentElement) ->
+        el = super ...
+        @renderView el
+    
+    
+    mapNode : @computed ->
+        @findUpTraits Trait.METRIC_GEO_MAP
+    
+    
+    featureNodes : @computedRequires 'mapNode', (mapNode) ->
+        mapNode.filterTraits [Trait.VIS_NODE, Trait.REQUIRES_METRIC, Trait.METRIC_GEO_FEATURE]
+    
+    
+    entries: @computedRequires 'featureNodes', (featureNodes) ->
+        featureNodes
+            .filter (node) ->
+                not (node.get('disabled') or node.options()?.get('noLegend'))
+            .map @lookupEntry, this
+    
+    
+    lookupEntry: (node) ->
+        return null unless node?
+        return that if @entryCache.get node
+        
+        entry = new InfoboxEntry this, node
+        @entryCache.set node, entry
+        
+        # register for notification when the node is destroyed
+        destroySub = node.isDisposed.subscribe (isDisposed) ~>
+            throw new Error "WTF! node.isDisposed false for #node!" unless isDisposed
+            currentEntry = @entryCache.get node
+            @entryCache.remove node if currentEntry is entry
+            destroySub.dispose()
+        
+        entry
+    
+    
+    trackHover: @computedRequires 'mapNode.features', (features) ->
+        self = this
+        features.on 'mouseover.infobox', (d) ->
+            currentId = self.featureId.peek()
+            return if currentId is d.id
+            self.label d.properties.name
+            self.featureId d.id
+            [x, y] = d3.mouse self.viewport().el()
+            self.$el.css { display:'block', top:y, left:x }
+        features.on 'mouseout.infobox', ~>
+            @$el.hide()
+            @featureId null
+    
+    
+
+
+/**
+ * @class A row in the infobox, tracking a particular GeoFeautreNode's metric.
+ * @extends AttributesBase
+ */
+class exports.InfoboxEntry extends AttributesBase
+    
+    defaults: ->
+        value : null
+    
+    attributeTypes: ->
+        {}
+    
+    
+    (@infobox, @node) ->
+        super {}
+        @infoboxOptions = @infobox.options
+        @nodeOptions    = @node.options
+        @valueFormatter()
+        @valueReady()
+    
+    
+    nodeId: @computed -> guidFor @node
+    
+    dataById: @computedRequires 'node.model.metric.dataById', -> it
+    
+    label: @computedRequires 'nodeOptions', (nodeOptions) ->
+        nodeOptions.get('label') or @node.model()?.metric()?.columnDef()?.label()
+    
+    valueFormatter : @computedRequires 'infoboxOptions', 'nodeOptions', (infoboxOptions, nodeOptions) ->
+        valueFormat = infoboxOptions.get('valueFormat') or nodeOptions.get('valueFormat')
+        d3.format valueFormat
+    
+    valueReady : @computed ->
+        featureId      = @infobox.featureId()
+        dataById       = @dataById()
+        valueFormatter = @valueFormatter()
+        return unless featureId? and dataById? and valueFormatter
+        val = dataById[featureId]
+        @value if val? then valueFormatter val else '-'
+    
+    
+

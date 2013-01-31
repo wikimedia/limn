@@ -1,4 +1,5 @@
 _ = require 'underscore'
+d3 = require 'd3'
 { Dataset,
 } = require './dataset'
 
@@ -10,7 +11,25 @@ _ = require 'underscore'
 class exports.SeriesDataset extends Dataset
     @registerType 'series'
     
+    @parser = (d3Parser) ->
+        (rawData) ->
+            parsedData = d3Parser.parseRows rawData
+            ignoreHeader = parsedData.slice(1)
+            ignoreHeader.map ->
+                it.map ->
+                    # TODO: use the types defined in the datasource
+                    tryParse = parseFloat it
+                    tryParse = parseInt it if isNaN tryParse
+                    tryParse = new Date it if isNaN tryParse
+                    tryParse = it if tryParse == 'Invalid Date'
+                    tryParse
     
+    formatParsers:
+        csv: @parser d3.csv
+        tsv: @parser d3.tsv
+        json  : (rawData) -> rawData
+        jsonp : (rawData) -> rawData
+        xml   : (rawData) -> rawData
     
     (source, rawData) ->
         super ...

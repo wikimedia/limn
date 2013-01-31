@@ -1,8 +1,9 @@
 # Utilities for use in templates
 
-fs    = exports.fs   = require 'fs'
-path  = exports.path = require 'path'
-glob  = exports.glob = require 'glob'
+fs     = exports.fs     = require 'fs'
+path   = exports.path   = require 'path'
+glob   = exports.glob   = require 'glob'
+moment = exports.moment = require 'moment'
 
 {dirname, basename} = path
 BASE     = exports.BASE     = dirname __dirname
@@ -38,6 +39,11 @@ IS_TEST  = exports.IS_TEST  = NODE_ENV is 'test'
 IS_DEV   = exports.IS_DEV   = not (IS_PROD or IS_TEST)
 
 
+# Cache items for 10sec; no limit to cache-size
+LRUCache = require 'lru-cache'
+MOD_FILE_CACHE = new LRUCache maxAge: 10 * 1000ms
+FIND_SRC_CACHE = new LRUCache maxAge: 10 * 1000ms
+
 
 SOURCES_ENV = if process.env.LIMN_FORCE_BUNDLES then 'production' else NODE_ENV
 
@@ -46,24 +52,38 @@ SOURCES_ENV = if process.env.LIMN_FORCE_BUNDLES then 'production' else NODE_ENV
  * FIXME: this executes many times when loading the website
  */
 sources = exports.sources = (node_env=SOURCES_ENV, modulesFile="#WWW/modules.yaml") ->
-    mods = yaml.load fs.readFileSync modulesFile, 'utf8'
-    modlist = (mods.all or []).concat (mods[node_env] or [])
-    _.flatten modlist.map ({suffix or '', paths}) -> joinTree('', paths).map -> it+suffix
+    return that if MOD_FILE_CACHE.get modulesFile
+    
+    # console.log "[#{now()}] sources(): cache miss '#modulesFile'" if IS_DEV
+    mods     = yaml.load fs.readFileSync modulesFile, 'utf8'
+    modlist  = (mods.all or []).concat (mods[node_env] or [])
+    
+    srcs = _.flatten modlist.map ({suffix or '', paths}) ->
+        joinTree '', paths .map -> it+suffix
+    
+    MOD_FILE_CACHE.set modulesFile, srcs
+    srcs
 
 
 /**
  * Search for source files in listed directories.
  * 
  * @param {String|Array<String>} [srcDirs=<[ src ]>] Source directories to search.
- * @param {Object} [opts={}] Options.
+ * @param {Object} [opts={}] Options:
  * @param {Boolean} [opts.dropSrcDir=true] Do not include the directory-prefix we searched.
  * @param {Boolean} [opts.ext='.mod.js'] Replace .co with this extension.
  * @returns {Array<String>} List of paths to source files.
  */
 findSources = exports.findSources = (srcDirs=<[ src ]>, opts={}) ->
+    return null unless srcDirs?
     srcDirs = [ srcDirs ] unless _.isArray srcDirs
     opts    = { +dropSrcDir, ext:'.mod.js', pre:'', ...opts }
-    return _ srcDirs .chain()
+    
+    key = JSON.stringify [ srcDirs, opts ]
+    return that if FIND_SRC_CACHE.get key
+    # console.log "[#{now()}] findSources(): cache miss: #key" if IS_DEV
+    
+    srcs = _ srcDirs .chain()
         .map (srcDir) ->
             srcDir = _.str.rtrim srcDir, '/'
             pat = "#srcDir/**/*.co"
@@ -76,6 +96,9 @@ findSources = exports.findSources = (srcDirs=<[ src ]>, opts={}) ->
         .map (f) -> opts.pre + f.replace /\.co$/, opts.ext
         .sort indexSorter
         .value()
+    
+    FIND_SRC_CACHE.set key, srcs
+    srcs
 
 /**
  * Sort index files to the end of their directory.
@@ -111,4 +134,6 @@ joinTree = exports.joinTree = function joinTree(root, tree)
                     acc.push.apply acc, joinTree "#root/#k", v
             acc
         []
+
+now  = -> moment(new Date).format('YYYY-MM-DD HH:mm:ss.SSS')
 

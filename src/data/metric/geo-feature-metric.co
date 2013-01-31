@@ -1,7 +1,6 @@
-_  = require 'underscore'
 ko = require 'knockout'
 
-{ Query, ParsingMixin,
+{ _, Query, ParsingMixin,
 } = require '../../util'
 { DataSource,
 } = require '../datasource'
@@ -24,18 +23,32 @@ class exports.GeoFeatureMetric extends Metric
     
     
     /**
-     * The reified dataset (as (id, value) pairs) associated with this Metric.
-     * @type ko.computed<[ID, Value]>
-     * @depends source
+     * Query object for the parameters of this Metric.
+     * @type ko.computed<Query>
+     * @depends source_col
      */
-    data : @computed ->
+    query : @computed ->
         source_col = @get 'source_col'
         return unless source_col?
-        return unless csv = @source()?.data()
         Query()
-            .rows true
             .columns 'id', source_col
-            .apply csv.getData()
     
+    
+    /**
+     * The reified dataset (as (id, value) pairs) associated with this Metric.
+     * @type ko.computed<[ID, Value]>
+     * @depends source, query
+     */
+    data : @computed ->
+        return unless query = @query()
+        return unless csv = @source()?.data()
+        query
+            .materialize 'rows'
+            .process csv.getData()
+    
+    
+    dataById: @computed ->
+        return unless (data = @data())?
+        _.generate data
     
     

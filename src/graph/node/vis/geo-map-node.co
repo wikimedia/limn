@@ -69,6 +69,7 @@ class exports.GeoMapNode extends GroupNode
     
     features : ko.observable null
     
+    
     render: ->
         return unless mapData  = @model()?.metric()?.data()
         return unless options  = @model().options()
@@ -97,6 +98,5 @@ class exports.GeoMapNode extends GroupNode
             .style 'fill',   options.get('featuresColor')
         
         @features features
-    
     
     

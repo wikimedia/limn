@@ -65,23 +65,33 @@ class exports.LegendNode extends GraphNode
         @entryCache = new OrderedMap()
         super ...
         @date = ko.observable()
-        @trackHover()
+        # FIXME: this should stop tracking for scales that can't invert
+        # FIXME:   but it evidences an ugly problem: @root is always CanvasNode here
+        if @root().xScale?.invert
+            @trackHover()
     
     
     /**
      * Track hover events and change the legend date.  This can be used by legend entries
      */
     trackHover: @computed ->
-        return unless viewportHover = @root().viewportHover()
+        return unless cursor = @root().cursor()
+        return unless invert = @root().xScale.invert
         
-        if viewportHover.hovering
-            @date @root().xScale.invert viewportHover.xOffset
+        if cursor.hovering
+            @date invert cursor.x
     
     
     buildElement: (parentElement) ->
         el = super ...
         $ parentElement .prepend el
         @renderView el
+        
+        # handle toggling of legend entries
+        $('li.legend-entry', @$el).on 'click', ->
+            node = ko.dataFor(this).node
+            node.disabled(!node.disabled())
+            $(this).css('opacity', if node.disabled() then 0.3 else 1)
     
     
     nodes: @computed ->
@@ -132,7 +142,7 @@ class exports.LegendEntry extends AttributesBase implements formatters
         super {}
         @legendOptions = @legend.options
         @options = @node.options
-        this import _.pick(@options.peek(), 'label')
+        this.label = node.label
         @color = that if @node.color
         @legend.date.subscribe @trackLegendDate, this
     
