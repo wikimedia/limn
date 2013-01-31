@@ -84,11 +84,9 @@ class exports.LineNode extends TimeseriesNode
             cx: cx
             cy: cy
     
-    
     color: @computedRequires 'model.options', (options) ->
-        label = options.label?() or @model().metric()?.defaultLabel() or '(no label)'
         # FIXME: why is the color not converted into an observable?
-        ProjectColors.lookup(label) or options.stroke?()?.color or 'black'
+        ProjectColors.lookup(@label()) or options.stroke?()?.color or 'black'
     
     width: @computedRequires 'model.options', (options) ->
         options.stroke?()?.width?() or 3

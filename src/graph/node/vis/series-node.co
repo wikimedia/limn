@@ -51,3 +51,14 @@ class exports.SeriesNode extends GraphNode
      */
     seriesData: @computedRequires 'model.metric', (metric) ->
         metric.data()
+    
+    
+    /**
+     * Label determined from the following, in order
+     *   options.label
+     *   metric.defaultLabel
+     *   '(no label)'
+     * @type ko.computed<String>
+     */
+    label: @computedRequires 'model.options', (options) ->
+        options.label?() or @model().metric()?.defaultLabel() or '(no label)'
