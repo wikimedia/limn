@@ -27,7 +27,7 @@ BASE   = dirname __dirname
 SRC    = "#BASE/src"
 STATIC = "#BASE/static"
 VIEWS  = "#BASE/views"
-WWW    = "#BASE/www"
+CSS    = "#BASE/css"
 TEST   = "#BASE/test"
 
 NODE_ENV = process.env.NODE_ENV or 'development'
@@ -210,9 +210,9 @@ application = limn.application =
                 log_level : LOG_LEVEL
             @use '/css', compiler do
                 enabled : 'stylus'
-                src     : "#WWW/css"
+                src     : CSS
                 dest    : "#varDir/css"
-                options : stylus : { +nib, include:"#WWW/css" }
+                options : stylus : { +nib, include:CSS }
                 allowed_methods : <[ GET HEAD ]>
                 log_level : LOG_LEVEL
             
@@ -221,7 +221,7 @@ application = limn.application =
                 enabled : <[ coco stylus jade-browser jade ]>
                 src     : TEST
                 dest    : "#varDir/js/limn/test"
-                options : stylus : { +nib, include:"#WWW/css" }
+                options : stylus : { +nib, include:CSS }
                 allowed_methods : <[ GET HEAD ]>
                 log_level : LOG_LEVEL
             
@@ -260,7 +260,6 @@ application = limn.application =
             
             @use            express.static varDir, {maxAge}
             @use '/js/limn/test', express.static TEST, {maxAge}
-            @use            express.static WWW,    {maxAge}
             @use            express.static STATIC, {maxAge}
             
             @use @router
@@ -319,22 +318,10 @@ application = limn.application =
             @get '/x/*', proxy
         
         
-        ### FIXME?
-        @get '/:type/:action/?', (req, res, next) ->
-            {type, action} = req.params
-            if exists "#VIEWS/#type/#action.jade"
-                res.render "#type/#action"
-            else
-                next()
-        @get '/:type/?', (req, res, next) ->
-            {type} = req.params
-            if exists "#WWW/#type.jade"
-                res.render "#type"
-            else
-                next()
-        
+        # Tests
         @get '/test', (req, res) ->
             res.render 'test'
+        
         
         # All other non-controller, non-static endpoints mapped to default view
         # for client-side routing
