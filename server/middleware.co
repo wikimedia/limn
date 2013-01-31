@@ -299,7 +299,10 @@ application = limn.application =
                         console.error err
                         console.error that if err.stack
                         res.send { error:String(err), partial_data:data }, 500
-                .seq -> res.send data
+                .seq ->
+                    res.contentType 'application/json'
+                    return res.send JSON.stringify(data, null, 4) if req.query.pretty
+                    res.send data
                 .catch (err) ->
                     console.error '[/datasources/all] Error!'
                     console.error err
