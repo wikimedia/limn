@@ -74,7 +74,7 @@ task \build 'Build coco sources' ->
         .seq ->
             console.log '  Bundling Browserify bundle'
             bundle = browserify exports:<[ require process ]>
-                .require <[ seq d3 events ]>
+                .require <[ operator underscore underscore.nested underscore.kv underscore.deferred seq timeseries emitters events ]>
                 .bundle()
             write 'static/vendor/browserify.js', bundle
             @ok()
