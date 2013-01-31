@@ -35,9 +35,10 @@ h3 Search Datasources
 .navbar
     .navbar-inner
         .navbar-search
-            input.search-query(data-bind="value: filter", placeholder="filter by id or name")
+            input.search-query.datasourceSearch(data-bind="value: filter", placeholder="filter by id or name")
 
 table.table.table-striped
+    thead(data-bind="if: model().length == 0"): tr: th Loading all the datasources...
     tbody(data-bind="foreach: filteredModel")
         tr
             td

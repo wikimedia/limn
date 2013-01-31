@@ -36,7 +36,9 @@ class exports.DataSourceView extends View
         if model and model instanceof DataSource
             @model.push model
         else
-            DataSource.fetchAll().done ~> @model(_.sortBy DataSource.getAllSources(), (d) -> d.name())
+            DataSource.fetchAll().done ~>
+                @model(_.sortBy DataSource.getAllSources(), (d) -> d.name())
+                @$('.datasourceSearch').typeahead({source: @model().map -> it.name()})
             @blankDataSource = ko.observable()
             @initializeAddForm()
         
@@ -143,6 +145,7 @@ class exports.DataSourceView extends View
                 name: "All Metrics in #{@name()}"
                 root:
                     nodeType: nodeType
+                    scaling: 'linear'
                     children: [
                         {nodeType: 'axis', options: {dimension: 'x', orient: 'bottom'}}
                         {nodeType: 'axis', options: {dimension: 'y', orient: 'left'}}
