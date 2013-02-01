@@ -23,16 +23,11 @@ view_helpers          = require './view-helpers'
 /**
  * Limn project-internals
  */
-BASE   = dirname __dirname
-SRC    = "#BASE/src"
-STATIC = "#BASE/static"
-VIEWS  = "#BASE/views"
-WWW    = "#BASE/www"
-TEST   = "#BASE/test"
-
-NODE_ENV = process.env.NODE_ENV or 'development'
-IS_DEV   = NODE_ENV is 'development'
-IS_PROD  = NODE_ENV is 'production'
+{
+    MODULES,
+    BASE, SRC, STATIC, VIEWS, WWW, TEST,
+    NODE_ENV, IS_DEV, IS_PROD,
+} = require '../sources'
 
 LOG_LEVEL = process.env.LIMN_LOG_LEVEL
 LOG_LEVEL or= if IS_DEV then 'INFO' else 'WARN'
@@ -142,7 +137,7 @@ application = limn.application =
         opx = opts.proxy = { enabled:opx } if typeof opx is 'boolean'
         opx.enabled = true if opx.enabled is false and (opx.whitelist or opx.blacklist)
         if opx.enabled
-            opx.whitelist or= [ '*' ] #/.*/ throws an error in minimatch - does not support regex as assumed
+            opx.whitelist or= <[ * ]>
             opx.blacklist or= []
         @set 'limn options', opts
         
@@ -167,11 +162,6 @@ application = limn.application =
          * All environments: pre-process requests.
          */
         @configure ->
-            # Parse URL, fiddle
-            # @use (req, res, next) ->
-            #     req.info = url.parse req.url
-            #     next()
-            
             # Parse form submits into req.params
             @use express.bodyParser()
             
@@ -194,7 +184,7 @@ application = limn.application =
             # Browserify some deps
             @use browserify do
                 mount   : '/vendor/browserify.js'
-                require : <[ operator underscore underscore.nested underscore.kv underscore.deferred seq timeseries emitters events ]>
+                require : MODULES.browserify
                 cache   : "#varDir/.cache/browserify/cache.json"
             
             # transparently recompile modules that have changed
