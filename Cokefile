@@ -63,7 +63,9 @@ task \build 'Build coco sources' ->
     invoke \setup
     coco <[ -bjc package.co ]>
     
-    {sources, findSources}  = require './server/view-helpers'
+    { sources, findSources, MODULES,
+    } = require './sources'
+    
     browserify              = require 'browserify'
     Coco                    = require 'coco'
     Jade                    = require 'jade'
@@ -79,7 +81,7 @@ task \build 'Build coco sources' ->
         .seq ->
             console.log '  Bundling Browserify bundle'
             bundle = browserify exports:<[ require process ]>
-                .require <[ operator underscore underscore.nested underscore.kv underscore.deferred seq timeseries emitters events ]>
+                .require MODULES.browserify
                 .bundle()
             write 'static/vendor/browserify.js', bundle
             @ok()
@@ -108,7 +110,7 @@ task \build 'Build coco sources' ->
             write outfile, Coco.compile read(infile), {+bare, filename:infile}
             @ok()
         
-        .set sources 'development', 'www/modules.yaml' .map -> it.slice 1
+        .set sources 'development' .map -> it.slice 1
         .seqEach (srcfile) ->
             return @ok() unless matchExt.test srcfile
             outfile = (if _.startsWith srcfile, 'vendor' then 'static' else 'lib') + '/' + srcfile.replace /^js\/limn\//, ''
@@ -124,7 +126,7 @@ task \build 'Build coco sources' ->
             write outfile, "require.define('/node_modules/#ID.js', function(require, module, exports, __dirname, __filename, undefined){\n\n" + read(infile) + "\n\n});\n"
             @ok()
         
-        .set glob 'www/css/*.styl', {+sync}
+        .set glob 'css/*.styl', {+sync}
         .seqEach (infile) ->
             outfile = infile.replace /\.styl$/, '.css'
             console.log "  Compiling Stylus to CSS:\t #infile \t-->\t #outfile"
@@ -159,7 +161,7 @@ task \bundle 'Build application and vendor bundles' ->
     invoke \bundle_combine
 
 task \bundle_sources 'Build application bundle' ->
-    {findSources} = require './server/view-helpers'
+    {findSources} = require './sources'
     app_sources = findSources null, {pre:'var/js/limn/'}
     
     mkdirp dirname APP_BUNDLE_PATH
@@ -175,10 +177,10 @@ task \bundle_sources 'Build application bundle' ->
     say 'ok.\n'
 
 task \bundle_vendor 'Build vendor bundle' ->
-    {sources} = require './server/view-helpers'
+    {sources} = require './sources'
     
     # FIXME: including vendor dependencies is quite a mess.  Clean this up
-    vendor_sources_no_browserify = sources 'development', 'www/modules.yaml'
+    vendor_sources_no_browserify = sources 'development'
         .filter -> it.indexOf('browserify') === -1
     vendor_sources_static = vendor_sources_no_browserify
         .filter -> it.indexOf('mod.js') === -1
@@ -256,14 +258,14 @@ task \list_all 'Print a list of all source-file paths.' ->
     invoke \list_sources
 
 task \list_sources 'Print a list of limn source-file paths.' ->
-    {findSources}  = require './server/view-helpers'
+    {findSources}  = require './sources'
     say do
         findSources null, {pre:'js/limn/'}
             .join '\n'
 
 task \list_vendor 'Print a list of vendor source-file paths.' ->
-    {sources}  = require './server/view-helpers'
+    {sources}  = require './sources'
     say do
-        sources 'development', 'www/modules.yaml'
+        sources 'development'
             .map -> it.slice 1
             .join '\n'
