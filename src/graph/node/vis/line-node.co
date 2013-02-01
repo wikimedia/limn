@@ -86,7 +86,7 @@ class exports.LineNode extends TimeseriesNode
     
     color: @computedRequires 'model.options', (options) ->
         # FIXME: why is the color not converted into an observable?
-        ProjectColors.lookup(@label()) or options.stroke?()?.color or 'black'
+        ProjectColors.lookup(@shortLabel()) or options.stroke?()?.color or 'black'
     
     width: @computedRequires 'model.options', (options) ->
         options.stroke?()?.width?() or 3

@@ -88,11 +88,18 @@ class exports.Metric extends Model
     
     
     /**
-     * The reified dataset associated with this Metric.
+     * A short label of just the column name
      * @type ko.computed<String>
      * @depends columnDefinition
      */
     defaultLabel : @computed ->
-        @columnDef()?.get 'label'
+        @columnDef()?.label()
     
     
+    /**
+     * A long label including the datasource name
+     * @type ko.computed<String>
+     * @depends columnDefinition
+     */
+    defaultLongLabel : @computedRequires 'defaultLabel', (defaultLabel) ->
+        "#{@source().name()}, #defaultLabel"
