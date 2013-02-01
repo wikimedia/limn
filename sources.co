@@ -24,6 +24,7 @@ _.mixin _.str.exports()
  */
 export BASE     = __dirname
 export VAR      = "#BASE/var"
+export SRC      = "#BASE/src"
 export CSS      = "#BASE/css"
 export STATIC   = "#BASE/static"
 export VIEWS    = "#BASE/views"
