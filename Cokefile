@@ -87,21 +87,6 @@ task \build 'Build coco sources' ->
             write BROWSERIFY_PATH, bundle
             @ok()
         
-        #.set glob 'src/template/**/*.jade', {+sync}
-        #.seqEach (infile) ->
-        #    outfile     = "#infile.js".replace /^src/, 'lib'
-        #    console.log "  Compiling Jade template to JS:\t #infile \t-->\t #outfile"
-        #    template_fn = Jade.compile read(infile), { +pretty, +client, -compileDebug, filename:infile }
-        #    template    = String template_fn .replace /^function anonymous\(/, 'function \('
-        #    mkdirp dirname outfile
-        #    write outfile, """
-        #        var template = #template;
-        #        if (typeof module != 'undefined') {
-        #            module.exports = exports = template;
-        #        }
-        #    """
-        #    @ok()
-        
         # TODO: improve tomorrow
         #.set glob 'src/**???????????????????????????????????????/*.co', {+sync}
         #.seqEach (infile) ->

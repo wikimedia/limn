@@ -193,11 +193,6 @@ application = limn.application =
                 src     : SRC
                 dest    : "#varDir/js/limn"
                 log_level : LOG_LEVEL
-            @use '/js/limn/template', compiler do
-                enabled : <[ jade-browser jade ]>
-                src     : "#SRC/template"
-                dest    : "#varDir/js/limn/template"
-                log_level : LOG_LEVEL
             @use '/css', compiler do
                 enabled : 'stylus'
                 src     : CSS
