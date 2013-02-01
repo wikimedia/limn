@@ -64,7 +64,7 @@ task \build 'Build coco sources' ->
     invoke \setup
     coco <[ -bjc package.co ]>
     
-    { sources, findSources, MODULES, CSS
+    { sources, findSources, MODULES
     } = require './sources'
     
     browserify              = require 'browserify'
@@ -128,9 +128,9 @@ task \build 'Build coco sources' ->
         #    write outfile, "require.define('/node_modules/#ID.js', function(require, module, exports, __dirname, __filename, undefined){\n\n" + read(infile) + "\n\n});\n"
         #    @ok()
         
-        .set glob "#CSS/*.styl", {+sync}
+        .set glob "css/*.styl", {+sync}
         .seqEach (infile) ->
-            outfile = "var/css/#{infile.replace /\.styl$/, '.css'}"
+            outfile = "var/#{infile.replace /\.styl$/, '.css'}"
             console.log "  Compiling Stylus to CSS:\t #infile \t-->\t #outfile"
             mkdirp dirname outfile
             stylus = Stylus read infile
