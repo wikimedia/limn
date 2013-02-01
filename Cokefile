@@ -6,6 +6,7 @@ require 'buildtools/tasks'
 
 APP_BUNDLE_PATH        = 'var/js/limn.no-deps.js'
 APP_BUNDLE_MIN_PATH    = APP_BUNDLE_PATH.replace /\.js$/, '.min.js'
+BROWSERIFY_PATH        = 'static/vendor/browserify.js'
 VENDOR_BUNDLE_PATH     = 'var/vendor/vendor-bundle.js'
 VENDOR_BUNDLE_MIN_PATH = VENDOR_BUNDLE_PATH.replace /\.js$/, '.min.js'
 DIST_PATH              = 'dist/limn.js'
@@ -63,7 +64,7 @@ task \build 'Build coco sources' ->
     invoke \setup
     coco <[ -bjc package.co ]>
     
-    { sources, findSources, MODULES,
+    { sources, findSources, MODULES, CSS
     } = require './sources'
     
     browserify              = require 'browserify'
@@ -83,52 +84,53 @@ task \build 'Build coco sources' ->
             bundle = browserify exports:<[ require process ]>
                 .require MODULES.browserify
                 .bundle()
-            write 'static/vendor/browserify.js', bundle
+            write BROWSERIFY_PATH, bundle
             @ok()
         
-        .set glob 'src/template/**/*.jade', {+sync}
+        #.set glob 'src/template/**/*.jade', {+sync}
+        #.seqEach (infile) ->
+        #    outfile     = "#infile.js".replace /^src/, 'lib'
+        #    console.log "  Compiling Jade template to JS:\t #infile \t-->\t #outfile"
+        #    template_fn = Jade.compile read(infile), { +pretty, +client, -compileDebug, filename:infile }
+        #    template    = String template_fn .replace /^function anonymous\(/, 'function \('
+        #    mkdirp dirname outfile
+        #    write outfile, """
+        #        var template = #template;
+        #        if (typeof module != 'undefined') {
+        #            module.exports = exports = template;
+        #        }
+        #    """
+        #    @ok()
+        
+        # TODO: improve tomorrow
+        #.set glob 'src/**???????????????????????????????????????/*.co', {+sync}
+        #.seqEach (infile) ->
+        #    return @ok() unless exists infile
+        #    outfile = infile.replace /^src/, 'lib' .replace /\.co$/, '.js'
+        #    console.log "  Compiling Coco to JS:\t #infile \t-->\t #outfile"
+        #    mkdirp dirname outfile
+        #    write outfile, Coco.compile read(infile), {+bare, filename:infile}
+        #    @ok()
+        
+        #.set sources 'development' .map -> it.slice 1
+        #.seqEach (srcfile) ->
+        #    return @ok() unless matchExt.test srcfile
+        #    outfile = "var/#{srcfile}"
+        #    infile = outfile.replace matchExt, '$1$2.js'
+        #    unless exists infile
+        #        console.log "  Wrapping JS in Module:\t Cannot find #infile!"
+        #        return @ok() 
+        #    return @ok() if _.startsWith(srcfile, 'vendor') and exists outfile
+        #    parts = srcfile.replace fullExt, '' .split '/' .slice 1
+        #    ID = parts.join '/'
+        #    console.log "  Wrapping JS in Module:\t #infile \t-->\t #outfile"
+        #    mkdirp dirname outfile
+        #    write outfile, "require.define('/node_modules/#ID.js', function(require, module, exports, __dirname, __filename, undefined){\n\n" + read(infile) + "\n\n});\n"
+        #    @ok()
+        
+        .set glob "#CSS/*.styl", {+sync}
         .seqEach (infile) ->
-            outfile     = "#infile.js".replace /^src/, 'lib'
-            console.log "  Compiling Jade template to JS:\t #infile \t-->\t #outfile"
-            template_fn = Jade.compile read(infile), { +pretty, +client, -compileDebug, filename:infile }
-            template    = String template_fn .replace /^function anonymous\(/, 'function \('
-            mkdirp dirname outfile
-            write outfile, """
-                var template = #template;
-                if (typeof module != 'undefined') {
-                    module.exports = exports = template;
-                }
-            """
-            @ok()
-        
-        .set glob 'src/**/*.co', {+sync}
-        .seqEach (infile) ->
-            return @ok() unless exists infile
-            outfile = infile.replace /^src/, 'lib' .replace /\.co$/, '.js'
-            console.log "  Compiling Coco to JS:\t #infile \t-->\t #outfile"
-            mkdirp dirname outfile
-            write outfile, Coco.compile read(infile), {+bare, filename:infile}
-            @ok()
-        
-        .set sources 'development' .map -> it.slice 1
-        .seqEach (srcfile) ->
-            return @ok() unless matchExt.test srcfile
-            outfile = (if _.startsWith srcfile, 'vendor' then 'static' else 'lib') + '/' + srcfile.replace /^js\/limn\//, ''
-            infile = outfile.replace matchExt, '$1$2.js'
-            unless exists infile
-                console.log "  Wrapping JS in Module:\t Cannot find #infile!"
-                return @ok() 
-            return @ok() if _.startsWith(srcfile, 'vendor') and exists outfile
-            parts = srcfile.replace fullExt, '' .split '/' .slice 1
-            ID = parts.join '/'
-            console.log "  Wrapping JS in Module:\t #infile \t-->\t #outfile"
-            mkdirp dirname outfile
-            write outfile, "require.define('/node_modules/#ID.js', function(require, module, exports, __dirname, __filename, undefined){\n\n" + read(infile) + "\n\n});\n"
-            @ok()
-        
-        .set glob 'css/*.styl', {+sync}
-        .seqEach (infile) ->
-            outfile = infile.replace /\.styl$/, '.css'
+            outfile = "var/css/#{infile.replace /\.styl$/, '.css'}"
             console.log "  Compiling Stylus to CSS:\t #infile \t-->\t #outfile"
             mkdirp dirname outfile
             stylus = Stylus read infile
@@ -144,6 +146,7 @@ task \build 'Build coco sources' ->
             throw err
         .seq ->
             console.log 'Done!'
+            @ok()
         
 
 
@@ -180,7 +183,7 @@ task \bundle_vendor 'Build vendor bundle' ->
     vendor_sources_var = vendor_sources_no_browserify
         .filter -> it.indexOf('mod.js') !== -1
         .map -> "var#it"
-    vendor_sources = _.flatten [vendor_sources_static, 'static/todo-regenerate/browserify.js', vendor_sources_var]
+    vendor_sources = _.flatten [vendor_sources_static, BROWSERIFY_PATH, vendor_sources_var]
     mkdirp dirname VENDOR_BUNDLE_PATH
     bundle_js VENDOR_BUNDLE_PATH, vendor_sources, {-minify}
     print 'Minifying into', VENDOR_BUNDLE_MIN_PATH.magenta.bold, '... '
