@@ -136,8 +136,9 @@ class exports.CanvasNode extends ViewportNode
         
         # Update each scale using metrics
         xs = _.compact _.flatten _.invoke metrics, 'dates'
+        return [] unless xs.length
         xDomain = d3.extent xs
-        @xScale.domain xDomain if xs.length
+        @xScale.domain xDomain
         
         width = @viewportWidth()
         @xScale.range [0, width]
@@ -145,8 +146,14 @@ class exports.CanvasNode extends ViewportNode
         xValid = xs.length and width > 0
         
         ys = _.compact _.flatten _.invoke metrics, 'values'
+        return [] unless ys.length
         yDomain = @applyPadding d3.extent ys
-        @yScale.domain yDomain if ys.length
+        
+        # FIXME: hack to render log-scales when some input values are <= 0
+        if @scaling?() is not 'linear'
+            if yDomain[0] < 1
+                yDomain[0] = 0.01
+        @yScale.domain yDomain
         
         height = @viewportHeight()
         @yScale.range [height, 0]

@@ -109,16 +109,18 @@ class exports.AxisNode extends GraphNode
                 axis.tickFormat @numberFormatterFor 2
                     .orient(orient or= 'left')
                 
-                # TODO: handle different scale-types -- this only handles logscale
                 # TODO: GridNode to apply the same scale calculations
                 ticks ?= 10
-                tickValues = scale.ticks()
-                while 5 < tickValues.length > ticks + 2
-                    tickValues .= filter (v, i) ->
-                        L = tickValues.length
-                        # return true if log10(v) % 1 == 0
-                        mod = Math.max 2, Math.round((L - 2) / (L - 2 - ticks))
-                        i == 0 or i == (L - 1) or i % mod != 0
+                if @root().scaling?() is 'log'
+                    tickValues = scale.ticks()
+                    while 5 < tickValues.length > ticks + 2
+                        tickValues .= filter (v, i) ->
+                            L = tickValues.length
+                            # return true if log10(v) % 1 == 0
+                            mod = Math.max 2, Math.round((L - 2) / (L - 2 - ticks))
+                            i == 0 or i == (L - 1) or i % mod != 0
+                else
+                    tickValues = scale.ticks(ticks)
                 axis.tickValues tickValues
         
         @sel.classed dimension+'-axis axis', true

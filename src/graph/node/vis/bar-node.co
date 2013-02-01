@@ -48,9 +48,6 @@ class exports.BarNode extends SeriesNode
     
     -> super ...
     
-    label: @computedRequires 'model.options', (options) ->
-        options.label?() or @model().metric()?.defaultLabel() or '(no label)'
-    
     color: @computedRequires 'model.options', (options) ->
         ProjectColors.lookup(@label()) or options.stroke?()?.color or 'black'
     

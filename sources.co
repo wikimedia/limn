@@ -23,8 +23,8 @@ _.mixin _.str.exports()
  * Directory constants
  */
 export BASE     = __dirname
-export WWW      = "#BASE/www"
 export VAR      = "#BASE/var"
+export CSS      = "#BASE/css"
 export STATIC   = "#BASE/static"
 export VIEWS    = "#BASE/views"
 export TEMPLATE = "#BASE/src/template"

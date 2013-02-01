@@ -142,7 +142,7 @@ class exports.LegendEntry extends AttributesBase implements formatters
         super {}
         @legendOptions = @legend.options
         @options = @node.options
-        this import _.pick(@options.peek(), 'label')
+        this.label = node.label
         @color = that if @node.color
         @legend.date.subscribe @trackLegendDate, this
     

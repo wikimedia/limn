@@ -28,15 +28,20 @@ task \update_version ->
 task \server 'Start dev server' ->
     run './server/server.co'
 
-task \link_data 'Link to data passed in as an argument' ->
-    from = it.$args[1]
-    to = it.$args[2]
-    unless from and to
-        console.log 'USAGE: coke link_data path-to-data name-of-links'
-        console.log '  path-to-data:  can be absolute or relative to var/data/*/'
-        console.log '  name-of-links: used like var/data/*/name-of-links'
-        console.log ''
+
+option \data 'absolute or relative path to data repository, data var/data/*/' \DIR
+option \to 'name of subdirectory to link to, like this: var/data/*/name-of-links' \DIR
+
+task \link_data 'Link to data passed in as an argument' (options) ->
+    data = options.data
+    to = options.to
+    unless data and to
+        console.log 'USAGE: coke --data path-to-data --to name-of-links link_data'
+        console.log options.toString()
         console.log '  (* stands for any of: dashboards,datafiles,datasources,graphs,geo)'
+        console.log ''
+        console.log 'coke understood your command like this:'
+        console.log options
         return
     
     sh 'mkdir -p ./var/data'
@@ -45,13 +50,13 @@ task \link_data 'Link to data passed in as an argument' ->
     sh 'mkdir -p ./var/data/datasources'
     sh 'mkdir -p ./var/data/graphs'
     sh 'mkdir -p ./var/data/geo'
-    sh "ln -sn #from/dashboards ./var/data/dashboards/#to"
-    sh "ln -sn #from/datafiles ./var/data/datafiles/#to"
-    sh "ln -sn #from/datasources ./var/data/datasources/#to"
-    sh "ln -sn #from/graphs ./var/data/graphs/#to"
-    sh "ln -sn #from/geo ./var/data/geo/#to"
+    sh "ln -sn #data/dashboards ./var/data/dashboards/#to"
+    sh "ln -sn #data/datafiles ./var/data/datafiles/#to"
+    sh "ln -sn #data/datasources ./var/data/datasources/#to"
+    sh "ln -sn #data/graphs ./var/data/graphs/#to"
+    sh "ln -sn #data/geo ./var/data/geo/#to"
     
-    say 'ok (ignore "no such task" error).\n'
+    say 'ok\n'
 
 
 task \build 'Build coco sources' ->

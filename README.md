@@ -30,8 +30,7 @@ The "drop-in" part is important: we want it to be easy for programmers to enable
 
 ## Work in Progress
 
-Limn is a work-in-progress. This means it some things are harder than they should be (though it's still pretty easy to use!); it means it's missing some otherwise sensible features and configuration options; it means there's some code that probably needs to be cleaned up. When you find these things, help us out by [opening a ticket][limn_issues] (or, if you're feeling ambitious, a pull request `;)`). It means you probably shouldn't use Limn in production unless you're ready to submit patches.
-
+Limn is a work-in-progress. This means it some things are harder than they should be (though it's still pretty easy to use!); it means it's missing some otherwise sensible features and configuration options; it means there's some code that probably needs to be cleaned up. When you find these things, help us out by [opening a ticket][limn_issues] (or, if you're feeling ambitious, a pull request `;)`). It means you probably shouldn't use Limn in production unless you're ready to submit patches. We work on the [develop branch][develop_branch] and promote to master only when we have significant progress.
 
 ## Learn More
 
@@ -66,6 +65,7 @@ Limn is open-source software, freely available under the MIT License.
 [limn_internals]: https://github.com/wikimedia/limn/wiki/Internals "Limn Internals"
 [limn_middleware]: https://github.com/wikimedia/limn/wiki/Middleware "Using Limn Middleware"
 [limn_datasource]: https://github.com/wikimedia/limn/wiki/Datasource-Metadata "Describing DataSources"
+[develop_branch]: https://github.com/wikimedia/limn/tree/develop
 [dsc_email]: mailto:dsc@wikimedia.org "dsc@wikimedia.org"
 
 [wmf_analytics]: https://www.mediawiki.org/wiki/Analytics "Wikimedia Analytics team"
