@@ -59,6 +59,8 @@ task \link_data 'Link to data passed in as an argument' (options) ->
     
     say 'ok\n'
 
+wrapInRequireDefine = (module, infile) ->
+    "require.define('/node_modules/#module', function(require, module, exports, __dirname, __filename, undefined){\n\n" + read(infile) + "\n\n});\n"
 
 task \build 'Build coco sources' ->
     invoke \setup
@@ -76,8 +78,28 @@ task \build 'Build coco sources' ->
     
     matchExt = /((?:\.min)?)\.mod((?:\.min)?)\.js$/i
     fullExt  = /(\.(min|mod|amd|jade))*\.js$/i
+    commonjs_sources = sources 'development'
+        .filter -> it.indexOf('browserify') is -1 and it.indexOf('mod.js') is not -1
+        .map -> "static#it"
+    
     
     console.log 'Building source...'
+    
+    Seq(commonjs_sources)
+        .seqEach (modfile) ->
+            module = modfile.replace /^static\/vendor\//, '' .replace /\.mod\.js$/, ''
+            infile = "static/vendor/#module.js"
+            outfile = "var/vendor/#module.mod.js"
+            mkdirp dirname outfile
+            if exists modfile
+                console.log "  Writing CommonJS file:\t #modfile \t-->\t #outfile"
+                write outfile, read modfile
+            else
+                console.log "  Writing CommonJS file:\t #infile \t-->\t #outfile"
+                write outfile, wrapInRequireDefine "#module.js", infile
+            
+            @ok()
+    
     Seq()
         .seq ->
             console.log '  Bundling Browserify bundle'
@@ -87,31 +109,17 @@ task \build 'Build coco sources' ->
             write BROWSERIFY_PATH, bundle
             @ok()
         
-        # TODO: improve tomorrow
-        #.set glob 'src/**???????????????????????????????????????/*.co', {+sync}
-        #.seqEach (infile) ->
-        #    return @ok() unless exists infile
-        #    outfile = infile.replace /^src/, 'lib' .replace /\.co$/, '.js'
-        #    console.log "  Compiling Coco to JS:\t #infile \t-->\t #outfile"
-        #    mkdirp dirname outfile
-        #    write outfile, Coco.compile read(infile), {+bare, filename:infile}
-        #    @ok()
-        
-        #.set sources 'development' .map -> it.slice 1
-        #.seqEach (srcfile) ->
-        #    return @ok() unless matchExt.test srcfile
-        #    outfile = "var/#{srcfile}"
-        #    infile = outfile.replace matchExt, '$1$2.js'
-        #    unless exists infile
-        #        console.log "  Wrapping JS in Module:\t Cannot find #infile!"
-        #        return @ok() 
-        #    return @ok() if _.startsWith(srcfile, 'vendor') and exists outfile
-        #    parts = srcfile.replace fullExt, '' .split '/' .slice 1
-        #    ID = parts.join '/'
-        #    console.log "  Wrapping JS in Module:\t #infile \t-->\t #outfile"
-        #    mkdirp dirname outfile
-        #    write outfile, "require.define('/node_modules/#ID.js', function(require, module, exports, __dirname, __filename, undefined){\n\n" + read(infile) + "\n\n});\n"
-        #    @ok()
+        .set glob 'src/**/*.co', {+sync}
+        .seqEach (infile) ->
+            return @ok() unless exists infile
+            outfile = infile.replace /^src/, 'var/js/limn' .replace /\.co$/, '.js'
+            modfile = outfile.replace /\.js$/, '.mod.js'
+            module = outfile.replace /^var\/js\/limn/, 'limn'
+            console.log "  Compiling Coco to JS and .MOD.JS:\t #infile \t-->\t #outfile"
+            mkdirp dirname outfile
+            write outfile, Coco.compile read(infile), {+bare, filename:infile}
+            write modfile, "require.define('/node_modules/#module', function(require, module, exports, __dirname, __filename, undefined){\n\n" + read(outfile) + "\n\n});\n"
+            @ok()
         
         .set glob "css/*.styl", {+sync}
         .seqEach (infile) ->
@@ -136,9 +144,8 @@ task \build 'Build coco sources' ->
 
 
 task \bundle 'Build application and vendor bundles' ->
-    invoke \bundle_app
+    invoke \bundle_sources
     invoke \bundle_vendor
-    invoke \bundle_combine
 
 task \bundle_sources 'Build application bundle' ->
     {findSources} = require './sources'
@@ -161,12 +168,12 @@ task \bundle_vendor 'Build vendor bundle' ->
     
     # FIXME: including vendor dependencies is quite a mess.  Clean this up
     vendor_sources_no_browserify = sources 'development'
-        .filter -> it.indexOf('browserify') === -1
+        .filter -> it.indexOf('browserify') is -1
     vendor_sources_static = vendor_sources_no_browserify
-        .filter -> it.indexOf('mod.js') === -1
+        .filter -> it.indexOf('mod.js') is -1
         .map -> "static#it"
     vendor_sources_var = vendor_sources_no_browserify
-        .filter -> it.indexOf('mod.js') !== -1
+        .filter -> it.indexOf('mod.js') is not -1
         .map -> "var#it"
     vendor_sources = _.flatten [vendor_sources_static, BROWSERIFY_PATH, vendor_sources_var]
     mkdirp dirname VENDOR_BUNDLE_PATH
