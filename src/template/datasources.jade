@@ -1,6 +1,7 @@
 fieldset.controlGroup
-    legend.accordion-toggle(data-toggle="collapse", data-target="form.form-horizontal") Add New Data Source
-    form.form-horizontal.collapse.out(data-bind="submit: newDataSource, with: blankDataSource")
+    //legend.accordion-toggle(data-toggle="collapse", data-target="form.form-horizontal") Add New Data Source
+    legend Add New Data Source
+    form.form-horizontal.collapse.in(data-bind="submit: newDataSource, with: blankDataSource")
         .control-group
             label.control-label(for="url") Datafile URL
             .controls

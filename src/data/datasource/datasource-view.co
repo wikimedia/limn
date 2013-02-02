@@ -40,7 +40,6 @@ class exports.DataSourceView extends View
                 @model(_.sortBy DataSource.getAllSources(), (d) -> d.name())
                 @$('.datasourceSearch').typeahead({source: @model().map -> it.name()})
             @blankDataSource = ko.observable()
-            @initializeAddForm()
         
         @action action
         @message = ko.observable()
@@ -58,41 +57,45 @@ class exports.DataSourceView extends View
                 @model()
     
     
-    initializeAddForm: -> @blankDataSource new DataSource()
+    initializeAddForm: ->
+        @blankDataSource new DataSource()
+        saveButton = @$el.find 'button.save'
+        enableButton = -> saveButton.attr 'disabled', false
+        @blankDataSource().url.subscribe ~>
+            return if it is null or it.indexOf('?') is 0
+            @message "Attempting to analyze that Datafile"
+
+            @blankDataSource().determineFormat()
+            saveButton.attr 'disabled', true
+
+        @blankDataSource().data()
+        @blankDataSource().data.promise
+            .done (dataset) ~>
+                @blankDataSource().columns []
+                try
+                    dataset.getLabels().map (label, i) ->
+                    type = @getTypeFromExample dataset.data[0][i]
+                    @blankDataSource().columns.push new ColumnDef {label, type}
+                    @message "Metrics detected, please verify"
+                catch
+                    @message "Failed to analyze metrics (check file format)"
+            .fail ~> @message "Failed to retrieve datafile"
+            .always enableButton
     
     
     /**
      * Called by Knockout once the DataSource template has finished rendering.
      */
     afterRender: (element) ->
+        # FIXME: this seems to get called every time a property of @blankDataSource changes, which is very bad
+        # ^^ This might apply to the whole project
+        return if @el()
         @el element
         
         if @action() is 'edit'
             new EditView this
         
-        @blankDataSource().url.subscribe ~>
-            saveButton = @$el.find 'button.save'
-            saveButton.attr 'disabled', true
-            @message "Attempting to analyze #{@blankDataSource().url()}"
-            enableButton = -> saveButton.attr 'disabled', false
-            
-            # attempt to load datafile
-            @blankDataSource().data()
-            @blankDataSource().determineFormat()
-            # in order to parse out its columns
-            self = this
-            @blankDataSource().data.task()
-                .done (dataset) ->
-                    self.blankDataSource().columns []
-                    dataset.getLabels().map (label, i) ->
-                        type = self.getTypeFromExample dataset.data[0][i]
-                        self.blankDataSource().columns.push new ColumnDef {label, type}
-                    self.message "Metrics detected, please verify"
-                
-                .fail ->
-                    self.message "Failed to retrieve datafile"
-                
-                .always enableButton
+        @initializeAddForm()
     
     
     addMetric: (link) -> @columns.push new ColumnDef {label:'', type:''}
