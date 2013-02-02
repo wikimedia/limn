@@ -28,6 +28,5 @@ class exports.GeoJSONDataset extends Dataset
         labels = []
         if @parsedData?.length
             for key in @parsedData[0]
-                unless key is 'name' or key is 'id'
-                    labels.push key
+                labels.push key
         labels

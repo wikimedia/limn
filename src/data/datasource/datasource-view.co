@@ -75,7 +75,10 @@ class exports.DataSourceView extends View
             try
                 dataset.getLabels().map (label, i) ~>
                     type = @getTypeFromExample dataset.data[0][i]
-                    @blankDataSource().columns.push new ColumnDef {label, type}
+                    newColumn = new ColumnDef {label, type}
+                    if dataset.type is 'geojson'
+                        newColumn.id label
+                    @blankDataSource().columns.push newColumn
                 @message "Metrics detected, please verify"
             catch
                 @message "Failed to analyze metrics (check file format)"
