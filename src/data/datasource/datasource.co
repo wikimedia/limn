@@ -87,7 +87,7 @@ class exports.DataSource extends StoredModel
      * @type ko.computed<Boolean>
      */
     isValid: @computed ->
-        !! @dataUrl() and @get('format') in @formatContentTypes
+        !!  @dataUrl() and @get('format') in @formatContentTypes
     
     
     /**
@@ -101,11 +101,13 @@ class exports.DataSource extends StoredModel
      * @type ko.computed<String>
      */
     dataUrl: @computedRequires 'url', (url) ->
+        return url unless url
         if url.indexOf('http') == 0
             # TODO: no need to stream this through proxy, use CORS instead
             url = "/x/#url"
-        cacheBuster = @generateRandom()
-        "#url?#cacheBuster"
+        else
+            cacheBuster = @generateRandom()
+            url = "#url?#cacheBuster"
     
     
     /**
