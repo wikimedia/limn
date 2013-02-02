@@ -68,17 +68,19 @@ class exports.DataSourceView extends View
             @blankDataSource().determineFormat()
             saveButton.attr 'disabled', true
 
-        @blankDataSource().data()
-        @blankDataSource().data.promise
-            .done (dataset) ~>
-                @blankDataSource().columns []
-                try
-                    dataset.getLabels().map (label, i) ->
+        @blankDataSource().data.subscribe ~>
+            dataset = @blankDataSource().data()
+            @blankDataSource().columns []
+            try
+                dataset.getLabels().map (label, i) ~>
                     type = @getTypeFromExample dataset.data[0][i]
                     @blankDataSource().columns.push new ColumnDef {label, type}
-                    @message "Metrics detected, please verify"
-                catch
-                    @message "Failed to analyze metrics (check file format)"
+                @message "Metrics detected, please verify"
+            catch
+                @message "Failed to analyze metrics (check file format)"
+        
+        @blankDataSource().data()
+        @blankDataSource().data.promise
             .fail ~> @message "Failed to retrieve datafile"
             .always enableButton
     
