@@ -40,7 +40,6 @@ class exports.DataSourceView extends View
                 @model(_.sortBy DataSource.getAllSources(), (d) -> d.name())
                 @$('.datasourceSearch').typeahead({source: @model().map -> it.name()})
             @blankDataSource = ko.observable()
-            @initializeAddForm()
         
         @action action
         @message = ko.observable()
@@ -58,41 +57,48 @@ class exports.DataSourceView extends View
                 @model()
     
     
-    initializeAddForm: -> @blankDataSource new DataSource()
+    initializeAddForm: ->
+        @blankDataSource new DataSource()
+        saveButton = @$el.find 'button.save'
+        enableButton = -> saveButton.attr 'disabled', false
+        @blankDataSource().url.subscribe ~>
+            return if it is null or it.indexOf('?') is 0
+            @message "Attempting to analyze that Datafile"
+
+            @blankDataSource().determineFormat()
+            saveButton.attr 'disabled', true
+
+        @blankDataSource().data.subscribe ~>
+            return if @blankDataSource().url() is ''
+            dataset = @blankDataSource().data()
+            @blankDataSource().columns []
+            try
+                dataset.getLabels().map (label, i) ~>
+                    type = @getTypeFromExample dataset.data[0][i]
+                    newColumn = new ColumnDef {label, type}
+                    if dataset.type is 'geojson'
+                        newColumn.id label
+                    @blankDataSource().columns.push newColumn
+                @message "Metrics detected, please verify"
+            catch
+                @message "Failed to analyze metrics (check file format)"
+        
+        @blankDataSource().data()
     
     
     /**
      * Called by Knockout once the DataSource template has finished rendering.
      */
     afterRender: (element) ->
+        # FIXME: this seems to get called every time a property of @blankDataSource changes, which is very bad
+        # ^^ This might apply to the whole project
+        return if @el()
         @el element
         
         if @action() is 'edit'
             new EditView this
         
-        @blankDataSource().url.subscribe ~>
-            saveButton = @$el.find 'button.save'
-            saveButton.attr 'disabled', true
-            @message "Attempting to analyze #{@blankDataSource().url()}"
-            enableButton = -> saveButton.attr 'disabled', false
-            
-            # attempt to load datafile
-            @blankDataSource().data()
-            @blankDataSource().determineFormat()
-            # in order to parse out its columns
-            self = this
-            @blankDataSource().data.task()
-                .done (dataset) ->
-                    self.blankDataSource().columns []
-                    dataset.getLabels().map (label, i) ->
-                        type = self.getTypeFromExample dataset.data[0][i]
-                        self.blankDataSource().columns.push new ColumnDef {label, type}
-                    self.message "Metrics detected, please verify"
-                
-                .fail ->
-                    self.message "Failed to retrieve datafile"
-                
-                .always enableButton
+        @initializeAddForm()
     
     
     addMetric: (link) -> @columns.push new ColumnDef {label:'', type:''}
@@ -124,48 +130,87 @@ class exports.DataSourceView extends View
      */
     visualize: ->
         @fetch().done ~>
-            viewportNodeType = do
-                geojson: 'viewport'
-                series: 'canvas-series'
-                timeseries: 'canvas'
             metricNodeType = do
                 geojson: 'geo-feature'
                 series: 'bar'
                 timeseries: 'line'
             
-            nodeType = viewportNodeType[@type()]
             metricType = metricNodeType[@type()]
             
-            columns = @columns()
-            switch nodeType
-                case 'canvas'
+            columns = _.clone @columns()
+            # filter out columns that aren't meant to be visualized
+            switch @type()
+                case 'timeseries'
                     columns = columns.slice(1)
+                case 'geojson'
+                    columns = columns.filter -> it.id() is not 'id' and it.id() is not 'name'
             
-            graph = do
-                name: "All Metrics in #{@name()}"
-                root:
-                    nodeType: nodeType
-                    scaling: 'linear'
-                    children: [
-                        {nodeType: 'axis', options: {dimension: 'x', orient: 'bottom'}}
-                        {nodeType: 'axis', options: {dimension: 'y', orient: 'left'}}
-                        {nodeType: 'grid', options: {dimension: 'x'}}
-                        {nodeType: 'grid', options: {dimension: 'y'}}
-                        {nodeType: 'legend', options: {dateFormat: 'HH:mm on MMM DD, YYYY'}}
-                        {nodeType: 'zoom-brush'}
-                        {nodeType: 'smooth'}
-                        {nodeType: "#{metricType}-group", children: columns.map ~> {
-                            nodeType: metricType
-                            metric: {
-                                source_id: @id()
-                                source_col: it.index()
-                                type: it.type()
-                            }
-                            options: {
-                                label: it.label()
-                            }
-                        }}
-                    ]
+            switch @type()
+                # TODO: make work for other maps besides map-world_countries
+                case 'geojson'
+                    worldMapChildren = columns.map ~>
+                        nodeType: 'geo-feature'
+                        metric:
+                            source_id: @id()
+                            source_col: it.id()
+                        options:
+                            label: it.label()
+                            scale : 'log'
+                            fill  : ['#D4E7ED', '#0A3A4B']
+                        stroke :
+                            width   : 3.0
+                            color   : '#FFFFFF'
+                            opacity : [0, 1.0]
+                            
+                    worldMapChildren.push {nodeType: 'zoom-pan'}
+                    worldMapChildren.push {nodeType: 'infobox'}
+                    
+                    graph = do
+                        name: "All Metrics in #{@name()}"
+                        root:
+                            nodeType: 'canvas'
+                            width: 'auto'
+                            height: 750
+                            children: [
+                                nodeType: 'geo-map'
+                                metric:
+                                    source_id: 'map-world_countries'
+                                options:
+                                    projection: 'mercator'
+                                    backgroundColor: 'white'
+                                    featuresColor: '#EEEEEE'
+                                children: worldMapChildren
+                            ]
+                default
+                    viewportNodeType = do
+                        series: 'canvas-series'
+                        timeseries: 'canvas'
+                    nodeType = viewportNodeType[@type()]
+                    graph = do
+                        name: "All Metrics in #{@name()}"
+                        root:
+                            nodeType: nodeType
+                            scaling: 'linear'
+                            children: [
+                                {nodeType: 'axis', options: {dimension: 'x', orient: 'bottom'}}
+                                {nodeType: 'axis', options: {dimension: 'y', orient: 'left'}}
+                                {nodeType: 'grid', options: {dimension: 'x'}}
+                                {nodeType: 'grid', options: {dimension: 'y'}}
+                                {nodeType: 'legend', options: {dateFormat: 'HH:mm on MMM DD, YYYY'}}
+                                {nodeType: 'zoom-brush'}
+                                {nodeType: 'smooth'}
+                                {nodeType: "#{metricType}-group", children: columns.map ~> {
+                                    nodeType: metricType
+                                    metric: {
+                                        source_id: @id()
+                                        source_col: it.index()
+                                        type: it.type()
+                                    }
+                                    options: {
+                                        label: it.label()
+                                    }
+                                }}
+                            ]
             
             limn.view.visualizeDialog new GraphView graph
             limn.view.$('> .visualizeDialog').modal()

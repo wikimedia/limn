@@ -6,6 +6,7 @@ require 'buildtools/tasks'
 
 APP_BUNDLE_PATH        = 'var/js/limn.no-deps.js'
 APP_BUNDLE_MIN_PATH    = APP_BUNDLE_PATH.replace /\.js$/, '.min.js'
+BROWSERIFY_PATH        = 'static/vendor/browserify.js'
 VENDOR_BUNDLE_PATH     = 'var/vendor/vendor-bundle.js'
 VENDOR_BUNDLE_MIN_PATH = VENDOR_BUNDLE_PATH.replace /\.js$/, '.min.js'
 DIST_PATH              = 'dist/limn.js'
@@ -29,14 +30,14 @@ task \server 'Start dev server' ->
     run './server/server.co'
 
 
-option \from 'absolute or relative path to data repository, from var/data/*/' \DIR
+option \data 'absolute or relative path to data repository, data var/data/*/' \DIR
 option \to 'name of subdirectory to link to, like this: var/data/*/name-of-links' \DIR
 
 task \link_data 'Link to data passed in as an argument' (options) ->
-    from = options.from
+    data = options.data
     to = options.to
-    unless from and to
-        console.log 'USAGE: coke --from path-to-data --to name-of-links link_data'
+    unless data and to
+        console.log 'USAGE: coke --data path-to-data --to name-of-links link_data'
         console.log options.toString()
         console.log '  (* stands for any of: dashboards,datafiles,datasources,graphs,geo)'
         console.log ''
@@ -50,20 +51,24 @@ task \link_data 'Link to data passed in as an argument' (options) ->
     sh 'mkdir -p ./var/data/datasources'
     sh 'mkdir -p ./var/data/graphs'
     sh 'mkdir -p ./var/data/geo'
-    sh "ln -sn #from/dashboards ./var/data/dashboards/#to"
-    sh "ln -sn #from/datafiles ./var/data/datafiles/#to"
-    sh "ln -sn #from/datasources ./var/data/datasources/#to"
-    sh "ln -sn #from/graphs ./var/data/graphs/#to"
-    sh "ln -sn #from/geo ./var/data/geo/#to"
+    sh "ln -sn #data/dashboards ./var/data/dashboards/#to"
+    sh "ln -sn #data/datafiles ./var/data/datafiles/#to"
+    sh "ln -sn #data/datasources ./var/data/datasources/#to"
+    sh "ln -sn #data/graphs ./var/data/graphs/#to"
+    sh "ln -sn #data/geo ./var/data/geo/#to"
     
     say 'ok\n'
 
+wrapInRequireDefine = (module, infile) ->
+    "require.define('/node_modules/#module', function(require, module, exports, __dirname, __filename, undefined){\n\n" + read(infile) + "\n\n});\n"
 
 task \build 'Build coco sources' ->
     invoke \setup
     coco <[ -bjc package.co ]>
     
-    {sources, findSources}  = require './server/view-helpers'
+    { sources, findSources, MODULES
+    } = require './sources'
+    
     browserify              = require 'browserify'
     Coco                    = require 'coco'
     Jade                    = require 'jade'
@@ -73,60 +78,52 @@ task \build 'Build coco sources' ->
     
     matchExt = /((?:\.min)?)\.mod((?:\.min)?)\.js$/i
     fullExt  = /(\.(min|mod|amd|jade))*\.js$/i
+    commonjs_sources = sources 'development'
+        .filter -> it.indexOf('browserify') is -1 and it.indexOf('mod.js') is not -1
+        .map -> "static#it"
+    
     
     console.log 'Building source...'
+    
+    Seq(commonjs_sources)
+        .seqEach (modfile) ->
+            module = modfile.replace /^static\/vendor\//, '' .replace /\.mod\.js$/, ''
+            infile = "static/vendor/#module.js"
+            outfile = "var/vendor/#module.mod.js"
+            mkdirp dirname outfile
+            if exists modfile
+                console.log "  Writing CommonJS file:\t #modfile \t-->\t #outfile"
+                write outfile, read modfile
+            else
+                console.log "  Writing CommonJS file:\t #infile \t-->\t #outfile"
+                write outfile, wrapInRequireDefine "#module.js", infile
+            
+            @ok()
+    
     Seq()
         .seq ->
             console.log '  Bundling Browserify bundle'
             bundle = browserify exports:<[ require process ]>
-                .require <[ seq d3 events ]>
+                .require MODULES.browserify
                 .bundle()
-            write 'static/vendor/browserify.js', bundle
-            @ok()
-        
-        .set glob 'src/template/**/*.jade', {+sync}
-        .seqEach (infile) ->
-            outfile     = "#infile.js".replace /^src/, 'lib'
-            console.log "  Compiling Jade template to JS:\t #infile \t-->\t #outfile"
-            template_fn = Jade.compile read(infile), { +pretty, +client, -compileDebug, filename:infile }
-            template    = String template_fn .replace /^function anonymous\(/, 'function \('
-            mkdirp dirname outfile
-            write outfile, """
-                var template = #template;
-                if (typeof module != 'undefined') {
-                    module.exports = exports = template;
-                }
-            """
+            write BROWSERIFY_PATH, bundle
             @ok()
         
         .set glob 'src/**/*.co', {+sync}
         .seqEach (infile) ->
             return @ok() unless exists infile
-            outfile = infile.replace /^src/, 'lib' .replace /\.co$/, '.js'
-            console.log "  Compiling Coco to JS:\t #infile \t-->\t #outfile"
+            outfile = infile.replace /^src/, 'var/js/limn' .replace /\.co$/, '.js'
+            modfile = outfile.replace /\.js$/, '.mod.js'
+            module = outfile.replace /^var\/js\/limn/, 'limn'
+            console.log "  Compiling Coco to JS and .MOD.JS:\t #infile \t-->\t #outfile"
             mkdirp dirname outfile
             write outfile, Coco.compile read(infile), {+bare, filename:infile}
+            write modfile, "require.define('/node_modules/#module', function(require, module, exports, __dirname, __filename, undefined){\n\n" + read(outfile) + "\n\n});\n"
             @ok()
         
-        .set sources 'development', 'www/modules.yaml' .map -> it.slice 1
-        .seqEach (srcfile) ->
-            return @ok() unless matchExt.test srcfile
-            outfile = (if _.startsWith srcfile, 'vendor' then 'static' else 'lib') + '/' + srcfile.replace /^js\/limn\//, ''
-            infile = outfile.replace matchExt, '$1$2.js'
-            unless exists infile
-                console.log "  Wrapping JS in Module:\t Cannot find #infile!"
-                return @ok() 
-            return @ok() if _.startsWith(srcfile, 'vendor') and exists outfile
-            parts = srcfile.replace fullExt, '' .split '/' .slice 1
-            ID = parts.join '/'
-            console.log "  Wrapping JS in Module:\t #infile \t-->\t #outfile"
-            mkdirp dirname outfile
-            write outfile, "require.define('/node_modules/#ID.js', function(require, module, exports, __dirname, __filename, undefined){\n\n" + read(infile) + "\n\n});\n"
-            @ok()
-        
-        .set glob 'www/css/*.styl', {+sync}
+        .set glob "css/*.styl", {+sync}
         .seqEach (infile) ->
-            outfile = infile.replace /\.styl$/, '.css'
+            outfile = "var/#{infile.replace /\.styl$/, '.css'}"
             console.log "  Compiling Stylus to CSS:\t #infile \t-->\t #outfile"
             mkdirp dirname outfile
             stylus = Stylus read infile
@@ -136,30 +133,22 @@ task \build 'Build coco sources' ->
                 write outfile, css unless err
                 this err
         
-        .set glob 'www/schema/**/*.yaml', {+sync}
-        .seqEach (infile) ->
-            outfile = infile.replace /\.yaml$/, '.json'
-            console.log "  Compiling YAML to JSON:\t #infile \t-->\t #outfile"
-            mkdirp dirname outfile
-            write outfile, JSON.stringify yaml.load read infile
-            @ok()
-        
         .catch (err) ->
             console.error "Error! #err", err
             err = new Error err if typeof err is 'string'
             throw err
         .seq ->
             console.log 'Done!'
+            @ok()
         
 
 
 task \bundle 'Build application and vendor bundles' ->
-    invoke \bundle_app
+    invoke \bundle_sources
     invoke \bundle_vendor
-    invoke \bundle_combine
 
 task \bundle_sources 'Build application bundle' ->
-    {findSources} = require './server/view-helpers'
+    {findSources} = require './sources'
     app_sources = findSources null, {pre:'var/js/limn/'}
     
     mkdirp dirname APP_BUNDLE_PATH
@@ -175,18 +164,18 @@ task \bundle_sources 'Build application bundle' ->
     say 'ok.\n'
 
 task \bundle_vendor 'Build vendor bundle' ->
-    {sources} = require './server/view-helpers'
+    {sources} = require './sources'
     
     # FIXME: including vendor dependencies is quite a mess.  Clean this up
-    vendor_sources_no_browserify = sources 'development', 'www/modules.yaml'
-        .filter -> it.indexOf('browserify') === -1
+    vendor_sources_no_browserify = sources 'development'
+        .filter -> it.indexOf('browserify') is -1
     vendor_sources_static = vendor_sources_no_browserify
-        .filter -> it.indexOf('mod.js') === -1
+        .filter -> it.indexOf('mod.js') is -1
         .map -> "static#it"
     vendor_sources_var = vendor_sources_no_browserify
-        .filter -> it.indexOf('mod.js') !== -1
+        .filter -> it.indexOf('mod.js') is not -1
         .map -> "var#it"
-    vendor_sources = _.flatten [vendor_sources_static, 'static/todo-regenerate/browserify.js', vendor_sources_var]
+    vendor_sources = _.flatten [vendor_sources_static, BROWSERIFY_PATH, vendor_sources_var]
     mkdirp dirname VENDOR_BUNDLE_PATH
     bundle_js VENDOR_BUNDLE_PATH, vendor_sources, {-minify}
     print 'Minifying into', VENDOR_BUNDLE_MIN_PATH.magenta.bold, '... '
@@ -212,37 +201,6 @@ task \bundle_combine 'Combine bundles into dist file' ->
 
 
 
-task \test 'Rebuild test files and run tests' ->
-    invoke \setup
-    invoke \cleanup_tests
-    
-    # Compile tests to JS so Expresso finds them
-    say "Compiling tests...".white.bold
-    glob 'test/**/*.co', {+sync} .forEach -> coco [ '-bc', it ]
-    say 'ok.\n'
-    
-    say "Running tests...".white.bold
-    err <- sh 'expresso', {-die}
-    say "#{err and 'yep' or 'ok'}.\n"
-    
-    # Clean up JS turds
-    invoke \cleanup_tests
-
-
-task \cleanup_tests 'Removes compiled tests' ->
-    # XXX: erp. only works if no .js files by default :P
-    # say "Cleaning up old test files...".white.bold
-    # js_files = glob 'test/**/*.js', {+sync}
-    # for js of js_files.filter( -> exists it )
-    #     say "unlink #js"
-    #     fs.unlinkSync js
-    # say 'ok.\n'
-    
-    glob 'test/**/*.co', {+sync}
-        .map -> it.replace('.co', '.js')
-        .filter exists
-        .forEach fs.unlinkSync
-
 task \clean 'Clean up environment and artifacts' ->
     invoke \cleanup_tests
     remove ['var', 'dist'], {+ignoreMissing, +verbose}
@@ -256,14 +214,14 @@ task \list_all 'Print a list of all source-file paths.' ->
     invoke \list_sources
 
 task \list_sources 'Print a list of limn source-file paths.' ->
-    {findSources}  = require './server/view-helpers'
+    {findSources}  = require './sources'
     say do
         findSources null, {pre:'js/limn/'}
             .join '\n'
 
 task \list_vendor 'Print a list of vendor source-file paths.' ->
-    {sources}  = require './server/view-helpers'
+    {sources}  = require './sources'
     say do
-        sources 'development', 'www/modules.yaml'
+        sources 'development'
             .map -> it.slice 1
             .join '\n'

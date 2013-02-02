@@ -1,0 +1,214 @@
+/**
+ * @fileOverview Project Sources and Templates -- currently consumed by:
+ * - Cokefile
+ * - server/middleware.co
+ * - server/view-helpers.co
+ */
+
+
+fs     = require 'fs'
+path   = require 'path'
+{dirname, basename} = path
+
+op     = require 'operator'
+glob   = require 'glob'
+jade   = require 'jade'
+
+_     = require 'underscore'
+_.str = require 'underscore.string'
+_.mixin _.str.exports()
+
+
+/**
+ * Directory constants
+ */
+export BASE     = __dirname
+export VAR      = "#BASE/var"
+export SRC      = "#BASE/src"
+export CSS      = "#BASE/css"
+export STATIC   = "#BASE/static"
+export VIEWS    = "#BASE/views"
+export TEMPLATE = "#BASE/src/template"
+export TEST     = "#BASE/test"
+
+/**
+ * Node Env
+ */
+export NODE_ENV = (process.env.NODE_ENV or 'development').toLowerCase()
+export IS_PROD  = NODE_ENV is 'production'
+export IS_TEST  = NODE_ENV is 'test'
+export IS_DEV   = not (IS_PROD or IS_TEST)
+
+/**
+ * Module Paths
+ */
+export MODULES =
+    browserify: <[
+            underscore underscore.nested underscore.kv underscore.deferred
+            operator seq timeseries emitters events
+        ]>
+    
+    production:
+        *   suffix: '.min.js'
+            paths: <[
+                vendor/vendor-bundle
+                js/limn.no-deps
+            ]>
+        ...
+    
+    development:
+        *   suffix: '.js'
+            paths:
+                vendor: <[
+                    es5-shim.min
+                    jquery
+                    bootstrap.min
+                    knockout-2.2.0
+                    d3.v3
+                    browserify
+                ]>
+        
+        ### CommonJS support starts here (this means any .mod files must go here)
+        *   suffix: '.mod.js'
+            paths:
+                vendor: <[
+                    underscore.string
+                    colorbrewer
+                    showdown
+                    moment
+                    page
+                ]>
+        
+        ### Might need these sometime soon?
+        # *   suffix: '.min.js'
+        #     paths:
+        #         *   vendor: <[
+        #                 jquery.spin
+        #                 jquery.transit
+        #                 jquery-ui-1.9.1.custom
+        #                 bootstrap-colorpicker
+        #                 bootstrap-datepicker
+        #                 jade.runtime
+        #             ]>
+        #         ...
+        #         
+        #         ### For Debugging
+        #         *   vendor: <[ livecss ]>
+
+/**
+ * Cache of source paths
+ */
+SOURCES = {}
+
+
+/**
+ * Reify and extract paths in modules.
+ */
+export sources = (env=NODE_ENV) ->
+    return that if SOURCES[env]
+    
+    modlist = MODULES[env] or []
+    SOURCES[env] = _.flatten modlist.map ({suffix or '', paths}) ->
+        paths = [paths] unless _.isArray paths
+        joinTree '', paths .map -> it+suffix
+
+
+
+# Cache items for 10sec; no limit to cache-size
+LRUCache = require 'lru-cache'
+FIND_SRC_CACHE = new LRUCache maxAge: 10 * 1000ms
+TEMPLATE_CACHE = new LRUCache maxAge: 10 * 1000ms
+
+
+/**
+ * Search for source files in listed directories.
+ * 
+ * @param {String|Array<String>} [srcDirs=<[ src ]>] Source directories to search.
+ * @param {Object} [opts={}] Options:
+ * @param {Boolean} [opts.dropSrcDir=true] Do not include the directory-prefix we searched.
+ * @param {Boolean} [opts.ext='.mod.js'] Replace .co with this extension.
+ * @returns {Array<String>} List of paths to source files.
+ */
+export findSources = (srcDirs=<[ src ]>, opts={}) ->
+    return null unless srcDirs?
+    srcDirs = [ srcDirs ] unless _.isArray srcDirs
+    opts    = { +dropSrcDir, ext:'.mod.js', pre:'', ...opts }
+    
+    key = JSON.stringify [ srcDirs, opts ]
+    return that if FIND_SRC_CACHE.get key
+    # console.log "[#{now()}] findSources(): cache miss: #key" if IS_DEV
+    
+    srcs = _ srcDirs .chain()
+        .map (srcDir) ->
+            srcDir = _.str.rtrim srcDir, '/'
+            pat = "#srcDir/**/*.co"
+            cwd = process.cwd()
+            if opts.dropSrcDir
+                pat = '**/*.co'
+                cwd = path.join cwd, srcDir
+            glob.sync pat, { +nosort, cwd }
+        .flatten()
+        .map (f) -> opts.pre + f.replace /\.co$/, opts.ext
+        .sort indexSorter
+        .value()
+    
+    FIND_SRC_CACHE.set key, srcs
+    srcs
+
+
+/**
+ * Read and reify a template file.
+ */
+export getTemplate = (filename) ->
+    return that if TEMPLATE_CACHE.get filename
+    
+    name = basename filename .replace /\.jade$/i, ''
+    text = fs.readFileSync filename, 'utf8'
+    if /\.jade$/i.test filename
+        text = jade.compile(text, { filename, +pretty })(^exports)
+    
+    tpl = { name, filename, text }
+    TEMPLATE_CACHE.set filename, tpl
+    tpl
+
+
+/**
+ * Search for tests.
+ */
+export findTests = ->
+    return glob.sync "#TEST/**/*.co"
+        .filter (f) ->
+            f is not "#TEST/index.co" and not _.startsWith(f, "#TEST/qunit")
+        .concat [ "#TEST/index.co" ]
+        .map (f) ->
+            p = path.join dirname(f), basename(f).replace /\.co$/, '.mod.js'
+            '/js/limn/' + p.slice BASE.length+1
+
+
+
+
+### Helpers
+
+export joinTree = (root, tree) ->
+    return ["#root/#tree"]  if typeof tree is 'string'
+    tree = [tree] unless _.isArray tree
+    _ tree .reduce do
+        (acc, branch) ->
+            if typeof branch is 'string'
+                acc.push "#root/#branch"
+            else
+                _.each branch, (v, k) ->
+                    acc.push.apply acc, joinTree "#root/#k", v
+            acc
+        []
+
+/**
+ * Sort index files to the end of their directory.
+ */
+export indexSorter = (p1, p2) ->
+    return that if op.cmp dirname(p1), dirname(p2)
+    f1 = basename p1
+    f2 = basename p2
+    return that if op.cmp _.startsWith(f1, 'index.'), _.startsWith(f2, 'index.')
+    return op.cmp f1, f2
+

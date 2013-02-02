@@ -340,322 +340,14 @@ exports.extname = function(path) {
 
 });
 
-require.define("/node_modules/operator/package.json", function (require, module, exports, __dirname, __filename) {
-module.exports = {"main":"./operator"}
-});
-
-require.define("/node_modules/operator/operator.js", function (require, module, exports, __dirname, __filename) {
-var DASH_PATTERN, STRIP_PAT, FALSEY, op, slice$ = [].slice;
-DASH_PATTERN = /-/g;
-STRIP_PAT = /(^\s*|\s*$)/g;
-FALSEY = /^\s*(?:no|off|false)\s*$/i;
-op = {};
-if (typeof exports != 'undefined' && exports !== null) {
-  op = exports;
-} else if (typeof window != 'undefined' && window !== null) {
-  window.operator = op;
-}
-if (typeof define === 'function' && define.amd) {
-  define('operator', [], function(require, exports, module){
-    return module.exports = op;
-  });
-}
-op.I = function(x){
-  return x;
-};
-op.K = function(k){
-  return function(){
-    return k;
-  };
-};
-op.nop = function(){};
-op.noop = op.noop;
-op.kThis = function(){
-  return this;
-};
-op.kObject = function(){
-  return {};
-};
-op.kArray = function(){
-  return [];
-};
-op.val = function(def, o){
-  return o != null ? o : def;
-};
-op.ok = function(o){
-  return o != null;
-};
-op.notOk = function(o){
-  return o == null;
-};
-op.isK = function(k){
-  return function(v){
-    return v === k;
-  };
-};
-op.second = function(_, a){
-  return a;
-};
-op.nth = function(n){
-  switch (n) {
-  case 0:
-    return op.first;
-  case 1:
-    return op.second;
-  default:
-    return function(){
-      return arguments[n];
-    };
-  }
-};
-op.flip = function(fn){
-  return function(a, b){
-    arguments[0] = b;
-    arguments[1] = a;
-    return fn.apply(this, arguments);
-  };
-};
-op.aritize = function(fn, cxt, n){
-  var ref$;
-  if (arguments.length < 3) {
-    ref$ = [cxt, null], n = ref$[0], cxt = ref$[1];
-  }
-  return function(){
-    return fn.apply(cxt != null ? cxt : this, [].slice.call(arguments, 0, n));
-  };
-};
-op.it = function(fn, cxt){
-  return function(it){
-    return fn.call(cxt != null ? cxt : this, it);
-  };
-};
-op.khas = function(k, o){
-  return k in o;
-};
-op.kget = function(k, o){
-  return o[k];
-};
-op.defkget = function(def, k, o){
-  if (k in o) {
-    return o[k];
-  } else {
-    return def;
-  }
-};
-op.thisget = function(k){
-  return this[k];
-};
-op.vkset = function(o, v, k){
-  if (o && k != null) {
-    o[k] = v;
-  }
-  return o;
-};
-op.has = function(o, k){
-  return k in o;
-};
-op.get = function(o, k){
-  return o[k];
-};
-op.getdef = function(o, k, def){
-  if (k in o) {
-    return o[k];
-  } else {
-    return def;
-  }
-};
-op.kvset = function(o, k, v){
-  if (o && k != null) {
-    o[k] = v;
-  }
-  return o;
-};
-op.thiskvset = function(k, v){
-  if (k != null) {
-    this[k] = v;
-  }
-  return this;
-};
-op.prop = function(k){
-  return function(o){
-    return o[k];
-  };
-};
-op.method = function(name){
-  var args;
-  args = slice$.call(arguments, 1);
-  return function(obj){
-    var _args;
-    _args = slice$.call(arguments, 1);
-    if (obj != null && obj[name]) {
-      return obj[name].apply(obj, args.concat(_args));
-    }
-  };
-};
-op.parseBool = function(s){
-  var i;
-  i = parseInt(s || 0);
-  return !!(isNaN(i) ? !FALSEY.test(s) : i);
-};
-op.toBool = op.parseBool;
-op.toInt = function(v){
-  return parseInt(v);
-};
-op.toFloat = function(v){
-  return parseFloat(v);
-};
-op.toStr = function(v){
-  return String(v);
-};
-op.toRegExp = function(v){
-  return new RegExp(v);
-};
-op.toObject = function(v){
-  if (typeof v === 'string' && op.strip(v)) {
-    return JSON.parse(v);
-  } else {
-    return Object(v);
-  }
-};
-op.toDate = function(v){
-  if (v == null || v instanceof Date) {
-    return v;
-  }
-  if (typeof v === 'number') {
-    return new Date(v);
-  }
-  return new Date(String(v).replace(DASH_PATTERN, '/'));
-};
-op.cmp = function(x, y){
-  if (x < y) {
-    return -1;
-  } else {
-    if (x > y) {
-      return 1;
-    } else {
-      return 0;
-    }
-  }
-};
-op.eq = function(x, y){
-  return x == y;
-};
-op.ne = function(x, y){
-  return x != y;
-};
-op.gt = function(x, y){
-  return x > y;
-};
-op.ge = function(x, y){
-  return x >= y;
-};
-op.lt = function(x, y){
-  return x < y;
-};
-op.le = function(x, y){
-  return x <= y;
-};
-op.add = function(x, y){
-  return x + y;
-};
-op.sub = function(x, y){
-  return x - y;
-};
-op.mul = function(x, y){
-  return x * y;
-};
-op.div = function(x, y){
-  return x / y;
-};
-op.flrdiv = function(x, y){
-  return Math.floor(x / y);
-};
-op.mod = function(x, y){
-  return x % y;
-};
-op.neg = function(x){
-  return -x;
-};
-op.log2 = function(n){
-  return Math.log(n / Math.LN2);
-};
-op.is = function(x, y){
-  return x === y;
-};
-op.isnt = function(x, y){
-  return x !== y;
-};
-op.and = function(x, y){
-  return x && y;
-};
-op.or = function(x, y){
-  return x || y;
-};
-op.not = function(x){
-  return !x;
-};
-op.bitnot = function(x){
-  return ~x;
-};
-op.bitand = function(x, y){
-  return x & y;
-};
-op.bitor = function(x, y){
-  return x | y;
-};
-op.bitxor = function(x, y){
-  return x ^ y;
-};
-op.lshift = function(x, y){
-  return x << y;
-};
-op.rshift = function(x, y){
-  return x >> y;
-};
-op.bin = function(n){
-  var s;
-  do {
-    s = (n % 2 ? '1' : '0') + (s || '');
-    n >>= 1;
-  } while (n);
-  return s;
-};
-op.binlen = function(n){
-  return op.bin(Math.abs(n)).length;
-};
-op.mask = function(n){
-  return (1 << n) - 1;
-};
-op.chr = function(it){
-  return String.fromCharCode(it);
-};
-op.ord = function(it){
-  return String(it).charCodeAt(0);
-};
-op.encode = function(it){
-  return it && $("<div>" + it + "</div>").html().replace(/"/g, '&quot;');
-};
-op.decode = function(it){
-  return it && $("<div>" + it + "</div>").text();
-};
-op.strip = function(s){
-  if (s) {
-    return s.replace(STRIP_PAT, '');
-  } else {
-    return s;
-  }
-};
-
-});
-
 require.define("/node_modules/underscore/package.json", function (require, module, exports, __dirname, __filename) {
 module.exports = {"main":"underscore.js"}
 });
 
 require.define("/node_modules/underscore/underscore.js", function (require, module, exports, __dirname, __filename) {
-//     Underscore.js 1.4.3
+//     Underscore.js 1.4.4
 //     http://underscorejs.org
-//     (c) 2009-2012 Jeremy Ashkenas, DocumentCloud Inc.
+//     (c) 2009-2013 Jeremy Ashkenas, DocumentCloud Inc.
 //     Underscore may be freely distributed under the MIT license.
 
 (function() {
@@ -719,7 +411,7 @@ require.define("/node_modules/underscore/underscore.js", function (require, modu
   }
 
   // Current version.
-  _.VERSION = '1.4.3';
+  _.VERSION = '1.4.4';
 
   // Collection Functions
   // --------------------
@@ -879,8 +571,9 @@ require.define("/node_modules/underscore/underscore.js", function (require, modu
   // Invoke a method (with arguments) on every item in a collection.
   _.invoke = function(obj, method) {
     var args = slice.call(arguments, 2);
+    var isFunc = _.isFunction(method);
     return _.map(obj, function(value) {
-      return (_.isFunction(method) ? method : value[method]).apply(value, args);
+      return (isFunc ? method : value[method]).apply(value, args);
     });
   };
 
@@ -890,15 +583,21 @@ require.define("/node_modules/underscore/underscore.js", function (require, modu
   };
 
   // Convenience version of a common use case of `filter`: selecting only objects
-  // with specific `key:value` pairs.
-  _.where = function(obj, attrs) {
-    if (_.isEmpty(attrs)) return [];
-    return _.filter(obj, function(value) {
+  // containing specific `key:value` pairs.
+  _.where = function(obj, attrs, first) {
+    if (_.isEmpty(attrs)) return first ? null : [];
+    return _[first ? 'find' : 'filter'](obj, function(value) {
       for (var key in attrs) {
         if (attrs[key] !== value[key]) return false;
       }
       return true;
     });
+  };
+
+  // Convenience version of a common use case of `find`: getting the first object
+  // containing specific `key:value` pairs.
+  _.findWhere = function(obj, attrs) {
+    return _.where(obj, attrs, true);
   };
 
   // Return the maximum element or (element-based computation).
@@ -1222,26 +921,23 @@ require.define("/node_modules/underscore/underscore.js", function (require, modu
   // Function (ahem) Functions
   // ------------------
 
-  // Reusable constructor function for prototype setting.
-  var ctor = function(){};
-
   // Create a function bound to a given object (assigning `this`, and arguments,
-  // optionally). Binding with arguments is also known as `curry`.
-  // Delegates to **ECMAScript 5**'s native `Function.bind` if available.
-  // We check for `func.bind` first, to fail fast when `func` is undefined.
+  // optionally). Delegates to **ECMAScript 5**'s native `Function.bind` if
+  // available.
   _.bind = function(func, context) {
-    var args, bound;
     if (func.bind === nativeBind && nativeBind) return nativeBind.apply(func, slice.call(arguments, 1));
-    if (!_.isFunction(func)) throw new TypeError;
-    args = slice.call(arguments, 2);
-    return bound = function() {
-      if (!(this instanceof bound)) return func.apply(context, args.concat(slice.call(arguments)));
-      ctor.prototype = func.prototype;
-      var self = new ctor;
-      ctor.prototype = null;
-      var result = func.apply(self, args.concat(slice.call(arguments)));
-      if (Object(result) === result) return result;
-      return self;
+    var args = slice.call(arguments, 2);
+    return function() {
+      return func.apply(context, args.concat(slice.call(arguments)));
+    };
+  };
+
+  // Partially apply a function by creating a version that has had some of its
+  // arguments pre-filled, without changing its dynamic `this` context.
+  _.partial = function(func) {
+    var args = slice.call(arguments, 1);
+    return function() {
+      return func.apply(this, args.concat(slice.call(arguments)));
     };
   };
 
@@ -1249,7 +945,7 @@ require.define("/node_modules/underscore/underscore.js", function (require, modu
   // all callbacks defined on an object belong to it.
   _.bindAll = function(obj) {
     var funcs = slice.call(arguments, 1);
-    if (funcs.length == 0) funcs = _.functions(obj);
+    if (funcs.length === 0) funcs = _.functions(obj);
     each(funcs, function(f) { obj[f] = _.bind(obj[f], obj); });
     return obj;
   };
@@ -1674,7 +1370,7 @@ require.define("/node_modules/underscore/underscore.js", function (require, modu
       max = min;
       min = 0;
     }
-    return min + (0 | Math.random() * (max - min + 1));
+    return min + Math.floor(Math.random() * (max - min + 1));
   };
 
   // List of HTML entities for escaping.
@@ -1730,7 +1426,7 @@ require.define("/node_modules/underscore/underscore.js", function (require, modu
   // Useful for temporary DOM ids.
   var idCounter = 0;
   _.uniqueId = function(prefix) {
-    var id = '' + ++idCounter;
+    var id = ++idCounter + '';
     return prefix ? prefix + id : id;
   };
 
@@ -1765,6 +1461,7 @@ require.define("/node_modules/underscore/underscore.js", function (require, modu
   // Underscore templating handles arbitrary delimiters, preserves whitespace,
   // and correctly escapes quotes within interpolated code.
   _.template = function(text, data, settings) {
+    var render;
     settings = _.defaults({}, settings, _.templateSettings);
 
     // Combine delimiters into one regular expression via alternation.
@@ -1803,7 +1500,7 @@ require.define("/node_modules/underscore/underscore.js", function (require, modu
       source + "return __p;\n";
 
     try {
-      var render = new Function(settings.variable || 'obj', '_', source);
+      render = new Function(settings.variable || 'obj', '_', source);
     } catch (e) {
       e.source = source;
       throw e;
@@ -2779,6 +2476,314 @@ require.define("/node_modules/underscore.deferred/underscore.deferred.js", funct
   }
 
 })(this);
+
+});
+
+require.define("/node_modules/operator/package.json", function (require, module, exports, __dirname, __filename) {
+module.exports = {"main":"./operator"}
+});
+
+require.define("/node_modules/operator/operator.js", function (require, module, exports, __dirname, __filename) {
+var DASH_PATTERN, STRIP_PAT, FALSEY, op, slice$ = [].slice;
+DASH_PATTERN = /-/g;
+STRIP_PAT = /(^\s*|\s*$)/g;
+FALSEY = /^\s*(?:no|off|false)\s*$/i;
+op = {};
+if (typeof exports != 'undefined' && exports !== null) {
+  op = exports;
+} else if (typeof window != 'undefined' && window !== null) {
+  window.operator = op;
+}
+if (typeof define === 'function' && define.amd) {
+  define('operator', [], function(require, exports, module){
+    return module.exports = op;
+  });
+}
+op.I = function(x){
+  return x;
+};
+op.K = function(k){
+  return function(){
+    return k;
+  };
+};
+op.nop = function(){};
+op.noop = op.noop;
+op.kThis = function(){
+  return this;
+};
+op.kObject = function(){
+  return {};
+};
+op.kArray = function(){
+  return [];
+};
+op.val = function(def, o){
+  return o != null ? o : def;
+};
+op.ok = function(o){
+  return o != null;
+};
+op.notOk = function(o){
+  return o == null;
+};
+op.isK = function(k){
+  return function(v){
+    return v === k;
+  };
+};
+op.second = function(_, a){
+  return a;
+};
+op.nth = function(n){
+  switch (n) {
+  case 0:
+    return op.first;
+  case 1:
+    return op.second;
+  default:
+    return function(){
+      return arguments[n];
+    };
+  }
+};
+op.flip = function(fn){
+  return function(a, b){
+    arguments[0] = b;
+    arguments[1] = a;
+    return fn.apply(this, arguments);
+  };
+};
+op.aritize = function(fn, cxt, n){
+  var ref$;
+  if (arguments.length < 3) {
+    ref$ = [cxt, null], n = ref$[0], cxt = ref$[1];
+  }
+  return function(){
+    return fn.apply(cxt != null ? cxt : this, [].slice.call(arguments, 0, n));
+  };
+};
+op.it = function(fn, cxt){
+  return function(it){
+    return fn.call(cxt != null ? cxt : this, it);
+  };
+};
+op.khas = function(k, o){
+  return k in o;
+};
+op.kget = function(k, o){
+  return o[k];
+};
+op.defkget = function(def, k, o){
+  if (k in o) {
+    return o[k];
+  } else {
+    return def;
+  }
+};
+op.thisget = function(k){
+  return this[k];
+};
+op.vkset = function(o, v, k){
+  if (o && k != null) {
+    o[k] = v;
+  }
+  return o;
+};
+op.has = function(o, k){
+  return k in o;
+};
+op.get = function(o, k){
+  return o[k];
+};
+op.getdef = function(o, k, def){
+  if (k in o) {
+    return o[k];
+  } else {
+    return def;
+  }
+};
+op.kvset = function(o, k, v){
+  if (o && k != null) {
+    o[k] = v;
+  }
+  return o;
+};
+op.thiskvset = function(k, v){
+  if (k != null) {
+    this[k] = v;
+  }
+  return this;
+};
+op.prop = function(k){
+  return function(o){
+    return o[k];
+  };
+};
+op.method = function(name){
+  var args;
+  args = slice$.call(arguments, 1);
+  return function(obj){
+    var _args;
+    _args = slice$.call(arguments, 1);
+    if (obj != null && obj[name]) {
+      return obj[name].apply(obj, args.concat(_args));
+    }
+  };
+};
+op.parseBool = function(s){
+  var i;
+  i = parseInt(s || 0);
+  return !!(isNaN(i) ? !FALSEY.test(s) : i);
+};
+op.toBool = op.parseBool;
+op.toInt = function(v){
+  return parseInt(v);
+};
+op.toFloat = function(v){
+  return parseFloat(v);
+};
+op.toStr = function(v){
+  return String(v);
+};
+op.toRegExp = function(v){
+  return new RegExp(v);
+};
+op.toObject = function(v){
+  if (typeof v === 'string' && op.strip(v)) {
+    return JSON.parse(v);
+  } else {
+    return Object(v);
+  }
+};
+op.toDate = function(v){
+  if (v == null || v instanceof Date) {
+    return v;
+  }
+  if (typeof v === 'number') {
+    return new Date(v);
+  }
+  return new Date(String(v).replace(DASH_PATTERN, '/'));
+};
+op.cmp = function(x, y){
+  if (x < y) {
+    return -1;
+  } else {
+    if (x > y) {
+      return 1;
+    } else {
+      return 0;
+    }
+  }
+};
+op.eq = function(x, y){
+  return x == y;
+};
+op.ne = function(x, y){
+  return x != y;
+};
+op.gt = function(x, y){
+  return x > y;
+};
+op.ge = function(x, y){
+  return x >= y;
+};
+op.lt = function(x, y){
+  return x < y;
+};
+op.le = function(x, y){
+  return x <= y;
+};
+op.add = function(x, y){
+  return x + y;
+};
+op.sub = function(x, y){
+  return x - y;
+};
+op.mul = function(x, y){
+  return x * y;
+};
+op.div = function(x, y){
+  return x / y;
+};
+op.flrdiv = function(x, y){
+  return Math.floor(x / y);
+};
+op.mod = function(x, y){
+  return x % y;
+};
+op.neg = function(x){
+  return -x;
+};
+op.log2 = function(n){
+  return Math.log(n / Math.LN2);
+};
+op.is = function(x, y){
+  return x === y;
+};
+op.isnt = function(x, y){
+  return x !== y;
+};
+op.and = function(x, y){
+  return x && y;
+};
+op.or = function(x, y){
+  return x || y;
+};
+op.not = function(x){
+  return !x;
+};
+op.bitnot = function(x){
+  return ~x;
+};
+op.bitand = function(x, y){
+  return x & y;
+};
+op.bitor = function(x, y){
+  return x | y;
+};
+op.bitxor = function(x, y){
+  return x ^ y;
+};
+op.lshift = function(x, y){
+  return x << y;
+};
+op.rshift = function(x, y){
+  return x >> y;
+};
+op.bin = function(n){
+  var s;
+  do {
+    s = (n % 2 ? '1' : '0') + (s || '');
+    n >>= 1;
+  } while (n);
+  return s;
+};
+op.binlen = function(n){
+  return op.bin(Math.abs(n)).length;
+};
+op.mask = function(n){
+  return (1 << n) - 1;
+};
+op.chr = function(it){
+  return String.fromCharCode(it);
+};
+op.ord = function(it){
+  return String(it).charCodeAt(0);
+};
+op.encode = function(it){
+  return it && $("<div>" + it + "</div>").html().replace(/"/g, '&quot;');
+};
+op.decode = function(it){
+  return it && $("<div>" + it + "</div>").text();
+};
+op.strip = function(s){
+  if (s) {
+    return s.replace(STRIP_PAT, '');
+  } else {
+    return s;
+  }
+};
 
 });
 

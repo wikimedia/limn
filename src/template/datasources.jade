@@ -1,6 +1,14 @@
 fieldset.controlGroup
-    legend.accordion-toggle(data-toggle="collapse", data-target="form.form-horizontal") Add New Data Source
-    form.form-horizontal.collapse.out(data-bind="submit: newDataSource, with: blankDataSource")
+    //legend.accordion-toggle(data-toggle="collapse", data-target="form.form-horizontal") Add New Data Source
+    legend Add New Data Source
+    form.form-horizontal.collapse.in(data-bind="submit: newDataSource, with: blankDataSource")
+        .control-group
+            label.control-label(for="type") Type of File
+            .controls
+                select(id="type", data-bind="value: type", required)
+                    option(value="timeseries") Timeseries
+                    option(value="geojson") Geographical
+                    option(value="series") Series
         .control-group
             label.control-label(for="url") Datafile URL
             .controls
