@@ -21,7 +21,13 @@ class exports.GeoJSONDataset extends Dataset
     #     @rows
     
     
-    
-    
-
-
+    /**
+     * @returns {Array<String>} List of column labels.
+     */
+    getLabels: ->
+        labels = []
+        if @parsedData?.length
+            for key in @parsedData[0]
+                unless key is 'name' or key is 'id'
+                    labels.push key
+        labels
