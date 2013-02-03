@@ -18,7 +18,7 @@ append defs
             script(src="/vendor/qunit/qunit.js")
             script(src="/vendor/qunit/theme-picker.js")
             
-            for test in tests()
+            for test in findTests()
                 script(src=path.join(mount, test))
             
             script
