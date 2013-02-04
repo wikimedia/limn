@@ -57,6 +57,7 @@ class exports.DataSource extends StoredModel
         # format    : Content-Type for AJAX request
         csv         : 'text'
         tsv         : 'text'
+        log         : 'text'
         json        : 'json'
         jsonp       : 'jsonp'
         xml         : 'xml'
@@ -122,7 +123,18 @@ class exports.DataSource extends StoredModel
     
     determineFormat: ->
         # XXX: work on a regex for this -  format = /\.([^\.]+)$/.exec(url)?[1] or 'csv'
-        @format if @url().indexOf('.json') === @url().length - 5 then 'json' else 'csv'
+        if @url().indexOf('.csv') >= 0
+            @format 'csv'
+        else if @url().indexOf('.json') >= 0
+            @format 'json'
+        else if @url().indexOf('.tsv') >= 0
+            @format 'tsv'
+        else if @url().indexOf('.xml') >= 0
+            @format 'xml'
+        else if @url().indexOf('.log') >= 0
+            @format 'log'
+        else
+            @format 'csv'
     
     
     /**
