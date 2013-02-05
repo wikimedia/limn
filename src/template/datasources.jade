@@ -1,7 +1,6 @@
 fieldset.controlGroup
-    //legend.accordion-toggle(data-toggle="collapse", data-target="form.form-horizontal") Add New Data Source
-    legend Add New Data Source
-    form.form-horizontal.collapse.in(data-bind="submit: newDataSource, with: blankDataSource")
+    legend.accordion-toggle(data-toggle="collapse", data-target="form.form-horizontal") Add New Data Source
+    form.form-horizontal.collapse(data-bind="submit: newDataSource, with: blankDataSource, css: { 'in': showAddForm, 'out': hideAddForm }")
         .control-group
             label.control-label(for="type") Type of File
             .controls
@@ -9,16 +8,17 @@ fieldset.controlGroup
                     option(value="timeseries") Timeseries
                     option(value="geojson") Geographical
                     option(value="series") Series
-        .control-group
-            label.control-label(for="format") Format of Data
-            .controls
-                select(id="format", data-bind="value: format", required)
-                    option(value="csv") Comma Separated Values
-                    option(value="tsv") Tab Separated Values
-                    option(value="json") JSON
-                    option(value="jsonp") JSONp
-                    option(value="xml") XML
-                    option(value="log") Custom format, gets Pre-Parsed
+        //
+            .control-group
+                label.control-label(for="format") Format of Data
+                .controls
+                    select(id="format", data-bind="value: format", required)
+                        option(value="csv") Comma Separated Values
+                        option(value="tsv") Tab Separated Values
+                        option(value="json") JSON
+                        option(value="jsonp") JSONp
+                        option(value="xml") XML
+                        option(value="log") Custom format, gets Pre-Parsed
         .control-group
             label.control-label(for="url") Datafile URL
             .controls
