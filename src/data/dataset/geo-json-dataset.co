@@ -33,18 +33,20 @@ class exports.GeoJSONDataset extends Dataset
     
     preParser: (rawData) ->
         return rawData unless typeof rawData is 'string'
-        return rawData unless rawData.substring(0,1) is '('
-        console.log 'INFO: PIG tuple format, pre-parsing it into JSON'
+        console.log 'INFO: PIG format, pre-parsing it into JSON'
         
         
         # Hardcoding this format: (2013-02-01,A2,Android,Samsung,GT-S5830,3,3,3)
-        regex = /\(([^,]+),([^,]+),([^,]+),([^,]+),([^,]+),([^,]+),([^,]+),([^,]+)\)/g
+        # regex = /\(([^,]+),([^,]+),([^,]+),([^,]+),([^,]+),([^,]+),([^,]+),([^,]+)\)/g
+        # Hardcoding this format: 2013-02-01	TZ	SonyEricsson	Symbian OS	5
+        regex = /([^\t]*)\t([^\t]*)\t([^\t]*)\t([^\t]*)\t([^\t]*)\n/g
+
         rawDataPivoted = {}
         
         while match = regex.exec rawData
             country = match[2]
-            manufacturer = match[4].toLowerCase()
-            count = parseInt(match[6] or 0)
+            manufacturer = match[3].toLowerCase()
+            count = parseInt(match[5]) or 0
             
             unless rawDataPivoted[country]
                 countryData = countriesByTwoLetterCode[country] or do

@@ -76,7 +76,7 @@ class exports.DataSource extends StoredModel
         notes         : ''
         
         columns       : []
-        timespan      : { start:null, end:null, step:'1mo' }
+        timespan      : { start:null, end:null, step:null }
     
     attributeTypes: ->
         columns: ColumnDef
@@ -122,19 +122,17 @@ class exports.DataSource extends StoredModel
     
     
     determineFormat: ->
-        # XXX: work on a regex for this -  format = /\.([^\.]+)$/.exec(url)?[1] or 'csv'
-        if @url().indexOf('.csv') >= 0
+        fourBeforeEnd = @url().length - 4
+        if @url().indexOf('.csv') is fourBeforeEnd
             @format 'csv'
-        else if @url().indexOf('.json') >= 0
+        else if @url().indexOf('.json') is fourBeforeEnd - 1
             @format 'json'
-        else if @url().indexOf('.tsv') >= 0
+        else if @url().indexOf('.tsv') is fourBeforeEnd
             @format 'tsv'
-        else if @url().indexOf('.xml') >= 0
+        else if @url().indexOf('.xml') is fourBeforeEnd
             @format 'xml'
-        else if @url().indexOf('.log') >= 0
+        else # default - parses as text and allows pre-parsing
             @format 'log'
-        else
-            @format 'csv'
     
     
     /**
