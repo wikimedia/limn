@@ -212,17 +212,21 @@ class exports.DataSourceView extends View
                                 {nodeType: 'legend', options: {dateFormat: 'HH:mm on MMM DD, YYYY'}}
                                 {nodeType: 'zoom-brush'}
                                 {nodeType: 'smooth'}
-                                {nodeType: "#{metricType}-group", children: columns.map ~> {
-                                    nodeType: metricType
-                                    metric: {
-                                        source_id: @id()
-                                        source_col: it.index()
-                                        type: it.type()
+                                {
+                                    nodeType: "#{metricType}-group",
+                                    options: {palette: 'category20'},
+                                    children: columns.map ~> {
+                                        nodeType: metricType
+                                        metric: {
+                                            source_id: @id()
+                                            source_col: it.index()
+                                            type: it.type()
+                                        }
+                                        options: {
+                                            label: it.label()
+                                        }
                                     }
-                                    options: {
-                                        label: it.label()
-                                    }
-                                }}
+                                }
                             ]
             
             limn.view.visualizeDialog new GraphView graph

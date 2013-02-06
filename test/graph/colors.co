@@ -1,0 +1,37 @@
+ProjectColors = require 'limn/graph/project-colors'
+
+
+QUnit.module '[graph] Color Palettes', do
+    setup: ->
+    teardown: ->
+
+
+test 'Correct color for China', ->
+    color = ProjectColors.lookup 'China', 'wmf_projects'
+    strictEqual color, '#AD3238', 'with returnDefault not specified'
+    color = ProjectColors.lookup 'China', 'wmf_projects', true
+    strictEqual color, '#AD3238', 'with returnDefault true'
+
+
+test 'Correct and consistent colors for category20 palette', ->
+    color = ProjectColors.lookup 'China', 'category20'
+    strictEqual color, '#1f77b4', 'first color, first palette value'
+    color = ProjectColors.lookup 'Germany', 'category20'
+    strictEqual color, '#aec7e8', 'second color, second palette value'
+    color = ProjectColors.lookup 'China', 'category20'
+    strictEqual color, '#1f77b4', 'first color repeated, first palette value'
+
+
+test 'Consistent colors if multiple palettes are used', ->
+    color = ProjectColors.lookup 'China', 'wmf_projects'
+    strictEqual color, '#AD3238', 'wmf_projects palette'
+    color = ProjectColors.lookup 'China', 'category10'
+    strictEqual color, '#1f77b4', 'first color, first palette value'
+    color = ProjectColors.lookup 'Germany', 'wmf_projects'
+    strictEqual color, '#FF0097', 'wmf_projects palette'
+    color = ProjectColors.lookup 'Germany', 'category10'
+    strictEqual color, '#ff7f0e', 'second color, second palette value'
+    color = ProjectColors.lookup 'China', 'category10'
+    strictEqual color, '#1f77b4', 'first color repeated, first palette value'
+    color = ProjectColors.lookup 'SomethingRandom', null, true
+    strictEqual color, '#1f77b4', 'first color in default scale, first palette value'

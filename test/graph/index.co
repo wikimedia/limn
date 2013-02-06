@@ -1,3 +1,4 @@
 graph = require './graph'
+colors = require './colors'
 
-exports import graph
+exports import graph import colors

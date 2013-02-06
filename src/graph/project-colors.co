@@ -1,3 +1,5 @@
+d3 = require 'd3'
+
 /**
  * @fileOverview Applies consistent coloring to language/project Metrics with a null `color` field.
  */
@@ -18,6 +20,7 @@ PROJECT_COLORS = exports.PROJECT_COLORS =
     'chinese'               : '#AD3238'
     'europe'                : '#FF0097'
     'german'                : '#FF0097'
+    'germany'               : '#FF0097'
     'dutch'                 : '#EF8158'
     'french'                : '#1A9380'
     'italian'               : '#FF87FF'
@@ -45,8 +48,31 @@ PROJECT_COLORS = exports.PROJECT_COLORS =
 
 PROJECT_TESTS = ( { pat://\b#{project.replace(/ /g, '[ _-]')}\b//i, project, color } for project, color in PROJECT_COLORS )
 
+paletteScales = do
+    category10  : d3.scale.category10()
+    category20  : d3.scale.category20()
+    category20b : d3.scale.category20b()
+    category20c : d3.scale.category20c()
+    default     : d3.scale.category10()
 
-lookupColor = exports.lookup = (label) ->
-    for project, {pat, color} in PROJECT_TESTS
-        return color if pat.test label
 
+/**
+ * Provides consistent color lookup accross projects and/or instances
+ * @param {string} label is the label of the object to be colored
+ * @param {string} [palette] is the palette of colors that will do the coloring
+ * @param {boolean} returnDefault is true if the caller wants a color no matter what
+ * @returns a color if one is found, a color if returnDefault is true, or null otherwise
+ */
+lookupColor = exports.lookup = (label, palette=null, returnDefault=false) ->
+    if palette is 'wmf_projects'
+        for project, {pat, color} in PROJECT_TESTS
+            return color if pat.test label
+    
+    if scale = paletteScales[palette]
+        return scale label
+    
+    if returnDefault
+        scale = paletteScales['default']
+        return scale label
+    
+    return null

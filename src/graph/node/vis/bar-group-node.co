@@ -16,7 +16,7 @@ class exports.BarGroupNodeData extends GroupNodeData
     
     defaults: ->
         options :
-            palettes    : <[ wmf_projects spectral ]>
+            palette     : 'wmf_projects'
             scale       : 'log' # log | linear
             stroke :
                 width   : 40

@@ -181,7 +181,7 @@ class exports.GraphJSONConverter
                     out.root.children.push lines =
                         nodeType : 'line-group'
                         options  :
-                            palettes    : <[ wmf_projects spectral ]>
+                            palette     : 'wmf_projects'
                             dateFormat  : 'MMM YYYY'
                             valueFormat : ",.#{&digitsAfterDecimal}s"
                             stroke : 
@@ -237,7 +237,7 @@ class exports.GraphJSONConverter
             
             *   nodeType  : 'line-group'
                 options   :
-                    palette : 'spectral'
+                    palette : 'wmf_projects'
                 children  : []
         ]
     
