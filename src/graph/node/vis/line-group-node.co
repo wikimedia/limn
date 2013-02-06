@@ -16,7 +16,7 @@ class exports.LineGroupNodeData extends GroupNodeData
     
     defaults: ->
         options :
-            palettes    : <[ wmf_projects spectral ]>
+            palette     : 'wmf_projects'
             scale       : 'log' # log | linear
             dateFormat  : 'MMM YYYY'
             valueFormat : ',.2s'

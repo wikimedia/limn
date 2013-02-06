@@ -49,7 +49,7 @@ class exports.AxisNodeData extends GraphNodeData
         dimension : null # x | y
         orient    : null # top|bottom | left|right
         options   :
-            ticks      : 4
+            ticks      : null
             tickFormat : 'MMM YY'
             
             label      : null
@@ -98,10 +98,10 @@ class exports.AxisNode extends GraphNode
         switch dimension
             case 'x'
                 axis.orient(orient or= 'bottom')
-                ticks ?= 3
+                ticks ?= 10
                 if isTimeseries
                     axis.tickFormat multiTimeFormatter # @dateFormatterFor 'MMM YY'
-                    axis.ticks d3.time.months, ticks if ticks > 0
+                    axis.ticks ticks
                 else
                     axis.ticks scale.domain()
             

@@ -7,47 +7,30 @@
             li
                 i.icon-home.icon-white
                 a(href="/") Home
-            //- FIXME: put link to /graphs only if dev env, for now.
-            if IS_DEV
-                li
-                    i.icon-th.icon-white
-                    a(href='/graphs') Browse
+            li
+                i.icon-th.icon-white
+                a(href='/datasources') Browse Data
             li
                 i.icon-glass.icon-white
-                a(href="/about") About
-                ul
-                    li: a(href="/contact") Contact
-                    li: a(href="http://mediawiki.org/wiki/Analytics", target="_blank") Other Projects
+                a(href="https://github.com/wikimedia/limn", target="_blank") About, Help, and Feedback
             li
                 i.icon-bookmark.icon-white
-                a(href="/project") Project
-                //- 
-                    ul
-                        li: a(href="mailto:dsc@wikimedia.org?subject=Reportcard/Limn Feedback") Feedback!
-                        li: a(href="/blog") Blog
-                        li: a(href="/docs/roadmap") Roadmap
-                        li: a(href="https://github.com/wikimedia/limn", target="_blank") Source Repository
-                        li: a(href="https://github.com/wikimedia/limn/issues", target="_blank") Issue Tracker
-                        li: a(href="https://lists.wikimedia.org/mailman/listinfo/analytics", target="_blank") Mailing List
-            //- 
-                li
-                    i.icon-question-sign.icon-white
-                    a(href="/help") Help
+                a(href="http://mediawiki.org/wiki/Analytics", target="_blank") Other Projects
     
     .get-involved.col.span4
         h3
             i.icon-comment.icon-white
             a(href="/project") Get Involved!
         p
-            a(href="/project") Limn
-            |  is  
+            a(href="http://www.mediawiki.org/wiki/Analytics/Limn", target="_blank") Limn
+            |  is
             a(href="https://github.com/wikimedia/limn", target="_blank") open-source software
-            | , made with love by the 
-            a(href="/about") Wikimedia Analytics Team
+            | , made with love by the
+            a(href="http://www.mediawiki.org/wiki/Analytics#Team", target="_blank") Wikimedia Analytics Team
             | .
         p
-            | Find a bug or have a suggestion? 
-            a(href="mailto:dsc@wikimedia.org?subject=Limn Feedback") We'd love to hear from you!
+            | Find a bug or have a suggestion?
+            a(href="https://github.com/wikimedia/limn", target="_blank") We'd love to hear from you!
         
     .about-wmf.col.span4
         h3
