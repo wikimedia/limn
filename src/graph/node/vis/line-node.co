@@ -21,10 +21,10 @@ class exports.LineNodeData extends TimeseriesNodeData
     
     defaults: ->
         options :
-            label    : null
-            color    : null
-            stroke   : null
-            noLegend : false
+            label       : null
+            color       : null
+            stroke      : null
+            noLegend    : false
     
     attributeTypes: ->
         metric : TimeseriesMetric
@@ -86,7 +86,7 @@ class exports.LineNode extends TimeseriesNode
     
     color: @computedRequires 'model.options', (options) ->
         # FIXME: why is the color not converted into an observable?
-        ProjectColors.lookup(@shortLabel()) or options.stroke?()?.color or 'black'
+        ProjectColors.lookup(@shortLabel(), @palette()) or options.stroke?()?.color or 'black'
     
     width: @computedRequires 'model.options', (options) ->
         options.stroke?()?.width?() or 3
@@ -132,10 +132,4 @@ class exports.LineNode extends TimeseriesNode
     
     
     # TODO: Options:
-    # - color with palette lookup on line-group
     # - opacity
-    # - stroke-width
-    # - label with default == metric.defaultLabel
-    # - valueFormat, dateFormat
-    
-

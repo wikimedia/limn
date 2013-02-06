@@ -1,10 +1,8 @@
 _  = require 'underscore'
 ko = require 'knockout'
 
-{ GraphNodeData,
-} = require '../graph-node-data'
-{ GraphNode,
-} = require '../graph-node'
+{ SeriesNodeData, SeriesNode,
+} = require './series-node'
 { TimeseriesMetric,
 } = require '../../../data/metric'
 
@@ -15,7 +13,7 @@ Trait = require '../graph-node-trait'
  * @class
  * @extends GraphNodeData
  */
-class exports.TimeseriesNodeData extends GraphNodeData
+class exports.TimeseriesNodeData extends SeriesNodeData
     @registerType 'timeseries'
     
     defaults: ->
@@ -32,7 +30,7 @@ class exports.TimeseriesNodeData extends GraphNodeData
  * @class
  * @extends GraphNode
  */
-class exports.TimeseriesNode extends GraphNode
+class exports.TimeseriesNode extends SeriesNode
     @registerType 'timeseries'
     traits : [
         Trait.VIS_NODE
@@ -52,25 +50,3 @@ class exports.TimeseriesNode extends GraphNode
      */
     timeseriesData: @computedRequires 'model.metric', (metric) ->
         metric.data()
-    
-    
-    /**
-     * Label determined from the following, in order
-     *   options.label
-     *   metric.defaultLabel
-     *   '(no label)'
-     * @type ko.computed<String>
-     */
-    shortLabel: @computedRequires 'model.options', (options) ->
-        options.label?() or @model().metric()?.defaultLabel() or '(no label)'
-    
-    
-    /**
-     * Label determined from the following, in order
-     *   options.label
-     *   metric.defaultLongLabel
-     *   '(no label)'
-     * @type ko.computed<String>
-     */
-    label: @computedRequires 'model.options', (options) ->
-        options.label?() or @model().metric()?.defaultLongLabel() or '(no label)'

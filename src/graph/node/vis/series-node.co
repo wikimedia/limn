@@ -73,3 +73,10 @@ class exports.SeriesNode extends GraphNode
      */
     label: @computedRequires 'model.options', (options) ->
         options.label?() or @model().metric()?.defaultLongLabel() or '(no label)'
+    
+    
+    /**
+     * Palette using defaults
+     */
+    palette: @computedRequires 'model.options', (options) ->
+        options.get 'palette'
