@@ -237,6 +237,15 @@ application = limn.application =
                 log_level : LOG_LEVEL
         
         /**
+         * Set CORS header to allow access to our datafiles.
+         * TODO: path should be based on `opts.dataDir`?
+         */
+        @use '/data', (req, res, next) ->
+            if origin = req.header 'Origin'
+                res.header 'Access-Control-Allow-Origin', origin
+            next()
+        
+        /**
          * All environments: static files prior to applying routes and controllers.
          */
         @configure ->
@@ -294,7 +303,6 @@ application = limn.application =
                     res.send { error:String(err), partial_data:data }, 500
         
         @controller require './controllers/datasource'
-        
         
         # Proxy endpoint: /x
         if opts.proxy.enabled
