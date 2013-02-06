@@ -75,12 +75,12 @@ class exports.GeoFeatureNode extends GraphNode
         featureData = metric?.data()
         features    = @parent().features()
         return unless metric and featureData and features?[0]?.length
+        return unless dataById = metric.dataById()
         
         options   = @options()
         scaleType = options.get 'scale'
         throw Error "Unknown scale type '#scaleType'!" unless d3.scale[scaleType]
         
-        dataById  = metric.dataById()
         extent    = d3.extent _.pluck(featureData, 1)
         if scaleType is 'log'
             extent[0] = Math.max 1e-4, extent[0]

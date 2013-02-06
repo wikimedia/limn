@@ -1,7 +1,6 @@
 fieldset.controlGroup
-    //legend.accordion-toggle(data-toggle="collapse", data-target="form.form-horizontal") Add New Data Source
-    legend Add New Data Source
-    form.form-horizontal.collapse.in(data-bind="submit: newDataSource, with: blankDataSource")
+    legend.accordion-toggle(data-toggle="collapse", data-target="form.form-horizontal") Add New Data Source
+    form.form-horizontal.collapse(data-bind="submit: newDataSource, with: blankDataSource, css: { 'in': showAddForm, 'out': hideAddForm }")
         .control-group
             label.control-label(for="type") Type of File
             .controls
@@ -9,6 +8,17 @@ fieldset.controlGroup
                     option(value="timeseries") Timeseries
                     option(value="geojson") Geographical
                     option(value="series") Series
+        //
+            .control-group
+                label.control-label(for="format") Format of Data
+                .controls
+                    select(id="format", data-bind="value: format", required)
+                        option(value="csv") Comma Separated Values
+                        option(value="tsv") Tab Separated Values
+                        option(value="json") JSON
+                        option(value="jsonp") JSONp
+                        option(value="xml") XML
+                        option(value="log") Custom format, gets Pre-Parsed
         .control-group
             label.control-label(for="url") Datafile URL
             .controls
@@ -25,12 +35,15 @@ fieldset.controlGroup
             label.control-label(for="shortName") Short Name
             .controls
                 input(type="text", id="shortName", placeholder="short name", data-bind="value: shortName")
-        .control-group(data-bind="if: columns().length > 0")
+        .control-group
             h4 Metrics in Datafile
             a.btn(data-bind="click: $parent.addMetric") Add Metric
             .control-group(data-bind="foreach: columns")
                 .controls.controls-row
                     span(data-bind="text: $index")
+                    // ko if: $parent.type() == 'geojson'
+                    input.span1(type="text", required, placeholder="id", data-bind="value: id")
+                    // /ko
                     input.span3(type="text", required, placeholder="column heading", data-bind="value: label")
                     input.span2(type="text", required, placeholder="data type (int, Date, float)", data-bind="value: type")
                     a.btn(data-bind="click: $parents[1].removeMetricFrom($parent)") Remove

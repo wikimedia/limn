@@ -40,6 +40,8 @@ class exports.DataSourceView extends View
                 @model(_.sortBy DataSource.getAllSources(), (d) -> d.name())
                 @$('.datasourceSearch').typeahead({source: @model().map -> it.name()})
             @blankDataSource = ko.observable()
+            @showAddForm = ko.computed ~> @blankDataSource?()?.url?()?.length > 0
+            @hideAddForm = ko.computed ~> not @showAddForm()
         
         @action action
         @message = ko.observable()
@@ -77,7 +79,18 @@ class exports.DataSourceView extends View
                     type = @getTypeFromExample dataset.data[0][i]
                     newColumn = new ColumnDef {label, type}
                     if dataset.type is 'geojson'
+                        label = 'unknown' unless label
+                        switch label
+                            case 'name'
+                                capitalizedLabel = 'Name'
+                                newColumn.type 'string'
+                            case 'id'
+                                capitalizedLabel = 'ID'
+                                newColumn.type 'string'
+                            default
+                                capitalizedLabel = label.charAt(0).toUpperCase() + label.slice(1)
                         newColumn.id label
+                        newColumn.label capitalizedLabel
                     @blankDataSource().columns.push newColumn
                 @message "Metrics detected, please verify"
             catch
