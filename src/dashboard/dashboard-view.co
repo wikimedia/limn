@@ -35,6 +35,10 @@ class exports.DashboardView extends View
         # Decorate properties we need to clean up with history tracking
         @tabs = @attributes.tabs = @tabs.history({ -includeInitial })
         @tabs.equalityComparer = compareIds
+        @tabs.subscribe ~>
+            if @tabs().length
+                @tabs()[0].el.subscribe ~>
+                    @$('div.graphs.tabbable nav li.tab-button:first a').click()
         
         if model instanceof Dashboard
             model.fetch()
@@ -46,12 +50,6 @@ class exports.DashboardView extends View
         @action action
         @model  model
         
-        # Fires when afterRender is called
-        @once 'render', ~>
-            @$el.on 'shown', '.graphs.tabbable .nav a[data-toggle="tab"]', ~>
-                _.invoke @tabs(), 'resize'
-        
-        @on 'render', @updateActiveTab, this
         @watching()
     
     
@@ -74,13 +72,7 @@ class exports.DashboardView extends View
     
     
     updateActiveTab: ->
-        # console.log "#this.updateActiveTab!"
-        tabnav = @$ '.graphs.tabbable .nav.subnav.nav-pills'
-        unless tabnav.find('li.tab-button.active').length
-            # tabnav.find('li.tab-button:first')
-            #     .addClass('active')
-            tabnav.find('li.tab-button:first a')
-                .click()
+        @everActivated true
     
     
     ### Navigation Between Graphs {{{

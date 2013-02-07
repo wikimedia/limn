@@ -12,7 +12,7 @@ section.dashboard
                     li: h3 Graphs
                     // ko foreach: { data:tabs, as:'tab' }
                     li.tab-button(data-bind="css: tab.tabButtonCss")
-                        a(data-toggle="tab", data-bind="attr: { href:'#' + tabId() + '-graphs-tab' }, text: tab.model().name")
+                        a(data-toggle="tab", data-bind="attr: { href:'#' + tabId() + '-graphs-tab' }, text: tab.model().name, click: $parent.updateActiveTab")
                     // /ko
             
             .tab-content(data-bind="foreach: { data:tabs, as:'tab' }")

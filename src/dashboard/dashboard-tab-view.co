@@ -13,7 +13,9 @@ class exports.DashboardTabView extends View
     
     (@dashboard, model) ->
         super model
-        @on 'render', ~> @dashboard.updateActiveTab()
+        @everActivated = ko.observable false
+        @okToShow = ko.computed ~> @everActivated()
+            .throttle 50
     
     
     defaults: ->
