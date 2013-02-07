@@ -61,7 +61,7 @@ class exports.CanvasNode extends ViewportNode
         @xScale = d3.time.scale().clamp(true)
         # ko.utils.observeFluentMethod @xScale, 'domain'
         
-        @yScale = if @scaling?() is 'linear' then d3.scale.linear() else d3.scale.log()
+        @yScale = if @scaling?() is 'log' then d3.scale.log() else d3.scale.linear()
         # ko.utils.observeFluentMethod @yScale, 'domain'
         
         @scaleShape = (shape) ~>
