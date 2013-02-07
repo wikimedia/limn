@@ -32,6 +32,13 @@ class exports.CanvasNodeData extends ViewportNodeData
     defaults: ->
         width    : 'auto'
         height   : 500
+        
+        # Override the data domain
+        xDomain  : null
+        yDomain  : null
+        
+        # Data domain padding, expressed as a fraction of the extents,
+        # but overriden by {x,y}Domain
         xPadding : 0
         yPadding : 0.1
     
@@ -136,33 +143,35 @@ class exports.CanvasNode extends ViewportNode
         _width   = @xScale.range()[1]
         _height  = @yScale.range()[0]
         
-        # Update each scale using metrics
+        # Update values and domains, applying overrides
         @xValues = _.flatten _.invoke metrics, 'dates'
-        xs = _.compact @xValues
-        return [] unless xs.length
-        xDomain = @applyPadding d3.extent(xs), @xPadding()
-        @xScale.domain xDomain
+        @yValues = _.flatten _.invoke metrics, 'values'
+        
+        xDomain = @xDomain()
+        unless _.isArray(xDomain) and xDomain.length > 1
+            xDomain = @applyPadding d3.extent(_.compact(@xValues)), @xPadding()
+        @xScale.domain xDomain if xDomain.length > 1
         
         width = @viewportWidth()
         @xScale.range [0, width]
         
-        xValid = xs.length and width > 0
+        xValid = xDomain.length and width > 0
         
-        @yValues = _.flatten _.invoke metrics, 'values'
-        ys = _.compact @yValues
-        return [] unless ys.length
-        yDomain = @applyPadding d3.extent(ys), @yPadding()
+        yDomain = @yDomain()
+        unless _.isArray(yDomain) and yDomain.length > 1
+            yDomain = @applyPadding d3.extent(_.compact(@yValues)), @yPadding()
         
         # FIXME: hack to render log-scales when some input values are <= 0
-        if @scaling?() is not 'linear'
-            if yDomain[0] < 1
-                yDomain[0] = 0.01
-        @yScale.domain yDomain
+        if yDomain.length > 1
+            if @scaling?() is not 'linear'
+                if yDomain[0] < 1
+                    yDomain[0] = 0.01
+            @yScale.domain yDomain
         
         height = @viewportHeight()
         @yScale.range [height, 0]
         
-        yValid = ys.length and height > 0
+        yValid = yDomain.length and height > 0
         
         
         # If anything changed, trigger a notification by setting the scales computed
