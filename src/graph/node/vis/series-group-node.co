@@ -1,0 +1,102 @@
+_  = require 'underscore'
+op = require 'operator'
+ko = require 'knockout'
+d3 = require 'd3'
+
+{ GroupNode, GroupNodeData,
+} = require '../group-node'
+
+Trait = require '../graph-node-trait'
+
+
+getX  = -> it[0]
+getY  = -> it[1]
+setY0 = (d, y0, y) -> d[2] = y0
+
+/**
+ * @class
+ * @extends GroupNodeData
+ */
+class exports.SeriesGroupNodeData extends GroupNodeData
+    @registerType 'series-group'
+    
+    defaults: ->
+        options :
+            palette             : 'wmf_projects'
+            scale               : 'log'                 # := log | linear
+            
+            # See: https://github.com/mbostock/d3/wiki/Stack-Layout
+            stack               : false                 # := true | false | object -- If bool, it becomes `options.stack.enabled`, and the defaults are:
+                # enabled       : false
+                # offset        : 'zero'                # := zero | expand | silhouette | wiggle
+                # order         : 'default'             # := default (input order) | reverse | inside-out
+            
+            # Some series group the visualized datapoints into bands of equal size, dividing up the range.
+            # These options control the number of visible bands and band padding.
+            # TODO: min/max visible bands
+            bands :
+                padding         : 0.2                   # fraction of the band used for inter-band padding
+                outerPadding    : null                  # fraction of a band subtracted from the total range. Defaults to `options.bands.padding`.
+            
+    
+    attributeTypes: ->
+        {}
+    
+    canonicalize: (data={}) ->
+        # Allow options.stack to be a bool, and use the defaults
+        enabled = data.options?.stack
+        if enabled!? or typeof enabled is 'boolean'
+            _.setNested data, 'options.stack', { enabled, offset:'zero', order:'default' }, {+ensure}
+        data
+    
+    
+    -> super ...
+    
+    
+
+
+
+/**
+ * @class
+ * @extends GroupNode
+ */
+class exports.SeriesGroupNode extends GroupNode
+    @registerType 'series-group'
+    traits : [
+        Trait.VIS_NODE
+        Trait.SVG
+    ]
+    
+    -> super ...
+    
+    
+    stack: @computed ->
+        return unless stackOpts = @options().stack()
+        return unless (children = @children()).length
+        return unless children
+            .map -> it.metric()?.data()
+            .reduce op.and, true # we don't use children.every() to ensure we visit every node
+        return unless stackOpts.enabled()
+        stack = d3.layout.stack()
+            .offset stackOpts.offset()
+            .order  stackOpts.order()
+            .values (node) -> node.metric().data()
+            .x      getX
+            .y      getY
+            .out    setY0
+        stack children
+        stack
+    
+    
+    xBands: @computed ->
+        return unless bandOpts = @options().bands()
+        return unless scales = @root().scalesIfValid()
+        
+        pad      = bandOpts.padding()
+        outerPad = bandOpts.outerPadding() ? pad
+        d3.scale.ordinal()
+            .domain @viewport().xValues
+            .rangeRoundBands scales.xScale.range(), pad, outerPad
+    
+    
+    

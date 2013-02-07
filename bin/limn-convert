@@ -1,0 +1,64 @@
+#!/usr/bin/env coco
+
+fs   = require 'fs'
+path = require 'path'
+Seq  = require 'seq'
+
+LIMN = path.dirname __dirname
+{ GraphJSONConverter,
+} = require "#LIMN/src/data/graph-json-converter"
+
+
+program = require 'optimist'
+    .usage 'Upgrade limn Graph metadata files.\n\nUsage: limn-convert [OPTIONS] [INFILE [OUTFILE]]'
+    .options 'h',
+        alias   : 'help'
+        type    : 'boolean'
+        desc    : 'Show this help.'
+    .options 'p',
+        alias   : 'pretty'
+        default : 4
+        desc    : '''
+                Pretty-print the result using this as the indent. If false or 0, pretty-printing 
+                is disabled; if a number, it represents spaces; finally, if a string, it 
+                becomes the literal indentation string. This follows JSON.stringify's space 
+                parameter.
+            '''
+    .options 'e',
+        alias   : 'encoding'
+        default : 'utf8'
+        desc    : 'File encoding for both input and output.'
+
+argv = program.argv
+if argv.help
+    program.showHelp()
+    process.exit 1
+
+[infile or '-', outfile or '-'] = argv._
+console.error "%s --> %s", infile, outfile
+
+Seq()
+    .seq ->
+        if infile is '-'
+            txt = ''
+            process.stdin.on 'data', -> txt += it
+            process.stdin.on 'end',  ~> @ok txt
+            process.stdin.setEncoding argv.encoding
+            return process.stdin.resume()
+        else
+            fs.readFile infile, argv.encoding, (err, txt) ~>
+                throw err if err
+                @ok txt
+    .seq (txt) ->
+        data = new GraphJSONConverter JSON.parse(txt) .canonicalize()
+        txt  = JSON.stringify data, null, if argv.pretty then argv.pretty else null
+        @ok "#txt\n"
+    .seq (txt) ->
+        if outfile is '-'
+            process.stdout.write txt
+        else
+            fs.writeFileSync outfile, txt, argv.encoding
+    .seq ->
+        process.exit 0
+
+

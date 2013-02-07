@@ -4,8 +4,6 @@ d3 = require 'd3'
 
 { TimeseriesNode, TimeseriesNodeData,
 } = require './timeseries-node'
-{ TimeseriesMetric,
-} = require '../../../data/metric'
 
 Trait = require '../graph-node-trait'
 ProjectColors = require '../../project-colors'
@@ -27,7 +25,7 @@ class exports.LineNodeData extends TimeseriesNodeData
             noLegend    : false
     
     attributeTypes: ->
-        metric : TimeseriesMetric
+        {}
     
     -> super ...
 
@@ -86,7 +84,7 @@ class exports.LineNode extends TimeseriesNode
     
     color: @computedRequires 'model.options', (options) ->
         # FIXME: why is the color not converted into an observable?
-        ProjectColors.lookup(@shortLabel(), @palette()) or options.stroke?()?.color or 'black'
+        ProjectColors.lookup(@shortLabel(), options.get('palette')) or options.stroke?()?.color or 'black'
     
     width: @computedRequires 'model.options', (options) ->
         options.stroke?()?.width?() or 3
@@ -101,17 +99,18 @@ class exports.LineNode extends TimeseriesNode
     render: ->
         data = if @timeseriesData() then [that] else []
         
-        # create selection
+        return null unless data.length
+        return null unless model  = @model()
+        return null unless scales = @root().scalesIfValid()
+        
+        shape = @parent().get('options.shape') or 'line'
+        color = @color()
+        
         line = @selectAll 'path.metric-line' .data data
         
         # always exit() to remove existing nodes if data has changed and become invalid
         line.exit().remove()
         
-        return line unless data.length
-        return null unless model  = @model()
-        return null unless scales = @root().scales()
-        
-        shape = @parent().shape?()
         path = line.enter()
             .append 'path'
                 .classed 'metric-line',     true
@@ -119,17 +118,17 @@ class exports.LineNode extends TimeseriesNode
                 .style 'fill',              'none'
                 .style 'stroke-dasharray',  @dasharray()
                 .style 'stroke-width',      @width()
-                .style 'stroke',            @color()
+                .style 'stroke',            color
+        
         if shape is 'area'
             path
-                .style 'fill',              @color()
+                .style 'fill',              color
                 .style 'opacity',           0.4
         
         line.style 'visibility', if @disabled() then "hidden" else "visible"
         line.transition()
             .attr 'd', scales.scaleShape(shape)
+        
         line
     
     
-    # TODO: Options:
-    # - opacity

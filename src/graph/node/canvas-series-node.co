@@ -181,7 +181,7 @@ class exports.CanvasSeriesNode extends ViewportNode
         super ...
         
         @xScale = d3.scale.ordinal()
-        @yScale = if @scaling?() is 'linear' then d3.scale.linear() else d3.scale.log()
+        @yScale = if @scaling?() is 'log' then d3.scale.log() else d3.scale.linear()
         @scales { @xScale, @yScale, -xValid, -yValid }
     
     

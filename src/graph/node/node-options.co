@@ -1,3 +1,5 @@
+_ = require 'underscore'
+
 { Model,
 } = require '../../base'
 
@@ -141,6 +143,40 @@ class exports.NodeOptions extends Model
     
     
     # }}}
+    /* * * *  Rendering Helpers  * * * {{{ */
+    
+    
+    /**
+     * Applies options to their corresponding CSS style properties,
+     * appropriately mapping things like `stroke.color` to `stroke`,
+     * etc.
+     * 
+     * @param {d3.selection} sel Selection to style.
+     * @param {Array<String>|String} optKeys Option keys to apply.
+     * @returns {this}
+     */
+    applyStyles: (sel, optKeys) ->
+        optKeys = optKeys.split /\s+/g  if typeof optKeys is 'string'
+        optKeys = [optKeys]             unless _.isArray optKeys
+        return this unless sel and optKeys.length
+        
+        optKeys.forEach (opt) ~>
+            return unless (val = @get opt)?
+            
+            style = _.str.dasherize opt.replace /\./g, '-'
+            style = 'stroke' if style is 'stroke-color'
+            sel.style style, val
+        
+        this
+    
+    
+    applyStroke: (sel) -> @applyStyles sel, <[ stroke.width stroke.color stroke.opacity stroke.dashed ]>
+    applyFill: (sel) -> @applyStyles sel, <[ fill fillOpacity ]>
+    applyShapeStyles: (sel) -> @applyStroke sel .applyFill sel
+    
+    
+    # }}}
+    
     
     /**
      * @static

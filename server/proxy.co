@@ -32,7 +32,12 @@ ProxyMiddleware = (options={}) ->
         
         console.log "[Proxy] #targetUrl" if options.verbose
         request.get targetUrl
-            .on 'error', (error) -> res.send { error }
+            .on 'error', (ex) ->
+                if ex.syscall is 'getaddrinfo'
+                    error = 'Invalid or Unreachable URL'
+                else
+                    error = ex.message or ex.code
+                res.send { error }, 502
             .pipe res
 
 

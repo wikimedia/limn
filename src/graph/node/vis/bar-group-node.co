@@ -1,28 +1,37 @@
 _  = require 'underscore'
 ko = require 'knockout'
 
-{ GroupNode, GroupNodeData,
-} = require '../group-node'
+{ SeriesGroupNode, SeriesGroupNodeData,
+} = require './series-group-node'
 
 Trait = require '../graph-node-trait'
 
 
 /**
  * @class
- * @extends GraphNodeData
+ * @extends SeriesGroupData
  */
-class exports.BarGroupNodeData extends GroupNodeData
+class exports.BarGroupNodeData extends SeriesGroupNodeData
     @registerType 'bar-group'
     
     defaults: ->
         options :
             palette     : 'wmf_projects'
             scale       : 'log' # log | linear
-            stroke :
-                width   : 40
-                opacity : 1
+            
+            dateFormat  : 'MMM YYYY'
+            valueFormat : ',.2s'
+            
+            fill        : null              # := null (use palette) | rgb() color | hex color
+            fillOpacity : 1.0
+            
+            stroke      :
+                color   : null              # := null (use palette) | rgb() color | hex color
+                width   : 0
+                pattern : 'solid'
+                opacity : 1.0
     
-    attributeTypes: ->
+    attributeTypes: -> {}
     
     -> super ...
 
@@ -30,9 +39,9 @@ class exports.BarGroupNodeData extends GroupNodeData
 
 /**
  * @class
- * @extends GroupNode
+ * @extends SeriesGroupNode
  */
-class exports.BarGroupNode extends GroupNode
+class exports.BarGroupNode extends SeriesGroupNode
     @registerType 'bar-group'
     traits : [
         Trait.VIS_NODE

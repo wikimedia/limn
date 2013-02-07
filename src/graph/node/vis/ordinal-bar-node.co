@@ -1,0 +1,90 @@
+_  = require 'underscore'
+ko = require 'knockout'
+d3 = require 'd3'
+
+{ SeriesNode, SeriesNodeData,
+} = require './series-node'
+{ Metric,
+} = require '../../../data/metric'
+
+Trait = require '../graph-node-trait'
+ProjectColors = require '../../project-colors'
+
+
+
+/**
+ * @class
+ * @extends SeriesNodeData
+ */
+class exports.OrdinalBarNodeData extends SeriesNodeData
+    @registerType 'ordinal-bar'
+    
+    defaults: ->
+        options :
+            label    : null
+            color    : null
+            stroke   : null
+            noLegend : false
+    
+    attributeTypes: ->
+        metric : Metric
+    
+    -> super ...
+
+
+/**
+ * @class
+ * @extends SeriesNode
+ */
+class exports.OrdinalBarNode extends SeriesNode
+    @registerType 'ordinal-bar'
+    traits : [
+        Trait.VIS_NODE
+        Trait.REQUIRES_METRIC
+        Trait.METRIC_CONTENT_DATA
+        Trait.SVG
+        Trait.LEAF
+    ]
+    
+    -> super ...
+    
+    color: @computedRequires 'model.options', (options) ->
+        ProjectColors.lookup(@shortLabel(), @palette()) or options.stroke?()?.color or 'black'
+    
+    width: @computedRequires 'model.options', (options) ->
+        options.stroke?()?.width?() or 40
+    
+    /**
+     * Represent the data as the bar (SVG rectangle) height
+     * @type ko.computed<d3.selection.update>
+     */
+    render: ->
+        data = if @seriesData() then that[0] else []
+        
+        # create selection
+        bar = @selectAll 'rect.metric-bar' .data data
+        
+        # always exit() to remove existing nodes if data has changed and become invalid
+        bar.exit().remove()
+        
+        return bar unless data.length
+        return null unless model  = @model()
+        return null unless scales = @root().scales()
+        disabled = @disabled()
+        
+        bar.enter()
+            .append 'rect'
+                .classed 'metric-bar', true
+                .style 'fill', @color()
+                .style 'stroke', @color()
+                .attr 'width', @width()
+        bar.style 'visibility', if disabled then "hidden" else "visible"
+        bar.transition()
+            .attr 'height', (d) ->
+                if disabled
+                    0
+                else
+                    scales.yScale.range()[0] - scales.yScale d
+            .attr 'x', scales.xScale(@label()) - @width()/2
+            .attr 'y', scales.yScale
+        bar

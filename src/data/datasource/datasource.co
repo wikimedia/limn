@@ -88,7 +88,7 @@ class exports.DataSource extends StoredModel
      * @type ko.computed<Boolean>
      */
     isValid: @computed ->
-        !! @dataUrl() and @get('format') in @formatContentTypes
+        !!  @dataUrl() and @get('format') in @formatContentTypes
     
     
     /**
@@ -102,11 +102,13 @@ class exports.DataSource extends StoredModel
      * @type ko.computed<String>
      */
     dataUrl: @computedRequires 'url', (url) ->
+        return url unless url
         if url.indexOf('http') == 0
             # TODO: no need to stream this through proxy, use CORS instead
             url = "/x/#url"
-        cacheBuster = @generateRandom()
-        "#url?#cacheBuster"
+        else
+            cacheBuster = @generateRandom()
+            url = "#url?#cacheBuster"
     
     
     /**
@@ -137,10 +139,17 @@ class exports.DataSource extends StoredModel
     
     /**
      * Dataset class wrapping the data.
-     * @type ko.computed<Dataset>
+     * @type ko.computed<Class<Dataset>>
      */
     datasetType: @computedRequires 'type', (type) ->
         Dataset.lookupType type
+    
+    
+    /**
+     * The content-type of the datafile, as sent by the server; null before load.
+     * @type ko.observable<String>
+     */
+    dataContentType : ko.observable null
     
     
     /**
@@ -159,8 +168,12 @@ class exports.DataSource extends StoredModel
         
         promise = xhr.pipe (data) ~> new DatasetType this, data
         promise.then do
-            (data) ~> @trigger 'data-load',  this, data
-            (err)  ~> @trigger 'data-error', this
+            (data) ~>
+                @dataContentType xhr.getResponseHeader 'Content-Type'
+                @trigger 'data-load',  this, data
+            (err) ~>
+                @dataContentType null
+                @trigger 'data-error', this
         promise.xhr = xhr
         
         promise
