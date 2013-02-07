@@ -44,7 +44,7 @@ export IS_DEV   = not (IS_PROD or IS_TEST)
  */
 export MODULES =
     browserify: <[
-            underscore underscore.nested underscore.kv underscore.deferred
+            underscore underscore.nested underscore.kv
             operator seq timeseries emitters events
         ]>
     

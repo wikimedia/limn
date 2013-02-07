@@ -19,16 +19,12 @@ dependencies                    :
     'underscore.string'         : '== 2.1.1'
     'underscore.nested'         : '== 0.1.x'
     'underscore.kv'             : '== 0.1.x'
-    'underscore.deferred'       : '== 0.2.x'
     
     'operator'                  : '== 0.1.x'
     'emitters'                  : '== 0.1.x'
     'seq'                       : '== 0.3.5'
     'lru-cache'                 : '== 2.2.2'
-    'async-cache'               : '== 0.0.2'
     'moment'                    : '== 1.7.2'
-    
-    'd3'                        : '== 3.0.x'
     'timeseries'                : '== 0.1.x'
     
     'express'                   : '== 2.5.11'
