@@ -101,35 +101,59 @@ class exports.LineNode extends TimeseriesNode
     render: ->
         data = if @timeseriesData() then [that] else []
         
-        # create selection
-        line = @selectAll 'path.metric-line' .data data
-        
-        # always exit() to remove existing nodes if data has changed and become invalid
-        line.exit().remove()
-        
-        return line unless data.length
+        return null unless data.length
         return null unless model  = @model()
         return null unless scales = @root().scales()
         
-        shape = @parent().shape?()
-        path = line.enter()
-            .append 'path'
-                .classed 'metric-line',     true
-                .attr  'vector-effect',     'non-scaling-stroke'
-                .style 'fill',              'none'
-                .style 'stroke-dasharray',  @dasharray()
-                .style 'stroke-width',      @width()
-                .style 'stroke',            @color()
-        if shape is 'area'
-            path
-                .style 'fill',              @color()
-                .style 'opacity',           0.4
+        shape = @parent().options?().shape?() or 'line'
+        color = @color()
         
-        line.style 'visibility', if @disabled() then "hidden" else "visible"
-        line.transition()
-            .attr 'd', scales.scaleShape(shape)
-        line
-    
-    
-    # TODO: Options:
-    # - opacity
+        if shape is 'bar'
+            data = data[0]
+            bar = @selectAll 'rect.metric-bar' .data data
+            
+            # always exit() to remove existing nodes if data has changed and become invalid
+            bar.exit().remove()
+            
+            yScale = @root().scales().yScale
+            yRange = yScale.range()
+            
+            xScale = @root().scales().xScale
+            xRange = xScale.range()
+            width = Math.floor((xRange[1] - xRange[0]) / data.length * 0.5)
+            offset = width / 2
+            
+            rect = bar.enter()
+                .append 'rect'
+                    .classed 'metricBar', true
+                    .attr 'y', (d) -> yScale(d[1])
+                    .attr 'x', (d, i) -> xScale(d[0]) - offset
+                    .attr 'width', width
+                    .attr 'height', (d) -> yRange[0] - yScale(d[1])
+                    .style 'stroke', color
+                    .style 'fill', color
+            bar
+        
+        else if shape is 'line' or shape is 'area'
+            line = @selectAll 'path.metric-line' .data data
+            
+            # always exit() to remove existing nodes if data has changed and become invalid
+            line.exit().remove()
+            
+            path = line.enter()
+                .append 'path'
+                    .classed 'metric-line',     true
+                    .attr  'vector-effect',     'non-scaling-stroke'
+                    .style 'fill',              'none'
+                    .style 'stroke-dasharray',  @dasharray()
+                    .style 'stroke-width',      @width()
+                    .style 'stroke',            color
+            if shape is 'area'
+                path
+                    .style 'fill',              color
+                    .style 'opacity',           0.4
+            
+            line.style 'visibility', if @disabled() then "hidden" else "visible"
+            line.transition()
+                .attr 'd', scales.scaleShape(shape)
+            line
