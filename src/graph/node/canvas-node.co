@@ -30,8 +30,10 @@ class exports.CanvasNodeData extends ViewportNodeData
     @registerType 'canvas'
     
     defaults: ->
-        width  : 'auto'
-        height : 500
+        width    : 'auto'
+        height   : 500
+        xPadding : 0
+        yPadding : 0.1
     
     attributeTypes: ->
     
@@ -135,9 +137,10 @@ class exports.CanvasNode extends ViewportNode
         _height  = @yScale.range()[0]
         
         # Update each scale using metrics
-        xs = _.compact _.flatten _.invoke metrics, 'dates'
+        @xValues = _.flatten _.invoke metrics, 'dates'
+        xs = _.compact @xValues
         return [] unless xs.length
-        xDomain = d3.extent xs
+        xDomain = @applyPadding d3.extent(xs), @xPadding()
         @xScale.domain xDomain
         
         width = @viewportWidth()
@@ -145,9 +148,10 @@ class exports.CanvasNode extends ViewportNode
         
         xValid = xs.length and width > 0
         
-        ys = _.compact _.flatten _.invoke metrics, 'values'
+        @yValues = _.flatten _.invoke metrics, 'values'
+        ys = _.compact @yValues
         return [] unless ys.length
-        yDomain = @applyPadding d3.extent ys
+        yDomain = @applyPadding d3.extent(ys), @yPadding()
         
         # FIXME: hack to render log-scales when some input values are <= 0
         if @scaling?() is not 'linear'
@@ -164,7 +168,7 @@ class exports.CanvasNode extends ViewportNode
         # If anything changed, trigger a notification by setting the scales computed
         unless  width  is _width  and tuplesEqual(xDomain, _xDomain) and
                 height is _height and tuplesEqual(yDomain, _yDomain)
-            @scales { @xScale, @yScale, @scaleShape, xValid, yValid }
+            @scales { xValid, yValid, @xScale, @yScale, @scaleShape }
         
         metrics
     
@@ -196,17 +200,12 @@ class exports.CanvasNode extends ViewportNode
             isFinite @yScale val
     
     
-    /**
-     * Percentage (expressed as a fraction) to expand the extrema of the y-scale.
-     * @type Number
-     */
-    padding : 0.1
-    
-    
-    applyPadding: ([min, max]) ->
-        min -= min * @padding
-        max += max * @padding
-        [min, max]
+    applyPadding: (ext, p) ->
+        isDate     = ext.map -> it instanceof Date
+        [min, max] = ext.map toNumeric
+        min -= min * p
+        max += max * p
+        [min, max].map (v, i) -> if isDate[i] then new Date(v) else v
     
     
     logDomains: ->

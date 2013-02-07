@@ -4,8 +4,6 @@ d3 = require 'd3'
 
 { TimeseriesNode, TimeseriesNodeData,
 } = require './timeseries-node'
-{ TimeseriesMetric,
-} = require '../../../data/metric'
 
 Trait = require '../graph-node-trait'
 ProjectColors = require '../../project-colors'
@@ -27,7 +25,7 @@ class exports.LineNodeData extends TimeseriesNodeData
             noLegend    : false
     
     attributeTypes: ->
-        metric : TimeseriesMetric
+        {}
     
     -> super ...
 
@@ -86,7 +84,7 @@ class exports.LineNode extends TimeseriesNode
     
     color: @computedRequires 'model.options', (options) ->
         # FIXME: why is the color not converted into an observable?
-        ProjectColors.lookup(@shortLabel(), @palette()) or options.stroke?()?.color or 'black'
+        ProjectColors.lookup(@shortLabel(), options.get('palette')) or options.stroke?()?.color or 'black'
     
     width: @computedRequires 'model.options', (options) ->
         options.stroke?()?.width?() or 3
@@ -103,57 +101,34 @@ class exports.LineNode extends TimeseriesNode
         
         return null unless data.length
         return null unless model  = @model()
-        return null unless scales = @root().scales()
+        return null unless scales = @root().scalesIfValid()
         
-        shape = @parent().options?().shape?() or 'line'
+        shape = @parent().get('options.shape') or 'line'
         color = @color()
         
-        if shape is 'bar'
-            data = data[0]
-            bar = @selectAll 'rect.metric-bar' .data data
-            
-            # always exit() to remove existing nodes if data has changed and become invalid
-            bar.exit().remove()
-            
-            yScale = @root().scales().yScale
-            yRange = yScale.range()
-            
-            xScale = @root().scales().xScale
-            xRange = xScale.range()
-            width = Math.floor((xRange[1] - xRange[0]) / data.length * 0.5)
-            offset = width / 2
-            
-            rect = bar.enter()
-                .append 'rect'
-                    .classed 'metricBar', true
-                    .attr 'y', (d) -> yScale(d[1])
-                    .attr 'x', (d, i) -> xScale(d[0]) - offset
-                    .attr 'width', width
-                    .attr 'height', (d) -> yRange[0] - yScale(d[1])
-                    .style 'stroke', color
-                    .style 'fill', color
-            bar
+        line = @selectAll 'path.metric-line' .data data
         
-        else if shape is 'line' or shape is 'area'
-            line = @selectAll 'path.metric-line' .data data
-            
-            # always exit() to remove existing nodes if data has changed and become invalid
-            line.exit().remove()
-            
-            path = line.enter()
-                .append 'path'
-                    .classed 'metric-line',     true
-                    .attr  'vector-effect',     'non-scaling-stroke'
-                    .style 'fill',              'none'
-                    .style 'stroke-dasharray',  @dasharray()
-                    .style 'stroke-width',      @width()
-                    .style 'stroke',            color
-            if shape is 'area'
-                path
-                    .style 'fill',              color
-                    .style 'opacity',           0.4
-            
-            line.style 'visibility', if @disabled() then "hidden" else "visible"
-            line.transition()
-                .attr 'd', scales.scaleShape(shape)
-            line
+        # always exit() to remove existing nodes if data has changed and become invalid
+        line.exit().remove()
+        
+        path = line.enter()
+            .append 'path'
+                .classed 'metric-line',     true
+                .attr  'vector-effect',     'non-scaling-stroke'
+                .style 'fill',              'none'
+                .style 'stroke-dasharray',  @dasharray()
+                .style 'stroke-width',      @width()
+                .style 'stroke',            color
+        
+        if shape is 'area'
+            path
+                .style 'fill',              color
+                .style 'opacity',           0.4
+        
+        line.style 'visibility', if @disabled() then "hidden" else "visible"
+        line.transition()
+            .attr 'd', scales.scaleShape(shape)
+        
+        line
+    
+    
