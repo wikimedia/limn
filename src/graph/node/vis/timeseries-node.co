@@ -11,7 +11,7 @@ Trait = require '../graph-node-trait'
 
 /**
  * @class
- * @extends GraphNodeData
+ * @extends SeriesNodeData
  */
 class exports.TimeseriesNodeData extends SeriesNodeData
     @registerType 'timeseries'
@@ -28,7 +28,7 @@ class exports.TimeseriesNodeData extends SeriesNodeData
 
 /**
  * @class
- * @extends GraphNode
+ * @extends SeriesNode
  */
 class exports.TimeseriesNode extends SeriesNode
     @registerType 'timeseries'

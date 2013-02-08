@@ -103,3 +103,9 @@ class exports.Metric extends Model
      */
     defaultLongLabel : @computedRequires 'defaultLabel', (defaultLabel) ->
         "#{@source().name()}, #defaultLabel"
+    
+    
+    toString: ->
+        className = @..displayName or @..name
+        "#className(source_id=#{@source_id.peek()}, source_col=#{@source_col.peek()})"
+    

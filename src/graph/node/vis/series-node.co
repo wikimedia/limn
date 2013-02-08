@@ -9,6 +9,7 @@ ko = require 'knockout'
 } = require '../../../data/metric'
 
 Trait = require '../graph-node-trait'
+ProjectColors = require '../../project-colors'
 
 
 /**
@@ -80,3 +81,12 @@ class exports.SeriesNode extends GraphNode
      */
     palette: @computedRequires 'model.options', (options) ->
         options.get 'palette'
+    
+    
+    /**
+     * @type ko.computed<String := hex color | rgb() color>
+     */
+    paletteColor: @computedRequires 'model.options', (options) ->
+        ProjectColors.lookup(@shortLabel(), options.get('palette'))
+    
+    

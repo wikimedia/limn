@@ -1,0 +1,94 @@
+# { SeriesNodeData, SeriesNode,
+# } = require './series-node'
+{ TimeseriesNode, TimeseriesNodeData,
+} = require './timeseries-node'
+
+Trait = require '../graph-node-trait'
+
+datumValid = -> it.every isFinite
+validOr    = (v, def) -> if isFinite(+v) then v else def
+
+/**
+ * @class
+ * @extends TimeseriesNodeData
+ */
+class exports.ScatterplotNodeData extends TimeseriesNodeData
+    @registerType 'scatterplot'
+    
+    defaults: ->
+        options        : 
+            label      : null
+            noLegend   : false
+            stroke     : 
+                width  : 0
+            radius     : 5.0
+            # TODO: Marker shape customization
+            # shape      : 
+            #     type    : 'circle'     # := circle | rect | ellipse
+            #     radius  : 5.0          # valid for `options.shape.type="circle"` only
+            #     xRadius : 2.5          # valid for `options.shape.type="ellipse"` only
+            #     yRadius : 2.5          # valid for `options.shape.type="ellipse"` only
+            #     width   : 10.0         # valid for `options.shape.type="rect"` only
+            #     height  : 10.0         # valid for `options.shape.type="rect"` only
+        
+    
+    attributeTypes: -> {}
+    
+    
+    -> super ...
+
+
+
+/**
+ * @class
+ * @extends TimeseriesNode
+ */
+class exports.ScatterplotNode extends TimeseriesNode
+    @registerType 'scatterplot'
+    traits : [
+        Trait.VIS_NODE
+        Trait.REQUIRES_METRIC
+        Trait.METRIC_CONTENT_DATA
+        Trait.SVG
+        Trait.LEAF
+    ]
+    
+    -> super ...
+    
+    fillColor: @computedRequires 'model.options', (options) ->
+        options.fill?() or @paletteColor() or 'black'
+    
+    strokeColor: @computedRequires 'model.options', (options) ->
+        options.stroke?()?.color or @paletteColor() or 'black'
+    
+    color: @computed -> @fillColor()
+    
+    
+    render: ->
+        return unless (data = @seriesData()).length
+        return unless scales = @root().scalesIfValid()
+        return unless options = @model().options()
+        data = data.filter datumValid
+        disabled = @disabled()
+        
+        point = @selectAll 'circle.metric-point' .data data
+        point.exit().remove()
+        circle = point.enter()
+            .append 'circle'
+                .classed    'metric-point'  ,       true
+                .attr       'vector-effect' ,       'non-scaling-stroke'
+                .attr       'r'             ,       options.get 'radius'
+                .style do
+                            stroke          :       @strokeColor()
+                            fill            :       @fillColor()
+                            visibility      :       if disabled then 'hidden' else 'visible'
+        
+        options.applyStyles circle, <[ fillOpacity stroke.width stroke.opacity stroke.dashed ]>
+        
+        {yScale, xScale} = scales
+        point.transition()
+            .attr 'cx', ([x,y]) -> xScale(x)
+            .attr 'cy', ([x,y]) -> yScale(y)
+        
+        point
+    
