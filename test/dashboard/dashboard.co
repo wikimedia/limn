@@ -8,13 +8,13 @@ QUnit.module '[dashboard] Dashboard', do
     teardown: ->
 
 asyncTest 'fetch', ->
-    dashboard = new Dashboard id: 'reportcard'
+    dashboard = new Dashboard id: 'sample'
     dashboard.fetch().done ->
         start()
         ok dashboard.headline().length > 0, 'The dashboard headline was loaded'
 
 asyncTest 'fetch tabs and graphs', ->
-    dashboard = new Dashboard id: 'reportcard'
+    dashboard = new Dashboard id: 'sample'
     initialFetch = ''
     dashboard.fetch().done ->
         ok dashboard.tabs().length > 0, 'The tabs were loaded'
