@@ -30,7 +30,7 @@ class exports.StoredModel extends Model
     
     
     link: @computed ->
-        "#{@resourceURLRoot()}#{@resource}/#{@slug()}"
+        "#{@resourceURLRoot()}#{@resource}/#{@slug() or @id()}"
     
     
     toString: ->
