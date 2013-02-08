@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # clone the reportcard-data project
-git clone https://gerrit.wikimedia.org/r/p/analytics/reportcard/data.git ../reportcard-data
-coke -d ../../../../reportcard-data -t rc
+git clone git://github.com/wikimedia/limn-data.git ../limn-data
+coke -d ../../../../limn-data -t example
 
 # starts the server, gives it a sec to fire up, runs that file I linked with phantomjs, then cleans up the server process
 export LIMN_PORT=8081
