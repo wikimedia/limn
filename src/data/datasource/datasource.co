@@ -200,6 +200,7 @@ class exports.DataSource extends StoredModel
                     {id, index: idx, label, type or 'int'}
                 else
                     col.type or= 'int'
+                    col.index or= idx
                     col
         else
             cols = _.merge { ids:[], types:[] }, cols
