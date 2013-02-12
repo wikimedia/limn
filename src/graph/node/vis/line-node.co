@@ -49,10 +49,12 @@ class exports.LineNode extends TimeseriesNode
     
     ->
         super ...
+        @tooManyDataPoints = ko.observable false
         @trackHover()
     
     
     trackHover: @computed ->
+        return if @tooManyDataPoints()
         return unless cursor = @root().cursor()
         return unless @model().metric()?.data()?.length
         return unless @sel
@@ -107,6 +109,11 @@ class exports.LineNode extends TimeseriesNode
         color = @color()
         
         line = @selectAll 'path.metric-line' .data data
+        
+        # optimization: if there are more data points than pixels in the range,
+        # set a flag and use it to do things like not show tracking circles
+        xRange = scales.xScale.range()
+        @tooManyDataPoints data[0].length > Math.abs(xRange[0] - xRange[1])
         
         # always exit() to remove existing nodes if data has changed and become invalid
         line.exit().remove()
