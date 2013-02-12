@@ -89,7 +89,7 @@ class exports.LineNode extends TimeseriesNode
         ProjectColors.lookup(@shortLabel(), options.get('palette')) or options.stroke?()?.color or 'black'
     
     width: @computedRequires 'model.options', (options) ->
-        options.stroke?()?.width?() or 3
+        options.stroke?()?.width?() or 1
     
     dasharray: @computedRequires 'model.options', (options) ->
         options.stroke?()?.dashed?() or 'none'
@@ -113,7 +113,7 @@ class exports.LineNode extends TimeseriesNode
         # optimization: if there are more data points than pixels in the range,
         # set a flag and use it to do things like not show tracking circles
         xRange = scales.xScale.range()
-        @tooManyDataPoints data[0].length > Math.abs(xRange[0] - xRange[1])
+        @tooManyDataPoints data[0].length > (2 * Math.abs(xRange[0] - xRange[1]))
         
         # always exit() to remove existing nodes if data has changed and become invalid
         line.exit().remove()
