@@ -110,7 +110,10 @@ class exports.LineNode extends TimeseriesNode
         return null unless model  = @model()
         return null unless scales = @root().scalesIfValid()
         
-        shape = @parent().get('options.shape') or 'line'
+        # TODO: do not use features before they are implemented
+        # dot separated options do not work
+        # shape = @parent().get('options.shape') or 'line'
+        shape = @parent().options().shape?() or 'line'
         color = @color()
         
         line = @selectAll 'path.metric-line' .data data
