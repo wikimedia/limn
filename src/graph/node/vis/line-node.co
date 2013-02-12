@@ -19,6 +19,7 @@ class exports.LineNodeData extends TimeseriesNodeData
     
     defaults: ->
         options :
+            disabled    : false
             label       : null
             color       : null
             stroke      : null
@@ -89,10 +90,14 @@ class exports.LineNode extends TimeseriesNode
         ProjectColors.lookup(@shortLabel(), options.get('palette')) or options.stroke?()?.color or 'black'
     
     width: @computedRequires 'model.options', (options) ->
-        options.stroke?()?.width?() or 1
+        stroke = options.get 'stroke'
+        stroke.width?() or 3
     
     dasharray: @computedRequires 'model.options', (options) ->
         options.stroke?()?.dashed?() or 'none'
+    
+    disabled: @computedRequires 'model.options', (options) ->
+        options.disabled?() or false
     
     /**
      * Update selection representing the SVG path element for the line.

@@ -204,6 +204,8 @@ class exports.DataSourceView extends View
                         root:
                             nodeType: nodeType
                             scaling: 'linear'
+                            width: 900
+                            height: 350
                             children: [
                                 {nodeType: 'axis', options: {dimension: 'x', orient: 'bottom'}}
                                 {nodeType: 'axis', options: {dimension: 'y', orient: 'left'}}

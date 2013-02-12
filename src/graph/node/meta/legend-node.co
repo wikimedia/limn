@@ -86,12 +86,6 @@ class exports.LegendNode extends GraphNode
         el = super ...
         $ parentElement .prepend el
         @renderView el
-        
-        # handle toggling of legend entries
-        $('li.legend-entry', @$el).on 'click', ->
-            node = ko.dataFor(this).node
-            node.disabled(!node.disabled())
-            $(this).css('opacity', if node.disabled() then 0.3 else 1)
     
     
     nodes: @computed ->
@@ -101,7 +95,7 @@ class exports.LegendNode extends GraphNode
     entries: @computedRequires 'nodes', (nodes) ->
         nodes
             .filter (node) ->
-                not (node.get('disabled') or node.options()?.get('noLegend'))
+                not node.options()?.get('noLegend')
             .map (node) ~>
                 @lookupEntry node
     
@@ -145,6 +139,13 @@ class exports.LegendEntry extends AttributesBase implements formatters
         this.label = node.label
         @color = that if @node.color
         @legend.date.subscribe @trackLegendDate, this
+    
+    
+    /**
+     * handle toggling of legend entries, bound with knockout
+     */
+    toggle: ->
+        @node.options().set 'disabled', !@node.disabled()
     
     
     trackLegendDate: (newDate) ->
