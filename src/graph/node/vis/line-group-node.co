@@ -17,7 +17,6 @@ class exports.LineGroupNodeData extends SeriesGroupNodeData
     defaults: ->
         options :
             palette     : 'wmf_projects'
-            scale       : 'log' # log | linear
             
             dateFormat  : 'MMM YYYY'
             valueFormat : ',.2s'
