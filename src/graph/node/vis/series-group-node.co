@@ -23,7 +23,6 @@ class exports.SeriesGroupNodeData extends GroupNodeData
     defaults: ->
         options :
             palette             : 'wmf_projects'
-            scale               : 'log'                 # := log | linear
             
             # See: https://github.com/mbostock/d3/wiki/Stack-Layout
             stack               : false                 # := true | false | object -- If bool, it becomes `options.stack.enabled`, and the defaults are:
