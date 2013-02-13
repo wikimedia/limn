@@ -21,10 +21,11 @@ class exports.BarNodeData extends TimeseriesNodeData
     
     defaults: ->
         options :
-            label    : null
-            color    : null
-            stroke   : null
-            noLegend : false
+            disabled    : false
+            label       : null
+            color       : null
+            stroke      : null
+            noLegend    : false
     
     attributeTypes: ->
         {}
@@ -60,6 +61,8 @@ class exports.BarNode extends TimeseriesNode
     
     color: @computed -> @fillColor()
     
+    disabled: @computedRequires 'model.options', (options) ->
+        options.disabled?() or false
     
     /**
      * Represent the data as the bar (SVG rectangle) height
