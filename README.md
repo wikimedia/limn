@@ -21,9 +21,7 @@ Check out the [Feature Walkthrough][limn_features] for more info!
 
 There are a great many JavaScript graphing libraries, and Limn isn't one: if you're a programmer looking to stick some graphs on your site, you already have a ton of options (ps. use [d3.js][d3]).
 
-But what about your non-programmers? They don't have many options: they email somebody, maybe try some shoddy web tools, and eventually reach for Excel. Ew. Worse, the time and energy expended in getting a single chart is so great that they're seriously discouraged from playing around. In the age of big data, this is a big problem. Exploration is a huge component of success. You need to iterate. You need to be open to inspiration. If you think you know what you're looking for, you're probably wrong.
-
-This is the niche Limn aims to fill: a drop-in component that enables self-service visualizations for your team.
+But what about your non-programmers? They don't have many options: they email somebody, maybe try some shoddy web tools, and eventually reach for Excel. Ew. Worse, the time and energy expended in getting a single chart is so great that they're seriously discouraged from playing around. In the age of big data, this is a big problem. Exploration is a huge component of success. You need to iterate. You need to be open to inspiration. If you think you know what you're looking for, you're probably wrong.  This is the niche Limn aims to fill: a drop-in component that enables self-service visualizations for your team.
 
 The "drop-in" part is important: we want it to be easy for programmers to enable these features in existing applications with minimal changes. If you already have a datasource that provides data in CSV or JSON format (be it files on disk or a REST API) you're mostly good to go. Limn can run entirely as a client-side application simply by including `limn.js`, or as [node.js][nodejs] middleware using either [Connect][connect] or [Express][express], in which case graphs can be persisted on disk. The only real work is to [configure Limn to know about your datasources][limn_datasource], though in the future we aim for the client to be able introspect this information from the data.
 
@@ -42,6 +40,24 @@ Excited? Here are some good places to go from here:
  - Finally, if you're interested in hacking on Limn (&hearts;!), check out the notes on [Contributing][limn_contributing] and on [Project Internals][limn_internals].
 
 
+## Install
+
+The fastest way to get Limn up and running:
+
+ * On Mac or Linux, make sure you have [nodejs][nodejs] and [npm][npm] installed
+
+```
+git clone git@github.com:wikimedia/limn.git
+npm install
+npm update
+npm i -g coco
+npm start
+```
+
+ * Configure one or more of the following data repositories:
+ * [Limn Example Data][limn_data]
+ * [Limn Editor Engagement Data][limn_editor_engagement]
+
 ## Feedback
 
 Limn is made with love by [the Wikimedia Foundation's Analytics team][wmf_analytics], and [we'd love to hear from you][dsc_email], whether it's because you found a bug, have suggestions, or want to contribute! For mundane things, open a ticket (or fork the project!) on [GitHub][limn]. You can also send Dave a charming email at [dsc@wikimedia.org][dsc_email].
@@ -54,6 +70,7 @@ Limn is open-source software, freely available under the MIT License.
 
 
 [limn]: https://github.com/wikimedia/limn "Limn on GitHub"
+[limn_git]: git@github.com:wikimedia/limn.git "Limn on GitHub git repository"
 [limn_sample_graph]: http://reportcard.wmflabs.org/graphs/sample_graph/edit "Limn Sample Graph"
 [limn_screenshot]: https://raw.github.com/wikimedia/limn/master/static/img/limn-screenshot.png "Limn Screenshot"
 [limn_issues]: https://github.com/wikimedia/limn/issues
@@ -65,6 +82,8 @@ Limn is open-source software, freely available under the MIT License.
 [limn_internals]: https://github.com/wikimedia/limn/wiki/Internals "Limn Internals"
 [limn_middleware]: https://github.com/wikimedia/limn/wiki/Middleware "Using Limn Middleware"
 [limn_datasource]: https://github.com/wikimedia/limn/wiki/Datasource-Metadata "Describing DataSources"
+[limn_data]: https://github.com/wikimedia/limn-data "Limn Example Data"
+[limn_editor_engagement]: https://github.com/wikimedia/limn-editor-engagement "Limn Editor Engagement Data"
 [develop_branch]: https://github.com/wikimedia/limn/tree/develop
 [dsc_email]: mailto:dsc@wikimedia.org "dsc@wikimedia.org"
 
