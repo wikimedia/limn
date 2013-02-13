@@ -44,7 +44,7 @@ Excited? Here are some good places to go from here:
 
 The fastest way to get Limn up and running:
 
- * On Mac or Linux, make sure you have [node][node] and [npm][npm] installed
+ * On Mac or Linux, make sure you have [nodejs][nodejs] and [npm][npm] installed
 
 ```
 git clone git@github.com:wikimedia/limn.git
