@@ -27,5 +27,11 @@ or, if you already did this, update the submodules
 
     git submodule foreach git pull
   
+Now you have to sync the git log with the debian changelog (TODO: add all needed params)
 
+    ./git2deblogs.pl --generate
+
+and finally build the package
+    
+    dpkg-buildpackage
 
