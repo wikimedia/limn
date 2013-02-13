@@ -151,7 +151,7 @@ class exports.CanvasNode extends ViewportNode
         xDomain = @xDomain()
         unless _.isArray(xDomain) and xDomain.length > 1
             xDomain = @applyPadding d3.extent(_.compact(@xValues)), @xPadding()
-        return unless xDomain.length and xDomain[0] and xDomain[1]
+        return unless xDomain.length and isFinite xDomain[0] and isFinite xDomain[1]
         @xScale.domain xDomain
         
         width = @viewportWidth()
@@ -162,7 +162,7 @@ class exports.CanvasNode extends ViewportNode
         yDomain = @yDomain()
         unless _.isArray(yDomain) and yDomain.length > 1
             yDomain = @applyPadding d3.extent(_.compact(@yValues)), @yPadding()
-        return unless yDomain.length and yDomain[0] and yDomain[1]
+        return unless yDomain.length and isFinite yDomain[0] and isFinite yDomain[1]
         
         # FIXME: hack to render log-scales when some input values are <= 0
         if @scaling?() is not 'linear'
