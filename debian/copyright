@@ -1,0 +1,8 @@
+Format: http://dep.debian.net/deps/dep5
+Upstream-Name: limn
+Source: https://github.com/wikimedia/limn
+
+Files: *
+Copyright: 2012-2013 Wikimedia Foundation
+License: Apache 2.0
+  TODO
