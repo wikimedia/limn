@@ -10,14 +10,10 @@ Second, add these two lines to your /etc/apt/sources.list
 
 Third, update packages list and install nodejs and npm
 
-    sudo aptitude update
-    sudo aptitude install nodejs npm
+    sudo apt-get update
+    sudo apt-get install nodejs npm
 
 ## Creating the debian package
-  
-Switch to the debianization branch in limn:
-
-    git checkout debianization
 
 Let git pull the debianize submodule for you
 
@@ -26,10 +22,13 @@ Let git pull the debianize submodule for you
   
 or, if you already did this, update the submodules
 
-    git submodule foreach git pull
+    git submodule foreach git pull origin master
   
 Now you have to sync the git log with the debian changelog (TODO: add all needed params)
 
+    sudo apt-get install libjson-xs-perl
+    sudo apt-get install devscripts
+    ln -s ./debianize/git2deblogs.pl
     ./git2deblogs.pl --generate
 
 now delete your old package data if you had one like this:
@@ -38,6 +37,7 @@ now delete your old package data if you had one like this:
 
 and finally build the package
     
+    sudo apt-get install debhelper
     dpkg-buildpackage
 
 It will take a while ( 43 seconds on a i5 3.2GHz ).
