@@ -59,10 +59,7 @@ if require.main is module or 'Cokefile' is mainfile
     NODE_ENV  = process.env.NODE_ENV or 'development'
     
     REV = process.env.LIMN_REV or 'HEAD'
-    try REV = require '../version' catch e
-    err, stdout, stderr <- exec 'git rev-parse --short HEAD', {cwd:process.cwd(), env:process.env}
-    throw err if err
-    REV = stdout.trim! unless REV
+    try REV = require '../src/version' catch e
     
     console.log s = "Limn Server (port=#PORT, env=#NODE_ENV, rev=#REV)"
     console.log '=' * s.length
