@@ -1,0 +1,17 @@
+Source: limn
+Section: science
+Maintainer: Stefan Petrea <stefan@garage-coding.com>
+Uploaders: Diederik van Liere <dvanliere@wikimedia.org>, Dan Andreescu <dandreescu@wikimedia.org>
+Build-Depends: debhelper (>= 7.0.50~), nodejs (>= 0.8.19), npm (>= 1.2.9)
+Standards-Version: 3.8.4
+Vcs-Git: git://github.com/wikimedia/limn.git
+Homepage: http://github.com/wikimedia
+Priority: optional
+
+
+Package: limn
+Priority: optional
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, nodejs (>= 0.8.19)
+Suggests: file
+Description: Limn - TODO: add details
