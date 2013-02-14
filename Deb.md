@@ -21,7 +21,8 @@ Switch to the debianization branch in limn:
 
 Let git pull the debianize submodule for you
 
-    git submodule --init
+    git submodule init
+    git submodule update
   
 or, if you already did this, update the submodules
 
@@ -31,7 +32,17 @@ Now you have to sync the git log with the debian changelog (TODO: add all needed
 
     ./git2deblogs.pl --generate
 
+now delete your old package data if you had one like this:
+
+    rm -rf ../limn_0*.dsc ../limn_0*.changes ../limn_0*deb ../limn_0*.tar.gz
+
 and finally build the package
     
     dpkg-buildpackage
+
+It will take a while ( 43 seconds on a i5 3.2GHz ).
+
+Now after you finished building the package you can check the package contents with:
+
+    dpkg -c ../limn*.deb 
 

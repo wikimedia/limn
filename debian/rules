@@ -9,7 +9,8 @@
 # Uncomment this to turn on verbose mode.
 export DH_VERBOSE=1
 
-export DESTDIR=$(CURDIR)/debian/tmp
+export BASEDIR="$(CURDIR)/debian/limn"
+export SRVLIMN="$(BASEDIR)/srv/limn"
 
 %:
 	dh  $@
@@ -19,8 +20,17 @@ install: build
 	dh_testroot;
 	dh_prep;
 	dh_installdirs;
-	cp -r $(CURDIR)/bin $(DESTDIR)/bin
-	cp -r $(CURDIR)/var $(DESTDIR)/var
+	mkdir -p $(SRVLIMN);
+	mkdir -p $(BASEDIR)/usr/lib/limn/node_modules;
+	npm install;
+	npm update;
+	npm install coco;
+	coke build;
+	coke bundle;
+	cp -r $(CURDIR)/node_modules $(BASEDIR)/usr/lib/limn/node_modules/
+	cp -r $(CURDIR)/var          $(SRVLIMN)/var
+	cp -r $(CURDIR)/server 	     $(SRVLIMN)/server
+
 
 binary: build install
 
