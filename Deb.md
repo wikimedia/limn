@@ -13,6 +13,12 @@ Third, update packages list and install nodejs and npm
     sudo apt-get update
     sudo apt-get install nodejs npm
 
+## Install coco
+
+Coco is a compiler. It also comes with coke which is a build system, so you get both by installing this:
+    
+    sudo npm install -g coco
+
 ## Creating the debian package
 
 Let git pull the debianize submodule for you

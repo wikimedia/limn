@@ -41,4 +41,5 @@ static/vendor/browserify.js
 git2deblogs.pl
 debian/changelog
 debian/limn*
+!debian/limn.conf
 debian/files
