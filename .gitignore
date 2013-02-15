@@ -38,3 +38,7 @@ src/version.js
 www/presets/*.json
 
 static/vendor/browserify.js
+git2deblogs.pl
+debian/changelog
+debian/limn*
+debian/files
