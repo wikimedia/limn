@@ -37,4 +37,4 @@ tmp
 src/version.js
 www/presets/*.json
 
-
+static/vendor/browserify.js
