@@ -24,12 +24,19 @@ install: build
 	mkdir -p $(BASEDIR)/usr/lib/limn/node_modules;
 	npm install;
 	npm update;
-	npm install coco;
+	npm install -g coco;
 	coke build;
 	coke bundle;
-	cp -r $(CURDIR)/node_modules $(BASEDIR)/usr/lib/limn/node_modules/
-	cp -r $(CURDIR)/var          $(SRVLIMN)/var
-	cp -r $(CURDIR)/server 	     $(SRVLIMN)/server
+	cp -r $(CURDIR)/node_modules  $(BASEDIR)/usr/lib/limn/node_modules/
+	cp -r $(CURDIR)/server        $(SRVLIMN)/server
+	cp -r $(CURDIR)/src           $(SRVLIMN)/src
+	cp -r $(CURDIR)/test          $(SRVLIMN)/test
+	cp -r $(CURDIR)/var           $(SRVLIMN)/var
+	cp -r $(CURDIR)/views         $(SRVLIMN)/views
+	cp    $(CURDIR)/Cokefile      $(SRVLIMN)/Cokefile
+	cp    $(CURDIR)/sources.co    $(SRVLIMN)/sources.co
+	cp    $(CURDIR)/packages.co   $(SRVLIMN)/packages.co
+	cp    $(CURDIR)/packages.json $(SRVLIMN)/packages.json
 
 
 binary: build install
