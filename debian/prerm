@@ -3,7 +3,6 @@ if which update-python-modules >/dev/null 2>&1; then
 	update-python-modules -c  limn.private
 fi
 
-deluser limn
 
 
 # End automatically added section
