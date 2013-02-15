@@ -21,6 +21,7 @@ install: build
 	dh_testroot;
 	dh_prep;
 	dh_installdirs;
+	dh_installinit;
 	mkdir -p $(SRVLIMN);
 	npm install;
 	npm update;
