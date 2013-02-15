@@ -9,8 +9,9 @@
 # Uncomment this to turn on verbose mode.
 export DH_VERBOSE=1
 
-export BASEDIR="$(CURDIR)/debian/limn"
-export SRVLIMN="$(BASEDIR)/srv/limn"
+# things copied to BASEDIR will be copied to the root directory of the target machine on install
+export BASEDIR=$(CURDIR)/debian/limn
+export SRVLIMN=$(BASEDIR)/usr/lib/limn
 
 %:
 	dh  $@
@@ -21,13 +22,12 @@ install: build
 	dh_prep;
 	dh_installdirs;
 	mkdir -p $(SRVLIMN);
-	mkdir -p $(BASEDIR)/usr/lib/limn/node_modules;
 	npm install;
 	npm update;
 	npm install -g coco;
 	coke build;
 	coke bundle;
-	cp -r $(CURDIR)/node_modules  $(BASEDIR)/usr/lib/limn/node_modules/
+	cp -r $(CURDIR)/node_modules  $(SRVLIMN)/node_modules
 	cp -r $(CURDIR)/server        $(SRVLIMN)/server
 	cp -r $(CURDIR)/src           $(SRVLIMN)/src
 	cp -r $(CURDIR)/test          $(SRVLIMN)/test
@@ -35,8 +35,8 @@ install: build
 	cp -r $(CURDIR)/views         $(SRVLIMN)/views
 	cp    $(CURDIR)/Cokefile      $(SRVLIMN)/Cokefile
 	cp    $(CURDIR)/sources.co    $(SRVLIMN)/sources.co
-	cp    $(CURDIR)/packages.co   $(SRVLIMN)/packages.co
-	cp    $(CURDIR)/packages.json $(SRVLIMN)/packages.json
+	cp    $(CURDIR)/package.co    $(SRVLIMN)/package.co
+	cp    $(CURDIR)/package.json  $(SRVLIMN)/package.json
 
 
 binary: build install
