@@ -35,11 +35,12 @@ if require.main is module or 'Cokefile' is mainfile
     PORT = 8081
     PORT = parseInt(that, 10) if process.env.LIMN_PORT
     
-    NODE_ENV  = process.env.NODE_ENV or 'development'
+    NODE_ENV = process.env.NODE_ENV or 'development'
+    LIMN_DATA = process.env.LIMN_DATA
     
     REV = process.env.LIMN_REV or 'HEAD'
     try REV = require '../src/version' catch e
     
-    console.log s = "Limn Server (port=#PORT, env=#NODE_ENV, rev=#REV)"
+    console.log s = "Limn Server (port=#PORT, env=#NODE_ENV, rev=#REV, data=#LIMN_DATA)"
     console.log '=' * s.length
     app.listen PORT

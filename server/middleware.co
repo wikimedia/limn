@@ -239,12 +239,13 @@ application = limn.application =
          * All environments: static files prior to applying routes and controllers.
          */
         @configure ->
-            {varDir, staticMaxAge} = @set 'limn options'
+            {varDir, staticMaxAge, dataDir} = @set 'limn options'
             maxAge = staticMaxAge[NODE_ENV] ? staticMaxAge.default
             
-            @use            express.static varDir, {maxAge}
-            @use '/js/limn/test', express.static TEST, {maxAge}
-            @use            express.static STATIC, {maxAge}
+            @use                    express.static varDir,  {maxAge}
+            @use '/js/limn/test',   express.static TEST,    {maxAge}
+            @use '/data',           express.static dataDir, {maxAge}
+            @use                    express.static STATIC,  {maxAge}
             
             @use @router
         
