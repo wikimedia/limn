@@ -34,7 +34,7 @@ var
 log
 tmp
 
-version.js
+src/version.js
 www/presets/*.json
 
 
