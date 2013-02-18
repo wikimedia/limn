@@ -42,7 +42,8 @@ export IS_DEV   = not (IS_PROD or IS_TEST)
 /**
  * Data that will be served through this Limn instance
  */
-export LIMN_DATA = process.env.LIMN_DATA or './var/data'
+export LIMN_VARDIR = process.env.LIMN_VARDIR or './var'
+export LIMN_DATA   = process.env.LIMN_DATA   or "#LIMN_VARDIR/data"
 
 /**
  * Module Paths

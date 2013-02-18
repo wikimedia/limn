@@ -14,7 +14,7 @@ kill timeout 300
  
 env NODE_ENV=production
 env LIMN_PORT=8081
-env LIMN_DATA=/var/lib/limn
+env LIMN_VARDIR=/var/lib/limn
  
 setuid limn
 setgid limn

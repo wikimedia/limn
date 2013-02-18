@@ -26,7 +26,7 @@ view_helpers          = require './view-helpers'
 {
     MODULES,
     BASE, SRC, STATIC, VIEWS, CSS, TEST,
-    NODE_ENV, IS_DEV, IS_PROD, LIMN_DATA
+    NODE_ENV, IS_DEV, IS_PROD, LIMN_VARDIR, LIMN_DATA
 } = require '../sources'
 
 LOG_LEVEL = process.env.LIMN_LOG_LEVEL
@@ -52,7 +52,7 @@ DEFAULT_OPTIONS =
      * @type String
      * Path to directory where derived files are written while in dev-mode.
      */
-    varDir : './var'
+    varDir : LIMN_VARDIR
     
     /**
      * @name proxy
