@@ -36,7 +36,7 @@ if require.main is module or 'Cokefile' is mainfile
     PORT = parseInt(that, 10) if process.env.LIMN_PORT
     
     NODE_ENV = process.env.NODE_ENV or 'development'
-    LIMN_DATA = process.env.LIMN_DATA
+    LIMN_DATA = process.env.LIMN_DATA or '../var/data'
     
     REV = process.env.LIMN_REV or 'HEAD'
     try REV = require '../src/version' catch e
