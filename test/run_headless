@@ -2,7 +2,7 @@
 
 # clone the reportcard-data project
 git clone git://github.com/wikimedia/limn-data.git ../limn-data
-coke -v ./var -d ../../../../limn-data -t example
+coke -v ./var -d ../../../../limn-data -t example link_data
 
 # starts the server, gives it a sec to fire up, runs that file I linked with phantomjs, then cleans up the server process
 export LIMN_PORT=8081
