@@ -55,7 +55,7 @@
     "uglify-js": ">= 1.2.x"
   },
   "scripts": {
-    "test": "phantomjs test/phantom.runner.js http://localhost:8081/test",
+    "test": "phantomjs test/phantom.runner.js http://localhost:8081/test 3",
     "start": "coke server"
   },
   "repository": {
