@@ -1,4 +1,4 @@
-limn (0.6.0) UNRELEASED; urgency=low
+limn (0.6.1) UNRELEASED; urgency=low
 
   [ Dan Andreescu ]
   * Created new 0.6.0 version from tag 0.6.0
@@ -1961,5 +1961,44 @@ limn (0.6.0) UNRELEASED; urgency=low
 
   [ Dan Andreescu ]
   * Tag created for version 0.6.0
+  * Created new 0.6.1 version from tag 0.6.1
 
- -- Dan Andreescu <dan@DAndreescu-ThinkPad-T420s>  Fri, 15 Feb 2013 15:41:15 -0500
+  [ milimetric  ]
+  * Debianization instructions updated
+  * removed legacy support for line coloring, have to fix any old bad
+    graphs
+  * ignoring version file and legend color fix
+  * removing compiled browserify.js as it's a derived file
+  * fix for new data configuration
+  * sane coloring restored, no more legacy support
+  * added file format option back in datasources
+  * updating debian rules and control
+  * Changed install path to /usr/lib/limn
+  * ignoring debianization build files
+
+  [ Petrea Corneliu Stefan  ]
+  * added preinst to create limn user and /var/lib/limn homedir for it.
+    moved installation of coco out of the debian/rules  this will now be
+    done manually by the maintainer, more details in Deb.md
+
+  [ milimetric  ]
+  * changing default data directory to be inside the limn install
+
+  [ Petrea Corneliu Stefan  ]
+  * added Andrew's limn.conf init script to be able to start/stop limn
+    from /etc/init.d/limn [need to test on VM]
+
+  [ milimetric  ]
+  * Merge remote tracking branch 'wikimedia/develop' into develop
+
+  [ Petrea Corneliu Stefan  ]
+  * renamed limn.conf => limn.upstart  for details =>
+    http://manpages.ubuntu.com/manpages/lucid/man1/dh_installinit.1.html
+  * added prerm script  logic to delete limn user
+  * added postrm
+  * postrm is now executable
+
+  [ Dan Andreescu ]
+  * Tag created for version 0.6.1
+
+ -- Dan Andreescu <dan@DAndreescu-ThinkPad-T420s>  Tue, 19 Feb 2013 12:59:22 -0500

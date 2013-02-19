@@ -35,11 +35,12 @@ Now you have to sync the git log with the debian changelog (TODO: add all needed
     sudo apt-get install libjson-xs-perl
     sudo apt-get install devscripts
     ln -s ./debianize/git2deblogs.pl
-    ./git2deblogs.pl --generate
+    ./git2deblogs.pl --update
 
 now delete your old package data if you had one like this:
 
     rm -rf ../limn_0*.dsc ../limn_0*.changes ../limn_0*deb ../limn_0*.tar.gz
+    rm -rf debian/limn/*
 
 and finally build the package
     
