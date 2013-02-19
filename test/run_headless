@@ -6,4 +6,4 @@ coke -v ./var -d ../../../../limn-data -t example
 
 # starts the server, gives it a sec to fire up, runs that file I linked with phantomjs, then cleans up the server process
 export LIMN_PORT=8081
-npm start & sleep 3 && npm test && killall node
+npm start & sleep 3 && npm test ; killall node
