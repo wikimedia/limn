@@ -33,7 +33,7 @@ task \server 'Start dev server' ->
     run './server/server.co'
 
 
-option \limnData 'the base directory where an instance of limn links to data' \DIR
+option \vardir 'the base directory where an instance of limn outputs derived files and links to data' \DIR
 option \data 'absolute or relative path to data repository, data LIMN_DATA/*/' \DIR
 option \to 'name of subdirectory to link to, like this: LIMN_DATA/*/name-of-links' \DIR
 
@@ -41,9 +41,9 @@ task \link_data 'Link to data passed in as an argument' (options) ->
     data = options.data
     toLink = options.to
     # FIXME: find a way to read from the LIMN_DATA environment variable
-    limnData = options.limnData
-    unless data and toLink and limnData
-        console.log 'USAGE: coke --limnData base-limn-data --data path-to-data --to name-of-links link_data'
+    vardir = options.vardir
+    unless data and toLink and vardir
+        console.log 'USAGE: coke --vardir limn-var-dir --data path-to-data --to name-of-links link_data'
         console.log options.toString()
         console.log '  (* stands for any of: dashboards,datafiles,datasources,graphs,geo)'
         console.log ''
@@ -51,17 +51,18 @@ task \link_data 'Link to data passed in as an argument' (options) ->
         console.log options
         return
     
-    sh "mkdir -p #limnData"
-    sh "mkdir -p #limnData/dashboards"
-    sh "mkdir -p #limnData/datafiles"
-    sh "mkdir -p #limnData/datasources"
-    sh "mkdir -p #limnData/graphs"
-    sh "mkdir -p #limnData/geo"
-    sh "ln -sn #data/dashboards #limnData/dashboards/#toLink"
-    sh "ln -sn #data/datafiles #limnData/datafiles/#toLink"
-    sh "ln -sn #data/datasources #limnData/datasources/#toLink"
-    sh "ln -sn #data/graphs #limnData/graphs/#toLink"
-    sh "ln -sn #data/geo #limnData/geo/#toLink"
+    datadir = "#vardir/data"
+    sh "mkdir -p #datadir"
+    sh "mkdir -p #datadir/dashboards"
+    sh "mkdir -p #datadir/datafiles"
+    sh "mkdir -p #datadir/datasources"
+    sh "mkdir -p #datadir/graphs"
+    sh "mkdir -p #datadir/geo"
+    sh "ln -sn #data/dashboards #datadir/dashboards/#toLink"
+    sh "ln -sn #data/datafiles #datadir/datafiles/#toLink"
+    sh "ln -sn #data/datasources #datadir/datasources/#toLink"
+    sh "ln -sn #data/graphs #datadir/graphs/#toLink"
+    sh "ln -sn #data/geo #datadir/geo/#toLink"
     
     say 'ok\n'
 
