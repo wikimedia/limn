@@ -121,6 +121,15 @@ class exports.InfoboxNode extends GraphNode
             self.label d.properties.name
             self.featureId d.id
             [x, y] = d3.mouse self.viewport().el()
+            
+            # make the box stay inside its viewport
+            vh = self.viewport().height()
+            vw = self.viewport().width()
+            h = self.$el.height()
+            w = self.$el.width()
+            x = Math.min x, (vw - w - 10)
+            y = Math.min y, (vh - h - 10)
+            
             self.$el.css { display:'block', top:y, left:x }
         @root().$el.on 'mouseout', ~>
             @$el.hide()
