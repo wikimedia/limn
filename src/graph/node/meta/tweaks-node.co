@@ -1,0 +1,48 @@
+_  = require 'underscore'
+op = require 'operator'
+ko = require 'knockout'
+moment = require 'moment'
+
+{ GroupNode, GroupNodeData,
+} = require '../group-node'
+Trait = require '../graph-node-trait'
+
+
+
+/**
+ * @class
+ * @extends GroupNodeData
+ */
+class exports.TweaksNodeData extends GroupNodeData
+    @registerType 'tweaks'
+    
+    defaults: ->
+    
+    attributeTypes: ->
+    
+    -> super ...
+
+
+
+/**
+ * @class
+ * @extends GroupNode
+ */
+class exports.TweaksNode extends GroupNode
+    @registerType 'tweaks'
+    traits : [
+        Trait.SECTION
+        Trait.META_NODE
+        Trait.HTML
+    ]
+    tagName  : 'section'
+    template : 'tweaks-node'
+    
+    
+    -> super ...
+    
+    
+    buildElement: (parentElement) ->
+        el = super ...
+        $ parentElement .prepend el
+        @renderView el

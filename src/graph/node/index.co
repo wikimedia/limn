@@ -4,8 +4,9 @@ graph_node_data     = require './graph-node-data'
 group_node          = require './group-node'
 canvas_node         = require './canvas-node'
 canvas_series_node  = require './canvas-series-node'
+child_node          = require './child-node'
 
-exports import node_mixin import graph_node import graph_node_data import group_node import canvas_node import canvas_series_node
+exports import node_mixin import graph_node import graph_node_data import group_node import canvas_node import canvas_series_node import child_node
 exports.Trait = require './graph-node-trait'
 exports.meta  = require './meta'
 exports.vis   = require './vis'

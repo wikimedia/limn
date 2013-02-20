@@ -8,8 +8,8 @@ moment = require 'moment'
 
 { GraphNodeData,
 } = require '../graph-node-data'
-{ GraphNode,
-} = require '../graph-node'
+{ ChildNode,
+} = require '../child-node'
 Trait = require '../graph-node-trait'
 
 
@@ -34,7 +34,7 @@ class exports.SmoothNodeData extends GraphNodeData
  * @class
  * @extends GraphNode
  */
-class exports.SmoothNode extends GraphNode
+class exports.SmoothNode extends ChildNode
     @registerType 'smooth'
     traits : [
         Trait.SECTION
@@ -56,12 +56,6 @@ class exports.SmoothNode extends GraphNode
         super ...
         @transform = new SmoothingIterator null, @factor
         @smoothedNodes()
-    
-    
-    buildElement: (parentElement) ->
-        el = super ...
-        $ parentElement .prepend el
-        @renderView el
     
     
     nodes: @computed ->

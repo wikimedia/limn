@@ -4,9 +4,11 @@ grid_node       = require './grid-node'
 guide_node      = require './guide-node'
 infobox_node    = require './infobox-node'
 legend_node     = require './legend-node'
+tweaks_node     = require './tweaks-node'
 smooth_node     = require './smooth-node'
+scaling_node    = require './scaling-node'
 zoom_brush_node = require './zoom-brush-node'
 zoom_pan_node   = require './zoom-pan-node'
 
-exports import axis_node import callout_node import grid_node import guide_node import infobox_node import legend_node import smooth_node import zoom_brush_node import zoom_pan_node
+exports import axis_node import callout_node import grid_node import guide_node import infobox_node import legend_node import smooth_node import scaling_node import tweaks_node import zoom_brush_node import zoom_pan_node
 
