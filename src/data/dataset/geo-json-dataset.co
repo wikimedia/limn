@@ -58,6 +58,8 @@ class exports.GeoJSONDataset extends Dataset
             
             rawDataPivoted[country][manufacturer] ?= 0
             rawDataPivoted[country][manufacturer] += count
+            rawDataPivoted[country]['Total'] ?= 0
+            rawDataPivoted[country]['Total'] += count
         
         results = []
         for country in rawDataPivoted
