@@ -108,7 +108,7 @@ class exports.LineNode extends TimeseriesNode
         
         return null unless data.length
         return null unless model  = @model()
-        return null unless scales = @root().scalesIfValid()
+        return null unless xScale = @viewport().xScale()
         
         # TODO: do not use features before they are implemented
         # dot separated options do not work
@@ -120,7 +120,7 @@ class exports.LineNode extends TimeseriesNode
         
         # optimization: if there are more data points than pixels in the range,
         # set a flag and use it to do things like not show tracking circles
-        xRange = scales.xScale.range()
+        xRange = xScale.range()
         @tooManyDataPoints data[0].length > (2 * Math.abs(xRange[0] - xRange[1]))
         
         # always exit() to remove existing nodes if data has changed and become invalid
@@ -142,7 +142,7 @@ class exports.LineNode extends TimeseriesNode
         
         line.style 'visibility', if @disabled() then "hidden" else "visible"
         line.transition()
-            .attr 'd', scales.scaleShape(shape)
+            .attr 'd', @viewport().scaleShape(shape)
         
         line
     

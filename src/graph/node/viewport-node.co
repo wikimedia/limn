@@ -12,6 +12,27 @@ Trait = require './graph-node-trait'
 
 
 
+/**
+ * @namespace Default options for various scale types
+ */
+SCALE_DEFAULTS =
+    ALL :
+        clamp : false
+        nice  : false
+    time :
+        # picks out a d3.time.interval for scale.nice()
+        # := null | year | month | day | hour | minute | second | week == sunday | monday | tuesday | wednesday | thursday | friday | saturday
+        # XXX: what happens if I pass an interval range, like d3.time.hour.range(2)
+        interval : null
+    pow :
+        exponent : 1
+    ordinal :
+        round : true
+        spacing : 0
+        outerSpacing : 0
+    # TODO: quantize, quantile; maybe threshold?
+
+
 
 /**
  * @class
@@ -28,9 +49,25 @@ class exports.ViewportNodeData extends GraphNodeData
         height    : 500
         minHeight : 500
         maxHeight : null
+        
+        # scaleType {String} := null | "time" | "linear" | "log" | "sqrt" | "pow" | "ordinal"
+        # Scale types defualt to a value based on introspection of the metric type:
+        #   date/time               -> linear time scale
+        #   int, float, numeric     -> linear quantitive scale
+        #   string, *               -> ordinal scale
+        
+        x :
+            scaleType : null
+            padding   : 0
+            domain    : null
+        
+        y :
+            scaleType : null
+            padding   : 0.1
+            domain    : null
+        
     
-    attributeTypes: ->
-        {}
+    attributeTypes: -> {}
     
     -> super ...
 
@@ -109,11 +146,184 @@ class exports.ViewportNode extends GraphNode
     center         : @computed -> [ @width()/2, @height()/2 ]
     
     
-    # }}}
-    /* * * *  Watchers  * * * {{{ */
     
-    watchDeps: ->
-    watchOthers: ->
+    # }}}
+    /* * * *  Metrics  * * * {{{ */
+    
+    /**
+     * Child nodes that are not children of another viewport node.
+     * @type ko.computed<GraphNode>
+     */
+    viewportChildren: @computed ->
+        children = []
+        unvisited = @children().slice()
+        while node = unvisited.unshift()
+            continue if node.hasTrait Trait.VIEWPORT
+            unvisited .= concat node.children() # note: circular refs in a tree should be impossible
+        children
+    
+    
+    
+    /**
+     * @protected
+     * @param {Array<GraphNode>} nodes
+     * @returns {Array<Metric>} Metrics of valid, enabled nodes.
+     */
+    _metricsFrom: (nodes) ->
+        metrics = _.reduce_ nodes, [], (metrics, node) ->
+            if      node.hasTrait(Trait.REQUIRES_METRIC) and
+                    node.hasTrait(Trait.METRIC_CONTENT_DATA) and
+                    not node.disabled() and
+                    metric = node.model()?.metric()
+                metrics.push metric
+            metrics
+        return if metrics.length then metrics else null
+        
+    
+    /**
+     * All content-data metrics under this viewport.
+     * @type ko.computed<Array<Metric>>
+     */
+    allMetrics: @computed ->
+        @_metricsFrom @map op.I
+    
+    
+    /**
+     * Content-data metrics under this viewport not under another viewport.
+     * @type ko.computed<Array<Metric>>
+     */
+    viewportMetrics: @computed ->
+        @_metricsFrom @viewportChildren()
+    
+    
+    xValues: @computedRequires 'allMetrics', (metrics) ->
+        _.flatten _.invoke metrics, 'xValues'
+    
+    
+    yValues: @computedRequires 'allMetrics', (metrics) ->
+        _.flatten _.invoke metrics, 'yValues'
+    
+    
+    
+    # }}}
+    /* * * *  Scales  * * * {{{ */
+    
+    
+    xScale: @computed ->
+        xScale = @createScale @xScaleType()
+        xScale.domain that if @xDomain()
+        xScale.range [0, @viewportWidth()]
+    
+    
+    yScale: @computed ->
+        yScale = @createScale @yScaleType()
+        yScale.domain that if @yDomain()
+        yScale.range [@viewportHeight(), 0]
+    
+    
+    _domainFor: (dim) ->
+        domain = @get "#dim.domain"
+        unless _.isArray(domain) and domain.length is 2 and _.every(domain, isFinite)
+            return unless (values = @["#{dim}Values"]())?.length
+            domain = @applyPadding d3.extent(_.compact(values)), @get("#dim.padding")
+        domain
+    
+    
+    xDomain: @computed ->
+        @_domainFor 'x'
+    
+    
+    yDomain: @computed ->
+        return unless yDomain = @_domainFor 'y'
+        # FIXME: hack to render log-scales when some input values are <= 0
+        yDomain[0] = 0.01 if @scaling?() is not 'linear' and yDomain[0] < 1
+        yDomain
+    
+    
+    /**
+     * @type ko.computed<String := time | linear | log | sqrt | pow | ordinal>
+     */
+    xScaleType: @computed ->
+        @get('x.scaleType') or @_scaleTypeFor('xType')
+    
+    
+    /**
+     * @type ko.computed<String := time | linear | log | sqrt | pow | ordinal>
+     */
+    yScaleType: @computed ->
+        @get('y.scaleType') or @_scaleTypeFor('yType')
+    
+    
+    /**
+     * @private
+     * @param {String} typeDimension 'xType' or 'yType'
+     * @returns {String := time | linear | log | sqrt | pow | ordinal}
+     */
+    _scaleTypeFor: (typeDimension) ->
+        return null unless metrics = @viewportMetrics()
+        types = _ metrics .chain()
+            .invoke typeDimension
+            .compact()
+            .map ->
+                switch it .= toLowerCase()
+                case 'linear' 'log' 'sqrt' 'pow'    then it
+                case 'int' 'float' 'number'         then 'linear'
+                case 'time' 'date'                  then 'time'
+                # includes ordinal, string
+                default                             then 'ordinal'
+            .uniq()
+            .value()
+        if types.length > 1
+            throw new Error "Invalid Graph: Multiple scale types specified by children for #typeDimension! #{JSON.stringify types}"
+        types[0]
+    
+    
+    createScale: (type, props={}) ->
+        scale = switch type
+            case 'time'
+                d3.time.scale().clamp(true)
+            case 'linear' 'log' 'sqrt' 'pow'
+                d3.scale[type]()
+            case 'ordinal'
+                d3.scale.ordinal()
+            default
+                throw new Error "Unknown scale type #type!"
+        for k, v in props
+            scale[k] v
+        scale
+    
+    
+    makeScaleShape: (shape) ->
+        xScale = @xScale()
+        yScale = @yScale()
+        switch shape
+        case 'area'
+            d3.svg.area()
+                .x  ([date, val], i) ~> xScale date
+                .y1 ([date, val], i) ~> yScale val
+                .y0 yScale.range()[0]
+                .defined @isDataInView.bind this
+                .interpolate 'linear'
+        default
+            d3.svg.line()
+                .x ([date, val], i) ~> xScale date
+                .y ([date, val], i) ~> yScale val
+                .defined @isDataInView.bind this
+                .interpolate 'linear'
+    
+    
+    isDataInView: ([date, val], i) ->
+        [xMin, xMax] = @xDomain().map toNumeric
+        return  xMin <= +date <= xMax and
+            isFinite @yScale() val
+    
+    
+    applyPadding: (ext, p) ->
+        isDate     = ext.map -> it instanceof Date
+        [min, max] = ext.map toNumeric
+        min -= min * p
+        max += max * p
+        [min, max].map (v, i) -> if isDate[i] then new Date(v) else v
     
     
     
@@ -127,6 +337,8 @@ class exports.ViewportNode extends GraphNode
         el
     
     
+    
+    # }}}
     /* * * *  Viewport Events  * * * {{{ */
     
     
@@ -158,14 +370,23 @@ class exports.ViewportNode extends GraphNode
         return unless svg = _.toElement @graph.$('svg')
         svg = d3.select svg
         
+        svg.on 'mouseover', ~>
+            [x, y] = d3.mouse(el)
+            cursor = { +hovering, x, y }
+            @trigger 'mouseover', cursor, this
+            # cursor observable will be handled by mousemove
+        
         svg.on 'mousemove', ~>
             [x, y] = d3.mouse(el)
-            cur = @cursor.peek()
-            if not cur?.hovering or cur.x != x or cur.y != y
-                @cursor { +hovering, x, y }
+            cursor = { +hovering, x, y }
+            @trigger 'mousemove', cursor, this
+            with @cursor.peek()
+                @cursor info if not &?.hovering or &x != x or &y != y
         
         svg.on 'mouseout', ~>
-            @cursor { -hovering }
+            [x, y] = d3.mouse(el)
+            @cursor cursor = { -hovering, x, y }
+            @trigger 'mouseout', cursor, this
         
         this
     
@@ -177,30 +398,17 @@ class exports.ViewportNode extends GraphNode
         @trigger 'zoom-graph', translate, scale, this
     
     
-    /**
-     * register a handler for an event name so that child nodes can see parent events
-     * @param {string} eventName
-     * @param {Object} context the context to call the function in
-     * @param {Function} fn the handling function
-     */
-    #FIXME: this doesn't work because of the changing / overwriting of the GraphNode tree.  Move to dependency tracking instead of events
-    handle: (eventName, context, fn) ->
-        @handlers ?= {}
-        unless @handlers[eventName]
-            @handlers[eventName] = []
-            @on eventName, ~>
-                for handler of @handlers[eventName]
-                    handler.fn.apply handler.context, arguments
-        
-        existing = false
-        for handler of @handlers[eventName]
-            if handler.context is context
-                handler.fn = fn
-                existing = true
-                break
-        
-        unless existing
-            @handlers[eventName].push {fn, context}
+    # }}}
+    /* * * *  Watchers  * * * {{{ */
+    
+    watchDeps: ->
+        @allMetrics()
+    
+    
+    watchOthers: ->
+        @xScale()
+        @yScale()
+    
     
     
     # }}}

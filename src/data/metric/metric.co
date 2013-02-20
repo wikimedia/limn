@@ -8,15 +8,18 @@ _ = require 'underscore'
 } = require '../datasource'
 
 
+/**
+ * @class Specifies the coordinates for a column of data in a DataSource,
+ * and provides accessors to materialize that data within its bounds.
+ */
 class exports.Metric extends Model
     ParsingMixin.mix this
     -> super ...
     
     
     defaults : ->
-        source_id  : null # String
+        source_id  : null       # String
         source_col : null       # String|Number
-        type       : 'int'      # String
     
     
     /**
@@ -32,8 +35,7 @@ class exports.Metric extends Model
      * @depends source_id
      */
     source : @asyncComputed ->
-        # FIXME: shouldn't have to go to the global limn variable to get DataSource
-        limn.data.datasource.DataSource.lookup id if id = @get 'source_id'
+        DataSource.lookup id if id = @get 'source_id'
     
     
     /**
@@ -44,8 +46,9 @@ class exports.Metric extends Model
     query : @computed ->
         source_col = @get 'source_col'
         return unless source_col?
+        # TODO: support attributes.x_column
         Query()
-            .columns source_col
+            .columns 0, source_col
     
     
     /**
@@ -63,49 +66,91 @@ class exports.Metric extends Model
             .materialize 'both'
             .transforms @transforms()
             .process csv.getData()
-        
         {rows, columns}
     
     
     /**
-     * The reified dataset (as (date, value) pairs) associated with this Metric.
-     * @type ko.computed<[Date, Value]>
+     * The reified dataset (as [x, y] pairs) associated with this Metric.
+     * @type ko.computed<[xType, yType]>
      * @depends materialized
      */
-    data : @computed ->
+    data: @computed ->
         @materialized()?.rows
     
     
     /**
-     * The reified dataset associated with this Metric.
+     * The reified dataset X-values associated with this Metric.
+     * @type ko.computed<Array<xType>>
+     * @depends materialized
+     */
+    xValues: @computed ->
+        @materialized()?.columns[0]
+    
+    
+    /**
+     * The reified dataset Y-values associated with this Metric.
+     * @type ko.computed<Array<yType>>
+     * @depends materialized
+     */
+    yValues: @computed ->
+        @materialized()?.columns[1]
+    
+    
+    /**
+     * The column definition for the X-dimension of this Metric.
+     * @type ko.computed<ColumnDef>
+     * @depends source
+     */
+    xColumnDef: @computed ->
+        # TODO: support attributes.x_column
+        @source()?.getColumnDef 0
+    
+    
+    /**
+     * The column definition for the Y-dimension of this Metric.
      * @type ko.computed<ColumnDef>
      * @depends source, source_col
      */
-    columnDef : @computed ->
-        source_col = @get 'source_col'
-        return unless source_col?
+    yColumnDef: @computedRequires 'source_col', (source_col) ->
         @source()?.getColumnDef source_col
+    
+    
+    /**
+     * Type of the X-values.
+     * @type ko.computed<String>
+     * @depends xColumnDef
+     */
+    xType: @computed ->
+        @xColumnDef()?.type()
+    
+    
+    /**
+     * Type of the Y-values.
+     * @type ko.computed<String>
+     * @depends xColumnDef
+     */
+    yType: @computed ->
+         @yColumnDef()?.type()
     
     
     /**
      * A short label of just the column name
      * @type ko.computed<String>
-     * @depends columnDefinition
+     * @depends yColumnDef
      */
-    defaultLabel : @computed ->
-        @columnDef()?.label()
+    defaultLabel : @computedRequires 'yColumnDef', (col) ->
+        col.label()
     
     
     /**
      * A long label including the datasource name
      * @type ko.computed<String>
-     * @depends columnDefinition
+     * @depends defaultLabel
      */
     defaultLongLabel : @computedRequires 'defaultLabel', (defaultLabel) ->
         "#{@source().name()}, #defaultLabel"
     
     
     toString: ->
-        className = @..displayName or @..name
-        "#className(source_id=#{@source_id.peek()}, source_col=#{@source_col.peek()})"
+        "#{@getClassName()}(source_id=#{@source_id.peek()}, source_col=#{@source_col.peek()})"
     

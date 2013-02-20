@@ -27,26 +27,6 @@ _cls =
     
     
     /**
-     * @returns {String} The name of the type of the thing you passed me.
-     */
-    typeName : (o) ->
-        # null, undefined
-        return String(o) unless o?
-        
-        # Primitives &co are easy ...Except the tricky ones.
-        return name unless TRICKY_TYPES[ name = objToString.call(o) ]
-        
-        # If it's a limn type, it'll help us out.
-        return o.displayName or o.name or 'Class' if _.isClass o
-        
-        # Functions are complicated.
-        # and loose if statements sink builds: FIXME if _.isFunction o
-            
-        
-        return o.constructor
-    
-    
-    /**
      * Creates a new instance of the given class without running its constructor.
      * 
      * @param {Class<T>} Class Class to instantiate.

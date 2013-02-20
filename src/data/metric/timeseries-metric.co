@@ -16,8 +16,7 @@ class exports.TimeseriesMetric extends Metric
     defaults : ->
         source_id  : null       # String
         source_col : null       # String|Number
-        type       : 'int'      # String
-        timespan : 
+        timespan   :
             start  : null       # String -> Date
             end    : null       # String -> Date
             step   : null       # String -> moment.Duration

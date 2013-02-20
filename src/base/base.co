@@ -84,6 +84,13 @@ class exports.Base extends EventEmitter
     
     
     /**
+     * @returns {String} Name of this object's Class.
+     */
+    getClassName: ->
+        with @constructor then "#{ &displayName or &name }"
+    
+    
+    /**
      * Invoked when Base is extended; copies over all class methods to the Subclass (including this).
      * @protected
      * @static

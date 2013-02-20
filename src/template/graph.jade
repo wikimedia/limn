@@ -4,7 +4,22 @@ section.graph.graph-display(data-bind="attr: { id:graphId }")
         section.callout
         h2: a.graph-name(data-bind="text: model().name, attr: { href:model().link }")
     
-    .graph-canvas-row.row-fluid: .inner
+    .graph-chart-row.row-fluid: .inner
+        section.chart-meta.fg
+        section.chart(data-bind='with: rootNode')
+            svg(pointer-events='all', data-bind='attr: { width:frameWidth, height:frameHeight }')
+                defs
+                    clipPath(data-bind='attr: { id:"clip-"+graphId }')
+                        rect(data-bind='attr: { width:clipWidth, height:clipHeight }')
+                    g.metricDefs
+                g.margin-frame(data-bind='attr: { transform:"translate("+margin.left+","+margin.top+")" }')
+                    g.frame
+                        g.content-frame(data-bind='attr: { "clip-path":"url(#clip-"+graphId+")" }')
+                            g.bg
+                                rect.bgcolor(data-bind='attr: { width:clipWidth, height:clipHeight }')
+                            g.root-viewport.viewport
+                        g.fg
+        section.chart-meta.bg
     
     .graph-details-row.row
         .span7.offset3.ug.graph-desc(data-bind='html: model().desc')

@@ -127,8 +127,9 @@ class exports.AxisNode extends GraphNode
         @sel.call axis
         @moveAxis()
         
-        @zoomHandler ?= @root().handle 'zoom-graph', this, (translate, scale) ~>
-            @sel.call axis
+        unless @zoomHandler
+            @zoomHandler = ~> @sel.call axis
+            @root().on 'zoom-graph', @zoomHandler
         
         axis
     

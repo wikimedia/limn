@@ -1,7 +1,7 @@
-_       = require 'underscore'
-op      = require 'operator'
-ko      = require 'knockout'
-Seq     = require 'seq'
+_   = require 'underscore'
+op  = require 'operator'
+ko  = require 'knockout'
+Seq = require 'seq'
 
 { ReadyEmitter,
 } = require 'emitters'

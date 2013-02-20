@@ -155,7 +155,7 @@ class exports.InfoboxEntry extends AttributesBase
     dataById: @computedRequires 'node.model.metric.dataById', -> it
     
     label: @computedRequires 'nodeOptions', (nodeOptions) ->
-        nodeOptions.get('label') or @node.model()?.metric()?.columnDef()?.label()
+        nodeOptions.get('label') or @node.model()?.metric()?.yColumnDef()?.label()
     
     valueFormatter : @computedRequires 'infoboxOptions', 'nodeOptions', (infoboxOptions, nodeOptions) ->
         valueFormat = infoboxOptions.get('valueFormat') or nodeOptions.get('valueFormat')
