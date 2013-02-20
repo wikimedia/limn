@@ -122,7 +122,7 @@ class exports.InfoboxNode extends GraphNode
             self.featureId d.id
             [x, y] = d3.mouse self.viewport().el()
             self.$el.css { display:'block', top:y, left:x }
-        features.on 'mouseout.infobox', ~>
+        @root().$el.on 'mouseout', ~>
             @$el.hide()
             @featureId null
     
