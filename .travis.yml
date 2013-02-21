@@ -6,3 +6,12 @@ before_script:
   - "npm update"
   - "coke build"
 script: test/run_headless
+
+notifications:
+  irc:
+    channels:
+      - "irc.freenode.net#wikimedia-analytics"
+    template:
+      - "%{branch}/%{commit} (#%{build_number} by %{author}): %{message} %{build_url}"
+    use_notice: false
+    skip_join: false
