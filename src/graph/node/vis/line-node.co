@@ -126,6 +126,8 @@ class exports.LineNode extends TimeseriesNode
         # always exit() to remove existing nodes if data has changed and become invalid
         line.exit().remove()
         
+        @parent().stack()
+        
         path = line.enter()
             .append 'path'
                 .classed 'metric-line',     true

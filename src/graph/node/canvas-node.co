@@ -76,10 +76,11 @@ class exports.CanvasNode extends ViewportNode
         @scaleShape = (shape) ~>
             switch shape
                 case 'area'
+                    lastY = @yScale.range()[0]
                     d3.svg.area()
                         .x ([date, val], i) ~> @xScale date
-                        .y1 ([date, val], i) ~> @yScale val
-                        .y0 @yScale.range()[0]
+                        .y1 ([date, val, val0], i) ~> if val0 then @yScale(val + val0) else @yScale(val)
+                        .y0 ([date, val, val0], i) ~> if val0 then @yScale(val0) else lastY
                         .defined @isDataInView.bind this
                         .interpolate 'linear'
                 default
