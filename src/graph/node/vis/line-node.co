@@ -100,6 +100,9 @@ class exports.LineNode extends TimeseriesNode
     disabled: @computedRequires 'model.options', (options) ->
         options.disabled?() or false
     
+    shape: @computedRequires 'model.options', (options) ->
+        options.get('shape') or 'line'
+    
     /**
      * Update selection representing the SVG path element for the line.
      * @type ko.computed<d3.selection.update>
@@ -111,10 +114,6 @@ class exports.LineNode extends TimeseriesNode
         return null unless model  = @model()
         return null unless scales = @root().scalesIfValid()
         
-        # TODO: do not use features before they are implemented
-        # dot separated options do not work
-        # shape = @parent().get('options.shape') or 'line'
-        shape = @parent().options().shape?() or 'line'
         color = @strokeColor()
         
         line = @selectAll 'path.metric-line' .data data
@@ -136,14 +135,14 @@ class exports.LineNode extends TimeseriesNode
                 .style 'stroke-width',      @width()
                 .style 'stroke',            color
         
-        if shape is 'area'
+        if @shape() is 'area'
             path
                 .style 'fill',              color
                 .style 'opacity',           0.4
         
         line.style 'visibility', if @disabled() then "hidden" else "visible"
         line.transition()
-            .attr 'd', scales.scaleShape(shape)
+            .attr 'd', scales.scaleShape(@shape())
         
         line
     
