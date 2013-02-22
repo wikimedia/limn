@@ -76,4 +76,6 @@ class exports.ZoomPanNode extends GraphNode
             transform: "translate(#{self.behavior.translate()}) scale(#{self.behavior.scale()})"
         
         # FIXME: the tracking circles aren't displaying properly
-        self.root().zooming self.behavior.translate(), self.behavior.scale()
+        self.viewport().zooming self.behavior.translate(), self.behavior.scale()
+    
+    

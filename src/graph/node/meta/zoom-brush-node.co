@@ -50,45 +50,45 @@ class exports.ZoomBrushNode extends GraphNode
     
     render: ->
         return unless viewport = @viewport()
-        return unless xScale   = viewport.xScale()
-        return unless yScale   = viewport.yScale()
+        return unless xScale   = viewport.xZoomScale()
+        return unless yScale   = viewport.yZoomScale()
         
-        return if @brush
+        if @brush
+            @brush.x xScale .y yScale
+            @sel.call @brush
+            return
         
         @brush = d3.svg.brush()
             .x xScale
             .y yScale
-            .on 'brushend', ~>
-                vp = @viewport()
-                @originalXDomain ?= vp.xScale().domain()
-                @originalYDomain ?= vp.yScale().domain()
-                @zooming.call this
+            .on 'brushend', @onBrushEnd.bind this
         
         @sel.call @brush
         @sel.select 'rect.background'
             .attr 'pointer-events', 'all'
             .on 'dblclick', ~>
                 @hideTrackingCircles() # TODO: LineNode should listen for zoom event
-                @viewport().changeDomains @originalXDomain, @originalYDomain
+                @viewport().resetZoom()
                 window.getSelection?().removeAllRanges()
                 document.selection?.empty()
     
     
-    zooming: ->
-        extent = d3.event.target.extent()
+    onBrushEnd: ->
+        [[x0,y0], [x1,y1]] = extent = @brush.extent()
         if @extentIsSignificant extent
-            @viewport().changeDomains [extent[0][0], extent[1][0]], [extent[0][1], extent[1][1]]
+            @viewport().zoomInto x0,y0, x1,y1
         @brush.clear()
         @sel.call @brush
-        @hideTrackingCircles()
+        @hideTrackingCircles() # TODO: LineNode should listen for zoom event
+    
     
     hideTrackingCircles: ->
         @viewport().sel.selectAll 'circle.tracking'
-            .attr do
-                cx: -10
-                cy: -10
+            .attr { cx: -1000, cy: -1000 }
+    
     
     extentIsSignificant: (extent) ->
-        significanceThreshold = 1000 # one second
-        extent[1][0] - extent[0][0] > significanceThreshold
+        [[x0,y0], [x1,y1]] = extent
+        x1 - x0 > 1000ms
+    
     

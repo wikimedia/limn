@@ -70,6 +70,14 @@ class exports.CanvasNode extends ViewportNode
     
     
     /**
+     * Element representing the frame where the content is held.
+     * @type ko.observable<Element>
+     */
+    contentFrameEl: @computed ->
+        @$('.content-frame').0 if @el()
+    
+    
+    /**
      * Determine the DOM node to act as the parent for a direct child of the root node.
      * 
      * @protected
@@ -100,7 +108,7 @@ class exports.CanvasNode extends ViewportNode
     
     
     background: (color) ->
-        return unless (bg = @graph.$ 'svg .content-frame > .bg > .bgcolor').length
+        return unless (bg = @$ '.content-frame > .bg > .bgcolor').length
         if arguments.length
             bg.css 'fill', color
             this

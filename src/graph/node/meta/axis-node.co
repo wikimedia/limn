@@ -88,7 +88,7 @@ class exports.AxisNode extends GraphNode
         viewport = @viewport()
         options = @model().options()
         return unless dim   = options.get('dimension')
-        return unless scale = viewport[dim+'Scale']()
+        return unless scale = viewport[dim+'ZoomScale']()
         
         @sel.classed dim+'-axis axis', true
         

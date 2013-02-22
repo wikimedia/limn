@@ -357,6 +357,21 @@ class exports.ViewportNode extends GraphNode
         el
     
     
+    /**
+     * Element representing the frame where the content is held.
+     * @type ko.observable<Element>
+     */
+    contentFrameEl: @computed ->
+        @el()
+    
+    
+    /**
+     * Element holding the content itself.
+     * @type ko.observable<Element>
+     */
+    contentViewportEl: @computed ->
+        $(frame).find('.viewport:first').0 if frame = @contentFrameEl()
+    
     
     # }}}
     /* * * *  Viewport Events  * * * {{{ */
@@ -386,7 +401,7 @@ class exports.ViewportNode extends GraphNode
     
     trackCursor: ->
         return if @cursor.peek() # only initialize once
-        return unless el  = @el.peek()
+        return unless el  = @contentFrameEl()
         return unless svg = _.toElement @graph.$('svg')
         svg = d3.select svg
         
@@ -412,14 +427,62 @@ class exports.ViewportNode extends GraphNode
     
     
     /**
-     * Broadcast a zoom event.
+     * Zoom state.
+     * @type ko.observable<Object>
      */
-    zooming: (translate, scale) ->
-        @trigger 'zoom-graph', translate, scale, this
+    zoomTransform: ko.observable { scale:1.0, x:0, y:0 }
+    
+    
+    /**
+     * Set the viewport zoom level.
+     */
+    zoom: (scale, translate) ->
+        {x, y} = current = @zoomTransform.peek()
+        [x, y] = that if translate
+        zoom = { scale, x, y }
+        unless _.isEqual zoom, current
+            @zoomTransform zoom
+            @trigger 'zoom-graph', ({} import zoom), this
+        zoom
+    
+    
+    /**
+     * Zoom the viewport into a particular region.
+     */
+    zoomInto: (x0,y0, x1,y1) ->
+        xScale = @xScale()
+        yScale = @yScale()
+        return unless xScale and yScale
+        wR = xScale.range()[1]
+        hR = yScale.range()[0]
+        wS = wR / (x1 - x0)
+        hS = hR / (y1 - y0)
+        @zoom Math.min(wS, hS), [-x0, -y0]
+    
+    
+    resetZoom: ->
+        @zoom 1.0, [0, 0]
+    
+    
+    xZoomScale: @computed -> @xScale()?.copy()
+    yZoomScale: @computed -> @yScale()?.copy()
+    
+    
+    /**
+     * Update the content viewport's transform to match the zoom level.
+     * @protected
+     */
+    watchZoom: @computed ->
+        { scale, x, y } = @zoomTransform()
+        return unless el = @contentViewportEl()
+        d3.select(el).transition()
+            .attr 'transform', "scale(#scale), translate(#x, #y)"
+    
     
     
     # }}}
     /* * * *  Watchers  * * * {{{ */
+    
     
     watchDeps: ->
         @allMetrics()
@@ -428,6 +491,7 @@ class exports.ViewportNode extends GraphNode
     watchOthers: ->
         @xValues(); @xDomain(); @xScale()
         @yValues(); @yDomain(); @yScale()
+        @watchZoom()
     
     
     
