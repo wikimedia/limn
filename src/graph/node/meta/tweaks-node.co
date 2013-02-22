@@ -41,6 +41,8 @@ class exports.TweaksNode extends GroupNode
     
     -> super ...
     
+    toggleChildren: ->
+        @$el.find('.toggle-children').collapse('toggle')
     
     buildElement: (parentElement) ->
         el = super ...
