@@ -18,9 +18,8 @@ app = exports = module.exports = express.createServer()
  * Load Limn middleware
  */
 limn = app.limn = LimnMiddleware do
-    varDir  : './var'
-    dataDir : './var/data'
-    proxy :
+    varDir  : process.env.LIMN_VARDIR or './var'
+    proxy   :
         enabled   : true
         whitelist : '*' #/.*/ throws an error in minimatch - does not support regex as assumed
 
@@ -31,40 +30,18 @@ app.use limn
 # show exceptions, pretty stack traces ### FIXME
 app.use express.errorHandler { +dumpExceptions, +showStack }
 
-/**
- * Handle webhook notification to pull from origin.
- */
-app.all '/webhook/post-update', (req, res) ->
-    cmd = 'git pull origin master'
-    console.log "[/webhook/post-update] $ #cmd"
-    
-    # exec the pull async
-    child = exec cmd, (err, stdout, stderr) ->
-        res.contentType '.txt'
-        console.log '[/webhook/post-update]  ', stdout
-        console.log '[/webhook/post-update]  ', stderr
-        if err
-            console.error '[/webhook/post-update] ERROR!', err
-            res.send "$ #cmd\n\n#stdout\n\n#stderr\n\nERROR! #err", 503
-        else
-            res.send "$ #cmd\n\n#stdout\n\n#stderr", 200
-
-
-
 mainfile = path.basename require.main?.filename
 if require.main is module or 'Cokefile' is mainfile
     PORT = 8081
     PORT = parseInt(that, 10) if process.env.LIMN_PORT
     
-    NODE_ENV  = process.env.NODE_ENV or 'development'
+    NODE_ENV    = process.env.NODE_ENV    or 'development'
+    LIMN_VARDIR = process.env.LIMN_VARDIR or './var'
+    LIMN_DATA   = "#LIMN_VARDIR/data"
     
     REV = process.env.LIMN_REV or 'HEAD'
-    try REV = require '../version' catch e
-    err, stdout, stderr <- exec 'git rev-parse --short HEAD', {cwd:process.cwd(), env:process.env}
-    throw err if err
-    REV = stdout.trim! unless REV
+    try REV = require '../src/version' catch e
     
-    console.log s = "Limn Server (port=#PORT, env=#NODE_ENV, rev=#REV)"
+    console.log s = "Limn Server (port=#PORT, env=#NODE_ENV, rev=#REV, vardir=#LIMN_VARDIR, data=#LIMN_DATA)"
     console.log '=' * s.length
     app.listen PORT
-

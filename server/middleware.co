@@ -26,7 +26,7 @@ view_helpers          = require './view-helpers'
 {
     MODULES,
     BASE, SRC, STATIC, VIEWS, CSS, TEST,
-    NODE_ENV, IS_DEV, IS_PROD,
+    NODE_ENV, IS_DEV, IS_PROD, LIMN_VARDIR, LIMN_DATA
 } = require '../sources'
 
 LOG_LEVEL = process.env.LIMN_LOG_LEVEL
@@ -34,8 +34,6 @@ LOG_LEVEL or= if IS_DEV then 'INFO' else 'WARN'
 LOG_LEVEL .= toUpperCase()
 
 REV = process.env.LIMN_REV or 'HEAD'
-try REV = require '../version' catch e
-
 
 
 /**
@@ -47,14 +45,14 @@ DEFAULT_OPTIONS =
      * @type String
      * Path to directory where data and metadata files are stored.
      */
-    dataDir : './data'
+    dataDir : LIMN_DATA
     
     /**
      * @name varDir
      * @type String
      * Path to directory where derived files are written while in dev-mode.
      */
-    varDir : './var'
+    varDir : LIMN_VARDIR
     
     /**
      * @name proxy
@@ -210,14 +208,6 @@ application = limn.application =
                 allowed_methods : <[ GET HEAD ]>
                 log_level : LOG_LEVEL
             
-            # Compile YAML to JSON
-            # XXX: Unnecessary due to controllers
-            # @use '/data', compiler do
-            #     enabled : 'yaml'
-            #     src     : dataDir
-            #     dest    : "#varDir/data"
-            #     log_level : LOG_LEVEL
-            
             # Wrap modules in AMD/CommonJS closure for browser
             @use compiler do
                 enabled : <[ amd commonjs_define ]>
@@ -249,12 +239,13 @@ application = limn.application =
          * All environments: static files prior to applying routes and controllers.
          */
         @configure ->
-            {varDir, staticMaxAge} = @set 'limn options'
+            {varDir, staticMaxAge, dataDir} = @set 'limn options'
             maxAge = staticMaxAge[NODE_ENV] ? staticMaxAge.default
             
-            @use            express.static varDir, {maxAge}
-            @use '/js/limn/test', express.static TEST, {maxAge}
-            @use            express.static STATIC, {maxAge}
+            @use                    express.static varDir,  {maxAge}
+            @use '/js/limn/test',   express.static TEST,    {maxAge}
+            @use '/data',           express.static dataDir, {maxAge}
+            @use                    express.static STATIC,  {maxAge}
             
             @use @router
         

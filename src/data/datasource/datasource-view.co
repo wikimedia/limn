@@ -213,7 +213,13 @@ class exports.DataSourceView extends View
                                 {nodeType: 'grid', options: {dimension: 'y'}}
                                 {nodeType: 'legend', options: {dateFormat: 'HH:mm on MMM DD, YYYY'}}
                                 {nodeType: 'zoom-brush'}
-                                {nodeType: 'smooth'}
+                                {
+                                    nodeType: 'tweaks',
+                                    children: [
+                                        {nodeType: 'smooth'},
+                                        {nodeType: 'scaling'}
+                                    ]
+                                }
                                 {
                                     nodeType: "#{metricType}-group",
                                     options: {palette: 'category20'},

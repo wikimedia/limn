@@ -60,10 +60,9 @@ paletteScales = do
  * Provides consistent color lookup accross projects and/or instances
  * @param {string} label is the label of the object to be colored
  * @param {string} [palette] is the palette of colors that will do the coloring
- * @param {boolean} returnDefault is true if the caller wants a color no matter what
- * @returns a color if one is found, a color if returnDefault is true, or null otherwise
+ * @returns a color if one is found in the specified palette, a color from the default palette otherwise
  */
-lookupColor = exports.lookup = (label, palette=null, returnDefault=false) ->
+lookupColor = exports.lookup = (label, palette=null) ->
     if palette is 'wmf_projects'
         for project, {pat, color} in PROJECT_TESTS
             return color if pat.test label
@@ -71,8 +70,5 @@ lookupColor = exports.lookup = (label, palette=null, returnDefault=false) ->
     if scale = paletteScales[palette]
         return scale label
     
-    if returnDefault
-        scale = paletteScales['default']
-        return scale label
-    
-    return null
+    scale = paletteScales['default']
+    return scale label

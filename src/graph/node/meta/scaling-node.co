@@ -1,0 +1,41 @@
+{ GraphNodeData,
+} = require '../graph-node-data'
+{ ChildNode,
+} = require '../child-node'
+Trait = require '../graph-node-trait'
+
+
+
+/**
+ * @class
+ * @extends GraphNodeData
+ */
+class exports.ScalingNodeData extends GraphNodeData
+    @registerType 'scaling'
+    
+    defaults: ->
+        factor: 1
+    
+    attributeTypes: ->
+    
+    -> super ...
+
+
+
+/**
+ * @class
+ * @extends GraphNode
+ */
+class exports.ScalingNode extends ChildNode
+    @registerType 'scaling'
+    traits : [
+        Trait.SECTION
+        Trait.META_NODE
+        Trait.HTML
+        Trait.LEAF
+    ]
+    tagName  : 'section'
+    template : 'scaling-node'
+    
+    
+    -> super ...

@@ -137,7 +137,7 @@ class exports.LegendEntry extends AttributesBase implements formatters
         @legendOptions = @legend.options
         @options = @node.options
         this.label = node.label
-        @color = that if @node.color
+        @color = that if @node.strokeColor
         @legend.date.subscribe @trackLegendDate, this
     
     

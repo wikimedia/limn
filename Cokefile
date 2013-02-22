@@ -13,6 +13,9 @@ DIST_PATH              = 'dist/limn.js'
 DIST_MIN_PATH          = DIST_PATH.replace /\.js$/, '.min.js'
 
 
+{ sources, findSources, MODULES, LIMN_VARDIR, LIMN_DATA
+} = require './sources'
+
 
 task \install 'Install project dependencies.' ->
     <- sh 'npm install', {-verbose, +errors, +die}
@@ -30,14 +33,17 @@ task \server 'Start dev server' ->
     run './server/server.co'
 
 
-option \data 'absolute or relative path to data repository, data var/data/*/' \DIR
-option \to 'name of subdirectory to link to, like this: var/data/*/name-of-links' \DIR
+option \vardir 'the base directory where an instance of limn outputs derived files and links to data' \DIR
+option \data 'absolute or relative path to data repository, data LIMN_DATA/*/' \DIR
+option \to 'name of subdirectory to link to, like this: LIMN_DATA/*/name-of-links' \DIR
 
 task \link_data 'Link to data passed in as an argument' (options) ->
     data = options.data
-    to = options.to
-    unless data and to
-        console.log 'USAGE: coke --data path-to-data --to name-of-links link_data'
+    toLink = options.to
+    # FIXME: find a way to read from the LIMN_DATA environment variable
+    vardir = options.vardir
+    unless data and toLink and vardir
+        console.log 'USAGE: coke --vardir limn-var-dir --data path-to-data --to name-of-links link_data'
         console.log options.toString()
         console.log '  (* stands for any of: dashboards,datafiles,datasources,graphs,geo)'
         console.log ''
@@ -45,17 +51,18 @@ task \link_data 'Link to data passed in as an argument' (options) ->
         console.log options
         return
     
-    sh 'mkdir -p ./var/data'
-    sh 'mkdir -p ./var/data/dashboards'
-    sh 'mkdir -p ./var/data/datafiles'
-    sh 'mkdir -p ./var/data/datasources'
-    sh 'mkdir -p ./var/data/graphs'
-    sh 'mkdir -p ./var/data/geo'
-    sh "ln -sn #data/dashboards ./var/data/dashboards/#to"
-    sh "ln -sn #data/datafiles ./var/data/datafiles/#to"
-    sh "ln -sn #data/datasources ./var/data/datasources/#to"
-    sh "ln -sn #data/graphs ./var/data/graphs/#to"
-    sh "ln -sn #data/geo ./var/data/geo/#to"
+    datadir = "#vardir/data"
+    sh "mkdir -p #datadir"
+    sh "mkdir -p #datadir/dashboards"
+    sh "mkdir -p #datadir/datafiles"
+    sh "mkdir -p #datadir/datasources"
+    sh "mkdir -p #datadir/graphs"
+    sh "mkdir -p #datadir/geo"
+    sh "ln -sn #data/dashboards #datadir/dashboards/#toLink"
+    sh "ln -sn #data/datafiles #datadir/datafiles/#toLink"
+    sh "ln -sn #data/datasources #datadir/datasources/#toLink"
+    sh "ln -sn #data/graphs #datadir/graphs/#toLink"
+    sh "ln -sn #data/geo #datadir/geo/#toLink"
     
     say 'ok\n'
 
@@ -65,9 +72,6 @@ wrapInRequireDefine = (module, infile) ->
 task \build 'Build coco sources' ->
     invoke \setup
     coco <[ -bjc package.co ]>
-    
-    { sources, findSources, MODULES
-    } = require './sources'
     
     browserify              = require 'browserify'
     Coco                    = require 'coco'
@@ -148,23 +152,15 @@ task \bundle 'Build application and vendor bundles' ->
     invoke \bundle_vendor
 
 task \bundle_sources 'Build application bundle' ->
-    {findSources} = require './sources'
     app_sources = findSources null, {pre:'var/js/limn/'}
     
     mkdirp dirname APP_BUNDLE_PATH
     bundle_js APP_BUNDLE_PATH, app_sources, {-minify}
     print 'Minifying into', APP_BUNDLE_MIN_PATH.magenta.bold, '... '
     write APP_BUNDLE_MIN_PATH, minify read APP_BUNDLE_PATH
-    /** old fix, remove when minify is validated
-    say 'Bundling...'.magenta.bold
-    Seq(app_sources)
-        .seqEach (s) ->
-            fs.appendFile APP_BUNDLE_PATH, "\n#{read s};\n", ~> @ok()
-    */
     say 'ok.\n'
 
 task \bundle_vendor 'Build vendor bundle' ->
-    {sources} = require './sources'
     
     # FIXME: including vendor dependencies is quite a mess.  Clean this up
     vendor_sources_no_browserify = sources 'development'
@@ -180,12 +176,6 @@ task \bundle_vendor 'Build vendor bundle' ->
     bundle_js VENDOR_BUNDLE_PATH, vendor_sources, {-minify}
     print 'Minifying into', VENDOR_BUNDLE_MIN_PATH.magenta.bold, '... '
     write VENDOR_BUNDLE_MIN_PATH, minify read VENDOR_BUNDLE_PATH
-    /** old fix, remove when minify is validated
-    say 'Bundling...'.magenta.bold
-    Seq(vendor_sources)
-        .seqEach (s) ->
-            fs.appendFile VENDOR_BUNDLE_PATH, "\n#{read s};\n", ~> @ok()
-    */
     say 'ok.\n'
 
 task \bundle_combine 'Combine bundles into dist file' ->
@@ -214,13 +204,11 @@ task \list_all 'Print a list of all source-file paths.' ->
     invoke \list_sources
 
 task \list_sources 'Print a list of limn source-file paths.' ->
-    {findSources}  = require './sources'
     say do
         findSources null, {pre:'js/limn/'}
             .join '\n'
 
 task \list_vendor 'Print a list of vendor source-file paths.' ->
-    {sources}  = require './sources'
     say do
         sources 'development'
             .map -> it.slice 1

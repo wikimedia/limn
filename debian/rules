@@ -1,0 +1,43 @@
+#!/usr/bin/make -f
+# -*- makefile -*-
+# Sample debian/rules that uses debhelper.
+# This file was originally written by Joey Hess and Craig Small.
+# As a special exception, when this file is copied by dh-make into a
+# dh-make output file, you may use that output file without restriction.
+# This special exception was added by Craig Small in version 0.37 of dh-make.
+
+# Uncomment this to turn on verbose mode.
+export DH_VERBOSE=1
+
+# things copied to BASEDIR will be copied to the root directory of the target machine on install
+export BASEDIR=$(CURDIR)/debian/limn
+export SRVLIMN=$(BASEDIR)/usr/lib/limn
+
+%:
+	dh  $@
+
+install: build
+	dh_testdir;
+	dh_testroot;
+	dh_prep;
+	dh_installdirs;
+	dh_installinit;
+	mkdir -p $(SRVLIMN);
+	npm install;
+	npm update;
+	coke build;
+	coke bundle;
+	cp -r $(CURDIR)/node_modules  $(SRVLIMN)/node_modules
+	cp -r $(CURDIR)/server        $(SRVLIMN)/server
+	cp -r $(CURDIR)/src           $(SRVLIMN)/src
+	cp -r $(CURDIR)/test          $(SRVLIMN)/test
+	cp -r $(CURDIR)/var           $(SRVLIMN)/var
+	cp -r $(CURDIR)/views         $(SRVLIMN)/views
+	cp    $(CURDIR)/Cokefile      $(SRVLIMN)/Cokefile
+	cp    $(CURDIR)/sources.co    $(SRVLIMN)/sources.co
+	cp    $(CURDIR)/package.co    $(SRVLIMN)/package.co
+	cp    $(CURDIR)/package.json  $(SRVLIMN)/package.json
+
+
+binary: build install
+

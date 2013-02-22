@@ -1,4 +1,6 @@
-span Smooth the graph by averaging out&nbsp;
-input(type="number", data-bind="value: factor", min=1, max=1000)
-span &nbsp;datapoint
-span(data-bind="if: factor() > 1") s
+fieldset
+    legend Smooth
+    span average&nbsp;
+    input(type="number", data-bind="value: factor", min=1, max=1000)
+    span &nbsp;datapoint
+    span(data-bind="if: factor() > 1") s

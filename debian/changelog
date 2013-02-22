@@ -1,0 +1,2004 @@
+limn (0.6.1) UNRELEASED; urgency=low
+
+  [ Dan Andreescu ]
+  * Created new 0.6.0 version from tag 0.6.0
+
+  [ dsc  ]
+  * Initial commit.
+
+  [ Andrew Otto  ]
+  * Adding lib/{kraken ui.js,server.co}
+
+  [ dsc  ]
+  * Adds server boilerplate
+
+  [ Andrew Otto  ]
+  * Adding first views
+
+  [ dsc  ]
+  * .gitignore
+  * Adds static vendor modules.
+
+  [ Andrew Otto  ]
+  * styles and js
+
+  [ dsc  ]
+  * Adds dygraphs
+  * Demo graph!
+
+  [ Andrew Otto  ]
+  * Adding page views by project csv data.
+
+  [ dsc  ]
+  * Adds many boilerplate files, including Coke buildfile, view helpers,
+    and tmproj.
+  * Adds some visual assets; favicon.
+  * Updates backbone.
+
+  [ Andrew Otto  ]
+  * Merge branch 'master' of less.ly:kraken ui
+  * Merge branch 'master' of less.ly:kraken ui
+
+  [ dsc  ]
+  * Adds readme.
+  * Boilerplate readme setup.
+
+  [ declerambaul  ]
+  * Fabz is commiting!
+
+  [ dsc  ]
+  * First pass at UI styles.
+  * checkpoint
+  * After a torturous hour of debugging, Fabian and I have determined
+    you need node>=0.6.2 to meet the coco>=0.7.0 dep.
+
+  [ Andrew Otto  ]
+  * Merge branch 'master' of less.ly:kraken ui
+  * Adding page_views_by_language.csv
+  * Adding 'All' as total page views per all major wiki languages
+
+  [ dsc  ]
+  * Updates project links in package.co
+  * Adds and updates vendor modules.
+  * Updates dygraph options & parsing scripts.
+  * Adds underscore extensions.
+  * Removes duplicate options.
+  * Fixes require to be absolute.
+  * Adds utility modules.
+  * Fixes module name.
+  * Updated connect compiler to not die when a compiler throws an error.
+  * lib
+  * Dev server now serves .jade, .co, .styl as text/plain  so browsers
+    will display them, instead of downloading .
+  * Dev server now serves .jade, .co, .styl as text/plain  so browsers
+    will display them, instead of downloading .
+  * Adds Jade runtime for precompiling templates into functions.
+  * Use connect compiler from dsc/master
+  * Use precompiled Jade templates for views.
+  * Subclasses Scaffold models and views to implement Graph &
+    GraphOption specific behavior. I fully intend to reuse the Scaffold
+    :
+  * Adds isotope for options frobbing.
+  * Adds isotope for options frobbing.
+  * Fixes bug with the CommonJS wrapper and _.str
+  * okfine, guys, / can render the graphs.
+  * Uses js yaml to dynamically generate dygraph options.json at runtime
+    using connect compiler.
+
+  [ Andrew Otto  ]
+  * README.md   test push for post receive hook
+  * Merge branch 'master' of less.ly:kraken ui
+
+  [ dsc  ]
+  * Merge branch 'master' of less.ly:kraken ui
+  * Dynamically serve YAML  > JSON.
+  * Whoops, typo.
+  * Allows collapsing of options.
+  * Adds Bootstrap    http://twitter.github.com/bootstrap
+  * Moves bootstrap into its own folder.
+  * Adds symlinks for bootstrap.
+  * Adds directory indices, code comments.
+  * Vastly improves appearance of options, which means I've figured out
+    how to use Bootstrap. :
+  * Automatically maps tags to colors.
+  * Updates tag tracking.
+  * Fixes issue processing  option as a URL.
+  * Improves user supplied values parsing and tag colors.
+  * Adds endpoints for listing all dataset metadata files in /data, and
+    a metadata file for page_views_by_language
+  * Adds HEAD of dygraphs
+  * Booleans now render as checkboxes, and objects/arrays/functions as
+    textareas.
+  * Moves Tag crap to graph
+  * Merge branch 'master' of less.ly:kraken ui
+  * Booleans now render as checkboxes, and objects/arrays/functions as
+    textareas.
+  * Reorders dygraph options, fixes tags.
+  * Splits out models and views from graph.co
+  * Adds _.toKVPairs and _.fromKVPairs for dealing with www form encoded
+    serialization.
+  * Heh, apparently these functions were never accessible as the
+    assignment was using = instead of :.
+  * Breaks baseview out of scaffold; adds KVPairs serialization to most
+    models; updates model after checkbox click.
+  * Merge branch 'master' of less.ly:kraken ui
+  * Adds a post update webhook to the server to pull new files.
+  * Adds error handling to /data/all and fixes malformed yaml.
+  * Adds BaseModel and option setters.
+
+  [ Andrew Otto  ]
+  * Added  and renamed  updated dygraph .csv files, reparsed from Erik's
+    new reportcard csv files. Also added a pageviews_by.timestamp total
+    .csv file.
+  * kraken/baseview  > kraken/base
+
+  [ dsc  ]
+  * Implements toKVPairs and scaffold accepts options.
+  * Oops. Removes my options.
+  * Implements .fromKVPairs   with nested object support for most all of
+    the models.
+  * Scaffold now updates page URL after every render.
+  * Adds forms for GraphModel info.
+  * Renames model & view files to avoid having a ton named 'model.co'
+    etc
+  * Merge branch 'master' of less.ly:kraken ui
+  * Refactors Graph{Model,View} as Vis{Model,View} to reflect the chart
+    vs graph distinction.
+  * Updates todo and adds notes from various planning meetings.
+
+  [ declerambaul  ]
+  * Merge remote tracking branch 'origin/master'
+  * Merge remote tracking branch 'origin/master'
+
+  [ dsc  ]
+  * Updates todo, merges died's tags.
+  * Adds root graph presets.
+  * Checkpoint. Need to fix options mess that the subviews have
+    introduced.
+  * Merge branch 'master' of less.ly:kraken ui
+
+  [ Andrew Otto  ]
+  * I renamed the pageviews* files to non_mobile_pageviews
+
+  [ dsc  ]
+  * Upgrades history.js to use a fork that properly deals with URL
+    encoding.
+  * Fixes the vanished options.
+  * Merge.
+  * Return the plaintext result of the git pull command to the webhook
+    caller.
+  * Update options.file when datasource changes.
+  * Webhook test.
+  * Updates root preset and options; moves /graph/test  > /graph/view
+  * Moves presets, fixes routes & views to point to right place
+  * Adds option sorting.
+  * Updates presets, but mostly colons :P
+  * Updates legend & label formatting, adds isotope sorting, adds tab
+    container.
+  * Better tab container.
+  * Updates options and root presets.
+  * Fixes issue pushing toggled checkboxes to model; revises event flow;
+    fixes legend.
+  * Supports slug parsing and slug URLs.
+  * Adds vendor bundle.
+  * Server can now save json presets
+  * Adds redraw and save buttons.
+  * Ignore logs
+  * Adds desc form; fixes some styling.
+  * Ignore logs.
+  * Adds deploy script that builds JS bundles; updates layout to use
+    bundles when NODE_ENV=prod
+  * Refactors our parsers.
+  * Refactors chart defs into their own package.
+  * Updates Cascade
+  * Adds backbone nested
+  * Moves preset save directory out of WWW and into VAR. Update to
+    means we can load minified  files. Switches  for , and removes .
+  * Adds backbone extensions to vendor.
+  * Adds Cascade class, tests.
+  * Changes project package name to patch browser path.
+  * logging.
+  * Breaks toKV utils out; fixes ridiculous bugs in get/setNested.
+  * Fills out root presets.
+  * Minor layout tweaks.
+  * Test pages.
+  * Removes backbone.nested, as it breaks assignment with empty
+    containers.
+  * Cleanup.
+  * Major fixes to Cascade
+  * Graphs now cascade settings, to enable 'Fork this Graph', as well as
+    inheritence from root graph settings.
+  * kraken/{  > util/}underscore
+  * Renames 'chart library' to 'chart type', as it makes sense that one
+    library might service multiple chart types, each with their own
+    options schema.
+  * Renames 'chart library' to 'chart type', as it makes sense that one
+    library might service multiple chart types, each with their own
+    options schema.
+  * Ensure id in stored graphs.
+  * Renames Vis* to Graph*. Adds support for loading graphs off the
+    server.
+  * Fixes graph saving.
+  * Vendor libraries for time formatting.
+  * Axis and value formatting.
+  * Patches Dygraphs with structural markup for the legend so it can be
+    styled to be readable.
+  * Updates to bootstrap 2.0.2.
+  * Fixes buttons.
+  * Fixes errant fragment identifiers from buttons.
+  * Moves root Dygraphs preset to data folder.
+  * Converts the hodgepodge of server endpoints to RESTful resources.
+  * Adds colorbrewer to vendor lib.
+  * Updates Backbone to 0.9.2
+  * Fixes ugly Windows checkboxes.
+  * First pass at data UI, mostly inactive due to time. Adds simple
+    dropdown for datasets.
+  * Merges together datafiles
+  * Fixes saving bug.
+  * Updates datasource controller to search recursively.
+  * Fixes 'selected' property on dataset selector.
+
+  [ declerambaul  ]
+  * Type in yaml file. Changing default dataset to first chart on old
+    report card.
+
+  [ dsc  ]
+  * Updates spin.js
+  * Adds isotope custom layout modes.
+  * Fixes version caching code to work with Jade 22.1
+  * Updates dependencies.
+  * Updates to use node remove
+  * Fixes .
+  * Fixes node version requirement. Oof.
+  * Updates dygraph schema.
+  * Log all requests if prod.
+  * browserify cache now points at CWD instead of /home/dan
+
+  [ declerambaul  ]
+  * Merge branch 'master' of less.ly:kraken ui
+
+  [ dsc  ]
+  * Fixes node version requirement. Oof.
+  * Read various config variables from env.
+  * Merge branch 'master' of less.ly:kraken ui
+
+  [ declerambaul  ]
+  * Merge branch 'master' of less.ly:kraken ui
+
+  [ dsc  ]
+  * Adds GraphDisplayView
+  * Merge branch 'master' of less.ly:kraken ui
+  * Adds Dashboard for Reportcard.
+  * Makes Reportcard graphs read only.
+  * Checkpoint on Data UI
+  * Merge branch 'master' of less.ly:kraken ui into dataset ui
+  * Adds CascadingModel base model, for looking up model attributes on a
+    chain of dictionaries.
+  * Checkpoint on Data UI
+  * Adds Backbone Base docs.
+  * Symlinks in docs
+
+  [ Andrew Otto  ]
+  * Adding permalink to graph display view
+
+  [ dsc  ]
+  * Cascade.toJSON   now recursively merges objects using _.merge  .
+  * Merge branch 'master' of less.ly:kraken ui
+  * Merge branch 'master' of less.ly:kraken ui into dataset ui
+  * Adds .getClassName   to BaseMixin
+  * Adds _.merge   tests.
+  * Implements Cascade tombstones.
+  * Search for datasource by id.
+
+  [ Andrew Otto  ]
+  * Adding event handler to select permalink text on focus
+  * Merge branch 'master' of less.ly:kraken ui
+
+  [ declerambaul  ]
+  * Creating d3 testing branch. Added d3 to modules.yaml. geo.jade for
+    displaying the world graph
+
+  [ dsc  ]
+  * Adds _.merge   tests.
+  * Remove nested tombstones.
+  * /datasources/all to take precedence before the :id lookup.
+  * Checkpoint on Data UI
+
+  [ Andrew Otto  ]
+  * Linking graph name in graph title to graph url.
+
+  [ dsc  ]
+  * Data UI now renders and responds to most events. Propagation of
+    changes needs cleanup.
+  * Fixes Data UI resizing. Adds navbar shadow.
+  * Ah! Fixes the bug that prevented Controller from properly
+    registering mappings.
+  * Merge branch 'master' of less.ly:kraken ui
+  * Fixes Controller.mapping.
+  * CSV parser, supporting transforms.
+  * Abstracts out ModelCache.
+  * Checkpoint on Data UI.
+
+  [ Andrew Otto  ]
+  * Added /graphs view for viewing list of saved graphs.
+  * Refactoring a few things after code review with David.
+
+  [ dsc  ]
+  * Fixes GraphEditView classes and selectors to match others and defend
+    against bleeding their styles.
+  * Merge branch 'master' of less.ly:kraken ui
+  * Merges in master plus edit class fixes.
+  * Checkpoint on Data UI.
+  * Minor tweaks for first view Chart Options.
+
+  [ declerambaul  ]
+  * Geo code coffe script
+  * Merge branch 'master' into d3 testing
+
+  [ dsc  ]
+  * Checkpoint on Data UI.
+  * Async read multiple files.
+
+  [ Andrew Otto  ]
+  * Fixing /graphs so that it uses real data.
+
+  [ dsc  ]
+  * Adds files.readJSONFilesAsync
+  * Merge branch 'master' of less.ly:kraken ui
+  * Updates /graphslist to use files.readJSONFilesAsync
+
+  [ Andrew Otto  ]
+  * Moving /graphslist to /graphs.json, handled in graph.co controller
+    rather than directly in routing in server.co
+
+  [ dsc  ]
+  * Fixes dreadfully obvious error with /datasources/all
+  * Merge branch 'master' of less.ly:kraken ui
+
+  [ Andrew Otto  ]
+  * Adding media=print styles so that printed graphs look nicer.
+
+  [ dsc  ]
+  * Checkpoint: Graphs now render from their Dataset model
+
+  [ Andrew Otto  ]
+  * Adding link to /graphs in footer  only in dev envs for now .
+
+  [ dsc  ]
+  * Adds base TimeSeriesData class.
+
+  [ declerambaul  ]
+  * Merge branch 'master' of less.ly:kraken ui
+
+  [ dsc  ]
+  * Adds mime types for yaml and markdown.
+  * Improves TimeSeriesData interface.
+
+  [ Andrew Otto  ]
+  * Adding Project Layout and Deployment docs to README.md
+  * Merge branch 'master' of less.ly:kraken ui
+  * controllers/graph.co   using switch instead of if for index/ format
+    conditional
+  * server/controller.co   documentation for mapping property
+
+  [ declerambaul  ]
+  * New version of d3  2.8.1  to vendor libraries. Added d3 to
+    modules.yaml. Implemented simple geolocation map for enwp, data is
+    stored in /data/geo.
+  * Merge branch 'master' into d3 testing
+  * Fixed passing of method arguments
+
+  [ dsc  ]
+  * Adds auto triggering on ready registrations.
+  * Moves timeseries classes.
+  * Adds data binding class. See previous commit    I'm too lazy to fix
+    the index.
+
+  [ declerambaul  ]
+  * Loading data before creating map. Added simple mouseover infobox
+    with additional editor info.
+  * Styled infobox. Well I tried.
+
+  [ dsc  ]
+  * Adds abstractions on waiting and once ready EventEmitters.
+  * Vastly improves model cache.
+
+  [ declerambaul  ]
+  * Updated world map info to match geolocation country names. Played
+    around trying to combine bootstrap/d3.
+  * Copy/pasted chart notes from old report card. Needs some styling.
+  * Added experimental export button to display view. Not ready for
+    deployment  e.g. graph title missing , to disable remove .export
+    button from lib/template/graph display.jade
+
+  [ dsc  ]
+  * Merge branch 'master' of less.ly:kraken ui
+
+  [ declerambaul  ]
+  * Only show export button in dev mode for now.
+  * Merge branch 'develop'
+  * Removed confusing/wrong All data loaded log message.
+
+  [ dsc  ]
+  * Merge branch 'master' of less.ly:kraken ui
+  * Checkpoint: Events mostly flow upward.
+
+  [ declerambaul  ]
+  * Adding tab support for main page, splitting charts in core and non
+    core metrics
+  * Page header: changed Feb12 to March12
+  * Changed order of graphs, comscore data appears first
+
+  [ dsc  ]
+  * Merge branch 'master' of less.ly:kraken ui
+
+  [ declerambaul  ]
+  * Created saved graph for mobile data. Added mobile target to
+    dashboard.
+  * Changed dashboard title
+  * Adding uglify js to dependencies in package.json. Required by
+    deploy.sh
+  * Added mobile devices dygraph files to datasources. Included three
+    new mobile devices charts in saved graphs. Added charts to
+    dashboard.
+  * Merge branch 'master' into rc tabs
+  * Dygraphs needs to be refreshed
+  * Removing mobile devices charts from dashboard
+
+  [ dsc  ]
+  * Adds Bootstrap color and date pickers.
+  * Adds data attribute for binding to control escaping.
+  * Implements colorpicker for metrics.
+  * DataSet UI now wired up properly, woo.
+  * Merge branch 'master' of less.ly:kraken ui
+  * checkpoint
+  * Fabfile now bundles.
+  * checkpoint
+  * Updates deps
+  * Updates deps, adds more docs.
+  * Updates ParserMixin, working on simplifying Scaffolding.
+  * Temporarily redirect to /graphs/ohai/edit while I implement
+    backwards compat with the old data format.
+
+  [ declerambaul  ]
+  * Rudimentary tab support. Tabs are hardcoded in dashboard view.co.
+    Issue: when changing tabs, the charts have to be rerendered   for a
+    brief moment a distored chart is visible before rendering is
+    complete.
+
+  [ dsc  ]
+  * Merge branch 'develop' of less.ly:kraken ui into develop
+  * Fixes errant cursor, adds viewport defaults.
+  * Fixes update   for cases like Scaffold.
+
+  [ declerambaul  ]
+  * Merge remote tracking branch 'origin/develop' into develop
+
+  [ dsc  ]
+  * Merge remote tracking branch 'origin/master' into develop
+  * Merge remote tracking branch 'origin/dataset ui' into develop
+  * Fixes error with / from Jade 26.0
+  * Refactors much of GraphEditView and GraphDisplayView into a common
+    base.
+  * Tabs to spaces.
+  * Adds footer with useful information.
+  * Meh. Didn't like watermark.
+  * Adds mixins for CSS Animations.
+  * Turns off opacity animation as it causes some links to randomly
+    flicker.
+  * Refactor of ChartType.
+  * Pruning dead code.
+
+  [ David Schoonover  ]
+  * Trailing whitespace.
+  * Adds support for DataSet.removeMetric
+  * Fixes metric CRUD in data ui.
+  * Turns out sub forms don't contribute their fields to a parent form
+    when calling jQuery.serializeArray  , which is AWESOME. And fixes
+    the 'extraneous random crap' problem with serializing Metric models
+    in some cases.
+  * Refactor of source modules, including:   dataset      > data
+    timeseries   > util/timeseries   scaffold     > base/scaffold   Adds
+    templates/{chart,dashboard,data,graph} to match the structure of the
+    modules   Deletes unused/empty modules and templates
+  * Cleans up geo chart in prep for making a chart type.
+  * Adds AppView to start cleaning up  main.co files; Begins refactor of
+    chart type code; fixes new, broken changes from browserify.
+  * Fixes submit bug with subforms; fixes lost context with data
+    transforms.
+  * Checkpoint.
+  * Strip out id from DataSet JSON before saving.
+  * Remove cruft from dev bugs.
+
+  [ declerambaul  ]
+  * Merge branch 'develop' of less.ly:kraken ui into develop
+
+  [ David Schoonover  ]
+  * Merge branch 'develop' of less.ly:kraken ui into develop
+
+  [ declerambaul  ]
+  * Temporarily added test.json for debugging of new dataset ui graph
+    spec.
+  * Merge remote tracking branch 'origin/develop' into develop
+
+  [ David Schoonover  ]
+  * And that finishes up Callouts.
+  * Merge branch 'develop' of less.ly:kraken ui into develop
+  * Fixes issue with certain graphs failing to load their graph
+    metadata.
+  * Fixes test for default metric label resulting in misapplied labels.
+  * Updates callout style.
+  * Merge branch 'develop' of less.ly:kraken ui into develop
+  * Guards callout against null data. Re enables Dashboard.
+  * Moves legend to the left, along with the callout. Updates dashboard
+    style.
+  * Adds project to color mapping for metrics with no color defined.
+  * Colors the callout deltas.
+  * Stubs out project info pages.
+  * Removes github links for now.
+  * Minor dashboard style tweaks
+
+  [ declerambaul  ]
+  * Merge remote tracking branch 'origin/develop' into develop
+
+  [ David Schoonover  ]
+  * Fixes issue with derived colors in edit view.
+  * Merge branch 'develop' of less.ly:kraken ui into develop
+  * Fixes Callout for missing data.
+  * Whoops. Apparently I forgot to uncomment that.
+  * Replaces 'GraphKit' with 'Limn'.
+  * Updates footer.
+  * Updates reportcard date.
+
+  [ declerambaul  ]
+  * Fixed bug with callout that contain NaN numbers
+  * Merge branch 'develop' of less.ly:kraken ui into develop
+
+  [ David Schoonover  ]
+  * Force load chart schema as json.
+  * Proxy endpoint.
+  * Disable buffering for nginx.
+  * Checkpoint in adding shortcut to scroll between graphs.
+  * Updates dashboard and display to use AppView
+  * Adds generic non Backbone base class.
+  * Adds Dashboard controller.
+  * Fixes scroll to graph.
+  * Folding markers.
+  * First pass at a d3 line chart.
+  * Adds d3 line test graph.
+  * Fixes ordering issue with non default chart types.
+  * Auto load d3 line chart type.
+  * Unbreaks dygraph charts. Heh.
+  * Removes pointless logging.
+  * An experiment in hover reactive data points.
+  * Idea mockups.
+
+  [ declerambaul  ]
+  * Added mouseover event for the circles on a line.
+  * Added a rudimentary bar chart type
+  * D3 charttypes now render an individual metric, which allows to
+    combine different types in the same graph, e.g. having both bars and
+    lines in a graph.
+
+  [ David Schoonover  ]
+  * Whitespace.
+
+  [ declerambaul  ]
+  * Created a D3ChartType ChartType, abstracting the different d3
+    elements  line,bar  as subclasses of D3ChartElement.
+
+  [ David Schoonover  ]
+  * Whitespace
+  * Whitespace
+
+  [ erosen  ]
+  * successfully implemented the graph cache loading procedure which
+    returns a nested object of the form {tab_id : {graph_id : graph_obj}
+    }, which isnt really ideal
+  * finished basic refactoring of dashboard loading behavior.  Still
+    broken though
+
+  [ declerambaul  ]
+  * D3ized the displaying of the metrics stored in a model, i.e. using
+    enter   exit   methods.
+
+  [ erosen  ]
+  * dashboard view/model refactoring complete.  model now loads graphs
+    form cache and view just asks model for graph objects. graph_ids and
+    tabs are still hardcoded, however inside the model.
+
+  [ David Schoonover  ]
+  * Freezes deps.
+  * Merge branch 'develop' of less.ly:kraken ui into develop
+
+  [ dsc  ]
+  * Freezes deps.
+
+  [ David Schoonover  ]
+  * Adds conf to build /docs into nice HTML docs.
+
+  [ erosen  ]
+  * Merge branch 'evan' into develop
+  * Merge branch 'develop' of less.ly:kraken ui into develop
+
+  [ David Schoonover  ]
+  * Merge branch 'develop'
+
+  [ declerambaul  ]
+  * SVG rerenders each time the model changes and ChartType.renderChart
+    is called.
+  * Re added David's code for accessing individual data points in d3
+    line element.co for future use.
+  * Merge remote tracking branch 'origin/develop' into develop
+  * Adopted margin convention from http://bl.ocks.org/3019563
+
+  [ David Schoonover  ]
+  * Adds _.isMember, a generic test for whether a collection contains a
+    value.
+  * Updates contributors.
+  * Refactors server into middleware; changes 'dev' to 'development'
+    when testing environment, as per node convention.
+  * Fixes IS_DEV issue.
+  * Merge branch 'develop' with the Middleware updates.
+  * Updates dashboard month.
+
+  [ erosen  ]
+  * added yaml files for mobile charts
+
+  [ David Schoonover  ]
+  * Adds build target to compile all files.
+  * Merge branch 'develop' of less.ly:kraken ui into develop
+  * Fixes title update in graph edit mode.
+  * Adds precompiled .mod files to vendor.
+  * Updates build.
+  * Adds bundle tasks.
+  * Updates to multi dashboard with Evan.
+  * Updates to multi dashboard with Evan.
+  * Merge branch 'develop' of less.ly:kraken ui into develop
+  * Moves Coco source tree from 'lib' to 'src'    compiled JS files will
+    live in 'lib'.
+  * Static build of browserify.
+  * Build target now compiles derived files for release. Updates
+    middlware to serve the right directories.
+  * Adds compiled JS source files to be published with the npm
+    distribution.
+  * Exclude dev files from npm package.
+  * Compile all Coco files, otherwise we don't have Middleware :P
+
+  [ dsc  ]
+  * Fixes bundle tasks.
+
+  [ David Schoonover  ]
+  * Checkpoint. Updates deps and fiddles with middleware.
+  * Merge branch 'middleware' of less.ly:limn into middleware
+  * Renames kraken to limn.
+  * Adds YAML support to readJSONFilesAsync
+  * Updates all controllers to recursively search for their data.
+  * Clean up vendor.
+  * Fixes graph list endpoint to work with changes to readJSONFiles
+  * Graph List: Fall back on ID or URL for graphs missing info.
+  * Updates for compat with Bootstrap 2.0.4
+  * Updates GraphListView to load GraphList itself, rather than rely on
+    main.
+  * Updates application to use a router to delegate to the various
+    views.
+  * Beginning of a generic resource router.
+  * Removes * main.co files.
+  * Removes * main.co files.
+  * Merge branch 'middleware' of less.ly:limn into middleware
+  * Rebuilds lib/ with new name. Updates Cokefile to build dist/limn.js.
+    Adds symlinks in www for testing dist files.
+  * options.proxy = true   > options.proxy = { enabled: true }
+  * Makes all imports relative.
+  * Applicaton now obeys a mount point set by middleware.
+  * Adds license file.
+  * Updates README.
+  * Updates package; exposes view_helpers.
+  * Merges middleware branch.
+  * First pages commit
+  * Fixes Dashboard view.
+  * Fixes build with sources
+  * Builds JS.
+  * Fixes routing for /new /edit; fixes saving graphs.
+  * Adds fields to dashboard to set titles.
+  * Adds decorate method for emitter subclasses.
+  * Data UI now waits for /datasources/all TOC call to finish.
+  * Updates derived JS files.
+  * Breaks out operator.js & replaces import. Replaces internal mkdirp
+    with substack's.
+  * Breaks out underscore.nested & replaces import.
+  * Breaks out underscore.kv & replaces import.
+  * Breaks out timeseries.js & replaces import.
+  * Merge pull request #30 from dsc/master
+  * Adds error handling to install; removes module link.
+  * Adds utils.
+  * Fix UI slowdown with a large number of datasources.
+
+  [ Sumana Harihareswara  ]
+  * README typo fix
+
+  [ David Schoonover  ]
+  * Inlines reqinfo middleware.
+  * Updates jQuery to 1.8.0
+  * checkpoint
+  * Merge pull request #36 from brainwane/patch 1
+
+  [ Diederik van Liere  ]
+  * Initial travis ci support
+
+  [ David Schoonover  ]
+  * Conform to accessor names used elsewhere.
+  * Load AliasDict and HashSet
+  * Don't alias accessors on views    always use @model
+  * Initial stab at ChartElement tree.
+  * Moves ChartType related classes to their own shameful directory.
+  * Refactors old Dygraphs driven charts to 'LegacyGraph' and friends.
+  * Checkpoint
+
+  [ Dan Andreescu  ]
+  * creating a controller, route, view, and model for training purposes.
+    They are all called random
+  * fixed missing modules.yaml definition and bad class reference
+
+  [ David Schoonover  ]
+  * Checkpoint.
+
+  [ Dan Andreescu  ]
+  * managed to get a basic list, view, edit flow need to save the edit
+  * got random module to save
+  * adding files that were left out due to my git noobiness
+  * Merge remote tracking branch 'dsc/develop' into feature/d3
+
+  [ David Schoonover  ]
+  * Make errors come from the right place.
+  * GraphModel should now have components for loading dependant data
+    only once; GraphEditView triggers this process.
+
+  [ Dan Andreescu  ]
+  * Merge remote tracking branch 'dsc/develop' into feature/d3
+
+  [ milimetric  ]
+  * removed enough code to allow graphs/:graph to load without error
+  * stuck trying to render a line graph, switching gears playing with d3
+    on a test page
+  * creating a purely mock up version of graphs in d3 will build a view
+    hierarchy around this later
+  * improved mockup of d3 graph almost done with initial features except
+    zooming
+
+  [ Andrew Otto  ]
+  * Adding limn screenshot.png
+  * Updating README.md limn screenshot.png url
+
+  [ milimetric  ]
+  * done with d3 mockup next steps   clean up and refactor until usable
+    by a more generic framework
+  * small touch ups
+  * cleaned up the d3 prototype added layout and started grouping
+    everything logically
+  * fixed axes, legend tracking, and brush dimension
+  * getting good progress on transform based zooming
+  * fixed circles to not scale when zooming
+  * fixed the legend updating to work with new zoom
+  * Checkpoint: moving from circleGroup s  to single markers
+  * marks now replaced circleGroups and scale properly
+  * hacked a fix for double click zoom out
+  * New Zoom with data, enter, and exit
+  * Finished New Zoom with data, enter, and exit
+  * Cleaned up remaining padding and tracking issues
+  * Complete Junk attempting to merge d3 prototype into Limn
+  * Revert Complete Junk attempting to merge d3 prototype into Limn
+  * Revert stuck trying to render a line graph, switching gears
+  * Revert removed enough code to allow graphs/:graph to load without
+    error
+
+  [ dsc  ]
+  * Checkpoint
+
+  [ milimetric  ]
+  * First attempt at making blank ChartElements
+
+  [ David Schoonover  ]
+  * Fixes issue with mismatched pointers in ChartElement's ref to its
+    ChartElementData.
+  * Merge branch 'feature/d3' of https://github.com/milimetric/limn into
+    feature/d3
+
+  [ milimetric  ]
+  * Merge branch 'feature/d3', remote tracking branch 'dsc/feature/d3'
+    into feature/d3
+  * ChartElement hierarchy is loading.  Working on ChartView
+
+  [ David Schoonover  ]
+  * Merge branch 'feature/d3' of https://github.com/milimetric/limn into
+    feature/d3
+
+  [ milimetric  ]
+  * Checkpoint.  Problem with ChartView to LineChartElement events.
+
+  [ David Schoonover  ]
+  * Merge branch 'feature/d3' of https://github.com/milimetric/limn into
+    feature/d3
+
+  [ milimetric  ]
+  * Checkpoint.  Rendering correctly but invisible
+
+  [ David Schoonover  ]
+  * Merge branch 'feature/d3' of https://github.com/milimetric/limn into
+    feature/d3
+
+  [ milimetric  ]
+  * Checkpoint.  Still invisible
+  * Fixed invisible svg elements in chart element.co
+  * added axes
+
+  [ David Schoonover  ]
+  * Minor style changes hopefully protecting SVG elements.
+  * Adds bubbling helper to BaseView.
+  * Merge branch 'feature/d3' of https://github.com/milimetric/limn into
+    feature/d3
+
+  [ milimetric  ]
+  * added grid and legend
+  * got the legend and line guide working
+  * got metric markers working
+
+  [ David Schoonover  ]
+  * Adds skeleton for element relative UI options.
+
+  [ milimetric  ]
+  * merging dsc's edit UI
+  * fixed y domain and the accessing options
+  * fixed label bug introduced in last commit
+  * added a barebone BarChartElement
+
+  [ David Schoonover  ]
+  * Updates line styles.
+
+  [ milimetric  ]
+  * prototype for CSS transitions driven Edit UI
+
+  [ David Schoonover  ]
+  * Transform mixin.
+
+  [ milimetric  ]
+  * Zooming edit boxes with transitions  empty for now
+  * some styling of the Edit UI prototype
+  * merged style changes and removed line chart
+  * cleaned up TODOs
+  * Broken after adding legend element
+  * fixed reportcard data which highlighted the problem with legend edit
+
+  [ David Schoonover  ]
+  * Merge branch 'feature/d3' of https://github.com/milimetric/limn into
+    feature/d3
+  * Merge branch 'feature/d3' of https://github.com/milimetric/limn into
+    feature/d3
+
+  [ milimetric  ]
+  * legend edit mockup
+
+  [ David Schoonover  ]
+  * Merge branch 'feature/d3' of https://github.com/milimetric/limn into
+    feature/d3
+
+  [ milimetric  ]
+  * jquery ui files
+
+  [ David Schoonover  ]
+  * Merge branch 'feature/d3' of https://github.com/milimetric/limn into
+    feature/d3
+  * Adds livecss.js
+  * Enables LiveCSS when present; turns on compiler support for HEAD
+    requests.
+  * Auto binding and auto option2property for BaseList.
+  * Fixes livecss to handle individual .watch   calls against non fqdn
+    URLs.
+  * LiveCSS support.
+  * Respond to dataset changes and rerender metric lines.
+  * Fixes scale domain.
+  * Yo dawg, I heard you like libraries.
+  * Adds Backbone Nested
+  * Adds Backbone Nested
+  * Prunes files.
+  * Migrates files from Dan's knockout experiment.
+
+  [ milimetric  ]
+  * made datasource loading synchronous
+  * ignoring data symlink
+  * got legend to respond to metrics
+  * checkpoint
+  * barely functional page.js integration
+  * forgot to add page.js
+  * moved graphs into Dashboard model
+
+  [ dsc  ]
+  * Removes the stupid lib directory.
+  * Moves views.
+  * Removes refs to legacy graph files.
+  * Removes unnecessary src pointer.
+  * Removes unecessary css files.
+  * Centralizes css files.
+  * Moves server
+  * Updates server for move.
+
+  [ milimetric  ]
+  * fixed async loading using ko computed
+  * line elements not getting chart problem
+
+  [ dsc  ]
+  * Starting over.
+
+  [ milimetric  ]
+  * got rendering to work with knockout subscriptions
+  * all working except visible svg elements
+
+  [ dsc  ]
+  * Checkpoint on Model & Resource
+
+  [ milimetric  ]
+  * changed chart elements to use d3 to render
+
+  [ dsc  ]
+  * Checkpoint.
+  * Checkpoint for dinner.
+  * Checkpoint: adds Mixin baseclass and related machinery.
+  * Knockout stub for node.
+
+  [ milimetric  ]
+  * changing default view to index.jade and start testing
+
+  [ dsc  ]
+  * Fixes module shims.
+  * jQuery 1.8.2
+  * Checkpoint.
+  * Merge branch 'feature/knockout refactor' of
+    https://github.com/milimetric/limn into feature/knockout refactor
+  * Knockout module compatibility.
+  * Model drops null/undefined keys from json. Fixes Model test.
+
+  [ milimetric  ]
+  * merging
+  * Merge remote tracking branch 'dsc/feature/knockout refactor' into
+    feature/knockout refactor
+  * is this a failing test or misunderstanding?
+
+  [ dsc  ]
+  * Renames chart*. Finishes off Resource.
+  * Merge branch 'feature/knockout refactor' of
+    https://github.com/milimetric/limn into feature/knockout refactor
+  * Fixes typo in Model.set
+  * Removes obsolete schemas
+  * Adds Dan to contributors. Depend on underscore.deferred.
+  * Depend on underscore.deferred.
+  * Skeletal DataSource and Metric models.
+  * Limn's Knockout extenders/plugins.
+  * Checkpoint on Model rubbish. After much grief, I am abandoning
+    ko.mapping, as it is horrifying, pointless, poorly written, and
+    confusing.
+  * Model now uses @getAttributes   and the ko.typedObserver module
+
+  [ milimetric  ]
+  * checkpoint
+  * Merge remote tracking branch 'dsc/feature/knockout refactor' into
+    feature/knockout refactor
+
+  [ dsc  ]
+  * Checkpoint.
+
+  [ milimetric  ]
+  * checkpoint
+
+  [ dsc  ]
+  * Resolves conflict
+  * Updates controllers to pass on all requests to render a page,
+    allowing server to defer to client side routing.
+  * Fixes Model.un/set to create missing  non observable  attributes.
+  * Resolves conflict
+  * Dan: 'I just want to be able to get plain HTML.'
+  * Fixes jQuery dep.
+  * Add routes for /test
+
+  [ milimetric  ]
+  * moving from vows to qunit for testing
+  * of the basic tests, one fails
+
+  [ dsc  ]
+  * Adds ParserMixin.
+  * First pass at DataSource and Metric
+
+  [ milimetric  ]
+  * failing test on arrays, waiting for merge to patch
+  * clarifying test failure a bit more
+  * Merge remote tracking branch 'dsc/feature/knockout refactor' into
+    feature/knockout refactor
+  * patching mixin move
+  * changing test, might have been bad assumption
+  * added test for complex object
+
+  [ dsc  ]
+  * Fixes unit tests to work with clean checkout.
+  * Fixes failing test.
+  * Adds type tests for typed properties and arrays.
+  * A QUnit theme picker :
+
+  [ milimetric  ]
+  * mixing Resource only in StoredModel
+
+  [ dsc  ]
+  * Async computed observable
+  * Merge branch 'feature/knockout refactor' of
+    https://github.com/milimetric/limn into feature/knockout refactor
+  * Updates moment.js to 1.7.2
+  * Updates moment.js to 1.7.2
+  * Patch moment.js to expose constructors.
+  * Updates moment.js to 1.7.2
+
+  [ milimetric  ]
+  * added one test for asyncComputed
+  * forgot to include stored model in modules.yaml
+
+  [ dsc  ]
+  * Merge branch 'feature/knockout refactor' of
+    https://github.com/milimetric/limn into feature/knockout refactor
+  * Updates jQuery to 1.8.2
+  * Updates Underscore to 1.4.2
+
+  [ milimetric  ]
+  * added a very simple datasource cache with a test
+  * improved unique promise mechanism
+
+  [ dsc  ]
+  * Updates Resource to use promises.
+  * Merge branch 'feature/knockout refactor' of
+    https://github.com/milimetric/limn into feature/knockout refactor
+  * Updates Resource, adds ModelCache.
+  * Remove stupid cachebuster which now invalidates Chrome breakpoints.
+  * Fixes ModelCache and Resource.sync  .
+  * Fixes limn.mount   and DataSource.fetchAll
+  * Moves base classes to src/base
+
+  [ milimetric  ]
+  * test to show attributes not loading
+
+  [ dsc  ]
+  * Adds Model.update. Resource.fetch now actually updates the model. :P
+
+  [ milimetric  ]
+  * Merge remote tracking branch 'dsc/feature/knockout refactor' into
+    feature/knockout refactor
+
+  [ dsc  ]
+  * Merge branch 'feature/knockout refactor' of
+    https://github.com/milimetric/limn into feature/knockout refactor
+  * Duck punches the decorate method onto emitters.
+
+  [ milimetric  ]
+  * corrected test
+
+  [ dsc  ]
+  * Adds canonicalize   to be called as part of model construction and
+    resource update.
+  * Merge branch 'feature/knockout refactor' of
+    https://github.com/milimetric/limn into feature/knockout refactor
+
+  [ milimetric  ]
+  * Merge remote tracking branch 'dsc/feature/knockout refactor' into
+    feature/knockout refactor
+  * Merge remote tracking branch 'dsc/feature/knockout refactor' into
+    feature/knockout refactor
+  * fixed broken test
+
+  [ dsc  ]
+  * ModelCache: invalidate, purge
+
+  [ milimetric  ]
+  * first draft of dashboards and graphs
+
+  [ dsc  ]
+  * Removes unnecessary  and stale  copy of browserify results.
+  * asyncComputable compatibility with deferEvaluation
+  * Merge branch 'feature/knockout refactor' of
+    https://github.com/milimetric/limn into feature/knockout refactor
+  * Updates asyncComputed to only recompute the first time.
+
+  [ milimetric  ]
+  * fixed dashboard serialization and moved it into module
+
+  [ dsc  ]
+  * Merge branch 'feature/knockout refactor' of
+    https://github.com/milimetric/limn into feature/knockout refactor
+  * Updates HashSet to use guidFor
+
+  [ milimetric  ]
+  * Merge remote tracking branch 'dsc/feature/knockout refactor' into
+    feature/knockout refactor
+
+  [ dsc  ]
+  * Adds Query operator, Iterator objects, and completes computed data
+    properties on Metric and DataSource.
+  * Minor cleanup.
+  * Use QUnit.module over bare  so we can require tests and control the
+    ordering.
+  * Moves QUnit to vendor and loads tests as modules so the ordering is
+    consistent; directory structure in test now mirrors src; fixes silly
+    typo in Metric.
+  * Test module prefixes
+  * Removes lies.
+
+  [ milimetric  ]
+  * added routing with page.js and started templating
+  * Merged in dsc work
+  * fixed subview binding
+  * small cleanup
+  * fixed page.js routing
+  * unit test for subview binding and starting pages
+  * fixed broken templates
+  * weird nested arrays binding problem
+  * checkpoint
+  * silly misspelling was reason for binding problem
+  * forgot debugging slice in there
+  * added new subview binding test
+
+  [ dsc  ]
+  * Checkpoint.
+
+  [ milimetric  ]
+  * Merge remote tracking branch 'dsc/feature/knockout refactor' into
+    feature/knockout refactor
+
+  [ dsc  ]
+  * Merge branch 'feature/knockout refactor' of
+    https://github.com/milimetric/limn into feature/knockout refactor
+
+  [ milimetric  ]
+  * misspelling
+  * got axis to work but it's not visible because of lack of layout
+  * ported grids
+
+  [ dsc  ]
+  * Groups model methods.
+  * Ensure observed objects found on new instances are copied  to
+    prevent shared state .
+
+  [ milimetric  ]
+  * edit proof of concept
+
+  [ dsc  ]
+  * Factor out observable setup.
+  * Moves isNew from Model onto the Resource mixin; View now extends
+    Model.
+  * Moves generic Model machinery to Base.
+  * StoredModel.load id
+  * Refactors ko.typedObservable   to accept a generic type coercion
+    function, and moves the Model specific wrapper into its own
+    extender.
+  * Cleanup; improves docs.
+  * Cleanup.
+  * Cleanup.
+  * Automatically discover and include .co files in ./src while in dev
+    mode.
+  * First I added eager versions of the decorators... until I realized
+    that I was going to end up with a ton of them. So instead now we
+    have a factory @computedDecorator   to make them.
+  * Additional computed decorators
+  * Renames ModelCache.register to .add
+  * Renames ModelCache.register to .add
+  * Oh christ. Fine. Checkpoint.
+
+  [ milimetric  ]
+  * merged
+  * added hook in subview binding to call afterRender
+
+  [ dsc  ]
+  * Fixes require 'page'
+
+  [ milimetric  ]
+  * fixed test page to inherit from layout
+  * graph display view shouldn't have been started yet
+  * added test for afterRender
+  * StoredModel::load not working right now
+
+  [ dsc  ]
+  * Goddamnit, all the typedObservables need to be able to take an owner
+    after all.
+  * Checkpoint
+  * Merge branch 'feature/knockout refactor' of
+    https://github.com/milimetric/limn into feature/knockout refactor
+
+  [ milimetric  ]
+  * Merge remote tracking branch 'dsc/feature/knockout refactor' into
+    feature/knockout refactor
+  * Merge remote tracking branch 'dsc/feature/knockout refactor' into
+    feature/knockout refactor
+  * fixing broken build
+
+  [ dsc  ]
+  * Checkpoint.
+  * Checkpoint.
+  * Fixes OrderedSet.
+
+  [ milimetric  ]
+  * click to edit working from /graph/:id/edit
+  * example edit link
+
+  [ dsc  ]
+  * Index accessors for OrderedSet
+  * OrderedMap
+  * Adds _.alias for setting up method aliases.
+  * Adds whitespace friendly version of reduce. :P
+  * Fixes a few bugs with OrderedSet.
+  * Merge branch 'feature/knockout refactor' of
+    https://github.com/milimetric/limn into feature/knockout refactor
+  * Checkpoint on GraphNode sync.
+  * Checkpoint on GraphNode::syncChildren
+  * Derf.
+  * Enables a potential future ObservableSet.
+  * Derf
+  * Lots of GraphNode goodness.
+
+  [ milimetric  ]
+  * fix for bad unless statement
+  * reverting patch: coco was outdated and had a bad update with npm
+
+  [ dsc  ]
+  * And I think that works.
+  * OrderedSet tests.
+  * Fixes some minor problems.
+
+  [ milimetric  ]
+  * Merge remote tracking branch 'dsc/feature/knockout refactor' into
+    feature/knockout refactor
+  * observablesArray mechanism implemented
+  * fixed subscriptions sync problem and added test
+  * change event wasn't working   fixed and added test
+
+  [ dsc  ]
+  * Very minor cleanup.
+  * Cleanup.
+  * Rename makeObservable  > toObservable.
+  * Notes.
+  * Oops. Typo.
+  * Adds test for computed observation of ko.observablesArray and
+    repeated subscription tests.
+  * ObservableSet
+  * All tests now pass for observablesArray.
+  * Change class.
+  * Reorganizes knockout tests.
+  * Reorg of src/util, as it is getting fat.
+  * Updates Showdown; adds markdownExtender, which lazily renders an
+    observable with Markdown contents to HTML.
+  * Updates Showdown
+  * Updates Showdown
+  * lastChange is now the actual value, not an array of observables.
+  * Checkpoint on CanvasNode
+  * Checkpoint! It works!
+  * Checkpoint
+  * Fixes template IDs.
+
+  [ milimetric  ]
+  * fix rename
+
+  [ dsc  ]
+  * Recursive node building ahoy.
+  * We want to run @build   as a computed, but @coerciveObs is obviously
+    wrong.
+
+  [ milimetric  ]
+  * Merge remote tracking branch 'dsc/feature/knockout refactor' into
+    feature/knockout refactor
+
+  [ dsc  ]
+  * Merge branch 'feature/knockout refactor' of
+    https://github.com/milimetric/limn into feature/knockout refactor
+  * Woo. Node parenting totally not bastardly.
+
+  [ milimetric  ]
+  * Merge remote tracking branch 'dsc/feature/knockout refactor' into
+    feature/knockout refactor
+
+  [ dsc  ]
+  * @ignoreDeps
+
+  [ milimetric  ]
+  * Merge remote tracking branch 'dsc/feature/knockout refactor' into
+    feature/knockout refactor
+  * added root to GraphNode objects
+
+  [ dsc  ]
+  * Silly non ignoring methods.
+  * Merge branch 'feature/knockout refactor' of
+    https://github.com/milimetric/limn into feature/knockout refactor
+
+  [ milimetric  ]
+  * checkpoint
+  * Merge remote tracking branch 'dsc/feature/knockout refactor' into
+    feature/knockout refactor
+  * GroupNode fix and LineNode not working
+  * fixed lines
+  * checkpoint
+
+  [ dsc  ]
+  * Checkpoint
+
+  [ milimetric  ]
+  * Merge remote tracking branch 'dsc/feature/knockout refactor' into
+    feature/knockout refactor
+
+  [ dsc  ]
+  * scale.range
+  * Fixes scale construction errors
+  * Fixes shared state in Query
+  * Fixes graphing.
+  * Updates layout.
+
+  [ milimetric  ]
+  * added grids
+
+  [ dsc  ]
+  * Updates traits
+  * Merge branch 'feature/knockout refactor' of
+    https://github.com/milimetric/limn into feature/knockout refactor
+  * Grid node works; issue was [ironically] that @grid   wasn't being
+    called *often* enough as it could not depend on @xScale  etc
+    changes.
+  * Adds FG/BG traits.
+  * Moves GridNode to graph/node/meta
+  * Adds CalloutNode
+  * Adds AxisNode.
+  * Oops. That addition to limn.expose   kind of ruined everything.
+  * Adds formatters to GraphNode.
+  * Fixes CanvasNode child parenting.
+
+  [ milimetric  ]
+  * factored out common logic into GraphNode
+
+  [ dsc  ]
+  * Adds valid checks for CanvasNode.scales; Check it in AxisNode during
+    render.
+  * Fixes CalloutNode.
+  * CalloutNode now uses a ref to another metric.
+
+  [ milimetric  ]
+  * added zoom node   it doesn't work
+  * Merge remote tracking branch 'dsc/feature/knockout refactor' into
+    feature/knockout refactor
+  * sort of working zoomg
+
+  [ dsc  ]
+  * LegendNode checkpoint
+  * Merge branch 'feature/knockout refactor' of
+    https://github.com/milimetric/limn into feature/knockout refactor
+  * Forgot to update index.
+  * Missing imports.
+
+  [ milimetric  ]
+  * patching zoom
+
+  [ dsc  ]
+  * Updates chart styles.
+  * Resize graph on window resize.
+  * At least it has entries now.
+
+  [ milimetric  ]
+  * cleaned up zoom
+  * simple does it
+
+  [ dsc  ]
+  * Legend style
+  * Stupid SVG zindex
+  * Fixes LegendNode label
+  * Implements graph backwards compat.
+  * Checkpoint in case I am hit by a Bus.  ...and knowing Muni...
+
+  [ milimetric  ]
+  * line guide working but not updating legend yet
+  * Merge remote tracking branch 'dsc/feature/knockout refactor' into
+    feature/knockout refactor
+  * got legend entries to update
+
+  [ dsc  ]
+  * Checkpoint on dashboard.
+  * Merge branch 'feature/knockout refactor' of
+    https://github.com/milimetric/limn into feature/knockout refactor
+  * Graphs render.
+  * Dashboards look great.
+  * Project colors
+
+  [ milimetric  ]
+  * fix zoom pan jitteriness
+  * zoom working except y axis flaw
+  * x and y axis are not translating or scaling properly
+
+  [ dsc  ]
+  * Moves project colors to src/graph/
+  * Fix super   on generic views.
+
+  [ milimetric  ]
+  * links for graphs and skipping undefined values
+  * hacking away the rectangle width and height errors The Fix will be
+    to change the rendering process
+  * commenting out debug output
+
+  [ dsc  ]
+  * Merge branch 'feature/knockout refactor' of
+    https://github.com/milimetric/limn into feature/knockout refactor
+  * Fixes date comparisons in Query.
+
+  [ milimetric  ]
+  * hack fix missed files
+
+  [ dsc  ]
+  * Adds watchDeps   to GraphNode.
+  * Fixes clip path on frame. Extends grid beyond immediate viewport for
+    zoom.
+
+  [ milimetric  ]
+  * starting zoom brush, checkpoint to merge
+  * merging fixes for zoom pan
+  * todos to help resume work on zoom pan
+  * implemented the zoom brush
+  * todo was done
+  * changed hovering to dependency tracking, added hover circles
+
+  [ dsc  ]
+  * Fixes memory leak with LegendEntries.
+  * Squelch scale domain update notifications when nothing has changed.
+  * Improves Zoom brush.
+
+  [ milimetric  ]
+  * links to raw data almost working
+  * Merge remote tracking branch 'dsc/feature/knockout refactor' into
+    feature/knockout refactor
+
+  [ dsc  ]
+  * Prevents page.js from intercepting clicks on links to datafiles
+  * Improves presentation of datafile links.
+
+  [ milimetric  ]
+  * fixed line hover circles
+  * watch is a native function in Firefox, changed to watching
+  * added descriptions to the graphs
+
+  [ dsc  ]
+  * Apply some stroke styles
+  * Merge branch 'feature/knockout refactor' of
+    https://github.com/milimetric/limn into feature/knockout refactor
+
+  [ milimetric  ]
+  * small legend and zoom brush updates
+  * Merge remote tracking branch 'dsc/feature/knockout refactor' into
+    feature/knockout refactor
+  * fixed brush style and behavior, fixed error on hover circles
+
+  [ dsc  ]
+  * Removes obsolute styl files.
+  * Moves all chart related styles to chart.styl
+  * Fixes Y axis labels.
+
+  [ milimetric  ]
+  * starting to configure Jenkins
+  * setup increments the version
+
+  [ dsc  ]
+  * Merge branch 'feature/knockout refactor' of
+    https://github.com/milimetric/limn into feature/knockout refactor
+
+  [ milimetric  ]
+  * Merge remote tracking branch 'dsc/feature/knockout refactor' into
+    feature/knockout refactor
+  * fixed axis fonts on windows
+  * cleaning up unused libraries, styles, and scripts
+
+  [ dsc  ]
+  * Merge branch 'feature/knockout refactor' of
+    https://github.com/milimetric/limn into feature/knockout refactor
+  * Fixes mkdir  p and ln  sn in coke link_reportcard_data task
+
+  [ milimetric  ]
+  * restoring style file for data ui
+
+  [ dsc  ]
+  * Fixes problems with undefined data in lines.
+  * Adds .walk/map/filter   to GraphNodeData.
+  * GraphNodeData::parent   now auto updates.
+
+  [ milimetric  ]
+  * fixing the tracking circles slightly
+  * Merge branch 'feature/d3' into feature/knockout refactor Note:
+    Ignoring 'feature/d3' in favor of the new architecture Merging it in
+    to keep history intact
+  * Merge branch 'feature/knockout' into feature/knockout refactor Note:
+    Ignoring 'feature/knockout' in favor of the new architecture Merging
+    to keep history
+  * Merge branch 'playing' into feature/knockout refactor Ignoring this
+    branch, merging to keep history
+  * Merge branch 'feature/knockout refactor' into develop Wrapping up a
+    three month re architecturing process. This merge includes three
+    other branches: feature/knockout feature/d3 playing These were kept
+    around only for historical purposes.
+
+  [ dsc  ]
+  * Renames Cascade::extend to update, fixes aliases.
+  * _.getSuperClass
+  * _.resulting
+  * Merge branch 'feature/knockout refactor' into develop
+
+  [ milimetric  ]
+  * Merge remote tracking branch 'wikimedia/gh pages' into develop
+    Adding this to commit history but ignoring its changes
+  * Merge remote tracking branch 'wikimedia/master' into develop
+
+  [ David Schoonover  ]
+  * Merge pull request #37 from dvanliere/master
+
+  [ milimetric  ]
+  * more work to set up automated unit testing
+  * fix to start server on Travis CI before testing
+  * type o
+  * travis setup is trial and error
+  * travis ci takes trial and error
+  * forgot reportcard data for testing
+  * factored out test running so it's not Travis specific
+
+  [ dsc  ]
+  * Merge branch 'develop' of https://github.com/milimetric/limn into
+    develop
+
+  [ milimetric  ]
+  * fixed brush & packages.co
+  * added detailed test failure logging
+  * Fixed proxy error
+
+  [ dsc  ]
+  * Merge branch 'develop' of https://github.com/milimetric/limn into
+    develop
+  * Enables pretty printing of JSON resource responses ?pretty=1
+  * Support for attributeTypes   as a method
+  * Adds utility for collapsing returned objects from a method up the
+    prototype chain.
+  * Adds support for GraphNodeData defaults by nodeType.
+  * Adds geo related metric subclasses.
+  * Reusable TypeCache for indexing subclasses/types by an ID.
+  * GraphNodeData subtypes and registry.
+  * Use @registerType to set nodeType.
+
+  [ milimetric  ]
+  * added a datasources page with create functionality
+
+  [ dsc  ]
+  * Changes Resource::url to Resource::resourceURL
+
+  [ milimetric  ]
+  * Merge remote tracking branch 'dsc/develop' into develop
+  * datasource saving works now  url fixed by dsc
+  * support for loading remote datafiles
+
+  [ dsc  ]
+  * Missed a few instances of urlRoot  > resourceURLRoot
+
+  [ milimetric  ]
+  * fixed id/slug misunderstanding
+
+  [ dsc  ]
+  * Improves axis text legibility.
+  * Breaks out generic DOM utilities from GraphNode.
+  * Breaks out functionality common to both GraphNode and GraphNodeData
+    into NodeMixin.
+  * Renames destroy   to dispose  , eliminating conflict with
+    Resource::destroy  ; isDestroyed  > isDisposed.
+  * wherein robla and I attempt to improve the y axis tick heuristic.
+  * Renames Base to AttributesBase, then refactors it into smaller
+    components including a new light weight Base.
+  * Geo maps render and obey fill.
+
+  [ milimetric  ]
+  * checkpoint on deployment cleanup
+
+  [ dsc  ]
+  * GeoMapNode.options: featuresColor, backgroundColor, projection
+
+  [ milimetric  ]
+  * bundling is broken, but progress is made
+  * Merge remote tracking branch 'dsc/develop' into develop
+
+  [ dsc  ]
+  * Merge branch 'develop' of https://github.com/milimetric/limn into
+    develop
+
+  [ milimetric  ]
+  * small callout node fix, obscures the lineseries bug
+
+  [ dsc  ]
+  * Fixes timeseries dataset
+
+  [ milimetric  ]
+  * Merge remote tracking branch 'dsc/develop' into develop
+  * it's ok for loop to go down to 0
+  * without bigger changes, modules.yaml is as clean as possible
+
+  [ dsc  ]
+  * Adds option cascading via NodeOptions.
+
+  [ milimetric  ]
+  * zooming problem fixed   not a d3 problem
+  * forgot to update index
+  * updating tests for dataset and metric refactor
+  * tweaked the zoom pan to work with geo
+  * commenting out minify so we can at least bundle
+  * IMPORTANT: fixing require bugs invisible during dev
+  * fixed line node coloring for new graphs
+  * adding ability to handle hourly timeseries
+  * forgot to require moment: IMPORTANT   must fix this
+  * fixed wonky zooming
+  * cleaned up colors for reportcard
+  * prefer standard colors to graph defined ones
+  * cache busting for datafiles and PROD scripts
+  * removed minify hack
+  * played with compress, reduces size a lot, disabled for now
+  * rough smoothing working
+  * even uglier hack to stabilize smoothing
+  * removing dangerous expose function
+
+  [ dsc  ]
+  * Whitespace.
+
+  [ milimetric  ]
+  * toggling metrics from legend
+  * disable influences the metrics too, this updates the scales
+
+  [ dsc  ]
+  * Merge branch 'develop' of https://github.com/milimetric/limn into
+    develop
+  * Slight hilite on legend entry hover
+  * Optimizes smoothing transforms
+
+  [ milimetric  ]
+  * example of dashed
+
+  [ dsc  ]
+  * Merge branch 'develop' of https://github.com/milimetric/limn into
+    develop
+
+  [ milimetric  ]
+  * started simple annotation support
+  * errant file move
+
+  [ dsc  ]
+  * Checkpoint on fixing the zoom smooshing of data.
+  * Updates package.co to build.
+  * Adds moment.js
+  * Adds caching  10s  to sourcefile lookup calls in sources   and
+    findSources  .
+  * Disables modernizr and json2; we don't work in browsers that needs
+    them, anyway.
+  * Reduces number of CSS loads.
+  * Combines print styles into one file.
+  * Removes obsolete Chart Option styles for Dygraphs.
+  * Combines print styles into one file.
+  * Squelch unnecessary scrollTo   calls to prevent force invalidating
+    page layout.
+  * Makes cache buster string more ... professional.
+  * Resource#fetch   now preserves local additions like defaults. Use
+    Resource#reload   to completely replace extant data.
+  * shh.
+  * Recursively merge Model objects on Model::set
+  * Adds Model::put   to disable the recursive merge behavior of
+    Model::set
+  * Updates d3 to 3.0.4
+  * Adds support in GeoFeatureNode to bind data to fillOpacity,
+    stroke.width, stroke.color,and  stroke.opacity in features.
+  * Unbreaks smoothing.
+  * Implements Infobox for Geo.
+  * Adds support for power scales.
+  * Refactors Metric and Query to generate a materialized dataset of
+    filtered rows and columns in one pass.
+  * Simplifies and fixes errors with Query and Iterator
+  * SmoothNode now uses Query::transforms
+  * Updates users of Query.apply/call to .process/processCols
+  * Removes logging.
+  * Considerably improves Dashboard pageload performance.
+
+  [ milimetric  ]
+  * null pointer fix
+  * made date format more generic
+  * even more generic date format, zoom threshold 1 second
+  * starting bar chart attempt #3
+  * working bar chart, small scale problem
+  * fixed coloring and scaling bug
+  * fixed broken map series
+
+  [ dsc  ]
+  * src
+
+  [ milimetric  ]
+  * a stubborn attempt to use SVG to manipulate text
+  * Merge remote tracking branch 'dsc/develop' into develop
+  * got area graph working except flipped scales
+  * renamed scaleLine to scaleShape
+  * checkpoint
+  * simple fix for area graph, flipping scales too hard
+  * start support for linear scales   need to fix axis
+
+  [ dsc  ]
+  * Implements max/min width/height for Viewport.
+
+  [ milimetric  ]
+  * adding columns to datasource form, auto parsing them
+  * require bug with visualize datasource
+  * temporary hack for require bug, visualize works
+  * checkpoint
+
+  [ dsc  ]
+  * Merge branch 'develop' of https://github.com/milimetric/limn into
+    develop
+  * Proxy no longer crashes server when target returns an error.
+
+  [ milimetric  ]
+  * made datasource list prettier and added search
+  * fixed canonicalize in datasource which fixed quick peek
+  * resizing popup visualization
+  * very simple table view   refactor when scales are generalized
+  * generalized data linking
+  * fixed datasource loading, removed logging
+  * fixed id bug that made you have to reload, inserting at the top of
+    the list by default
+  * fixed id bug that made you have to reload, inserting at the top of
+    the list by default
+
+  [ dsc  ]
+  * Adds support for pretty printing /datasources/all.json
+  * Merge branch 'develop' of https://github.com/milimetric/limn into
+    develop
+
+  [ milimetric  ]
+  * Connecting logscale property to canvas Also optimized metrics in
+    canvas to do less work
+  * fixed y axis to work with linear a scale
+  * fixed silly margin mistake on show as table feature
+  * typeahead search and friendly loading message
+  * fixed Cokefile link_data task options
+  * fixed labeling problem, reading from datasource if not specified as
+    option
+  * specifying that we work mostly in the develop branch
+  * Releasing the first stable version of Limn with d3 Merge branch
+    'release/0.6.0'
+  * support for visualizing arbitrary world country data
+
+  [ dsc  ]
+  * Updates Browserify bundle in Cokefile.
+
+  [ milimetric  ]
+  * Merge remote tracking branch 'dsc/develop' into develop
+  * moved css files out of www, fixed Cokefile shadowing the  f option
+  * adding datasource name to default labels
+
+  [ dsc  ]
+  * Replaces modules.yaml with a canonical set of source tools.
+  * Resolves conflict.
+  * Updates Cokefile to use sources.co and /css.
+  * Removes obsolete tasks.
+
+  [ milimetric  ]
+  * checkpoint
+  * checkpoint
+  * checkpoint
+  * jade compiling into js no longer needed
+
+  [ dsc  ]
+  * Fixes recompilation.
+
+  [ milimetric  ]
+  * Merge remote tracking branch 'dsc/develop' into develop
+  * totally completely broke add form on /datasources
+  * unbroke the /datasources add form, still not pretty
+  * started support for adding geojson files
+
+  [ dsc  ]
+  * Don't cachebust proxied files; they can still send an etag the
+    browser will honor,  and the random querystring will break some
+    sites.
+  * Exposes Content Type of server response of Datasource::data
+
+  [ milimetric  ]
+  * working arbitrary datafile importer, geojson visualization has some
+    race condition on load
+  * forgot to rename tests   in modules.yaml refactoring
+  * fully automatic building
+  * Merging build improvements and /datasources cleanups Merge branch
+    'develop'
+
+  [ dsc  ]
+  * Proxy: 502 for invalid URLs.
+  * Merge branch 'develop' of https://github.com/milimetric/limn into
+    develop
+
+  [ milimetric  ]
+  * should fix Travis CI integration
+  * proof of concept for pivoting geojson datafiles dynamically
+  * updated hardcoded proof of concept to tab format
+  * small fixes for proof of concept parsing and pivoting
+  * fixed footer links
+  * ticks varying by timespan are built into d3   just get out of its
+    way :
+
+  [ dsc  ]
+  * Merge branch 'develop' of https://github.com/milimetric/limn into
+    develop
+
+  [ milimetric  ]
+  * implemented color palettes with defaults in * group node, converter,
+    and quick peek
+  * Merge branch 'develop'
+  * color testing
+
+  [ dsc  ]
+  * Merge branch 'develop' of https://github.com/milimetric/limn into
+    develop
+  * Adds CORS support for datafile requests.
+  * Removes unused dependencies.
+  * Adds limn convert script for upgrading between graph.json versions.
+
+  [ milimetric  ]
+  * I think I accidentally made log scales default again, undoing that
+    here
+
+  [ dsc  ]
+  * Merge branch 'develop' of https://github.com/milimetric/limn into
+    develop
+
+  [ milimetric  ]
+  * bar shape support
+
+  [ dsc  ]
+  * Merge branch 'develop' of https://github.com/milimetric/limn into
+    develop
+  * BarNode now operates like LineNode; old ordinal based BarNode is now
+    OrdinalBarNode. BarNode stacking now works.
+
+  [ milimetric  ]
+  * Merge branch 'develop'
+
+  [ dsc  ]
+  * Adds {x,y}Domain override on CanvasNode
+
+  [ milimetric  ]
+  * starting to fix the tabs to render one at a time removed dynamic
+    resizing because it was causing problems: have to add back in with
+    more care
+
+  [ dsc  ]
+  * Adds ScatterplotNode.
+
+  [ milimetric  ]
+  * making link use the id if slug is not available
+  * Merge remote tracking branch 'dsc/develop' into develop
+  * trying to fix Travis
+  * fixed dashboard test to work with sample dashboard, not reportcard
+
+  [ dsc  ]
+  * Only add DOM related underscore extensions if we're in the browser.
+
+  [ milimetric  ]
+  * Merge remote tracking branch 'dsc/develop' into develop
+  * optimization: don't render tracking circles if there are too many
+    datapoints
+  * index of datasource columns was not completely canonicalized
+  * changing default width to 1, tweaking tracking circle optimization
+  * bad default value of scales
+  * bad default value of scales
+  * bugs cleanup resulting from Dario's migration
+  * area shape option was not being read correctly
+
+  [ dsc  ]
+  * Merge branch 'master' of github.com:wikimedia/limn into develop
+
+  [ milimetric  ]
+  * Merge branch 'master' into develop
+  * added an install section
+
+  [ Dan Andreescu  ]
+  * type o in install instructions
+
+  [ milimetric  ]
+  * Merge branch 'master' into develop
+
+  [ Petrea Corneliu Stefan  ]
+  * added debianize submodule
+  * added control file
+  * started writing instructions on debianization
+  * reformatted Deb.md
+
+  [ milimetric  ]
+  * metrics were calculating invalid domains
+
+  [ Petrea Corneliu Stefan  ]
+  * added more debian files
+
+  [ dsc  ]
+  * Merge branch 'develop' of https://github.com/milimetric/limn into
+    develop
+
+  [ milimetric  ]
+  * fixed domain fix properly
+
+  [ Petrea Corneliu Stefan  ]
+  * a working debian/rules, but still have to figure out if I should use
+    'install' for this instead of 'cp'.
+  * added more steps for debianization
+
+  [ dsc  ]
+  * Merge branch 'develop' of https://github.com/milimetric/limn into
+    develop
+
+  [ milimetric  ]
+  * fixed bar node toggling
+
+  [ dsc  ]
+  * Merge branch 'develop' of https://github.com/milimetric/limn into
+    develop
+
+  [ milimetric  ]
+  * for debianization, update server to not depend on git
+  * Merge remote tracking branch 'dsc/develop' into develop
+
+  [ Petrea Corneliu Stefan  ]
+  * added debian/compat. Added more information about building the
+    debian package. Added more detailed contents of the debian package
+    in debian/rules + all the instructions Dan and I talked about
+
+  [ milimetric  ]
+  * Limn now supports running multiple instances from the same clone or
+    install To run multiple instances, the following should be
+    specified: LIMN_PORT  default 8081  LIMN_DATA  default /srv/limn
+    data  NODE_ENV  default development
+
+  [ Petrea Corneliu Stefan  ]
+  * Merge branch 'debianization' into develop
+
+  [ milimetric  ]
+  * Merge remote tracking branch 'wikimedia/develop' into develop
+
+  [ Dan Andreescu ]
+  * Tag created for version 0.6.0
+  * Created new 0.6.1 version from tag 0.6.1
+
+  [ milimetric  ]
+  * Debianization instructions updated
+  * removed legacy support for line coloring, have to fix any old bad
+    graphs
+  * ignoring version file and legend color fix
+  * removing compiled browserify.js as it's a derived file
+  * fix for new data configuration
+  * sane coloring restored, no more legacy support
+  * added file format option back in datasources
+  * updating debian rules and control
+  * Changed install path to /usr/lib/limn
+  * ignoring debianization build files
+
+  [ Petrea Corneliu Stefan  ]
+  * added preinst to create limn user and /var/lib/limn homedir for it.
+    moved installation of coco out of the debian/rules  this will now be
+    done manually by the maintainer, more details in Deb.md
+
+  [ milimetric  ]
+  * changing default data directory to be inside the limn install
+
+  [ Petrea Corneliu Stefan  ]
+  * added Andrew's limn.conf init script to be able to start/stop limn
+    from /etc/init.d/limn [need to test on VM]
+
+  [ milimetric  ]
+  * Merge remote tracking branch 'wikimedia/develop' into develop
+
+  [ Petrea Corneliu Stefan  ]
+  * renamed limn.conf => limn.upstart  for details =>
+    http://manpages.ubuntu.com/manpages/lucid/man1/dh_installinit.1.html
+  * added prerm script  logic to delete limn user
+  * added postrm
+  * postrm is now executable
+
+  [ Dan Andreescu ]
+  * Tag created for version 0.6.1
+
+ -- Dan Andreescu <dan@DAndreescu-ThinkPad-T420s>  Tue, 19 Feb 2013 12:59:22 -0500

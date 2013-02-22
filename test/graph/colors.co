@@ -8,9 +8,7 @@ QUnit.module '[graph] Color Palettes', do
 
 test 'Correct color for China', ->
     color = ProjectColors.lookup 'China', 'wmf_projects'
-    strictEqual color, '#AD3238', 'with returnDefault not specified'
-    color = ProjectColors.lookup 'China', 'wmf_projects', true
-    strictEqual color, '#AD3238', 'with returnDefault true'
+    strictEqual color, '#AD3238', 'Color for a label in wmf_projects'
 
 
 test 'Correct and consistent colors for category20 palette', ->

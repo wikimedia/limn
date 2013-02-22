@@ -34,7 +34,12 @@ var
 log
 tmp
 
-version.js
+src/version.js
 www/presets/*.json
 
-
+static/vendor/browserify.js
+git2deblogs.pl
+debian/changelog
+debian/limn*
+!debian/limn.conf
+debian/files

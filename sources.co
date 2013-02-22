@@ -40,6 +40,12 @@ export IS_TEST  = NODE_ENV is 'test'
 export IS_DEV   = not (IS_PROD or IS_TEST)
 
 /**
+ * Data that will be served through this Limn instance
+ */
+export LIMN_VARDIR = process.env.LIMN_VARDIR or './var'
+export LIMN_DATA   = "#LIMN_VARDIR/data"
+
+/**
  * Module Paths
  */
 export MODULES =

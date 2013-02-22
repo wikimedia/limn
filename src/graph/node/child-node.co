@@ -1,0 +1,16 @@
+{ GraphNode,
+} = require './graph-node'
+
+/**
+ * @class
+ * @extends GraphNode
+ */
+class exports.ChildNode extends GraphNode
+    @registerType 'child'
+    
+    -> super ...
+    
+    buildElement: (parentElement) ->
+        el = super ...
+        $ parentElement .find 'section.children' .append el
+        @renderView el

@@ -120,12 +120,31 @@ section.graph
             text-align right
     
     
-    section.smooth-node
+    section.tweaks-node
         position absolute
-        width 230px
-        margin-top 420px
+        width 16.7em
+        top: 0.1em
+        section.children
+            border-radius 5px
+            z-index 199
+            padding: 0.5em
+            background-color #ddd
+        .toggle-children.in
+            z-index 201
         input
             width 50px
+        section.node-node
+            fieldset
+                border-bottom dotted 2px #bbb
+                margin-bottom 10px
+                legend
+                    font-size 17px
+                    font-weight bold
+                    margin 0
+            &:last-child
+                fieldset
+                    border-bottom none
+                    margin-bottom 0
     
     
     g.zoom-brush-node
