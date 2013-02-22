@@ -49,17 +49,19 @@ class exports.ZoomBrushNode extends GraphNode
     
     
     render: ->
-        return unless root = @root()
-        return unless scales = root.scalesIfValid()
+        return unless viewport = @viewport()
+        return unless xScale   = viewport.xScale()
+        return unless yScale   = viewport.yScale()
         
         return if @brush
         
         @brush = d3.svg.brush()
-            .x scales.xScale
-            .y scales.yScale
+            .x xScale
+            .y yScale
             .on 'brushend', ~>
-                @originalXDomain ?= @root().xScale.domain()
-                @originalYDomain ?= @root().yScale.domain()
+                vp = @viewport()
+                @originalXDomain ?= vp.xScale().domain()
+                @originalYDomain ?= vp.yScale().domain()
                 @zooming.call this
         
         @sel.call @brush
@@ -67,7 +69,7 @@ class exports.ZoomBrushNode extends GraphNode
             .attr 'pointer-events', 'all'
             .on 'dblclick', ~>
                 @hideTrackingCircles() # TODO: LineNode should listen for zoom event
-                @root().changeDomains @originalXDomain, @originalYDomain
+                @viewport().changeDomains @originalXDomain, @originalYDomain
                 window.getSelection?().removeAllRanges()
                 document.selection?.empty()
     
@@ -75,13 +77,13 @@ class exports.ZoomBrushNode extends GraphNode
     zooming: ->
         extent = d3.event.target.extent()
         if @extentIsSignificant extent
-            @root().changeDomains [extent[0][0], extent[1][0]], [extent[0][1], extent[1][1]]
+            @viewport().changeDomains [extent[0][0], extent[1][0]], [extent[0][1], extent[1][1]]
         @brush.clear()
         @sel.call @brush
         @hideTrackingCircles()
     
     hideTrackingCircles: ->
-        @root().sel.selectAll 'circle.tracking'
+        @viewport().sel.selectAll 'circle.tracking'
             .attr do
                 cx: -10
                 cy: -10

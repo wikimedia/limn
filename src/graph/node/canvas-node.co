@@ -69,12 +69,43 @@ class exports.CanvasNode extends ViewportNode
         el
     
     
+    /**
+     * Determine the DOM node to act as the parent for a direct child of the root node.
+     * 
+     * @protected
+     * @param {GraphNode} node
+     * @returns {Element}
+     */
+    determineDOMParentForChildNode: (node) ->
+        # SVG nodes
+        if node.hasTrait Trait.SVG
+            if node.hasTrait Trait.FG_LAYER
+                @$ 'svg .frame > .fg' .0
+            else if node.hasTrait Trait.BG_LAYER
+                @$ 'svg .content-frame > .bg' .0
+            else
+                @$ 'svg .content-frame > .viewport' .0
+        
+        # HTML nodes
+        else
+            # XXX: Hack
+            if node.hasTrait Trait.CALLOUT_NODE
+                @$ '.graph-name-row > .callout' .0
+            else if node.hasTrait Trait.SECTION
+                @$el.parent().0
+            else if node.hasTrait Trait.FG_LAYER
+                @$ '.meta.fg' .0
+            else
+                @$ '.meta.bg' .0
+    
+    
     background: (color) ->
-        bg = @graph.$ 'svg g.bg rect.bgcolor'
-        if color
+        return unless (bg = @graph.$ 'svg .content-frame > .bg > .bgcolor').length
+        if arguments.length
             bg.css 'fill', color
             this
         else
             bg.css 'fill'
+    
     
 

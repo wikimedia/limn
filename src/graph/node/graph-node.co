@@ -95,7 +95,8 @@ class exports.GraphNode extends AttributesBase implements formatters
         model       : null
         parent      : null
         children    : []
-        isDisposed : false
+        isDisposed  : false
+        isRendered  : false
     
     
     attributeTypes: ->
@@ -189,8 +190,10 @@ class exports.GraphNode extends AttributesBase implements formatters
                     return unless @el() and @sel
                     return unless @model().options()
                     return if _.contains(@traits, Trait.REQUIRES_METRIC) and not @model().metric()?.data()
-                    # window.requestAnimationFrame @render
+                    @trigger 'before-render', this
                     @render()
+                    @isRendered true
+                    @trigger 'render', this
             
             @once 'watch-build', @renderWrap
         

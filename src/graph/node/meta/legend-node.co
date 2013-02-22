@@ -65,21 +65,6 @@ class exports.LegendNode extends GraphNode
         @entryCache = new OrderedMap()
         super ...
         @date = ko.observable()
-        # FIXME: this should stop tracking for scales that can't invert
-        # FIXME:   but it evidences an ugly problem: @root is always CanvasNode here
-        if @root().xScale?.invert
-            @trackHover()
-    
-    
-    /**
-     * Track hover events and change the legend date.  This can be used by legend entries
-     */
-    trackHover: @computed ->
-        return unless cursor = @root().cursor()
-        return unless invert = @root().xScale.invert
-        
-        if cursor.hovering
-            @date invert cursor.x
     
     
     buildElement: (parentElement) ->
@@ -89,7 +74,7 @@ class exports.LegendNode extends GraphNode
     
     
     nodes: @computed ->
-        @root().filterTraits [Trait.VIS_NODE, Trait.REQUIRES_METRIC]
+        @viewport().filterTraits [Trait.VIS_NODE, Trait.REQUIRES_METRIC]
     
     
     entries: @computedRequires 'nodes', (nodes) ->
@@ -119,6 +104,22 @@ class exports.LegendNode extends GraphNode
     
     dateFormatter : @computedRequires 'options', (options) ->
         @dateFormatterFor options.get('dateFormat')
+    
+    
+    watchOthers: ->
+        @trackHover()
+    
+    
+    /**
+     * Track hover events and change the legend date.  This can be used by legend entries.
+     */
+    trackHover: @computed ->
+        return unless viewport = @viewport()
+        return unless invert = viewport.xScale()?.invert
+        return unless cursor = viewport.cursor()
+        @date invert cursor.x if cursor.hovering
+    
+    
 
 
 /**

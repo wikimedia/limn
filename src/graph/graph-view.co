@@ -90,12 +90,13 @@ class exports.GraphView extends View
      * 
      */
     watchDOM: @computed ->
-        node = @rootNode()
+        # ensure we register our dependencies before potentially aborting the build() chain
+        root = @rootNode()
         el   = @el()
-        return null unless limn?.domReady() and node and el
-        return null unless nodeParentEl = @$('.graph-canvas-row > .inner').0
-        node.build nodeParentEl
-        nodeParentEl
+        return null unless limn?.domReady() and root and el
+        return null unless rootParentEl = @$('.graph-chart-row > .inner').0
+        root.build rootParentEl
+        rootParentEl
     
     
     /**
@@ -145,53 +146,6 @@ class exports.GraphView extends View
         node.watching() if @isWatching
         
         node
-    
-    
-    /**
-     * Determin the DOM node to act as the parent the given node.
-     * 
-     * @protected
-     * @param {GraphNode} node
-     * @returns {Element}
-     */
-    determineDOMParentForNode: (node, parentNode) ->
-        return @determineDOMParentForChildNode(node) unless parentNode
-        
-        elementType = if _.contains(node.traits, Trait.SVG) then Trait.SVG else Trait.HTML
-        return parentNode.el() if _.contains parentNode.traits, elementType
-        unless grandparentNode = parentNode.parent()
-            throw new Error "Unable to determine DOM parent for child node! #node"
-        @determineDOMParentForChildNode node, grandparentNode
-    
-    
-    /**
-     * Determine the DOM node to act as the parent for a direct child of the root node.
-     * 
-     * @protected
-     * @param {GraphNode} node
-     * @returns {Element}
-     */
-    determineDOMParentForChildNode: (node) ->
-        # SVG nodes
-        if node.hasTrait Trait.SVG
-            if node.hasTrait Trait.FG_LAYER
-                @$ 'svg > g > g.frame > g.fg' .0
-            else if node.hasTrait Trait.BG_LAYER
-                @$ 'svg > g > g.frame > g.content-frame > g.bg' .0
-            else
-                @$ 'svg > g > g.frame > g.content-frame > g.viewport' .0
-        
-        # HTML nodes
-        else
-            # XXX: Hack
-            if node.hasTrait Trait.CALLOUT_NODE
-                @$ '.graph-name-row > section.callout' .0
-            else if node.hasTrait Trait.SECTION
-                @$el.parent().0
-            else if node.hasTrait Trait.FG_LAYER
-                @$ 'section.meta.fg' .0
-            else
-                @$ 'section.meta.bg' .0
     
     
     resize: ->

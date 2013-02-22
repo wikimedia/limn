@@ -58,10 +58,11 @@ class exports.Metric extends Model
      * @depends source, query, transforms
      */
     materialized: @computed ->
+        source     = @source()
         source_col = @get 'source_col'
-        return unless source_col?
+        return unless source and source_col?
         return unless query = @query()
-        return unless csv   = @source()?.data()
+        return unless csv   = source.data()
         {rows, columns} = query
             .materialize 'both'
             .transforms @transforms()
@@ -111,8 +112,11 @@ class exports.Metric extends Model
      * @type ko.computed<ColumnDef>
      * @depends source, source_col
      */
-    yColumnDef: @computedRequires 'source_col', (source_col) ->
-        @source()?.getColumnDef source_col
+    yColumnDef: @computed ->
+        source     = @source()
+        source_col = @get 'source_col'
+        return unless source and source_col?
+        source.getColumnDef source_col
     
     
     /**
@@ -152,5 +156,7 @@ class exports.Metric extends Model
     
     
     toString: ->
-        "#{@getClassName()}(source_id=#{@source_id.peek()}, source_col=#{@source_col.peek()})"
+        id  = @source_id.peek()
+        col = @source_col.peek()
+        "#{@getClassName()}(source_id=#id, source_col=#col)"
     

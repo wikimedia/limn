@@ -52,20 +52,18 @@ class exports.GridNode extends GraphNode
     
     
     render: ->
+        viewport = @viewport()
         options = @model().options()
-        return unless scales    = @root().scalesIfValid()
-        return unless dimension = options.get('dimension')
+        return unless dim       = options.get('dimension')
+        return unless scale     = viewport[dim+'Scale']()
         return unless tickCount = options.get('ticks')
-        return unless scale     = scales[ dimension+'Scale' ]
+        @sel.classed dim+'-grid', true
         
-        isTimeseries = @root() instanceof CanvasNode
-        
-        @sel.classed dimension+'-grid', true
-        
-        switch dimension
+        ticks = scale.ticks(tickCount)
+        switch dim
             case 'x'
-                ticks = if isTimeseries then scale.ticks(tickCount) else scale.domain()
-                size = @root().height()
+                ticks = scale.domain() if viewport.xScaleType() is not 'time'
+                size = viewport.height()
                 enter =
                     y1: -1 * size
                     y2:  2 * size
@@ -74,8 +72,7 @@ class exports.GridNode extends GraphNode
                     x2: scale
             
             case 'y'
-                ticks = scale.ticks(tickCount)
-                size = @root().width()
+                size = viewport.width()
                 enter =
                     x1: -1 * size
                     x2:  2 * size
@@ -85,11 +82,12 @@ class exports.GridNode extends GraphNode
         
         gridLinesData = @sel.selectAll 'line'
             .data ticks
+            .attr transition
         gridLinesData.enter().append 'line'
             .attr 'vector-effect': 'non-scaling-stroke'
             .attr enter
-        gridLinesData.transition()
-            .attr transition
+        # gridLinesData.transition()
+        #     .attr transition
         gridLinesData.exit().remove()
     
 
