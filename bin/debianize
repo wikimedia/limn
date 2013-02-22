@@ -1,0 +1,62 @@
+#!/bin/bash
+
+
+# Limn - &mdash; Debianization guide
+## Setting up
+### First make sure you have Ubuntu precise installed.
+### Second, add these two lines to your /etc/apt/sources.list
+###
+###     deb http://ppa.launchpad.net/chris-lea/node.js/ubuntu precise main
+###     deb-src http://ppa.launchpad.net/chris-lea/node.js/ubuntu precise main
+###
+### Third, update packages list and install nodejs, npm, and things needed to build
+
+sudo apt-get update
+sudo apt-get install nodejs npm
+sudo apt-get install libjson-xs-perl
+sudo apt-get install devscripts
+sudo apt-get install debhelper
+sudo npm install -g coco
+
+## Creating the debian package
+### Let git pull the debianize submodule for you, or update it if it's there
+### (NOTE: For now, since submodules aren't working, we're just cloning the debianize repo in the parent folder and symlinking to it)
+
+git submodule init
+git submodule update
+git submodule foreach git pull origin master
+
+### TODO: remove this next line once submodules are working
+git clone git@github.com:wikimedia-incubator/debianize.git ../debianize
+
+ln -s ../debianize
+ln -s ./debianize/git2deblogs.pl
+
+### Now you have to sync the git log with the debian changelog
+
+./git2deblogs.pl --update
+
+### Now delete any previous build or temp files
+
+rm -rf ./debian/limn/*
+
+### and finally build the package
+
+dpkg-buildpackage
+
+### It will take a while ( 43 seconds on a i5 3.2GHz ).
+### Now after you finished building the package you can check the package contents with:
+###
+###    dpkg -c ../limn*.deb 
+###
+### And finally copy the output to the build directory, then clean up
+
+export LIMN_BUILD_OUTPUT=./debian/limn/build/
+mkdir -p $LIMN_BUILD_OUTPUT
+mv ../limn_*.dsc        $LIMN_BUILD_OUTPUT
+mv ../limn_*.changes    $LIMN_BUILD_OUTPUT
+mv ../limn_*deb         $LIMN_BUILD_OUTPUT
+mv ../limn_*.tar.gz     $LIMN_BUILD_OUTPUT
+
+rm git2deblogs.pl
+rm debianize
