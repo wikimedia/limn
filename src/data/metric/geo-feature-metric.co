@@ -15,40 +15,13 @@ ko = require 'knockout'
 class exports.GeoFeatureMetric extends Metric
     -> super ...
     
-    
     defaults : ->
-        source_id  : null       # String
-        source_col : null       # String|Number
-        type       : 'int'      # String
-    
+        xColumn: 'id' # In place of x at col 0, feature data is required to provide an `id` property in every row.
     
     /**
-     * Query object for the parameters of this Metric.
-     * @type ko.computed<Query>
-     * @depends source_col
+     * Reindexes the tabular data by row ID.
      */
-    query : @computed ->
-        source_col = @get 'source_col'
-        return unless source_col?
-        Query()
-            .columns 'id', source_col
-    
-    
-    /**
-     * The reified dataset (as (id, value) pairs) associated with this Metric.
-     * @type ko.computed<[ID, Value]>
-     * @depends source, query
-     */
-    data : @computed ->
-        return unless query = @query()
-        return unless csv = @source()?.data()
-        query
-            .materialize 'rows'
-            .process csv.getData()
-    
-    
     dataById: @computed ->
         return unless (data = @data())?
         _.generate data
-    
     

@@ -18,8 +18,24 @@ class exports.Metric extends Model
     
     
     defaults : ->
-        source_id  : null       # String
-        source_col : null       # String|Number
+        source_id   : null      # String
+        source_col  : null      # Number (index) | String (id)
+        xColumn     : 0         # Number (index) | String (id)
+    
+    
+    canonicalize: (data) ->
+        # Apply compatibility fixes for the world where we deprecate the awful
+        # snake_case attributes for being inconsistent (as all other attributes
+        # are camelCase).
+        data.source_id  ?= data.sourceId
+        data.source_col ?= data.sourceCol
+        
+        # Forwards-compatibility with yColumn replacing source_col.
+        # XXX: This will reverse once source_col is deprecated, and source_col
+        # is used as canonical.
+        data.source_col ?= data.yColumn
+        
+        data
     
     
     /**
@@ -45,10 +61,10 @@ class exports.Metric extends Model
      */
     query : @computed ->
         source_col = @get 'source_col'
-        return unless source_col?
-        # TODO: support attributes.x_column
+        xColumn    = @get 'xColumn'
+        return unless source_col? and xColumn?
         Query()
-            .columns 0, source_col
+            .columns xColumn, source_col
     
     
     /**
@@ -100,11 +116,13 @@ class exports.Metric extends Model
     /**
      * The column definition for the X-dimension of this Metric.
      * @type ko.computed<ColumnDef>
-     * @depends source
+     * @depends source, xColumn
      */
     xColumnDef: @computed ->
-        # TODO: support attributes.x_column
-        @source()?.getColumnDef 0
+        source  = @source()
+        xColumn = @get 'xColumn'
+        return unless source and xColumn?
+        source.getColumnDef xColumn
     
     
     /**
