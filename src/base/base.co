@@ -61,15 +61,30 @@ class exports.Base extends EventEmitter
     __id__ : null
     
     
+    /**
+     * A list of method-names to bind on `initialize`; set this on a subclass to override.
+     * @type Array<String>
+     */
+    __bind__ : []
+    
     
     /**
-     * 
-     * 
+     * Applies the contents of `__bind__`.
+     */
+    __apply_bind__: ->
+        names = _ this .chain().pluckSuperAndSelf '__bind__' .flatten().compact().unique().value()
+        _.bindAll this, ...names if names.length
+    
+    
+    
+    
+    /**
      * @constructor
      */
     ->
         @__id__ = generateId()
-        Class   = @constructor
+        @__apply_bind__()
+        Class = @constructor
         Class.trigger? 'new', this, Class
     
     
