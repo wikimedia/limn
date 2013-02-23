@@ -87,6 +87,7 @@ class exports.AxisNode extends GraphNode
     render: ->
         viewport = @viewport()
         options = @model().options()
+        return unless viewport.zoomTransform()
         return unless dim   = options.get('dimension')
         return unless scale = viewport[dim+'ZoomScale']()
         
@@ -127,9 +128,9 @@ class exports.AxisNode extends GraphNode
         @sel.call axis
         @moveAxis()
         
-        unless @zoomHandler
-            @zoomHandler = ~> @sel.call axis
-            viewport.on 'zoom-graph', @zoomHandler
+        # unless @zoomHandler
+        #     @zoomHandler = ~> @sel.call axis
+        #     viewport.on 'zoom-graph', @zoomHandler
         
         axis
     

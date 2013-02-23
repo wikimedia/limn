@@ -20,6 +20,9 @@ tuplesEqual = (a, b) ->
     cmpNumeric(a[0], b[0]) is 0 and
     cmpNumeric(a[1], b[1]) is 0
 
+fmt2f     = d3.format('.2f')
+fmtpair   = -> "(#{ it.map fmt2f   .join ','  })"
+ppExtents = -> "[#{ it.map fmtpair .join ', ' }]"
 
 
 
@@ -435,6 +438,10 @@ class exports.ViewportNode extends GraphNode
     
     /**
      * Set the viewport zoom level.
+     * 
+     * @param {Number} scale Scaling transform.
+     * @param {Array<Number>} translate Position transform, `[x, y]`.
+     * @returns {ZoomTransform} Object of `{ scale, x, y }`
      */
     zoom: (scale, translate) ->
         {x, y} = current = @zoomTransform.peek()
@@ -443,27 +450,74 @@ class exports.ViewportNode extends GraphNode
         unless _.isEqual zoom, current
             @zoomTransform zoom
             @trigger 'zoom-graph', ({} import zoom), this
+        # console.log "@zoom!", JSON.stringify zoom
         zoom
     
     
     /**
-     * Zoom the viewport into a particular region.
+     * Zoom the viewport into a particular screen region. Arguments are pixels.
+     * 
+     * Also accepts a 2D "extent" Array `[[x0,y0], [x1,y1]]` like the ones
+     * supplied by `d3.svg.brush`.
+     * 
+     * @param {Number} x0
+     * @param {Number} y0
+     * @param {Number} x1
+     * @param {Number} y1
+     * @returns {ZoomTransform}
      */
-    zoomInto: (x0,y0, x1,y1) ->
+    zoomToRegion: (x0,y0, x1,y1) ->
         xScale = @xScale()
         yScale = @yScale()
         return unless xScale and yScale
-        wR = xScale.range()[1]
-        hR = yScale.range()[0]
-        wS = wR / (x1 - x0)
-        hS = hR / (y1 - y0)
+        [[x0,y0], [x1,y1]] = x0 if _.isArray x0
+        [x0,x1] = [x1,x0] if x0 > x1
+        [y0,y1] = [y1,y0] if y0 > y1
+        wR = d3.max xScale.range()
+        hR = d3.max yScale.range()
+        wS = wR / Math.abs(x1 - x0)
+        hS = hR / Math.abs(y1 - y0)
+        # console.log "@zoomToRegion!", ppExtents [[x0,y0], [x1,y1]]
+        # @dot(x0,y0, 'TL'); @dot(x1,y1, 'BR')
         @zoom Math.min(wS, hS), [-x0, -y0]
     
     
+    /**
+     * Zoom the viewport into a particular subset of data. Arguments should
+     * be typed as per the data columns.
+     * 
+     * Also accepts a 2D "extent" Array `[[x0,y0], [x1,y1]]` like the ones
+     * supplied by `d3.svg.brush`.
+     * 
+     * @param {xType} x0
+     * @param {yType} y0
+     * @param {xType} x1
+     * @param {yType} y1
+     * @returns {ZoomTransform}
+     */
+    zoomToData: (x0,y0, x1,y1) ->
+        xZS = @xZoomScale()
+        yZS = @yZoomScale()
+        return unless xZS and yZS
+        [[x0,y0], [x1,y1]] = x0 if _.isArray x0
+        # console.log "@zoomToData!", ppExtents [[xZS(x0), yZS(y0)], [xZS(x1), yZS(y1)]]
+        @zoomToRegion xZS(x0), yZS(y0), xZS(x1), yZS(y1)
+    
+    
+    /**
+     * Reset the viewport zoom to normal (`1.0`) scaling, and 
+     * no (`(0,0)`) translation.
+     * 
+     * @returns {ZoomTransform}
+     */
     resetZoom: ->
         @zoom 1.0, [0, 0]
     
     
+    /**
+     * Copies of the scales with domains updated to match the zoom level.
+     * @type ko.observable<d3.scale>
+     */
     xZoomScale: @computed -> @xScale()?.copy()
     yZoomScale: @computed -> @yScale()?.copy()
     
@@ -489,10 +543,57 @@ class exports.ViewportNode extends GraphNode
     
     
     watchOthers: ->
-        @xValues(); @xDomain(); @xScale()
-        @yValues(); @yDomain(); @yScale()
+        @xValues(); @xDomain(); @xScale(); @xZoomScale()
+        @yValues(); @yDomain(); @yScale(); @yZoomScale()
         @watchZoom()
     
+    
+    
+    # }}}
+    /* * * *  Debugging Helpers  * * * {{{ */
+    
+    
+    /**
+     * Add a debugging dot to the viewport.
+     * @private
+     */
+    dot: (x, y, label, opts={}) ->
+        (@_dots or= []).push {
+            x, y, label, opts,
+            opts.r or 3
+        }
+        @renderDots()
+    
+    
+    /**
+     * Redraw the debugging dots.
+     * @private
+     */
+    renderDots: ->
+        colors = d3.scale.category10().range()
+        gDots  = d3.select @$('.frame > .fg').0 .selectAll 'g.dots'
+        gDots.data [this] .enter().append 'g' .classed 'dots', true
+        circles = gDots.selectAll 'circle'
+            .data @_dots, (d,i) -> i
+            .enter().append 'circle'
+                .attr do
+                    r     : (d) -> d.r
+                    cx    : (d) -> d.x
+                    cy    : (d) -> d.y
+                .style 'fill', (d, i) -> colors[i]
+                .append 'title'
+                    .text ({x,y, label}, i) ->
+                        "[#i] #label: "+fmtpair [x,y]
+        @_dots
+    
+    
+    /**
+     * Clear the debugging dots.
+     * @private
+     */
+    clearDots: ->
+        @_dots = []
+        @renderDots()
     
     
     # }}}

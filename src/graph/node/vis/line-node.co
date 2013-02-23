@@ -18,6 +18,7 @@ class exports.LineNodeData extends TimeseriesNodeData
     @registerType 'line'
     
     defaults: ->
+        # See LineGroupNode for cascaded defaults
         options :
             disabled    : false
             label       : null
@@ -56,16 +57,19 @@ class exports.LineNode extends TimeseriesNode
     trackHover: @computed ->
         return if @tooManyDataPoints()
         return unless cursor = @root().cursor()
-        return unless @model().metric()?.data()?.length
-        return unless @sel
+        return unless @model().metric()?.data()?.length and @el()
+        return unless zoom = @viewport().zoomTransform()
+        return unless opts = @model().options()
+        return unless opts.get('hoverPoints.enabled')
         
-        @trackingCircle ?= @sel.append 'circle'
-            .classed 'tracking', true
-            .style 'fill', @strokeColor()
-            .attr 'r', 5
+        r  = opts.get('hoverPoints.radius') / zoom.scale
+        cx = cy = -1000
         
-        cx = -10
-        cy = -10
+        @trackingCircle ?= @sel.append 'circle' .classed 'tracking', true
+        opts.applyShapeStyles @trackingCircle, 'hoverPoints.'
+        @trackingCircle.style do
+            fill   : opts.get('hoverPoints.fill')           or @strokeColor()
+            stroke : opts.get('hoverPoints.stroke.color')   or @strokeColor()
         
         if cursor.hovering and not @disabled()
             xScale  = @viewport().xScale()
@@ -76,10 +80,10 @@ class exports.LineNode extends TimeseriesNode
             cx = xScale closest.date
             cy = yScale closest.value
             unless isFinite cx and isFinite cy
-                cx = -10
-                cy = -10
+                cx = cy = -1000
         
-        @trackingCircle.attr { cx, cy }
+        @trackingCircle.attr { r, cx, cy }
+    
     
     paletteColor: @computedRequires 'model.options', (options) ->
         ProjectColors.lookup(@shortLabel(), options.get('palette'))

@@ -26,6 +26,19 @@ class exports.LineGroupNodeData extends SeriesGroupNodeData
                 width   : 3
                 pattern : 'solid'
                 opacity : 1
+            
+            # tracking circles shown on hover
+            hoverPoints :
+                enabled     : true
+                radius      : 5
+                fill        : null
+                fillOpacity : 1
+                stroke : 
+                    color   : null
+                    width   : 0
+                    pattern : 'solid'
+                    opacity : 1
+            
     
     attributeTypes: ->
         {}

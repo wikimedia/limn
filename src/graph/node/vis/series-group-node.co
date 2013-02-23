@@ -88,14 +88,16 @@ class exports.SeriesGroupNode extends GroupNode
     
     
     xBands: @computed ->
+        return unless viewport = @viewport()
         return unless bandOpts = @options().bands()
-        return unless scales = @root().scalesIfValid()
+        return unless xValues  = viewport.xValues()
+        return unless xScale   = viewport.xScale()
         
         pad      = bandOpts.padding()
         outerPad = bandOpts.outerPadding() ? pad
         d3.scale.ordinal()
-            .domain @viewport().xValues
-            .rangeRoundBands scales.xScale.range(), pad, outerPad
+            .domain xValues
+            .rangeRoundBands xScale.range(), pad, outerPad
     
     
     

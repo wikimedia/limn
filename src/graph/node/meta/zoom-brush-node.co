@@ -49,18 +49,20 @@ class exports.ZoomBrushNode extends GraphNode
     
     
     render: ->
-        return unless viewport = @viewport()
-        return unless xScale   = viewport.xZoomScale()
-        return unless yScale   = viewport.yZoomScale()
+        return unless vp     = @viewport()
+        return unless xZoomScale = vp.xZoomScale()
+        return unless yZoomScale = vp.yZoomScale()
         
         if @brush
-            @brush.x xScale .y yScale
+            @brush
+                .x xZoomScale
+                .y yZoomScale
             @sel.call @brush
             return
         
         @brush = d3.svg.brush()
-            .x xScale
-            .y yScale
+            .x xZoomScale
+            .y yZoomScale
             .on 'brushend', @onBrushEnd.bind this
         
         @sel.call @brush
@@ -74,9 +76,11 @@ class exports.ZoomBrushNode extends GraphNode
     
     
     onBrushEnd: ->
-        [[x0,y0], [x1,y1]] = extent = @brush.extent()
+        extent = @brush.extent()
+        console.log "brushend", JSON.stringify extent
+        
         if @extentIsSignificant extent
-            @viewport().zoomInto x0,y0, x1,y1
+            @viewport().zoomToData extent
         @brush.clear()
         @sel.call @brush
         @hideTrackingCircles() # TODO: LineNode should listen for zoom event
