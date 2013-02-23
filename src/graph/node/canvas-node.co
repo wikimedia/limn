@@ -71,10 +71,10 @@ class exports.CanvasNode extends ViewportNode
     
     /**
      * Element representing the frame where the content is held.
-     * @type ko.observable<Element>
+     * @type ko.observable<d3.selection>
      */
     contentFrameEl: @computed ->
-        @$('.content-frame').0 if @el()
+        d3.select @$('.content-frame').0 if @el()
     
     
     /**
@@ -98,7 +98,7 @@ class exports.CanvasNode extends ViewportNode
         else
             # XXX: Hack
             if node.hasTrait Trait.CALLOUT_NODE
-                @$ '.graph-name-row > .callout' .0
+                @graph.$ '.graph-name-row > .callout' .0
             else if node.hasTrait Trait.SECTION
                 @$el.parent().0
             else if node.hasTrait Trait.FG_LAYER
