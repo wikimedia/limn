@@ -73,7 +73,6 @@ class limn.LimnApp
             [prev, obs.prev] = [obs.prev, view]
             limn.trigger 'app-view-changed', view, prev, limn.app if view
         
-        
         # Prevent page.js from intercepting clicks on links to datafiles
         window.addEventListener do
             'click'

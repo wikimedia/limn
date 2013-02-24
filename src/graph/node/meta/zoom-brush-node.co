@@ -16,16 +16,16 @@ Trait = require '../graph-node-trait'
  * @class
  * @extends GraphNodeData
  */
-class exports.ZoomBrushNodeData extends GraphNodeData
+export class ZoomBrushNodeData extends GraphNodeData
     @registerType 'zoom-brush'
     
     defaults: ->
         options :
-            allowX : true
-            allowY : true
+            zoom :
+                allow : 'both'  # := both | x | y -- zoom dimension(s) the user controls
+                max   : null    # := null=Infinity | Number -- maximum zoom
     
-    attributeTypes: ->
-        {}
+    attributeTypes: -> {}
     
     -> super ...
 
@@ -35,7 +35,8 @@ class exports.ZoomBrushNodeData extends GraphNodeData
  * @class
  * @extends GraphNode
  */
-class exports.ZoomBrushNode extends GraphNode
+export class ZoomBrushNode extends GraphNode
+    __bind__ : <[ onBrushEnd onDoubleClick ]>
     @registerType 'zoom-brush'
     traits : [
         Trait.VIS_NODE
@@ -49,9 +50,9 @@ class exports.ZoomBrushNode extends GraphNode
     
     
     render: ->
-        return unless vp     = @viewport()
-        return unless xZoomScale = vp.xZoomScale()
-        return unless yZoomScale = vp.yZoomScale()
+        return unless viewport   = @viewport()
+        return unless xZoomScale = viewport.xZoomScale()
+        return unless yZoomScale = viewport.yZoomScale()
         
         if @brush
             @brush
@@ -63,27 +64,30 @@ class exports.ZoomBrushNode extends GraphNode
         @brush = d3.svg.brush()
             .x xZoomScale
             .y yZoomScale
-            .on 'brushend', @onBrushEnd.bind this
+            .on 'brushend', @onBrushEnd
         
         @sel.call @brush
         @sel.select 'rect.background'
             .attr 'pointer-events', 'all'
-            .on 'dblclick', ~>
-                @hideTrackingCircles() # TODO: LineNode should listen for zoom event
-                @viewport().resetZoom()
-                window.getSelection?().removeAllRanges()
-                document.selection?.empty()
+            .on 'dblclick', @onDoubleClick
     
     
     onBrushEnd: ->
         extent = @brush.extent()
-        console.log "brushend", JSON.stringify extent
+        # console.log "brushend", JSON.stringify extent
         
+        @hideTrackingCircles() # TODO: LineNode should listen for zoom event
         if @extentIsSignificant extent
             @viewport().zoomToData extent
         @brush.clear()
         @sel.call @brush
+    
+    
+    onDoubleClick: ->
         @hideTrackingCircles() # TODO: LineNode should listen for zoom event
+        @viewport().resetZoom()
+        window.getSelection?().removeAllRanges()
+        document.selection?.empty()
     
     
     hideTrackingCircles: ->
@@ -92,7 +96,7 @@ class exports.ZoomBrushNode extends GraphNode
     
     
     extentIsSignificant: (extent) ->
-        [[x0,y0], [x1,y1]] = extent
+        [[x0], [x1]] = extent
         x1 - x0 > 1000ms
     
     

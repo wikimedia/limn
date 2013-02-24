@@ -92,28 +92,14 @@ class exports.ViewportNodeData extends GraphNodeData
  * @extends GraphNode
  */
 class exports.ViewportNode extends GraphNode
+    __bind__ : <[ resize ]>
     @registerType 'viewport'
     traits : [
         Trait.VIEWPORT
         Trait.SVG
     ]
-    tagName : 'g'
-    
-    
-    
-    /**
-     * @constructor
-     * @param {GraphView} graph
-     * @param {GraphNodeData} model
-     */
-    (graph, model) ->
-        super ...
-        
-        # Trigger resize whenever a child is added
-        @on 'child-built', @resize, this
-        $ window .resize _.debounce @resize.bind(this), 50ms
-    
-    
+    tagName : 'svg:g'
+    -> super ...
     
     
     
@@ -298,17 +284,22 @@ class exports.ViewportNode extends GraphNode
     
     createScale: (type, props={}) ->
         return null unless type
+        props = _.extend {}, SCALE_DEFAULTS.ALL, (SCALE_DEFAULTS[type] or {}), props
         scale = switch type
             case 'time'
-                d3.time.scale().clamp(true)
+                props.nice = that if d3.time[props.interval]
+                d3.time.scale()
             case 'linear' 'log' 'sqrt' 'pow'
                 d3.scale[type]()
             case 'ordinal'
                 d3.scale.ordinal()
             default
                 throw new Error "Unknown scale type #type!"
+        
+        # Apply properties to the new scale
         for k, v in props
-            scale[k] v
+            scale[k]?(v) if v?
+        
         scale
     
     
@@ -354,26 +345,22 @@ class exports.ViewportNode extends GraphNode
     /* * * *  Rendering  * * * {{{ */
     
     
-    buildElement: (parentElement) ->
-        el = super ...
-        @trackCursor()
-        el
-    
-    
     /**
      * Element representing the frame where the content is held.
-     * @type ko.observable<Element>
+     * @type ko.observable<d3.selection>
      */
     contentFrameEl: @computed ->
-        @el()
+        return unless el = @el()
+        d3.select el
     
     
     /**
      * Element holding the content itself.
-     * @type ko.observable<Element>
+     * @type ko.observable<d3.selection>
      */
     contentViewportEl: @computed ->
-        $(frame).find('.viewport:first').0 if frame = @contentFrameEl()
+        return unless frame = @contentFrameEl()
+        d3.select $(frame.node()).find('.viewport:first').0
     
     
     # }}}
@@ -383,7 +370,12 @@ class exports.ViewportNode extends GraphNode
     /**
      * Trigger recalculation of values that depend on window size.
      */
-    resize : -> @_resizeProxy {} if @el.peek()
+    resize : ->
+        if @el.peek()
+            @_resizeProxy {}
+            true
+        else
+            false
     
     
     /**
@@ -393,40 +385,6 @@ class exports.ViewportNode extends GraphNode
      * @type ko.observable<Object>
      */
     _resizeProxy : ko.observable {}
-    
-    
-    /**
-     * Current location of the cursor in the viewport.
-     * @type ko.observable<Object>
-     */
-    cursor: ko.observable null
-    
-    
-    trackCursor: ->
-        return if @cursor.peek() # only initialize once
-        return unless el  = @contentFrameEl()
-        return unless svg = _.toElement @graph.$('svg')
-        svg = d3.select svg
-        
-        svg.on 'mouseover', ~>
-            [x, y] = d3.mouse(el)
-            cursor = { +hovering, x, y }
-            @trigger 'mouseover', cursor, this
-            # cursor observable will be handled by mousemove
-        
-        svg.on 'mousemove', ~>
-            [x, y] = d3.mouse(el)
-            cursor = { +hovering, x, y }
-            @trigger 'mousemove', cursor, this
-            with @cursor.peek()
-                @cursor cursor if not &?.hovering or &x != x or &y != y
-        
-        svg.on 'mouseout', ~>
-            [x, y] = d3.mouse(el)
-            @cursor cursor = { -hovering, x, y }
-            @trigger 'mouseout', cursor, this
-        
-        this
     
     
     /**
@@ -450,7 +408,7 @@ class exports.ViewportNode extends GraphNode
         unless _.isEqual zoom, current
             @zoomTransform zoom
             @trigger 'zoom-graph', ({} import zoom), this
-        # console.log "@zoom!", JSON.stringify zoom
+        console.log "@zoom!", JSON.stringify zoom
         zoom
     
     
@@ -529,8 +487,7 @@ class exports.ViewportNode extends GraphNode
     watchZoom: @computed ->
         { scale, x, y } = @zoomTransform()
         return unless el = @contentViewportEl()
-        d3.select(el).transition()
-            .attr 'transform', "scale(#scale), translate(#x, #y)"
+        el.transition().attr 'transform', "scale(#scale), translate(#x, #y)"
     
     
     

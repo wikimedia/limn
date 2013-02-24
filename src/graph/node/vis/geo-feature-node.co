@@ -73,7 +73,9 @@ class exports.GeoFeatureNode extends GraphNode
     render: ->
         metric      = @model().metric()
         featureData = metric?.data()
-        features    = @parent().features()
+        map         = @parent()
+        features    = map.features()
+        map.featurePath() # ensure we're notified when feature paths are updated (zooming, etc)
         return unless metric and featureData and features?[0]?.length
         return unless dataById = metric.dataById()
         
@@ -81,7 +83,7 @@ class exports.GeoFeatureNode extends GraphNode
         scaleType = options.get 'scale'
         throw Error "Unknown scale type '#scaleType'!" unless d3.scale[scaleType]
         
-        extent    = d3.extent _.pluck(featureData, 1)
+        extent = d3.extent _.pluck(featureData, 1)
         if scaleType is 'log'
             extent[0] = Math.max 1e-4, extent[0]
         
@@ -100,6 +102,10 @@ class exports.GeoFeatureNode extends GraphNode
                     .range  val
                 if scaleType is 'pow'
                     optScale.exponent(options.get('scaleExponent') or 2)
-                features.style style, (d) -> optScale dataById[d.id]
+                features.style style, (d) ->
+                    if d.id in dataById
+                        optScale dataById[d.id]
+                    else
+                        d3.select this .style style
     
     

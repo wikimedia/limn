@@ -116,7 +116,7 @@ class exports.LegendNode extends GraphNode
     trackHover: @computed ->
         return unless viewport = @viewport()
         return unless invert = viewport.xScale()?.invert
-        return unless cursor = viewport.cursor()
+        return unless cursor = @root().cursor()
         @date invert cursor.x if cursor.hovering
     
     

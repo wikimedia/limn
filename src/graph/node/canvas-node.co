@@ -29,19 +29,7 @@ tuplesEqual = (a, b) ->
 class exports.CanvasNodeData extends ViewportNodeData
     @registerType 'canvas'
     
-    defaults: ->
-        width    : 'auto'
-        height   : 500
-        
-        # Override the data domain
-        xDomain  : null
-        yDomain  : null
-        
-        # Data domain padding, expressed as a fraction of the extents,
-        # but overriden by {x,y}Domain
-        xPadding : 0
-        yPadding : 0.1
-    
+    defaults: -> {}
     attributeTypes: -> {}
     
     -> super ...
@@ -58,8 +46,11 @@ class exports.CanvasNode extends ViewportNode
     tagName  : 'section'
     template : 'canvas-node'
     
+    ->
+        super ...
+        @on 'child-built', @resize, this # Trigger resize whenever a child is added
+        $ window .resize _.debounce @resize.bind(this), 50ms
     
-    -> super ...
     
     
     buildElement: (parentElement) ->
@@ -114,6 +105,40 @@ class exports.CanvasNode extends ViewportNode
             this
         else
             bg.css 'fill'
+    
+    
+    /**
+     * Current location of the cursor in the viewport.
+     * @type ko.observable<Object>
+     */
+    cursor: ko.observable null
+    
+    
+    trackCursor: ->
+        return if @cursor.peek() # only initialize once
+        return unless el  = _.toElement @contentFrameEl()
+        return unless svg = _.toElement @graph.$('svg')
+        svg = d3.select svg
+        
+        svg.on 'mouseover', ~>
+            [x, y] = d3.mouse(el)
+            cursor = { +hovering, x, y }
+            @trigger 'mouseover', cursor, this
+            # cursor observable will be handled by mousemove
+        
+        svg.on 'mousemove', ~>
+            [x, y] = d3.mouse(el)
+            cursor = { +hovering, x, y }
+            @trigger 'mousemove', cursor, this
+            with @cursor.peek()
+                @cursor cursor if not &?.hovering or &x != x or &y != y
+        
+        svg.on 'mouseout', ~>
+            [x, y] = d3.mouse(el)
+            @cursor cursor = { -hovering, x, y }
+            @trigger 'mouseout', cursor, this
+        
+        this
     
     
 
