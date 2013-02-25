@@ -85,21 +85,23 @@ class exports.AxisNode extends GraphNode
     
     
     render: ->
+        viewport = @viewport()
         options = @model().options()
-        return unless scales    = @root().scalesIfValid()
-        return unless dimension = options.get('dimension')
-        return unless scale     = scales[ dimension+'Scale' ]
+        return unless viewport.zoomTransform()
+        return unless dim   = options.get('dimension')
+        return unless scale = viewport[dim+'ZoomScale']()
+        
+        @sel.classed dim+'-axis axis', true
         
         orient = options.get('orient')
         ticks  = options.get('ticks')
         axis   = d3.svg.axis().scale scale
-        isTimeseries = @root() instanceof CanvasNode
         
-        switch dimension
+        switch dim
             case 'x'
                 axis.orient(orient or= 'bottom')
                 ticks ?= 10
-                if isTimeseries
+                if viewport.xScaleType() is 'time'
                     axis.tickFormat multiTimeFormatter # @dateFormatterFor 'MMM YY'
                     axis.ticks ticks
                 else
@@ -111,7 +113,7 @@ class exports.AxisNode extends GraphNode
                 
                 # TODO: GridNode to apply the same scale calculations
                 ticks ?= 10
-                if @root().scaling?() is 'log'
+                if viewport.yScaleType() is 'log'
                     tickValues = scale.ticks()
                     while 5 < tickValues.length > ticks + 2
                         tickValues .= filter (v, i) ->
@@ -123,12 +125,12 @@ class exports.AxisNode extends GraphNode
                     tickValues = scale.ticks(ticks)
                 axis.tickValues tickValues
         
-        @sel.classed dimension+'-axis axis', true
         @sel.call axis
         @moveAxis()
         
-        @zoomHandler ?= @root().handle 'zoom-graph', this, (translate, scale) ~>
-            @sel.call axis
+        # unless @zoomHandler
+        #     @zoomHandler = ~> @sel.call axis
+        #     viewport.on 'zoom-graph', @zoomHandler
         
         axis
     
@@ -138,8 +140,8 @@ class exports.AxisNode extends GraphNode
         @sel.attr 'transform', ''
         
         # TODO: handle other orientations
-        return unless @model()?.options()?.get('dimension') is 'x'
-        height = @root().viewportHeight()
+        return unless @model().get('options.dimension') is 'x'
+        height = @viewport().viewportHeight()
         @sel.attr 'transform', "translate(0, #height)"
         height
     

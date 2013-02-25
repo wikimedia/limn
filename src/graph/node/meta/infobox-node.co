@@ -114,23 +114,21 @@ class exports.InfoboxNode extends GraphNode
     
     
     trackHover: @computedRequires 'mapNode.features', (features) ->
-        self = this
-        features.on 'mouseover.infobox', (d) ->
-            currentId = self.featureId.peek()
+        features.on 'mouseover.infobox', (d) ~>
+            currentId = @featureId.peek()
             return if currentId is d.id
-            self.label d.properties.name
-            self.featureId d.id
-            [x, y] = d3.mouse self.viewport().el()
+            root = @root()
+            [x, y] = d3.mouse root.el()
+            
+            @label d.properties.name
+            @featureId d.id
             
             # make the box stay inside its viewport
-            vh = self.viewport().height()
-            vw = self.viewport().width()
-            h = self.$el.height()
-            w = self.$el.width()
-            x = Math.min x, (vw - w - 10)
-            y = Math.min y, (vh - h - 10)
-            
-            self.$el.css { display:'block', top:y, left:x }
+            xMax = root.width()  - @$el.width()  - 10px
+            yMax = root.height() - @$el.height() - 10px
+            left = 0 >? x <? xMax
+            top  = 0 >? y <? yMax
+            @$el.css { display:'block', top, left }
         @root().$el.on 'mouseout', ~>
             @$el.hide()
             @featureId null
@@ -164,7 +162,7 @@ class exports.InfoboxEntry extends AttributesBase
     dataById: @computedRequires 'node.model.metric.dataById', -> it
     
     label: @computedRequires 'nodeOptions', (nodeOptions) ->
-        nodeOptions.get('label') or @node.model()?.metric()?.columnDef()?.label()
+        nodeOptions.get('label') or @node.model()?.metric()?.yColumnDef()?.label()
     
     valueFormatter : @computedRequires 'infoboxOptions', 'nodeOptions', (infoboxOptions, nodeOptions) ->
         valueFormat = infoboxOptions.get('valueFormat') or nodeOptions.get('valueFormat')

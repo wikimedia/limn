@@ -11,6 +11,41 @@ op = require 'operator'
 Trait = require './graph-node-trait'
 
 
+toNumeric = -> +it
+
+cmpNumeric = (a, b) ->
+    op.cmp +a, +b
+
+tuplesEqual = (a, b) ->
+    cmpNumeric(a[0], b[0]) is 0 and
+    cmpNumeric(a[1], b[1]) is 0
+
+fmt2f     = d3.format('.2f')
+fmtpair   = -> "(#{ it.map fmt2f   .join ','  })"
+ppExtents = -> "[#{ it.map fmtpair .join ', ' }]"
+
+
+
+/**
+ * @namespace Default options for various scale types
+ */
+SCALE_DEFAULTS =
+    ALL :
+        clamp : false
+        nice  : false
+    time :
+        # picks out a d3.time.interval for scale.nice()
+        # := null | year | month | day | hour | minute | second | week == sunday | monday | tuesday | wednesday | thursday | friday | saturday
+        # XXX: what happens if I pass an interval range, like d3.time.hour.range(2)
+        interval : null
+    pow :
+        exponent : 1
+    ordinal :
+        round : true
+        spacing : 0
+        outerSpacing : 0
+    # TODO: quantize, quantile; maybe threshold?
+
 
 
 /**
@@ -28,9 +63,25 @@ class exports.ViewportNodeData extends GraphNodeData
         height    : 500
         minHeight : 500
         maxHeight : null
+        
+        # scaleType {String} := null | "time" | "linear" | "log" | "sqrt" | "pow" | "ordinal"
+        # Scale types defualt to a value based on introspection of the metric type:
+        #   date/time               -> linear time scale
+        #   int, float, numeric     -> linear quantitive scale
+        #   string, *               -> ordinal scale
+        
+        x :
+            scaleType : null
+            padding   : 0
+            domain    : null
+        
+        y :
+            scaleType : null
+            padding   : 0.1
+            domain    : null
+        
     
-    attributeTypes: ->
-        {}
+    attributeTypes: -> {}
     
     -> super ...
 
@@ -41,28 +92,14 @@ class exports.ViewportNodeData extends GraphNodeData
  * @extends GraphNode
  */
 class exports.ViewportNode extends GraphNode
+    __bind__ : <[ resize ]>
     @registerType 'viewport'
     traits : [
         Trait.VIEWPORT
         Trait.SVG
     ]
-    tagName : 'g'
-    
-    
-    
-    /**
-     * @constructor
-     * @param {GraphView} graph
-     * @param {GraphNodeData} model
-     */
-    (graph, model) ->
-        super ...
-        
-        # Trigger resize whenever a child is added
-        @on 'child-built', @resize, this
-        $ window .resize _.debounce @resize.bind(this), 50ms
-    
-    
+    tagName : 'svg:g'
+    -> super ...
     
     
     
@@ -109,11 +146,198 @@ class exports.ViewportNode extends GraphNode
     center         : @computed -> [ @width()/2, @height()/2 ]
     
     
-    # }}}
-    /* * * *  Watchers  * * * {{{ */
     
-    watchDeps: ->
-    watchOthers: ->
+    # }}}
+    /* * * *  Metrics  * * * {{{ */
+    
+    /**
+     * Child nodes that are not children of another viewport node.
+     * @type ko.computed<GraphNode>
+     */
+    viewportChildren: @computed ->
+        children = []
+        unvisited = @children().slice()
+        while node = unvisited.shift()
+            children.push node
+            continue if node.hasTrait Trait.VIEWPORT
+            unvisited .= concat node.children() # note: circular refs in a tree should be impossible
+        children
+    
+    
+    
+    /**
+     * @protected
+     * @param {Array<GraphNode>} nodes
+     * @returns {Array<Metric>} Metrics of valid, enabled nodes.
+     */
+    _metricsFrom: (nodes) ->
+        metrics = _.reduce_ nodes, [], (metrics, node) ->
+            if      node.hasTrait(Trait.REQUIRES_METRIC) and
+                    node.hasTrait(Trait.METRIC_CONTENT_DATA) and
+                    not node.disabled() and
+                    metric = node.model()?.metric()
+                metrics.push metric
+            metrics
+        return if metrics.length then metrics else null
+        
+    
+    /**
+     * All content-data metrics under this viewport.
+     * @type ko.computed<Array<Metric>>
+     */
+    allMetrics: @computed ->
+        @_metricsFrom @map op.I
+    
+    
+    /**
+     * Content-data metrics under this viewport not under another viewport.
+     * @type ko.computed<Array<Metric>>
+     */
+    viewportMetrics: @computed ->
+        @_metricsFrom @viewportChildren()
+    
+    
+    xValues: @computed ->
+        return unless metrics = @allMetrics()
+        _.flatten _.compact _.invoke metrics, 'xValues'
+    
+    
+    yValues: @computed ->
+        return unless metrics = @allMetrics()
+        _.flatten _.compact _.invoke metrics, 'yValues'
+    
+    
+    
+    # }}}
+    /* * * *  Scales  * * * {{{ */
+    
+    
+    xScale: @computed ->
+        return null unless xScale = @createScale @xScaleType()
+        xScale.domain that if @xDomain()
+        xScale.range [0, @viewportWidth()]
+    
+    
+    yScale: @computed ->
+        return null unless yScale = @createScale @yScaleType()
+        yScale.domain that if @yDomain()
+        yScale.range [@viewportHeight(), 0]
+    
+    
+    xDomain: @computed ->
+        @_domainFor 'x'
+    
+    
+    yDomain: @computed ->
+        return unless yDomain = @_domainFor 'y'
+        # FIXME: hack to render log-scales when some input values are <= 0
+        yDomain[0] = 0.01 if @yScaleType() is 'log' and yDomain[0] < 1
+        yDomain
+    
+    
+    _domainFor: (dim) ->
+        values = @["#{dim}Values"]() # always create a dependency on the values
+        domain = @model().get "#dim.domain"
+        unless _.isArray(domain) and domain.length is 2 and _.every(domain, isFinite)
+            return unless values?.length
+            domain = @applyPadding d3.extent(values), @model().get("#dim.padding")
+        domain
+    
+    
+    /**
+     * @type ko.computed<String := time | linear | log | sqrt | pow | ordinal>
+     */
+    xScaleType: @computed ->
+        @model().get('x.scaleType') or @_scaleTypeFor('xType')
+    
+    
+    /**
+     * @type ko.computed<String := time | linear | log | sqrt | pow | ordinal>
+     */
+    yScaleType: @computed ->
+        @model().get('y.scaleType') or @_scaleTypeFor('yType')
+    
+    
+    /**
+     * @private
+     * @param {String} typeDimension 'xType' or 'yType'
+     * @returns {String := time | linear | log | sqrt | pow | ordinal}
+     */
+    _scaleTypeFor: (typeDimension) ->
+        return null unless metrics = @viewportMetrics()
+        types = _ metrics .chain()
+            .invoke typeDimension
+            .compact()
+            .map ->
+                switch it .= toLowerCase()
+                case 'linear' 'log' 'sqrt' 'pow'    then it
+                case 'int' 'float' 'number'         then 'linear'
+                case 'time' 'date'                  then 'time'
+                # includes ordinal, string
+                default                             then 'ordinal'
+            .uniq()
+            .value()
+        if types.length > 1
+            throw new Error "Invalid Graph: Multiple scale types specified by children for #typeDimension! #{JSON.stringify types}"
+        types[0]
+    
+    
+    createScale: (type, props={}) ->
+        return null unless type
+        props = _.extend {}, SCALE_DEFAULTS.ALL, (SCALE_DEFAULTS[type] or {}), props
+        scale = switch type
+            case 'time'
+                props.nice = that if d3.time[props.interval]
+                d3.time.scale()
+            case 'linear' 'log' 'sqrt' 'pow'
+                d3.scale[type]()
+            case 'ordinal'
+                d3.scale.ordinal()
+            default
+                throw new Error "Unknown scale type #type!"
+        
+        # Apply properties to the new scale
+        for k, v in props
+            scale[k]?(v) if v?
+        
+        scale
+    
+    
+    makeScaleShape: (shape) ->
+        xScale = @xScale()
+        yScale = @yScale()
+        unless xScale and yScale
+            throw new Error "Cannot make scale shape '#shape'! xScale=#{typeof xScale}; yScale=#{typeof yScale}"
+        switch shape
+        case 'area'
+            d3.svg.area()
+                .x  ([date, val], i) ~> xScale date
+                .y1 ([date, val], i) ~> yScale val
+                .y0 yScale.range()[0]
+                # .defined @isDataInView.bind this
+                .defined ([x,y])    ~> isFinite yScale y
+                .interpolate 'linear'
+        default
+            d3.svg.line()
+                .x ([date, val], i) ~> xScale date
+                .y ([date, val], i) ~> yScale val
+                # .defined @isDataInView.bind this
+                .defined ([x,y])    ~> isFinite yScale y
+                .interpolate 'linear'
+    
+    
+    isDataInView: ([x, y]) ->
+        [xMin, xMax] = @xDomain().map toNumeric
+        return  xMin <= +x <= xMax and
+            isFinite @yScale() y
+    
+    
+    applyPadding: (ext, p) ->
+        isDate     = ext.map -> it instanceof Date
+        [min, max] = ext.map toNumeric
+        min -= min * p
+        max += max * p
+        [min, max].map (v, i) -> if isDate[i] then new Date(v) else v
     
     
     
@@ -121,19 +345,37 @@ class exports.ViewportNode extends GraphNode
     /* * * *  Rendering  * * * {{{ */
     
     
-    buildElement: (parentElement) ->
-        el = super ...
-        @trackCursor()
-        el
+    /**
+     * Element representing the frame where the content is held.
+     * @type ko.observable<d3.selection>
+     */
+    contentFrameEl: @computed ->
+        return unless el = @el()
+        d3.select el
     
     
+    /**
+     * Element holding the content itself.
+     * @type ko.observable<d3.selection>
+     */
+    contentViewportEl: @computed ->
+        return unless frame = @contentFrameEl()
+        d3.select $(frame.node()).find('.viewport:first').0
+    
+    
+    # }}}
     /* * * *  Viewport Events  * * * {{{ */
     
     
     /**
      * Trigger recalculation of values that depend on window size.
      */
-    resize : -> @_resizeProxy {} if @el.peek()
+    resize : ->
+        if @el.peek()
+            @_resizeProxy {}
+            true
+        else
+            false
     
     
     /**
@@ -146,61 +388,169 @@ class exports.ViewportNode extends GraphNode
     
     
     /**
-     * Current location of the cursor in the viewport.
+     * Zoom state.
      * @type ko.observable<Object>
      */
-    cursor: ko.observable null
-    
-    
-    trackCursor: ->
-        return if @cursor.peek() # only initialize once
-        return unless el  = @el.peek()
-        return unless svg = _.toElement @graph.$('svg')
-        svg = d3.select svg
-        
-        svg.on 'mousemove', ~>
-            [x, y] = d3.mouse(el)
-            cur = @cursor.peek()
-            if not cur?.hovering or cur.x != x or cur.y != y
-                @cursor { +hovering, x, y }
-        
-        svg.on 'mouseout', ~>
-            @cursor { -hovering }
-        
-        this
+    zoomTransform: ko.observable { scale:1.0, x:0, y:0 }
     
     
     /**
-     * Broadcast a zoom event.
+     * Set the viewport zoom level.
+     * 
+     * @param {Number} scale Scaling transform.
+     * @param {Array<Number>} translate Position transform, `[x, y]`.
+     * @returns {ZoomTransform} Object of `{ scale, x, y }`
      */
-    zooming: (translate, scale) ->
-        @trigger 'zoom-graph', translate, scale, this
+    zoom: (scale, translate) ->
+        {x, y} = current = @zoomTransform.peek()
+        [x, y] = that if translate
+        zoom = { scale, x, y }
+        unless _.isEqual zoom, current
+            @zoomTransform zoom
+            @trigger 'zoom-graph', ({} import zoom), this
+        console.log "@zoom!", JSON.stringify zoom
+        zoom
     
     
     /**
-     * register a handler for an event name so that child nodes can see parent events
-     * @param {string} eventName
-     * @param {Object} context the context to call the function in
-     * @param {Function} fn the handling function
+     * Zoom the viewport into a particular screen region. Arguments are pixels.
+     * 
+     * Also accepts a 2D "extent" Array `[[x0,y0], [x1,y1]]` like the ones
+     * supplied by `d3.svg.brush`.
+     * 
+     * @param {Number} x0
+     * @param {Number} y0
+     * @param {Number} x1
+     * @param {Number} y1
+     * @returns {ZoomTransform}
      */
-    #FIXME: this doesn't work because of the changing / overwriting of the GraphNode tree.  Move to dependency tracking instead of events
-    handle: (eventName, context, fn) ->
-        @handlers ?= {}
-        unless @handlers[eventName]
-            @handlers[eventName] = []
-            @on eventName, ~>
-                for handler of @handlers[eventName]
-                    handler.fn.apply handler.context, arguments
-        
-        existing = false
-        for handler of @handlers[eventName]
-            if handler.context is context
-                handler.fn = fn
-                existing = true
-                break
-        
-        unless existing
-            @handlers[eventName].push {fn, context}
+    zoomToRegion: (x0,y0, x1,y1) ->
+        xScale = @xScale()
+        yScale = @yScale()
+        return unless xScale and yScale
+        [[x0,y0], [x1,y1]] = x0 if _.isArray x0
+        [x0,x1] = [x1,x0] if x0 > x1
+        [y0,y1] = [y1,y0] if y0 > y1
+        wR = d3.max xScale.range()
+        hR = d3.max yScale.range()
+        wS = wR / Math.abs(x1 - x0)
+        hS = hR / Math.abs(y1 - y0)
+        # console.log "@zoomToRegion!", ppExtents [[x0,y0], [x1,y1]]
+        # @dot(x0,y0, 'TL'); @dot(x1,y1, 'BR')
+        @zoom Math.min(wS, hS), [-x0, -y0]
+    
+    
+    /**
+     * Zoom the viewport into a particular subset of data. Arguments should
+     * be typed as per the data columns.
+     * 
+     * Also accepts a 2D "extent" Array `[[x0,y0], [x1,y1]]` like the ones
+     * supplied by `d3.svg.brush`.
+     * 
+     * @param {xType} x0
+     * @param {yType} y0
+     * @param {xType} x1
+     * @param {yType} y1
+     * @returns {ZoomTransform}
+     */
+    zoomToData: (x0,y0, x1,y1) ->
+        xZS = @xZoomScale()
+        yZS = @yZoomScale()
+        return unless xZS and yZS
+        [[x0,y0], [x1,y1]] = x0 if _.isArray x0
+        # console.log "@zoomToData!", ppExtents [[xZS(x0), yZS(y0)], [xZS(x1), yZS(y1)]]
+        @zoomToRegion xZS(x0), yZS(y0), xZS(x1), yZS(y1)
+    
+    
+    /**
+     * Reset the viewport zoom to normal (`1.0`) scaling, and 
+     * no (`(0,0)`) translation.
+     * 
+     * @returns {ZoomTransform}
+     */
+    resetZoom: ->
+        @zoom 1.0, [0, 0]
+    
+    
+    /**
+     * Copies of the scales with domains updated to match the zoom level.
+     * @type ko.observable<d3.scale>
+     */
+    xZoomScale: @computed -> @xScale()?.copy()
+    yZoomScale: @computed -> @yScale()?.copy()
+    
+    
+    /**
+     * Update the content viewport's transform to match the zoom level.
+     * @protected
+     */
+    watchZoom: @computed ->
+        { scale, x, y } = @zoomTransform()
+        return unless el = @contentViewportEl()
+        el.transition().attr 'transform', "scale(#scale), translate(#x, #y)"
+    
+    
+    
+    # }}}
+    /* * * *  Watchers  * * * {{{ */
+    
+    
+    watchDeps: ->
+        @allMetrics()
+    
+    
+    watchOthers: ->
+        @xValues(); @xDomain(); @xScale(); @xZoomScale()
+        @yValues(); @yDomain(); @yScale(); @yZoomScale()
+        @watchZoom()
+    
+    
+    
+    # }}}
+    /* * * *  Debugging Helpers  * * * {{{ */
+    
+    
+    /**
+     * Add a debugging dot to the viewport.
+     * @private
+     */
+    dot: (x, y, label, opts={}) ->
+        (@_dots or= []).push {
+            x, y, label, opts,
+            opts.r or 3
+        }
+        @renderDots()
+    
+    
+    /**
+     * Redraw the debugging dots.
+     * @private
+     */
+    renderDots: ->
+        colors = d3.scale.category10().range()
+        gDots  = d3.select @$('.frame > .fg').0 .selectAll 'g.dots'
+        gDots.data [this] .enter().append 'g' .classed 'dots', true
+        circles = gDots.selectAll 'circle'
+            .data @_dots, (d,i) -> i
+            .enter().append 'circle'
+                .attr do
+                    r     : (d) -> d.r
+                    cx    : (d) -> d.x
+                    cy    : (d) -> d.y
+                .style 'fill', (d, i) -> colors[i]
+                .append 'title'
+                    .text ({x,y, label}, i) ->
+                        "[#i] #label: "+fmtpair [x,y]
+        @_dots
+    
+    
+    /**
+     * Clear the debugging dots.
+     * @private
+     */
+    clearDots: ->
+        @_dots = []
+        @renderDots()
     
     
     # }}}

@@ -15,16 +15,16 @@ Trait = require '../graph-node-trait'
  * @class
  * @extends GraphNodeData
  */
-class exports.ZoomPanNodeData extends GraphNodeData
+export class ZoomPanNodeData extends GraphNodeData
     @registerType 'zoom-pan'
     
     defaults: ->
         options :
-            min : 1
-            max : 10
+            zoom :
+                min : 1
+                max : 10
     
-    attributeTypes: ->
-        {}
+    attributeTypes: -> {}
     
     -> super ...
 
@@ -34,46 +34,60 @@ class exports.ZoomPanNodeData extends GraphNodeData
  * @class
  * @extends GraphNode
  */
-class exports.ZoomPanNode extends GraphNode
+export class ZoomPanNode extends GraphNode
+    __bind__ : <[ onZoom ]>
     @registerType 'zoom-pan'
     traits : [
         Trait.VIS_NODE
         Trait.SVG
         Trait.LEAF
+        Trait.BG_LAYER
     ]
-    
+    tagName : 'svg:rect'
     
     -> super ...
     
     
+    buildElement: ->
+        el = super ...
+        @sel
+            .attr { width:'100%', height:'100%' }
+            .style 'fill-opacity', 0
+        el
+    
+    
     render: ->
-        return unless root = @root()
-        return unless scales = root.scales()
+        viewport = @viewport()
+        return unless xZoomScale = viewport.xZoomScale()
+        return unless yZoomScale = viewport.yZoomScale()
+        return unless frame      = viewport.contentFrameEl()
+        return unless options    = @model().options()
         
-        self = this
-        @behavior ?= d3.behavior.zoom()
-            .x scales.xScale
-            .y scales.yScale
-            .scaleExtent [1,10]
-            .on 'zoom', -> self.zooming.call this, self
-        
-        d3.select(@root().el()).select('g.content-frame').call @behavior
+        @behavior ?= d3.behavior.zoom().on 'zoom', @onZoom
+        @behavior
+            .x xZoomScale
+            .y yZoomScale
+            .scaleExtent [ options.get('zoom.min'), options.get('zoom.max') ]
+        frame.call @behavior
     
     
-    zooming: (self) ->
-        scale = d3.event.scale
-        # FIXME: this still isn't clipping quite right
-        frame = d3.select this
+    onZoom: ->
+        b        = @behavior
+        viewport = @viewport()
+        return unless viewport.contentViewportEl()
+        return unless options = @model().options()
+        minZoom  = options.get('zoom.min')
+        maxZoom  = options.get('zoom.max')
+        scale    = b.scale()
+        
+        if scale > maxZoom
+            b.scale maxZoom
         
         # special case, if they zoom all the way out, bring them back to normal
-        if scale is 1
-            self.behavior.translate([0,0])
-            self.behavior.scale(scale)
-            frame = frame.transition(100)
+        if scale <= minZoom
+            b.scale minZoom
+            b.translate [0,0]
         
-        # FIXME: the zooming works as expected but panning is weird, it pans less than the mouse moves
-        frame.attr do
-            transform: "translate(#{self.behavior.translate()}) scale(#{self.behavior.scale()})"
-        
-        # FIXME: the tracking circles aren't displaying properly
-        self.root().zooming self.behavior.translate(), self.behavior.scale()
+        viewport.zoom b.scale(), b.translate()
+    
+    

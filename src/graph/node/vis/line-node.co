@@ -18,6 +18,7 @@ class exports.LineNodeData extends TimeseriesNodeData
     @registerType 'line'
     
     defaults: ->
+        # See LineGroupNode for cascaded defaults
         options :
             disabled    : false
             label       : null
@@ -56,33 +57,33 @@ class exports.LineNode extends TimeseriesNode
     trackHover: @computed ->
         return if @tooManyDataPoints()
         return unless cursor = @root().cursor()
-        return unless @model().metric()?.data()?.length
-        return unless @sel
+        return unless @model().metric()?.data()?.length and @el()
+        return unless zoom = @viewport().zoomTransform()
+        return unless opts = @model().options()
+        return unless opts.get('hoverPoints.enabled')
         
-        @trackingCircle ?= @sel.append 'circle'
-            .classed 'tracking', true
-            .style do
-                fill: @strokeColor()
-            .attr do
-                r: 5
+        r  = opts.get('hoverPoints.radius') / zoom.scale
+        cx = cy = -1000
         
-        cx = -10
-        cy = -10
+        @trackingCircle ?= @sel.append 'circle' .classed 'tracking', true
+        opts.applyShapeStyles @trackingCircle, 'hoverPoints.'
+        @trackingCircle.style do
+            fill   : opts.get('hoverPoints.fill')           or @strokeColor()
+            stroke : opts.get('hoverPoints.stroke.color')   or @strokeColor()
         
         if cursor.hovering and not @disabled()
-            date = @root().xScale.invert cursor.x
+            xScale  = @viewport().xScale()
+            yScale  = @viewport().yScale()
+            date    = xScale.invert cursor.x
             closest = @model().metric().findClosest date
             
-            cx = @root().xScale closest.date
-            cy = @root().yScale closest.value
-            
+            cx = xScale closest.date
+            cy = yScale closest.value
             unless isFinite cx and isFinite cy
-                cx = -10
-                cy = -10
+                cx = cy = -1000
         
-        @trackingCircle.attr do
-            cx: cx
-            cy: cy
+        @trackingCircle.attr { r, cx, cy }
+    
     
     paletteColor: @computedRequires 'model.options', (options) ->
         ProjectColors.lookup(@shortLabel(), options.get('palette'))
@@ -103,16 +104,19 @@ class exports.LineNode extends TimeseriesNode
     shape: @computedRequires 'model.options', (options) ->
         options.get('shape') or 'line'
     
+    
     /**
      * Update selection representing the SVG path element for the line.
      * @type ko.computed<d3.selection.update>
      */
     render: ->
+        viewport = @viewport()
         data = if @timeseriesData() then [that] else []
         
-        return null unless data.length
-        return null unless model  = @model()
-        return null unless scales = @root().scalesIfValid()
+        return unless data.length
+        return unless model  = @model()
+        return unless xScale = viewport.xScale()
+        # return unless viewport.xDomain()
         
         color = @strokeColor()
         
@@ -120,7 +124,7 @@ class exports.LineNode extends TimeseriesNode
         
         # optimization: if there are more data points than pixels in the range,
         # set a flag and use it to do things like not show tracking circles
-        xRange = scales.xScale.range()
+        xRange = xScale.range()
         @tooManyDataPoints data[0].length > (2 * Math.abs(xRange[0] - xRange[1]))
         
         # always exit() to remove existing nodes if data has changed and become invalid
@@ -144,7 +148,7 @@ class exports.LineNode extends TimeseriesNode
         
         line.style 'visibility', if @disabled() then "hidden" else "visible"
         line.transition()
-            .attr 'd', scales.scaleShape(@shape())
+            .attr 'd', viewport.makeScaleShape(@shape())
         
         line
     

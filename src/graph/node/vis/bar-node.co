@@ -69,8 +69,10 @@ class exports.BarNode extends TimeseriesNode
      * @type ko.computed<d3.selection.update>
      */
     render: ->
-        data  = @timeseriesData()
-        return unless scales = @root().scalesIfValid()
+        data     = @timeseriesData()
+        viewport = @viewport()
+        return unless xScale  = viewport.xScale()
+        return unless yScale  = viewport.yScale()
         return unless options = @model().options()
         disabled = @disabled()
         
@@ -79,7 +81,6 @@ class exports.BarNode extends TimeseriesNode
         
         bar = @selectAll 'rect.metric-bar' .data data
         
-        {yScale, xScale} = scales
         barWidth = @parent().xBands().rangeBand()
         
         # always exit() to remove existing nodes if data has changed and become invalid
@@ -99,9 +100,7 @@ class exports.BarNode extends TimeseriesNode
         bar.transition()
             .attr 'x',      ([x,y])         -> xScale(x) - barWidth/2
             .attr 'y',      ([x,y,y0 or 0]) -> yScale(y0 + validOr(y, 0))
-            .attr 'height', ([x,y,y0 or 0]) ->
-                if disabled then    0
-                else                yScale(y0) - yScale(y0 + validOr(y, 0))
+            .attr 'height', ([x,y,y0 or 0]) -> if disabled then 0 else yScale(y0) - yScale(y0 + validOr(y, 0))
         
         bar
     

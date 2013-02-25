@@ -63,7 +63,7 @@ class exports.CalloutNode extends GraphNode
     
     
     metric: @computed ->
-        return unless metrics = @root()?.metrics()
+        return unless metrics = @viewport()?.allMetrics()
         return unless typeof (ref = @model()?.metricRef()) is 'number'
         metrics[ref]
     

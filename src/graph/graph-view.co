@@ -90,12 +90,13 @@ class exports.GraphView extends View
      * 
      */
     watchDOM: @computed ->
-        node = @rootNode()
+        # ensure we register our dependencies before potentially aborting the build() chain
+        root = @rootNode()
         el   = @el()
-        return null unless limn?.domReady() and node and el
-        return null unless nodeParentEl = @$('.graph-canvas-row > .inner').0
-        node.build nodeParentEl
-        nodeParentEl
+        return null unless limn?.domReady() and root and el
+        return null unless rootParentEl = @$('.graph-chart-row > .inner').0
+        root.build rootParentEl
+        rootParentEl
     
     
     /**

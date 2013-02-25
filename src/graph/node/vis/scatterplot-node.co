@@ -65,8 +65,10 @@ class exports.ScatterplotNode extends TimeseriesNode
     
     
     render: ->
+        viewport = @viewport()
         return unless (data = @seriesData()).length
-        return unless scales = @root().scalesIfValid()
+        return unless xScale  = viewport.xScale()
+        return unless yScale  = viewport.yScale()
         return unless options = @model().options()
         data = data.filter datumValid
         disabled = @disabled()
@@ -85,10 +87,9 @@ class exports.ScatterplotNode extends TimeseriesNode
         
         options.applyStyles circle, <[ fillOpacity stroke.width stroke.opacity stroke.dashed ]>
         
-        {yScale, xScale} = scales
-        point.transition()
-            .attr 'cx', ([x,y]) -> xScale(x)
-            .attr 'cy', ([x,y]) -> yScale(y)
+        point.transition().attr do
+            cx: ([x,y]) -> xScale x
+            cy: ([x,y]) -> yScale y
         
         point
     

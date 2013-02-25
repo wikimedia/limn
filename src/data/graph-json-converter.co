@@ -147,8 +147,8 @@ class exports.GraphJSONConverter
                         metricRef : 0
                         options   :
                             dateFormat  : 'MMM YYYY'
-                            valueFormat : ",.#{&digitsAfterDecimal}s"
-                            deltaFormat : "+,.#{&digitsAfterDecimal}%"
+                            valueFormat : ",.#{&digitsAfterDecimal ? 2}s"
+                            deltaFormat : "+,.#{&digitsAfterDecimal ? 2}%"
                     
                     ### Legend
                     children.push do
@@ -183,7 +183,7 @@ class exports.GraphJSONConverter
                         options  :
                             palette     : 'wmf_projects'
                             dateFormat  : 'MMM YYYY'
-                            valueFormat : ",.#{&digitsAfterDecimal}s"
+                            valueFormat : ",.#{&digitsAfterDecimal ? 2}s"
                             stroke : 
                                 width   : &strokeWidth
                                 pattern : &strokePattern
@@ -197,7 +197,7 @@ class exports.GraphJSONConverter
                             options  :
                                 label       : metric.label or null
                                 dateFormat  : 'MMM YYYY'
-                                valueFormat : ",.#{&digitsAfterDecimal}s"
+                                valueFormat : ",.#{&digitsAfterDecimal ? 2}s"
                                 stroke :
                                     color   : metric.color or &colors[idx]
                                     width   : &strokeWidth

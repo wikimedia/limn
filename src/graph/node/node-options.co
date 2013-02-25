@@ -153,15 +153,16 @@ class exports.NodeOptions extends Model
      * 
      * @param {d3.selection} sel Selection to style.
      * @param {Array<String>|String} optKeys Option keys to apply.
+     * @param {String} [prefix=''] Option prefix to prepend to all key lookups.
      * @returns {this}
      */
-    applyStyles: (sel, optKeys) ->
+    applyStyles: (sel, optKeys, prefix='') ->
         optKeys = optKeys.split /\s+/g  if typeof optKeys is 'string'
         optKeys = [optKeys]             unless _.isArray optKeys
         return this unless sel and optKeys.length
         
         optKeys.forEach (opt) ~>
-            return unless (val = @get opt)?
+            return unless (val = @get prefix+opt)?
             
             style = _.str.dasherize opt.replace /\./g, '-'
             style = 'stroke' if style is 'stroke-color'
@@ -170,9 +171,9 @@ class exports.NodeOptions extends Model
         this
     
     
-    applyStroke: (sel) -> @applyStyles sel, <[ stroke.width stroke.color stroke.opacity stroke.dashed ]>
-    applyFill: (sel) -> @applyStyles sel, <[ fill fillOpacity ]>
-    applyShapeStyles: (sel) -> @applyStroke sel .applyFill sel
+    applyStroke      : (sel, prefix) -> @applyStyles sel, <[ stroke.width stroke.color stroke.opacity stroke.dashed ]>, prefix
+    applyFill        : (sel, prefix) -> @applyStyles sel, <[ fill fillOpacity ]>, prefix
+    applyShapeStyles : (sel, prefix) -> @applyStroke sel, prefix .applyFill sel, prefix
     
     
     # }}}

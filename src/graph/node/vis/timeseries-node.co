@@ -50,3 +50,5 @@ class exports.TimeseriesNode extends SeriesNode
      */
     timeseriesData: @computedRequires 'model.metric', (metric) ->
         metric.data()
+    
+    

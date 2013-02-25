@@ -19,7 +19,7 @@
     "Evan Rosen <erosen@wikimedia.org>",
     "Diederik van Liere <dvanliere@wikimedia.org>"
   ],
-  "main": "./lib/server/middleware",
+  "main": "./server/middleware",
   "dependencies": {
     "underscore": "== 1.4.x",
     "underscore.string": "== 2.1.1",

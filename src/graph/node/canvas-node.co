@@ -29,20 +29,8 @@ tuplesEqual = (a, b) ->
 class exports.CanvasNodeData extends ViewportNodeData
     @registerType 'canvas'
     
-    defaults: ->
-        width    : 'auto'
-        height   : 500
-        
-        # Override the data domain
-        xDomain  : null
-        yDomain  : null
-        
-        # Data domain padding, expressed as a fraction of the extents,
-        # but overriden by {x,y}Domain
-        xPadding : 0
-        yPadding : 0.1
-    
-    attributeTypes: ->
+    defaults: -> {}
+    attributeTypes: -> {}
     
     -> super ...
 
@@ -58,187 +46,11 @@ class exports.CanvasNode extends ViewportNode
     tagName  : 'section'
     template : 'canvas-node'
     
-    
-    /**
-     * @constructor
-     * @param {GraphView} graph
-     * @param {ViewportNodeData} model
-     */
-    (graph, model) ->
+    ->
         super ...
-        
-        @xScale = d3.time.scale().clamp(true)
-        # ko.utils.observeFluentMethod @xScale, 'domain'
-        
-        @yScale = if @scaling?() is 'log' then d3.scale.log() else d3.scale.linear()
-        # ko.utils.observeFluentMethod @yScale, 'domain'
-        
-        @scaleShape = (shape) ~>
-            switch shape
-                case 'area'
-                    lastY = @yScale.range()[0]
-                    d3.svg.area()
-                        .x ([date, val], i) ~> @xScale date
-                        .y1 ([date, val, val0], i) ~> if val0 then @yScale(val + val0) else @yScale(val)
-                        .y0 ([date, val, val0], i) ~> if val0 then @yScale(val0) else lastY
-                        .defined @isDataInView.bind this
-                        .interpolate 'linear'
-                default
-                    d3.svg.line()
-                        .x ([date, val], i) ~> @xScale date
-                        .y ([date, val], i) ~> @yScale val
-                        .defined @isDataInView.bind this
-                        .interpolate 'linear'
-        @scales { @xScale, @yScale, @scaleShape, -xValid, -yValid }
+        @on 'child-built', @resize, this # Trigger resize whenever a child is added
+        $ window .resize _.debounce @resize.bind(this), 50ms
     
-    
-    /* * * *  Scales  * * * {{{ */
-    
-    /**
-     * The scale that translates x domain values into x output range values
-     * @type d3.time.scale
-     */
-    xScale : null
-    
-    
-    /**
-     * The scale that translates y domain values into y output range values
-     */
-    yScale : null
-    
-    
-    /**
-     * Observable for the contents of xScale and yScale, tracking their changes.
-     * @type ko.observable<Object>
-     */
-    scales : ko.observable null
-    
-    
-    /**
-     * @returns {false|Object} The scales object if all are valid; false otherwise.
-     */
-    scalesIfValid: @computed ->
-        scales = @scales()
-        return scales if scales?.xValid and scales.yValid
-        false
-    
-    
-    /**
-     * Recomputes the scale values.
-     * @type Array<Metric>
-     */
-    metrics : @computed ->
-        metrics = @walk [], (metrics, node) ->
-            if      node.hasTrait(Trait.REQUIRES_METRIC) and
-                    node.hasTrait(Trait.METRIC_TIMESERIES) and
-                    not node.disabled() and
-                    metric = node.model()?.metric()
-                metrics.push metric
-            metrics
-        
-        return unless metrics.length
-        
-        _scales  = @scales.peek()
-        _xDomain = @xScale.domain()
-        _yDomain = @yScale.domain()
-        _width   = @xScale.range()[1]
-        _height  = @yScale.range()[0]
-        
-        # Update values and domains, applying overrides
-        @xValues = _.flatten _.invoke metrics, 'dates'
-        @yValues = _.flatten _.invoke metrics, 'values'
-        
-        
-        xDomain = @xDomain()
-        unless _.isArray(xDomain) and xDomain.length > 1
-            xDomain = @applyPadding d3.extent(_.compact(@xValues)), @xPadding()
-        return unless xDomain.length and isFinite xDomain[0] and isFinite xDomain[1]
-        @xScale.domain xDomain
-        
-        width = @viewportWidth()
-        @xScale.range [0, width]
-        
-        xValid = xDomain.length and width > 0
-        
-        yDomain = @yDomain()
-        unless _.isArray(yDomain) and yDomain.length > 1
-            yDomain = @applyPadding d3.extent(_.compact(@yValues)), @yPadding()
-        return unless yDomain.length and isFinite yDomain[0] and isFinite yDomain[1]
-        
-        # FIXME: hack to render log-scales when some input values are <= 0
-        if @scaling?() is not 'linear'
-            if yDomain[0] < 1
-                yDomain[0] = 0.01
-        @yScale.domain yDomain
-        
-        height = @viewportHeight()
-        @yScale.range [height, 0]
-        
-        yValid = yDomain.length and height > 0
-        
-        
-        # If anything changed, trigger a notification by setting the scales computed
-        unless  width  is _width  and tuplesEqual(xDomain, _xDomain) and
-                height is _height and tuplesEqual(yDomain, _yDomain)
-            @scales { xValid, yValid, @xScale, @yScale, @scaleShape }
-        
-        metrics
-    
-    
-    /**
-     * Changes the x and y domains of the graph and refreshes the this.scales observable
-     * @param {Array} xDomain an array with length 2: [startX, stopX]
-     * @param {Array} yDomain an array with length 2: [startY, stopY]
-     */
-    changeDomains: (xDomain, yDomain) ->
-        _xDomain = @xScale.domain()
-        xValid = xDomain?.length > 1 and xDomain[0]? and xDomain[1]?
-        @xScale.domain(xDomain)
-        
-        _yDomain = @yScale.domain()
-        yValid = yDomain?.length > 1 and yDomain[0]? and yDomain[1]?
-        @yScale.domain(yDomain)
-        
-        # If anything changed, trigger a notification by setting the scales computed
-        unless tuplesEqual(xDomain, _xDomain) and tuplesEqual(yDomain, _yDomain)
-            @scales { @xScale, @yScale, @scaleShape, xValid, yValid }
-        
-        @scales.peek()
-    
-    
-    isDataInView: ([date, val], i) ->
-        [xMin, xMax] = @xScale.domain().map toNumeric
-        return  xMin <= +date <= xMax and
-            isFinite @yScale val
-    
-    
-    applyPadding: (ext, p) ->
-        isDate     = ext.map -> it instanceof Date
-        [min, max] = ext.map toNumeric
-        min -= min * p
-        max += max * p
-        [min, max].map (v, i) -> if isDate[i] then new Date(v) else v
-    
-    
-    logDomains: ->
-        xd = @xScale.domain().map -> if it instanceof Date then it.getTime() else it
-        console.log 'xScale.domain:', xd, '--', 'yScale.domain:', @yScale.domain()
-    
-    
-    
-    # }}}
-    
-    
-    watchDeps: ->
-        @filterTraits Trait.REQUIRES_METRIC
-            .forEach (node) -> node.model()?.get 'metric'
-    
-    
-    /**
-     * Hooks into the `@watching()` trigger.
-     */
-    watchOthers: ->
-        @metrics()
     
     
     buildElement: (parentElement) ->
@@ -248,53 +60,85 @@ class exports.CanvasNode extends ViewportNode
         el
     
     
+    /**
+     * Element representing the frame where the content is held.
+     * @type ko.observable<d3.selection>
+     */
+    contentFrameEl: @computed ->
+        d3.select @$('.content-frame').0 if @el()
+    
+    
+    /**
+     * Determine the DOM node to act as the parent for a direct child of the root node.
+     * 
+     * @protected
+     * @param {GraphNode} node
+     * @returns {Element}
+     */
     determineDOMParentForChildNode: (node) ->
         # SVG nodes
         if node.hasTrait Trait.SVG
             if node.hasTrait Trait.FG_LAYER
-                @$ 'svg > g > g.frame > g.fg' .0
+                @$ 'svg .frame > .fg' .0
             else if node.hasTrait Trait.BG_LAYER
-                @$ 'svg > g > g.frame > g.content-frame > g.bg' .0
+                @$ 'svg .content-frame > .bg' .0
             else
-                @$ 'svg > g > g.frame > g.content-frame > g.viewport' .0
+                @$ 'svg .content-frame > .viewport' .0
         
         # HTML nodes
         else
             # XXX: Hack
             if node.hasTrait Trait.CALLOUT_NODE
-                @graph.$ '.graph-name-row > section.callout' .0
+                @graph.$ '.graph-name-row > .callout' .0
             else if node.hasTrait Trait.SECTION
                 @$el.parent().0
             else if node.hasTrait Trait.FG_LAYER
-                @$ 'section.meta.fg' .0
+                @$ '.meta.fg' .0
             else
-                @$ 'section.meta.bg' .0
-    
-    
-    trackCursor: ->
-        return if @cursor.peek() # only initialize once
-        return unless el = @el.peek()
-        return unless (svg = d3.select(el).select('svg'))?.length
-        viewport = @sel.select 'g.viewport'
-        
-        svg.on 'mousemove', ~>
-            [x, y] = d3.mouse(viewport[0][0])
-            cur = @cursor.peek()
-            if not cur?.hovering or cur.x != x or cur.y != y
-                @cursor { +hovering, x, y }
-        
-        svg.on 'mouseout', ~>
-            @cursor { -hovering }
-        
-        this
+                @$ '.meta.bg' .0
     
     
     background: (color) ->
-        bg = @$ 'svg g.bg rect.bgcolor'
-        if color
+        return unless (bg = @$ '.content-frame > .bg > .bgcolor').length
+        if arguments.length
             bg.css 'fill', color
             this
         else
             bg.css 'fill'
+    
+    
+    /**
+     * Current location of the cursor in the viewport.
+     * @type ko.observable<Object>
+     */
+    cursor: ko.observable null
+    
+    
+    trackCursor: ->
+        return if @cursor.peek() # only initialize once
+        return unless el  = _.toElement @contentFrameEl()
+        return unless svg = _.toElement @graph.$('svg')
+        svg = d3.select svg
+        
+        svg.on 'mouseover', ~>
+            [x, y] = d3.mouse(el)
+            cursor = { +hovering, x, y }
+            @trigger 'mouseover', cursor, this
+            # cursor observable will be handled by mousemove
+        
+        svg.on 'mousemove', ~>
+            [x, y] = d3.mouse(el)
+            cursor = { +hovering, x, y }
+            @trigger 'mousemove', cursor, this
+            with @cursor.peek()
+                @cursor cursor if not &?.hovering or &x != x or &y != y
+        
+        svg.on 'mouseout', ~>
+            [x, y] = d3.mouse(el)
+            @cursor cursor = { -hovering, x, y }
+            @trigger 'mouseout', cursor, this
+        
+        this
+    
     
 
