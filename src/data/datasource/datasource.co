@@ -57,7 +57,6 @@ class exports.DataSource extends StoredModel
         # format    : Content-Type for AJAX request
         csv         : 'text'
         tsv         : 'text'
-        log         : 'text'
         json        : 'json'
         jsonp       : 'jsonp'
         xml         : 'xml'
@@ -67,7 +66,7 @@ class exports.DataSource extends StoredModel
         slug          : null
         
         format        : 'json'          # := csv | tsv | json | jsonp | xml                 ContentType/serialization/encoding of the dataset response.
-        type          : 'timeseries'    # := series | timeseries | geojson | topojson       Type of the contents of the dataset.
+        type          : 'timeseries'    # := series | timeseries | geojson | topojson                 Type of the contents of the dataset.
         url           : ''
         
         name          : ''
