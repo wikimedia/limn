@@ -19,8 +19,7 @@ class exports.ScatterplotNodeData extends TimeseriesNodeData
         options        : 
             label      : null
             noLegend   : false
-            stroke     : 
-                width  : 0
+            
             radius     : 5.0
             # TODO: Marker shape customization
             # shape      : 
@@ -30,6 +29,15 @@ class exports.ScatterplotNodeData extends TimeseriesNodeData
             #     yRadius : 2.5          # valid for `options.shape.type="ellipse"` only
             #     width   : 10.0         # valid for `options.shape.type="rect"` only
             #     height  : 10.0         # valid for `options.shape.type="rect"` only
+            
+            fill        : null
+            fillOpacity : 1
+            stroke     : 
+                color   : null
+                width  : 0
+                pattern : 'solid'
+                opacity : 1
+            
         
     
     attributeTypes: -> {}
@@ -70,6 +78,7 @@ class exports.ScatterplotNode extends TimeseriesNode
         return unless xScale  = viewport.xScale()
         return unless yScale  = viewport.yScale()
         return unless options = @model().options()
+        return unless zoom = viewport.zoomTransform()
         data = data.filter datumValid
         disabled = @disabled()
         
@@ -79,7 +88,6 @@ class exports.ScatterplotNode extends TimeseriesNode
             .append 'circle'
                 .classed    'metric-point'  ,       true
                 .attr       'vector-effect' ,       'non-scaling-stroke'
-                .attr       'r'             ,       options.get 'radius'
                 .style do
                             stroke          :       @strokeColor()
                             fill            :       @fillColor()
@@ -88,6 +96,7 @@ class exports.ScatterplotNode extends TimeseriesNode
         options.applyStyles circle, <[ fillOpacity stroke.width stroke.opacity stroke.dashed ]>
         
         point.transition().attr do
+            r:  options.get('radius') / zoom.scale
             cx: ([x,y]) -> xScale x
             cy: ([x,y]) -> yScale y
         
