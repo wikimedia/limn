@@ -134,7 +134,7 @@ class exports.ViewportNode extends GraphNode
             v   = min >? @fullHeight() <? max
         v
     
-    margin         : { top:30, right:60, bottom:30, left:60 }
+    margin         : { top:0, right:0, bottom:0, left:0 }
     viewportWidth  : @computed -> @frameWidth()  - @margin.left - @margin.right
     viewportHeight : @computed -> @frameHeight() - @margin.top  - @margin.bottom
     
@@ -408,7 +408,7 @@ class exports.ViewportNode extends GraphNode
         unless _.isEqual zoom, current
             @zoomTransform zoom
             @trigger 'zoom-graph', ({} import zoom), this
-        # console.log "@zoom!", JSON.stringify zoom
+        console.log "@zoom!", JSON.stringify zoom
         zoom
     
     

@@ -52,6 +52,7 @@ class exports.CanvasNode extends ViewportNode
         $ window .resize _.debounce @resize.bind(this), 50ms
     
     
+    margin: { top:30, right:60, bottom:30, left:60 }
     
     buildElement: (parentElement) ->
         @renderView parentElement
