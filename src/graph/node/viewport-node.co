@@ -408,7 +408,7 @@ class exports.ViewportNode extends GraphNode
         unless _.isEqual zoom, current
             @zoomTransform zoom
             @trigger 'zoom-graph', ({} import zoom), this
-        console.log "@zoom!", JSON.stringify zoom
+        # console.log "@zoom!", JSON.stringify zoom
         zoom
     
     

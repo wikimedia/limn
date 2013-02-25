@@ -79,8 +79,10 @@ class exports.AnnotationNode extends GraphNode
      * @type ko.computed<d3.selection.update>
      */
     render: ->
+        viewport = @viewport()
         return null unless model  = @model()
-        return null unless scales = @root().scalesIfValid()
+        return null unless xScale = viewport.xScale()
+        return null unless yScale = viewport.yScale()
         return null if @disabled()
         
         width = model.options().width()
@@ -106,8 +108,8 @@ class exports.AnnotationNode extends GraphNode
             @popup.append 'text'
                 .style 'text-anchor', 'left'
         
-        x = scales.xScale(model.x()) - width / 2
-        y = scales.yScale(model.y()) - height / 2
+        x = xScale(model.x()) - width / 2
+        y = yScale(model.y()) - height / 2
         
         @rect.transition()
             .attr 'x', x
