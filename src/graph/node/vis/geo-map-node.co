@@ -77,6 +77,9 @@ export class GeoMapNode extends ViewportNode
     ]
     -> super ...
     
+    fullWidth:  @computed -> @root().fullWidth()
+    fullHeight: @computed -> @root().fullHeight()
+    margin: { top:0, right:0, bottom:0, left:0 }
     
     
     /**
@@ -154,8 +157,8 @@ export class GeoMapNode extends ViewportNode
         width    = viewport.width()
         [cx, cy] = viewport.center()
         @projection
-            .translate [ cx+x, cy+y ]
             .scale width * scale
+            .translate [ cx * scale + x, cy * scale + y ]
         features
             .attr 'd', @path
             .style 'fill', @model().options().get('featuresColor')
