@@ -203,7 +203,8 @@ class exports.DataSourceView extends View
                         name: "All Metrics in #{@name()}"
                         root:
                             nodeType: nodeType
-                            scaling: 'linear'
+                            y:
+                                scaleType: 'linear'
                             width: 900
                             height: 350
                             children: [

@@ -77,9 +77,10 @@ class exports.GraphJSONConverter
                 
                 out.root = {
                     nodeType: 'canvas'
-                    scaling: if graph.options?.logscale then 'log' else 'linear'
                     graph.width
-                    height : Math.max graph.height, 500 # we were ignoring this in the old world
+                    height: Math.max graph.height, 500 # we were ignoring this in the old world
+                    y:
+                        scaleType: if graph.options?.logscale then 'log' else 'linear'
                     children: children = []
                 }
                 
