@@ -62,7 +62,13 @@ table.table.table-striped
     tbody(data-bind="foreach: filteredModel")
         tr
             td
-                a.btn(data-bind="click: $parent.visualize") Visualize
+                .btn-group
+                    button.btn(data-bind="click: $parent.visualizeLineGraph") Visualize
+                    button.btn.dropdown-toggle(data-toggle="dropdown")
+                        span.caret
+                    ul.dropdown-menu
+                        li: a(href="#", data-bind="click: $parent.visualizeLineGraph") as Line Graph
+                        li: a(href="#", data-bind="click: $parent.visualizeWorldMap") as World Map
             td
                 span(data-bind="text: id")
             td

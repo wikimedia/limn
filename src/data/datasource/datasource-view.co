@@ -66,10 +66,10 @@ class exports.DataSourceView extends View
         @blankDataSource().url.subscribe ~>
             return if it is null or it.indexOf('?') is 0
             @message "Attempting to analyze that Datafile"
-
+            
             @blankDataSource().determineFormat()
             saveButton.attr 'disabled', true
-
+        
         @blankDataSource().data.subscribe ~>
             return if @blankDataSource().url() is ''
             dataset = @blankDataSource().data()
@@ -139,105 +139,105 @@ class exports.DataSourceView extends View
     
     /**
      * Invoked via Knockout in the context of a datasource
-     * Dynamically creates a new GraphView and loads all the metrics from the datasource into it
+     * Creates a new GraphView and loads all the metrics from the datasource as Line nodes
      */
-    visualize: ->
-        @fetch().done ~>
-            metricNodeType = do
-                geojson: 'geo-feature'
-                series: 'bar'
-                timeseries: 'line'
+    visualizeLineGraph: -> limn.view.visualize this, 'line'
+    /**
+     * Invoked via Knockout in the context of a datasource
+     * Creates a new GraphView and loads all the metrics from the datasource as Geo Feature nodes
+     */
+    visualizeWorldMap: -> limn.view.visualize this, 'geo-feature'
+    
+    
+    visualize: (datasource, metricType) ->
+        datasource.fetch().done ~>
             
-            metricType = metricNodeType[@type()]
-            
-            columns = _.clone @columns()
+            columns = _.clone datasource.columns()
             # filter out columns that aren't meant to be visualized
-            switch @type()
-                case 'timeseries'
+            switch metricType
+                case 'line'
                     columns = columns.slice(1)
-                case 'geojson'
+                    graph = @buildLineGraph datasource, columns, metricType
+                case 'geo-feature'
                     columns = columns.filter -> it.id() is not 'id' and it.id() is not 'name'
-            
-            switch @type()
-                # TODO: make work for other maps besides map-world_countries
-                case 'geojson'
-                    worldMapChildren = columns.map ~>
-                        nodeType: 'geo-feature'
-                        metric:
-                            source_id: @id()
-                            source_col: it.id()
-                        options:
-                            label: it.label()
-                            scale : 'log'
-                            fill  : ['#D4E7ED', '#0A3A4B']
-                        stroke :
-                            width   : 3.0
-                            color   : '#FFFFFF'
-                            opacity : [0, 1.0]
-                            
-                    worldMapChildren.push {nodeType: 'zoom-pan'}
-                    worldMapChildren.push {nodeType: 'infobox'}
-                    
-                    graph = do
-                        name: "All Metrics in #{@name()}"
-                        root:
-                            nodeType: 'canvas'
-                            width: 'auto'
-                            height: 750
-                            children: [
-                                nodeType: 'geo-map'
-                                metric:
-                                    source_id: 'map-world_countries'
-                                options:
-                                    projection: 'mercator'
-                                    backgroundColor: 'white'
-                                    featuresColor: '#EEEEEE'
-                                children: worldMapChildren
-                            ]
-                default
-                    viewportNodeType = do
-                        series: 'canvas-series'
-                        timeseries: 'canvas'
-                    nodeType = viewportNodeType[@type()]
-                    graph = do
-                        name: "All Metrics in #{@name()}"
-                        root:
-                            nodeType: nodeType
-                            y:
-                                scaleType: 'linear'
-                            width: 900
-                            height: 350
-                            children: [
-                                {nodeType: 'axis', options: {dimension: 'x', orient: 'bottom'}}
-                                {nodeType: 'axis', options: {dimension: 'y', orient: 'left'}}
-                                {nodeType: 'grid', options: {dimension: 'x'}}
-                                {nodeType: 'grid', options: {dimension: 'y'}}
-                                {nodeType: 'legend', options: {dateFormat: 'HH:mm on MMM DD, YYYY'}}
-                                {nodeType: 'zoom-brush'}
-                                {
-                                    nodeType: 'tweaks',
-                                    children: [
-                                        {nodeType: 'smooth'},
-                                        {nodeType: 'scaling'}
-                                    ]
-                                }
-                                {
-                                    nodeType: "#{metricType}-group",
-                                    options: {palette: 'category20'},
-                                    children: columns.map ~> {
-                                        nodeType: metricType
-                                        metric: {
-                                            source_id: @id()
-                                            source_col: it.index()
-                                            type: it.type()
-                                        }
-                                        options: {
-                                            label: it.label()
-                                        }
-                                    }
-                                }
-                            ]
+                    graph = @buildWorldMapGraph datasource, columns, metricType
             
             limn.view.visualizeDialog new GraphView graph
             limn.view.$('> .visualizeDialog').modal()
             limn.view.visualizeDialog().resize()
+    
+    
+    buildWorldMapGraph: (datasource, columns, metricType) ->
+        worldMapChildren = columns.map ->
+            nodeType: 'geo-feature'
+            metric:
+                source_id: datasource.id()
+                source_col: it.id()
+            options:
+                label: it.label()
+                scale : 'log'
+                fill  : ['#D4E7ED', '#0A3A4B']
+            stroke :
+                width   : 3.0
+                color   : '#FFFFFF'
+                opacity : [0, 1.0]
+        
+        worldMapChildren.push {nodeType: 'zoom-pan'}
+        worldMapChildren.push {nodeType: 'infobox'}
+        
+        return do
+            name: "All Metrics in #{datasource.name()}"
+            root:
+                nodeType: 'canvas'
+                width: 'auto'
+                height: 750
+                children: [
+                    nodeType: 'geo-map'
+                    metric:
+                        source_id: 'map-world_countries'
+                    options:
+                        projection: 'mercator'
+                        backgroundColor: 'white'
+                        featuresColor: '#EEEEEE'
+                    children: worldMapChildren
+                ]
+    
+    
+    buildLineGraph: (datasource, columns, metricType) ->
+        return do
+            name: "All Metrics in #{datasource.name()}"
+            root:
+                nodeType: 'canvas'
+                scaling: 'linear'
+                width: 900
+                height: 350
+                children: [
+                    {nodeType: 'axis', options: {dimension: 'x', orient: 'bottom'}}
+                    {nodeType: 'axis', options: {dimension: 'y', orient: 'left'}}
+                    {nodeType: 'grid', options: {dimension: 'x'}}
+                    {nodeType: 'grid', options: {dimension: 'y'}}
+                    {nodeType: 'legend', options: {dateFormat: 'HH:mm on MMM DD, YYYY'}}
+                    {nodeType: 'zoom-brush'}
+                    {
+                        nodeType: 'tweaks',
+                        children: [
+                            {nodeType: 'smooth'},
+                            {nodeType: 'scaling'}
+                        ]
+                    }
+                    {
+                        nodeType: "#{metricType}-group",
+                        options: {palette: 'category20'},
+                        children: columns.map -> {
+                            nodeType: metricType
+                            metric: {
+                                source_id: datasource.id()
+                                source_col: it.index()
+                                type: it.type()
+                            }
+                            options: {
+                                label: it.label()
+                            }
+                        }
+                    }
+                ]
