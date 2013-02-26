@@ -103,7 +103,7 @@ class exports.AxisNode extends GraphNode
                 ticks ?= 10
                 if viewport.xScaleType() is 'time'
                     axis.tickFormat multiTimeFormatter # @dateFormatterFor 'MMM YY'
-                    axis.ticks ticks
+                        .ticks ticks
                 else
                     axis.ticks scale.domain()
             

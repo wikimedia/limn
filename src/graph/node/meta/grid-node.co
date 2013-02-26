@@ -54,8 +54,9 @@ class exports.GridNode extends GraphNode
     render: ->
         viewport = @viewport()
         options = @model().options()
+        return unless viewport.zoomTransform()
         return unless dim       = options.get('dimension')
-        return unless scale     = viewport[dim+'Scale']()
+        return unless scale     = viewport[dim+'ZoomScale']()
         return unless tickCount = options.get('ticks')
         @sel.classed dim+'-grid', true
         
@@ -82,12 +83,12 @@ class exports.GridNode extends GraphNode
         
         gridLinesData = @sel.selectAll 'line'
             .data ticks
-            .attr transition
+            # .attr transition
+        gridLinesData.exit().remove()
         gridLinesData.enter().append 'line'
             .attr 'vector-effect': 'non-scaling-stroke'
             .attr enter
-        # gridLinesData.transition()
-        #     .attr transition
-        gridLinesData.exit().remove()
+        gridLinesData.transition()
+            .attr transition
     
 
