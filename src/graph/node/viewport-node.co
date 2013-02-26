@@ -391,31 +391,35 @@ class exports.ViewportNode extends GraphNode
      * Zoom state.
      * @type ko.observable<Object>
      */
-    zoomTransform: ko.observable { scale:1.0, x:0, y:0 }
+    zoomTransform: ko.observable { scale:[1.0, 1.0], x:0, y:0 }
+    
     
     /**
      * @protected
      */
     updateZoomDomains: (scale, x, y) ->
-        xS = @xScale.peek()
-        [xMin, xMax] = xS.domain()
-        x1 = xS.invert(-x)
-        @xZoomScale.peek().domain [ x1 - (xMax - xMin)/scale, x1 ]
-        yS = @yScale.peek()
-        [yMin, yMax] = yS.domain()
-        y1 = yS.invert(-y)
-        @yZoomScale.peek().domain [ y1 - (yMax - yMin)/scale, y1 ]
+        [sx, sy] = scale
+        xScale = @xScale.peek()
+        [xMin, xMax] = xScale.domain()
+        x1 = xScale.invert(-x)
+        @xZoomScale.peek().domain [ x1 - (xMax - xMin)/sx, x1 ]
+        yScale = @yScale.peek()
+        [yMin, yMax] = yScale.domain()
+        y1 = yScale.invert(-y)
+        @yZoomScale.peek().domain [ y1 - (yMax - yMin)/sy, y1 ]
     
     
     /**
      * Set the viewport zoom level.
      * 
-     * @param {Number} scale Scaling transform.
-     * @param {Array<Number>} translate Position transform, `[x, y]`.
+     * @param {Number|Array<Number, Number>} scale Scaling transform `[sx, sy]`.
+     * @param {Array<Number, Number>} [translate] Position transform, `[x, y]`.
      * @returns {ZoomTransform} Object of `{ scale, x, y }`
      */
     zoom: (scale, translate) ->
         {x, y} = current = @zoomTransform.peek()
+        scale ?= current.scale
+        scale = [scale, scale] unless _.isArray scale
         [x, y] = that if translate
         zoom = { scale, x, y }
         unless _.isEqual zoom, current
@@ -445,13 +449,13 @@ class exports.ViewportNode extends GraphNode
         [[x0,y0], [x1,y1]] = x0 if _.isArray x0
         [x0,x1] = [x1,x0] if x0 > x1
         [y0,y1] = [y1,y0] if y0 > y1
-        wR = d3.max xScale.range()
-        hR = d3.max yScale.range()
-        wS = wR / (x1 - x0)
-        hS = hR / (y1 - y0)
+        xMax = d3.max xScale.range()
+        yMax = d3.max yScale.range()
+        sx = xMax / (x1 - x0)
+        sy = yMax / (y1 - y0)
         # console.log "@zoomToRegion!", ppExtents [[x0,y0], [x1,y1]]
         # @dot(x0,y0, 'TL'); @dot(x1,y1, 'BR')
-        @zoom Math.min(wS, hS), [-x0, -y0]
+        @zoom [sx, sy], [-x0, -y0]
     
     
     /**
@@ -483,7 +487,7 @@ class exports.ViewportNode extends GraphNode
      * @returns {ZoomTransform}
      */
     resetZoom: ->
-        @zoom 1.0, [0, 0]
+        @zoom [1.0, 1.0], [0, 0]
     
     
     /**
@@ -499,9 +503,9 @@ class exports.ViewportNode extends GraphNode
      * @protected
      */
     watchZoom: @computed ->
-        { scale, x, y } = @zoomTransform()
+        { [sx, sy]:scale, x, y } = @zoomTransform()
         return unless el = @contentViewportEl()
-        el.transition().attr 'transform', "scale(#scale), translate(#x, #y)"
+        el.transition().attr 'transform', "scale(#sx, #sy), translate(#x, #y)"
     
     
     

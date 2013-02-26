@@ -75,8 +75,8 @@ class exports.ScatterplotNode extends TimeseriesNode
     render: ->
         viewport = @viewport()
         return unless (data = @seriesData()).length
-        return unless xScale  = viewport.xScale()
-        return unless yScale  = viewport.yScale()
+        return unless xZoomScale  = viewport.xZoomScale()
+        return unless yZoomScale  = viewport.yZoomScale()
         return unless options = @model().options()
         return unless zoom = viewport.zoomTransform()
         data = data.filter datumValid
@@ -96,9 +96,9 @@ class exports.ScatterplotNode extends TimeseriesNode
         options.applyStyles circle, <[ fillOpacity stroke.width stroke.opacity stroke.dashed ]>
         
         point.transition().attr do
-            r:  options.get('radius') / zoom.scale
-            cx: ([x,y]) -> xScale x
-            cy: ([x,y]) -> yScale y
+            r:  options.get('radius') / d3.max(zoom.scale)
+            cx: ([x,y]) -> xZoomScale x
+            cy: ([x,y]) -> yZoomScale y
         
         point
     

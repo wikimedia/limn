@@ -128,10 +128,6 @@ class exports.AxisNode extends GraphNode
         @sel.call axis
         @moveAxis()
         
-        # unless @zoomHandler
-        #     @zoomHandler = ~> @sel.call axis
-        #     viewport.on 'zoom-graph', @zoomHandler
-        
         axis
     
     
