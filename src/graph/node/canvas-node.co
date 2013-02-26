@@ -117,7 +117,7 @@ class exports.CanvasNode extends ViewportNode
     
     trackCursor: ->
         return if @cursor.peek() # only initialize once
-        return unless el  = _.toElement @contentFrameEl()
+        return unless el  = _.toElement @contentViewportEl()
         return unless svg = _.toElement @graph.$('svg')
         svg = d3.select svg
         
