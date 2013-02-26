@@ -62,7 +62,7 @@ class exports.LineNode extends TimeseriesNode
         return unless opts = @model().options()
         return unless opts.get('hoverPoints.enabled')
         
-        r  = opts.get('hoverPoints.radius') / zoom.scale
+        r  = opts.get('hoverPoints.radius') / d3.max(zoom.scale)
         cx = cy = -1000
         
         @trackingCircle ?= @sel.append 'circle' .classed 'tracking', true

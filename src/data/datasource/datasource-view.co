@@ -66,10 +66,10 @@ class exports.DataSourceView extends View
         @blankDataSource().url.subscribe ~>
             return if it is null or it.indexOf('?') is 0
             @message "Attempting to analyze that Datafile"
-
+            
             @blankDataSource().determineFormat()
             saveButton.attr 'disabled', true
-
+        
         @blankDataSource().data.subscribe ~>
             return if @blankDataSource().url() is ''
             dataset = @blankDataSource().data()
