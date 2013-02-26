@@ -60,10 +60,9 @@ class exports.GridNode extends GraphNode
         return unless tickCount = options.get('ticks')
         @sel.classed dim+'-grid', true
         
-        ticks = scale.ticks(tickCount)
         switch dim
             case 'x'
-                ticks = scale.domain() if viewport.xScaleType() is not 'time'
+                ticks = if viewport.xScaleType() is 'time' then scale.ticks(tickCount) else scale.domain()
                 size = viewport.height()
                 enter =
                     y1: -1 * size
@@ -73,6 +72,7 @@ class exports.GridNode extends GraphNode
                     x2: scale
             
             case 'y'
+                ticks = scale.ticks(tickCount)
                 size = viewport.width()
                 enter =
                     x1: -1 * size
