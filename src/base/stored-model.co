@@ -34,11 +34,7 @@ class exports.StoredModel extends Model
     
     
     toString: ->
-        cid       = @__id__
-        id        = @getId()
-        Class     = @constructor
-        className = Class.displayName or Class.name
-        "#className(cid=#cid, id=#id)"
+        "#{@getClassName()}(id=#{@getId()})"
     
     
     /**

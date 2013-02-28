@@ -2,7 +2,7 @@ fieldset
     legend(data-bind='visible: label, text: label')
     ul(data-bind="foreach: { data:entries, as:'entry' }")
         li.legend-entry(data-bind="attr: { id:entry.nodeId }, click: toggle")
-            span.entry-label(data-bind='text: entry.label, style: { color: node.disabled() ? "#ddd" : entry.color }')
+            span.entry-label(data-bind='text: entry.label, style: { color: entry.color }')
             span.entry-value(data-bind='html: entry.value')
     
 

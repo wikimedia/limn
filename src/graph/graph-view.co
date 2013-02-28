@@ -175,3 +175,14 @@ class exports.GraphView extends View
     tabularize: ->
         @tabularizeDialog new TableView @model(), @rootNode()
         @$el.find '.tabularizeDialog' .modal 'show'
+    
+    
+    
+    /* * * *  UI Feedback  * * * {{{ */
+    
+    configurationError: (message) ->
+        
+    
+    
+    # }}}
+    

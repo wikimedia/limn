@@ -489,12 +489,9 @@ class exports.GraphNode extends AttributesBase implements formatters
     
     
     toString: ->
-        id        = @__id__
-        Class     = @constructor
-        className = Class.displayName or Class.name
         model     = @model?.peek()
         nChildren = @children?.peek()?.length or 0
-        "#className(id=#id, model=#model, \#children=#nChildren)"
+        "#{@getClassName()}(model=#model, \#children=#nChildren)"
     
     
     

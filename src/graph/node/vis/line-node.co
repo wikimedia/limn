@@ -55,27 +55,41 @@ class exports.LineNode extends TimeseriesNode
     
     
     trackHover: @computed ->
+        viewport = @viewport()
         return if @tooManyDataPoints()
         return unless cursor = @root().cursor()
-        return unless @model().metric()?.data()?.length and @el()
-        return unless zoom = @viewport().zoomTransform()
-        return unless opts = @model().options()
+        return unless metric = @model().metric()
+        return unless metric.data()?.length and @el()
+        return unless zoom   = viewport.zoomTransform()
+        return unless xScale = viewport.xScale()
+        return unless yScale = viewport.yScale()
+        return unless opts   = @model().options()
         return unless opts.get('hoverPoints.enabled')
+        
+        # Warn and bail if the scale isn't invertible
+        unless typeof xScale.invert is 'function'
+            unless (xScale.warned or= {}).noInvert
+                xScale.warned.noInvert = true
+                console.warn "
+                    [#{@graph}] Invalid Configuration: 
+                    x-scale type '#{@viewport().xScaleType()}' is not compatible 
+                    with 'options.hoverPoints.enabled'!
+                "
+            return
         
         r  = opts.get('hoverPoints.radius') / d3.max(zoom.scale)
         cx = cy = -1000
+        color = @strokeColor()
         
         @trackingCircle ?= @sel.append 'circle' .classed 'tracking', true
         opts.applyShapeStyles @trackingCircle, 'hoverPoints.'
         @trackingCircle.style do
-            fill   : opts.get('hoverPoints.fill')           or @strokeColor()
-            stroke : opts.get('hoverPoints.stroke.color')   or @strokeColor()
+            fill   : opts.get('hoverPoints.fill')           or color
+            stroke : opts.get('hoverPoints.stroke.color')   or color
         
         if cursor.hovering and not @disabled()
-            xScale  = @viewport().xScale()
-            yScale  = @viewport().yScale()
             date    = xScale.invert cursor.x
-            closest = @model().metric().findClosest date
+            closest = metric.findClosest date
             
             cx = xScale closest.date
             cy = yScale closest.value
@@ -116,10 +130,8 @@ class exports.LineNode extends TimeseriesNode
         return unless data.length
         return unless model  = @model()
         return unless xScale = viewport.xScale()
-        # return unless viewport.xDomain()
         
         color = @strokeColor()
-        
         line = @selectAll 'path.metric-line' .data data
         
         # optimization: if there are more data points than pixels in the range,
