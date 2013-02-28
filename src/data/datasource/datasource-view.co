@@ -208,7 +208,8 @@ class exports.DataSourceView extends View
             name: "All Metrics in #{datasource.name()}"
             root:
                 nodeType: 'canvas'
-                scaling: 'linear'
+                y:
+                    scaleType: 'linear'
                 width: 900
                 height: 350
                 children: [
