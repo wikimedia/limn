@@ -136,16 +136,15 @@ class exports.LegendEntry extends AttributesBase implements formatters
     (@legend, @node) ->
         super {}
         @legendOptions = @legend.options
-        @options = @node.options
-        this.label = node.label
-        @color = that if @node.strokeColor
+        @{ options, label, disabled
+        } = node
         @legend.date.subscribe @trackLegendDate, this
     
     
     /**
      * handle toggling of legend entries, bound with knockout
      */
-    toggle: ->
+    toggleVisibility: ->
         @node.options().set 'disabled', !@node.disabled()
     
     
@@ -159,8 +158,12 @@ class exports.LegendEntry extends AttributesBase implements formatters
             
             @legend.label @dateFormatter() @date()
     
+    
     nodeId: @computed ->
         guidFor @node
+    
+    color: @computed ->
+        if @disabled() then "#ddd" else @node.strokeColor()
     
     dateFormatter : @computedRequires 'legendOptions', 'options', (legendOptions, options) ->
         dateFormat = legendOptions.get('dateFormat') or options.get('dateFormat')

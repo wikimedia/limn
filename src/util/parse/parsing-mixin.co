@@ -23,7 +23,7 @@ class exports.ParsingMixin extends Mixin implements parsers
         # Handle compound/optional types
         # XXX: handle 'or' by returning an array of parsers?
         type = _ String(type).toLowerCase()
-        for t of <[ Integer Float Number Boolean Object Array Function ]>
+        for t of <[ Integer Float Number Boolean RegExp Date Object Array Function ]>
             if type.startsWith t.toLowerCase()
                 return @["parse#t"]
         @defaultParser or @parseString
@@ -31,17 +31,16 @@ class exports.ParsingMixin extends Mixin implements parsers
     
     getParserFromExample: (v) ->
         return null unless v?
-        type = typeof v
-        
-        if type is not 'object'
-            @getParser type
-        else if _.isArray v
-            @getParser 'Array'
-        else
-            @getParser 'Object'
+        typeName = _.typeName v
+        typeName = 'Object' if typeName is 'Class'
+        @getParser typeName
     
-    getTypeFromExample: (v) ->
-        parser = @getParserFromExample v
-        for key in this
-            if this[key] is parser
-                return key.replace /parse/, ''
+    
+    getTypeNameFromExample: (v) ->
+        typeName = _.typeName v
+        switch typeName
+        case 'Class'            then typeName = 'Object'
+        case 'Integer' 'Float'  then typeName = 'Number'
+        typeName
+    
+    

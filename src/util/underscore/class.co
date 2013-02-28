@@ -1,14 +1,20 @@
 _    = require 'underscore'
 _arr = require './array'
 
+root = do -> this or eval('this')
 
-objToString = {}.toString
-TYPENAME_PAT = /^\[object ([^\]]+)\]$/
+# FuncProto = Function::
+{
+    toString       : objToString
+    hasOwnProperty : hasOwn
+} = {}
+{   getPrototypeOf : getProto
+} = Object
 
-STR_TO_TYPENAME = _arr.synthesize do
-    <[ Boolean Number String Array Date RegExp Object Function ]>
-    (name) -> [ "[object #name]", name ]
-
+with <[ Boolean Number String Function Array Date RegExp Object ]>
+    STR_TO_TYPENAME = _arr.synthesize &, -> [ "[object #it]", it ]
+    STR_TO_TYPE     = _arr.synthesize &, -> [ it, root[it] ]
+    NATIVE_TYPES    = _.map           &, -> root[it]
 TRICKY_TYPES = { +Object, +Function }
 
 
@@ -18,12 +24,45 @@ _cls =
      * @returns {Boolean} Whether the given function is a class constructor.
      */
     isClass: (fn) ->
-        return true if fn is Object
+        return true if fn of NATIVE_TYPES
         typeof fn is 'function'     and
         _.isObject( proto = fn:: )  and do
             fn.__class__ is fn   or
             not _.isEmpty(proto) or
             not _.isPlainObject(proto)
+    
+    
+    /**
+     * @param {Object} o An object.
+     * @returns {String} Name of the type given object, one of:
+     *  null, undefined, Boolean, Number, String, Function, Array, Date, RegExp, Object.
+     */
+    nativeTypeName: (o) ->
+        return String o unless o?
+        STR_TO_TYPENAME[ objToString.call o ] or 'Object'
+    
+    
+    /**
+     * @returns {String} The name of the type of the thing you passed me.
+     */
+    typeName : (o) ->
+        # null, undefined
+        return String(o) unless o?
+        
+        # Primitives &co are easy ...Except the tricky ones
+        return name unless TRICKY_TYPES[ name = _.nativeTypeName o ]
+        
+        # If it's a limn type, it'll help us out
+        return o.getClassName?() or 'Class' if _.isClass o
+        
+        # Functions are complicated?
+        # if typeof o is 'function' and getProto.call(null, o) is FuncProto
+        return 'Function' if typeof o is 'function'
+        
+        # Only trust .constructor if it belongs to the prototype
+        return (o.constructor |> &displayName or &name) unless hasOwn.call o, 'constructor'
+        
+        return 'Object'
     
     
     /**

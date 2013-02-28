@@ -1,5 +1,4 @@
 _    = require 'underscore'
-
 limn = require 'limn'
 
 
@@ -22,8 +21,65 @@ class Llama extends Mammal
 
 
 test 'collapseAllSuper', ->
-    o = new Llama()
+    ll = new Llama()
     
-    deepEqual o.classification(), { genus:'lama' }, 'Non-collapsed invocation only contains instance properties.'
-    deepEqual _.collapseAllSuper(o, 'classification'), { kingdom:'animalia', class:'mammalia', genus:'lama' }, 'Properties collapsed correctly.'
+    deepEqual ll.classification(), { genus:'lama' }, 'Non-collapsed invocation only contains instance properties.'
+    deepEqual _.collapseAllSuper(ll, 'classification'), { kingdom:'animalia', class:'mammalia', genus:'lama' }, 'Properties collapsed correctly.'
+
+
+
+test 'typeName', ->
+    TYPE_TESTS =
+        * \undefined    void
+        * \null         null
+        * \Boolean      true
+        * \Boolean      false
+        * \Number       0
+        * \Number       1.161982
+        * \Number       NaN
+        * \Number       Infinity
+        * \String       ''
+        * \String       'ohai'
+        * \Number       new Number(0),                      'new Number(0)'
+        * \Boolean      new Boolean,                        'new Boolean'
+        * \Boolean      new Boolean(true),                  'new Boolean(true)'
+        * \String       new String(''),                     'new String("")'
+        * \String       new String('ohay'),                 'new String("ohay")'
+        * \String       new String(null),                   'new String(null)'
+        * \Date         new Date()
+        * \Date         new Date('lol'),                    'An invalid date'
+        * \RegExp       /yo/gi
+        * \RegExp       new RegExp(),                       'new RegExp()'
+        * \Array        [],
+        * \Array        new Array(),                        'new Array()'
+        * \Array        [1, 2, 3]
+        * \Object       {}
+        * \Object       { a:1, b:2 }
+        * \Object       { toString:"[object Array]" },      '{ toString:"[object Array]" }'
+        * \Error        new Error(),                        'new Error()'
+        * \Animal       new Animal(),                       'new Animal()'
+        * \Mammal       new Mammal(),                       'new Mammal()'
+        * \Llama        new Llama(),                        'new Llama()'
+        * \Class        Number
+        * \Class        Date
+        * \Class        Array
+        * \Class        Object
+        * \Class        Function
+        * \Class        Error
+        * \Class        Llama
+        * \Class        Element
+        * \Object       Math,                               'Math'
+        * \Object       JSON,                               'JSON'
+        * \Function     (->),                               'function(){}'
+        * \Function     parseInt
+        * \Function     encodeURIComponent
+        * \HTMLDocument document,                           'document'
+        * \Location     document.location,                  'document.location'
+        * \Window       window,                             'window'
+    
+    for t of TYPE_TESTS
+        [type, val, desc] = t
+        desc ?= if typeof val is 'function' then val.displayName or val.name or String(val) else JSON.stringify val
+        strictEqual _.typeName(val), type, "Value: #desc\t=>\tType: #type"
+    
 

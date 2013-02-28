@@ -78,7 +78,7 @@ class exports.DataSource extends StoredModel
         timespan      : { start:null, end:null, step:null }
     
     attributeTypes: ->
-        columns: ColumnDef
+        columns: -> new ColumnDef it, this
     
     
     
