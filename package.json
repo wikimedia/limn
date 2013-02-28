@@ -30,7 +30,7 @@
     "seq": "== 0.3.5",
     "lru-cache": "== 2.2.2",
     "moment": "== 1.7.2",
-    "timeseries": "== 0.1.x",
+    "timeseries": "== 0.2.x",
     "express": "== 2.5.11",
     "express-resource": "== 0.2.4",
     "minimatch": "== 0.2.5",
