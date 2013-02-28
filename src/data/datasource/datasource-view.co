@@ -76,8 +76,8 @@ class exports.DataSourceView extends View
             @blankDataSource().columns []
             try
                 dataset.getLabels().map (label, i) ~>
-                    type = @getTypeFromExample dataset.data[0][i]
-                    newColumn = new ColumnDef {label, type}
+                    type = @getTypeNameFromExample dataset.data[0][i]
+                    newColumn = new ColumnDef {label, type}, @blankDataSource()
                     if dataset.type is 'geojson'
                         label = 'unknown' unless label
                         switch label
@@ -114,7 +114,7 @@ class exports.DataSourceView extends View
         @initializeAddForm()
     
     
-    addMetric: (link) -> @columns.push new ColumnDef {label:'', type:''}
+    addMetric: (link) -> @columns.push new ColumnDef {label:'', type:''}, @blankDataSource()
     
     removeMetricFrom: (datasource) -> (link) -> datasource.columns.remove link
     
