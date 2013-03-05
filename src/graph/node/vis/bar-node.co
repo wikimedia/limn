@@ -53,8 +53,7 @@ class exports.BarNode extends TimeseriesNode
     paletteColor: @computedRequires 'model.options', (options) ->
         ProjectColors.lookup(@shortLabel(), options.get('palette'))
     
-    strokeColor: @computedRequires 'model.options', (options) ->
-        options.stroke?()?.color or @paletteColor() or 'black'
+    strokeColor: @computed -> @fillColor()
     
     fillColor: @computedRequires 'model.options', (options) ->
         options.fill?() or @paletteColor() or 'black'
