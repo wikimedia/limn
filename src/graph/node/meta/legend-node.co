@@ -163,7 +163,7 @@ class exports.LegendEntry extends AttributesBase implements formatters
         guidFor @node
     
     color: @computed ->
-        if @disabled() then "#ddd" else @node.strokeColor()
+        if @disabled() then '#ddd' else @node.strokeColor()
     
     dateFormatter : @computedRequires 'legendOptions', 'options', (legendOptions, options) ->
         dateFormat = legendOptions.get('dateFormat') or options.get('dateFormat')
@@ -180,10 +180,3 @@ class exports.LegendEntry extends AttributesBase implements formatters
     valueReady : @computedRequires 'node.timeseriesData', 'valueFormatter', (data, valueFormatter) ->
         [date, val] = _.last(data)
         @value valueFormatter val
-    
-    
-
-
-
-
-
