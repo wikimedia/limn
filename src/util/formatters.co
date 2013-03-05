@@ -62,7 +62,7 @@ _fmt = do
     numberFormatterHTML: (n, digits=2, addWrapper=true) ->
         { whole, fraction, suffix } = @numberFormatter n, digits
         # coco will trim the whitespace
-        if fraction and parseInt(fraction) is not 0
+        if fraction
             value = "
                 <span class='whole'>#whole</span>
                 .<span class='fraction'>#fraction</span>
