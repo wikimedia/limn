@@ -41,7 +41,7 @@ class exports.TableView extends View
             if      node.hasTrait(Trait.METRIC_CONTENT_DATA) and
                     columnDef = node.model()?.metric()?.yColumnDef()
                 column = {}
-                column.label = node.options().label()# FIXME: rc_comscore_region_uv and probably other datasources are labeled incorrectly, such that this is not true: yColumnDef.label() === node.options().label()
+                column.label = node.label()
                 for row of node.model().metric().materialized().rows
                     column[row[0]] = row[1]
                     distinctDates[row[0]] = true
