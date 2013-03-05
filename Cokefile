@@ -69,7 +69,8 @@ task \link_data 'Link to data passed in as an argument' (options) ->
 wrapInRequireDefine = (module, infile) ->
     "require.define('/node_modules/#module', function(require, module, exports, __dirname, __filename, undefined){\n\n" + read(infile) + "\n\n});\n"
 
-task \build 'Build coco sources' ->
+task \build 'Build coco sources' (options) ->
+    vardir = options.vardir or './var'
     invoke \setup
     coco <[ -bjc package.co ]>
     
@@ -93,7 +94,7 @@ task \build 'Build coco sources' ->
         .seqEach (modfile) ->
             module = modfile.replace /^static\/vendor\//, '' .replace /\.mod\.js$/, ''
             infile = "static/vendor/#module.js"
-            outfile = "var/vendor/#module.mod.js"
+            outfile = "#vardir/vendor/#module.mod.js"
             mkdirp dirname outfile
             if exists modfile
                 console.log "  Writing CommonJS file:\t #modfile \t-->\t #outfile"
@@ -116,9 +117,9 @@ task \build 'Build coco sources' ->
         .set glob 'src/**/*.co', {+sync}
         .seqEach (infile) ->
             return @ok() unless exists infile
-            outfile = infile.replace /^src/, 'var/js/limn' .replace /\.co$/, '.js'
+            outfile = infile.replace /^src/, "#vardir/js/limn" .replace /\.co$/, '.js'
             modfile = outfile.replace /\.js$/, '.mod.js'
-            module = outfile.replace /^var\/js\/limn/, 'limn'
+            module = outfile.replace /^.*\/js\/limn/, 'limn'
             console.log "  Compiling Coco to JS and .MOD.JS:\t #infile \t-->\t #outfile"
             mkdirp dirname outfile
             write outfile, Coco.compile read(infile), {+bare, filename:infile}
@@ -127,7 +128,7 @@ task \build 'Build coco sources' ->
         
         .set glob "css/*.styl", {+sync}
         .seqEach (infile) ->
-            outfile = "var/#{infile.replace /\.styl$/, '.css'}"
+            outfile = "#vardir/#{infile.replace /\.styl$/, '.css'}"
             console.log "  Compiling Stylus to CSS:\t #infile \t-->\t #outfile"
             mkdirp dirname outfile
             stylus = Stylus read infile
@@ -147,12 +148,13 @@ task \build 'Build coco sources' ->
         
 
 
-task \bundle 'Build application and vendor bundles' ->
-    invoke \bundle_sources
-    invoke \bundle_vendor
+task \bundle 'Build application and vendor bundles' (options) ->
+    invoke \bundle_sources, options
+    invoke \bundle_vendor, options
 
-task \bundle_sources 'Build application bundle' ->
-    app_sources = findSources null, {pre:'var/js/limn/'}
+task \bundle_sources 'Build application bundle' (options) ->
+    vardir = options.vardir or './var'
+    app_sources = findSources null, {pre:"#vardir/js/limn/"}
     
     mkdirp dirname APP_BUNDLE_PATH
     bundle_js APP_BUNDLE_PATH, app_sources, {-minify}
@@ -160,7 +162,8 @@ task \bundle_sources 'Build application bundle' ->
     write APP_BUNDLE_MIN_PATH, minify read APP_BUNDLE_PATH
     say 'ok.\n'
 
-task \bundle_vendor 'Build vendor bundle' ->
+task \bundle_vendor 'Build vendor bundle' (options) ->
+    vardir = options.vardir or './var'
     
     # FIXME: including vendor dependencies is quite a mess.  Clean this up
     vendor_sources_no_browserify = sources 'development'
@@ -170,7 +173,7 @@ task \bundle_vendor 'Build vendor bundle' ->
         .map -> "static#it"
     vendor_sources_var = vendor_sources_no_browserify
         .filter -> it.indexOf('mod.js') is not -1
-        .map -> "var#it"
+        .map -> "#vardir#it"
     vendor_sources = _.flatten [vendor_sources_static, BROWSERIFY_PATH, vendor_sources_var]
     mkdirp dirname VENDOR_BUNDLE_PATH
     bundle_js VENDOR_BUNDLE_PATH, vendor_sources, {-minify}
