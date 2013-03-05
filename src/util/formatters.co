@@ -55,18 +55,24 @@ _fmt = do
         whole = _.rchop parts[0], 3 .join ','
         fraction = parts[1]
         { n, digits, whole, fraction, suffix, toString: ->
-            fractionString = if parseInt(fraction) is 0 then '' else ".#{@fraction}"
+            fractionString = if @fraction and parseInt(@fraction) is not 0 then ".#{@fraction}" else ''
             "#{@whole}#{fractionString}#{if abbrev then '' else ' '}#{@suffix}"
         }
     
     numberFormatterHTML: (n, digits=2, addWrapper=true) ->
         { whole, fraction, suffix } = @numberFormatter n, digits
         # coco will trim the whitespace
-        value = "
-            <span class='whole'>#whole</span>
-            .<span class='fraction'>#fraction</span>
-            <span class='suffix'>#suffix</span>
-        "
+        if fraction and parseInt(fraction) is not 0
+            value = "
+                <span class='whole'>#whole</span>
+                .<span class='fraction'>#fraction</span>
+                <span class='suffix'>#suffix</span>
+            "
+        else
+            value = "
+                <span class='whole'>#whole</span>
+                <span class='suffix'>#suffix</span>
+            "
         value = "<span class='value'>#value</span>" if addWrapper
         value
     
