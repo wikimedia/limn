@@ -34,7 +34,7 @@ class exports.TableView extends View
         @model model
         
         # TODO: this is awful and should be replaced with scales mapping to column/row indices
-        distinctDates = {}
+        distinctRows = {}
         
         # TODO: make work for non-timeseries data
         @rootNode().walk [], (columns, node) ~>
@@ -44,24 +44,32 @@ class exports.TableView extends View
                 column.label = node.label()
                 for row of node.model().metric().materialized().rows
                     column[row[0]] = row[1]
-                    distinctDates[row[0]] = true
+                    distinctRows[row[0]] = true
                 @columns.push column
         
         firstColumn = []
-        for date in distinctDates
-            firstColumn.push new Date(date)
-        for date of firstColumn.sort((a,b) ->
+        for value in distinctRows
+            if moment(value).isValid()
+                firstColumn.push new Date(value)
+            else
+                firstColumn.push value
+        
+        for value of firstColumn.sort((a,b) ->
             return -1 if a > b
             return 1 if a < b
             return 0
         )
             row = []
-            row.push moment(date).format('YYYY-MM-DD HH:mm')
+            if moment(value).isValid()
+                row.push moment(value).format('YYYY-MM-DD HH:mm')
+            else
+                row.push value
+            
             for column, i of @columns()
-                row.push column[date]
+                row.push column[value]
             @rows.push row
         
         @columns.insert [], 0
-        @columns()[0].label = 'Date'
+        @columns()[0].label = if firstColumn[0] instanceof Date then 'Date' else ''
         @tableColumns @columns()
         @tableRows @rows()

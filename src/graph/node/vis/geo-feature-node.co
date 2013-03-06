@@ -69,6 +69,7 @@ class exports.GeoFeatureNode extends GraphNode
     
     -> super ...
     
+    label: @computedRequires 'model.metric.yColumnDef', (yColumnDef) -> yColumnDef.label() or '(no label)'
     
     render: ->
         metric      = @model().metric()
