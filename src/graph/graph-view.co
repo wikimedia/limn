@@ -99,16 +99,6 @@ class exports.GraphView extends View
         rootParentEl
     
     
-    /**
-     * Updates our wrappers for markdown fields when the model changes.
-     */
-    updateMarkdownFields: @eagerComputed ->
-        return null unless model = @model()
-        @descMarkdown  = model.desc.markdown()
-        @notesMarkdown = model.notes.markdown()
-        model
-    
-    
     
     /**
      * Inform sub-objects its safe to begin their watchers.
