@@ -285,7 +285,7 @@ application = limn.application =
                         res.send { error:String(err), partial_data:data }, 500
                 .seq ->
                     res.contentType 'application/json'
-                    return res.send JSON.stringify(data, null, 4) if req.query.pretty
+                    return res.send JSON.stringify(data, null, 4) if 'pretty' in req.query
                     res.send data
                 .catch (err) ->
                     console.error '[/datasources/all] Error!'
