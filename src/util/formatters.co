@@ -2,30 +2,15 @@ moment = require 'moment'
 _ = require './underscore'
 
 
-_fmt = do
-    
-    /**
-     * Formats a date for display on an axis: `MM/YYYY`
-     * @param {Date} d Date to format.
-     * @returns {String}
-     */
-    axisDateFormatter: (d) ->
-        moment(d).format 'MM/YYYY'
-    
-    /**
-     * Formats a date for display in the legend: `DD MMM YYYY`
-     * @param {Date} d Date to format.
-     * @returns {String}
-     */
-    dateFormatter: (d) ->
-        moment(d).format 'DD MMM YYYY'
+_fmt =
     
     /**
      * @param {String} pattern Date formatting pattern.
      * @returns {Function} Function that formats a date into the supplied pattern.
      */
     dateFormatterFor: (pattern) ->
-        (d) -> moment(d).format(pattern)
+        -> moment(it).format(pattern)
+    
     
     /**
      * Formats a number for display, first dividing by the greatest suffix
@@ -59,29 +44,23 @@ _fmt = do
             "#{@whole}#{fractionString}#{if abbrev then '' else ' '}#{@suffix}"
         }
     
+    
     numberFormatterHTML: (n, digits=2, addWrapper=true) ->
         { whole, fraction, suffix } = @numberFormatter n, digits
-        # coco will trim the whitespace
-        if fraction
-            value = "
-                <span class='whole'>#whole</span>
-                .<span class='fraction'>#fraction</span>
-                <span class='suffix'>#suffix</span>
-            "
-        else
-            value = "
-                <span class='whole'>#whole</span>
-                <span class='suffix'>#suffix</span>
-            "
-        value = "<span class='value'>#value</span>" if addWrapper
+        value  = "<span class='whole'>#whole</span>"
+        value += ".<span class='fraction'>#fraction</span>"     if fraction
+        value += "<span class='suffix'>#suffix</span>"
+        value  = "<span class='value'>#value</span>"            if addWrapper
         value
     
+    
     numberFormatterFor: (digits, abbrev) ->
-        (n) ~> @numberFormatter(n, digits, abbrev)
+        ~> @numberFormatter it, digits, abbrev
+    
     
     numberFormatterHTMLFor: (digits, abbrev, addWrapper) ->
-        (n) ~> @numberFormatterHTML(n, digits, abbrev, addWrapper)
+        ~> @numberFormatterHTML it, digits, abbrev, addWrapper
     
 
 
-module.exports = exports =  _fmt
+module.exports = exports = _fmt

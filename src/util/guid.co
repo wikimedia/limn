@@ -3,43 +3,34 @@
  * TODO: generateId, guidFor, and compareIds do not deal with *Globally* unique identifiers, they should be moved elsewhere
  */
 
-UUID        = 0
-GUID_KEY    = '__id__'
+UUID         = 0
+GUID_KEY     = '__id__'
+OBJ_PREFIX   = 'limn'
 NUMBER_CACHE = {}
 STRING_CACHE = {}
 
 
-generateId = exports.generateId = (prefix='limn') ->
+export generateId = (prefix=OBJ_PREFIX) ->
     id = UUID++
     "#prefix#id"
 
 
-guidFor = exports.guidFor = (obj) ->
+export guidFor = (obj) ->
     # special cases where we don't want to add a key to object
     return '(undefined)'  if obj is void
     return '(null)'       if obj is null
     
     # Don't allow prototype changes to String etc. to change the guidFor
     switch typeof obj
-    case 'number'
-        unless ret = NUMBER_CACHE[obj]
-            ret = NUMBER_CACHE[obj] = "nu#obj"
-        return ret
-        
-    case 'string'
-        unless ret = STRING_CACHE[obj]
-            ret = STRING_CACHE[obj] = "st#{(UUID++)}"
-        return ret
-        
-    case 'boolean'
-        return if obj then '(true)' else '(false)'
-        
-    default
-        return obj[GUID_KEY]    if obj[GUID_KEY]
-        return '(Object)'       if obj is Object
-        return '(Array)'        if obj is Array
-        return obj[GUID_KEY] = "limn#{(UUID++)}"
+    case 'number'   then return NUMBER_CACHE[obj] or= "nu#obj"
+    case 'string'   then return STRING_CACHE[obj] or= "st#{(UUID++)}"
+    case 'boolean'  then return if obj then '(true)' else '(false)'
+    
+    return obj[GUID_KEY]    if obj[GUID_KEY]
+    return '(Object)'       if obj is Object
+    return '(Array)'        if obj is Array
+    return obj[GUID_KEY] = "#OBJ_PREFIX#{(UUID++)}"
 
 
-compareIds = exports.compareIds = (a, b) ->
+export compareIds = (a, b) ->
     guidFor(a) is guidFor(b)

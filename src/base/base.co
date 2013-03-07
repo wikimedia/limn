@@ -1,15 +1,8 @@
-ko = require 'knockout'
-{
-    unwrapObservable : unwrap
-    peekObservable   : peek
-} = ko.utils
-
-
 { EventEmitter,
 } = require 'emitters'
 
 _ = require '../util/underscore'
-{ generateId, compareIds,
+{ guidFor, generateId, compareIds,
 } = require '../util/guid'
 
 
@@ -23,10 +16,11 @@ _ = require '../util/underscore'
  * @returns {Class} The Subclass.
  */
 extended = exports.extended = (SubClass, SuperClass) ->
+    SubClass.__id__ = guidFor this
+    
     for own k, v in SuperClass
         SubClass[k] = v unless SubClass[k]
     
-    SubClass.__id__         = generateId()
     SubClass.__class__      = SubClass
     SubClass.__super__      = SuperClass::
     SubClass.__superclass__ = SuperClass
@@ -82,7 +76,7 @@ class exports.Base extends EventEmitter
      * @constructor
      */
     ->
-        @__id__ = generateId()
+        @__id__ or= guidFor this
         @__apply_bind__()
         Class = @constructor
         Class.trigger? 'new', this, Class

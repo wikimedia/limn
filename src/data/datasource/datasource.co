@@ -123,17 +123,17 @@ class exports.DataSource extends StoredModel
     
     
     determineFormat: ->
-        fourBeforeEnd = @url().length - 4
-        if @url().indexOf('.csv') is fourBeforeEnd
+        url = @url()
+        if      _.endsWith url, '.csv'
             @format 'csv'
-        else if @url().indexOf('.json') is fourBeforeEnd - 1
+        else if _.endsWith url, '.json'
             @format 'json'
-        else if @url().indexOf('.tsv') is fourBeforeEnd
+        else if _.endsWith url, '.tsv'
             @format 'tsv'
-        else if @url().indexOf('.xml') is fourBeforeEnd
+        else if _.endsWith url, '.xml'
             @format 'xml'
-        else # default - parses as text and allows pre-parsing
-            @format 'log'
+        else
+            throw new Error "Unknown DataSource format for '#url'!"
     
     
     /**

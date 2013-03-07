@@ -82,9 +82,11 @@ class exports.Mixin
      */
     @extended = (SubClass) ->
         SuperClass = this
+        SubClass.__id__ = guidFor this
+        
         for own k, v in SuperClass
             SubClass[k] = v unless SubClass[k]
-        SubClass.__id__         = generateId()
+        
         SubClass.__class__      = SubClass
         SubClass.__super__      = SuperClass::
         SubClass.__superclass__ = SuperClass
