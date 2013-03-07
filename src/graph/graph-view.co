@@ -163,6 +163,17 @@ class exports.GraphView extends View
             new EditView this
     
     
+    metricDefs: @computed ->
+        defs = @rootNode()?.walk [], (defs, node) ->
+            if      node.hasTrait(Trait.METRIC_CONTENT_DATA) and
+                    metric = node.model()?.metric()
+                defs.push ...yDefs if yDefs = metric.yColumnDef()?.metricDefs()
+                defs.push ...xDefs if xDefs = metric.xColumnDef()?.metricDefs()
+            defs
+        defs = _.uniq _.compact(defs), false
+        if defs.length then defs else null
+    
+    
     uniqueMetricDataLinks: @computed ->
         links = @rootNode()?.walk [], (links, node) ->
             if      node.hasTrait(Trait.METRIC_CONTENT_DATA) and

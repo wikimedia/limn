@@ -7,22 +7,30 @@ section.graph.graph-display(data-bind="attr: { id:graphId }")
     .graph-chart-row.row-fluid: .inner
     
     .graph-details-row.row
-        .span7.offset3.ug.graph-desc(data-bind='html: model().desc')
+        .span7.offset3.ug.graph-desc(data-bind='html: model().descMarkdown')
     
     .graph-links-row.row(data-bind="if: model().permalink")
         .span6.offset3.ug.graph-permalink
             input.span6(data-bind="attr: { value:model().permalink }", readonly="readonly")
     
     .graph-notes-row.row
-        .span7.offset3.ug.graph-notes(data-bind='html: model().notes')
+        .span7.offset3.ug.graph-notes(data-bind='html: model().notesMarkdown')
     
     .graph-raw-data-row.row
         .span7.offset3.ug
-            h4 Raw Data used by this graph
+            h4 Raw Data
             ul(data-bind="foreach: uniqueMetricDataLinks()")
                 li
                     a(data-bind="text: $data, attr: {href: $data}", target="_blank")
         button.btn(data-bind="click: tabularize") See as a Table
+    
+    .graph-metric-defs-row.row(data-bind='if: metricDefs')
+        .offset3.ug
+            h4 Metric Definitions
+            dl.graph-metric-defs(data-bind='foreach: { data:metricDefs, as:"ref" }')
+                .graph-metric-def(data-bind='css: ref.cssClass')
+                    dt: a.metric-ref-name(data-bind='text: ref.name, attr: { href:ref.url }')
+                    dd.metric-ref-desc(data-bind='markdown: ref.desc')
     
 //-
     .row

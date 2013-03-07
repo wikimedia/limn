@@ -1,0 +1,18 @@
+ko = require 'knockout'
+{ unwrapObservable
+} = ko.utils
+
+{ Markdown, Showdown
+} = require '../markdown'
+
+
+ko.bindingHandlers.markdown =
+    init: (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) ->
+        controlsDescendantBindings: true
+    
+    update: (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) ->
+        md = unwrapObservable valueAccessor()
+        $(element).html Markdown.render md
+        # childContext = bindingContext.createChildContext unwrapped
+        ko.applyBindingsToDescendants bindingContext, element
+    

@@ -19,7 +19,12 @@ export class MetricDef extends Model
     
     ->
         super ...
+        # @descMarkdown = @desc.markdown()
         METRIC_DEF_CACHE.add this
+    
+    
+    cssClass: @computed ->
+        "graph-metric-def-#{@id()}"
     
     
     @__cache__ = METRIC_DEF_CACHE = new ModelCache this

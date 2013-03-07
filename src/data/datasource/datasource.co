@@ -1,7 +1,6 @@
 _   = require 'underscore'
 op  = require 'operator'
 ko  = require 'knockout'
-Seq = require 'seq'
 
 { ReadyEmitter,
 } = require 'emitters'
@@ -12,6 +11,8 @@ Seq = require 'seq'
 } = require '../../util'
 { Dataset,
 } = require '../dataset'
+{ MetricDef,
+} = require '../metric/metric-def'
 
 
 
@@ -20,15 +21,29 @@ Seq = require 'seq'
  */
 export class ColumnDef extends Model
     ParsingMixin.mix this
-    
     (attributes, @source) -> super ...
     
+    getId: -> @get 'id'
+    
     defaults: ->
-        id        : null
-        label     : ''
-        type      : 'int'
-        index     : -1
-        metricRef : null
+        id         : null
+        label      : ''
+        type       : 'int'
+        index      : -1
+        metricRefs : null
+    
+    
+    
+    metricDefs: @eagerComputed ->
+        return unless refs = @metricRefs()
+        refs.map MetricDef.get
+    
+    
+    canonicalize: (data={}) ->
+        refs = data.metricRefs or= []
+        data.metricRefs = [refs] unless _.isArray refs
+        data
+    
     
     /**
      * Convert the string representation of a value from this Column to

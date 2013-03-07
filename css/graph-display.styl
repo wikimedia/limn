@@ -1,5 +1,6 @@
 @import 'colors'
 @import 'nib'
+@import 'mixins'
 
 
 section.graph-display.graph
@@ -14,7 +15,14 @@ section.graph-display.graph
     .inner, .row
         position relative
     .row
-        margin 0 0 .2em 0
+        margin 1em 0
+    
+    .graph-metric-defs
+        column-count 2
+        padding 0.5em 3em 0.5em 1em
+        margin 0
+        .graph-metric-def, dd, dt
+            break-inside avoid
     
     
     /* * * *  Subnav & Tabs  * * * {{{ */
