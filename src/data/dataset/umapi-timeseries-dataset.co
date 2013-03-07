@@ -1,0 +1,45 @@
+{ Dataset,
+} = require './dataset'
+
+
+/**
+ * @class Hack to handle User Metrics JSON structure
+ * @extends Dataset
+ */
+class exports.UMAPITimeseriesDataset extends Dataset
+    @registerType 'umapi_timeseries'
+    
+    ->
+        super ...
+        @format = 'json'
+    
+    
+    /**
+     * @returns {Array<String>} List of column labels.
+     */
+    getLabels: ->
+        labels = []
+        if @parsedData?.length
+            for key in @parsedData[0]
+                labels.push key
+        labels
+    
+    
+    parse: (rawData) ->
+        return rawData if typeof rawData is 'string'
+        console.warn 'INFO: UMAPI format, parsing it into standard JSON'
+        
+        normalized = []
+        # skip the first header, it's user_id which isn't used
+        headers = rawData.header.slice 1
+        
+        for date in rawData.metric
+            newRow = []
+            newRow[0] = new Date date
+            for i in headers
+                index = parseInt i
+                newRow[index+1] = rawData.metric[date][index]
+            
+            normalized.push newRow
+        
+        normalized
