@@ -1,7 +1,5 @@
-geo_feature_metric = require './geo-feature-metric'
-geo_map_metric     = require './geo-map-metric'
-metric             = require './metric'
-timeseries_metric  = require './timeseries-metric'
-
-exports import geo_feature_metric import geo_map_metric import metric import timeseries_metric
-
+exports import metric             = require './metric'
+exports import metric_def         = require './metric-def'
+exports import geo_feature_metric = require './geo-feature-metric'
+exports import geo_map_metric     = require './geo-map-metric'
+exports import timeseries_metric  = require './timeseries-metric'

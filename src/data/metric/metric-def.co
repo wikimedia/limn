@@ -1,0 +1,79 @@
+_ = require 'underscore'
+{ Model, ModelCache,
+} = require '../../base'
+
+
+
+/**
+ * @class Explains the definition/derivation/calculation of a metric used across graphs.
+ * @extends Model
+ */
+export class MetricDef extends Model
+    getId    : -> @get 'id'
+    defaults : ->
+        id   : null     # String
+        name : null     # String
+        desc : null     # String
+        url  : null     # String
+    
+    
+    ->
+        super ...
+        METRIC_DEF_CACHE.add this
+    
+    
+    @__cache__ = METRIC_DEF_CACHE = new ModelCache this
+
+
+
+[
+    *   id   : 'edit'
+        name : 'Edit'
+        desc : 'Updates to [countable pages](https://www.mediawiki.org/wiki/Analytics/Metric_definitions#Countable_pages) in [countable namespaces](https://www.mediawiki.org/wiki/Analytics/Metric_definitions#Content_namespaces) (aka, the "mainspace", namespace 0).'
+        url  : 'https://www.mediawiki.org/wiki/Analytics/Metric_definitions#Edits'
+    
+    *   id   : 'active_editor'
+        name : 'Active Editor'
+        desc : 'A registered and logged-in person (not known as a [bot](https://www.mediawiki.org/wiki/Analytics/Metric_definitions#Bot)) who makes 5 or more edits in any month in [mainspace](https://www.mediawiki.org/wiki/Analytics/Metric_definitions#Content_namespaces) on [countable pages](https://www.mediawiki.org/wiki/Analytics/Metric_definitions#Countable_pages).'
+        url  : 'https://www.mediawiki.org/wiki/Analytics/Metric_definitions#Active_editor'
+    
+    *   id   : 'very_active_editor'
+        name : 'Very Active Editor'
+        desc : 'A registered and logged-in person (not known as a [bot](https://www.mediawiki.org/wiki/Analytics/Metric_definitions#Bot)) who makes 100 or more edits per month in [mainspace](https://www.mediawiki.org/wiki/Analytics/Metric_definitions#Content_namespaces) on [countable pages](https://www.mediawiki.org/wiki/Analytics/Metric_definitions#Countable_pages).'
+        url  : 'https://www.mediawiki.org/wiki/Analytics/Metric_definitions#Very_active_editor'
+    
+    *   id   : 'new_editor'
+        name : 'New Editor'
+        desc : 'A registered and logged-in person (not known as a [bot](https://www.mediawiki.org/wiki/Analytics/Metric_definitions#Bot)) 
+who has made their 10th edit during the time-period under consideration. Number of edits is a cumulative count across all of time on one wiki.'
+        url  : 'https://www.mediawiki.org/wiki/Analytics/Metric_definitions#Contributor'
+    
+    *   id   : 'upload'
+        name : 'Upload'
+        desc : 'File uploads create a new page in namespace 6; the first revision for this page describes the original upload. For Commons uploader activity is based on this first revision per namespace 6 page only. The metric *Uploads via [Upload Wizard](https://commons.wikimedia.org/wiki/Commons:Upload_Wizard)* for Commons can only be collected from full archive dumps (from the category tag in page content).'
+        url  : 'https://www.mediawiki.org/wiki/Analytics/Metric_definitions#Uploads'
+    
+    *   id   : 'article'
+        name : 'Article'
+        desc : 'Wiki pages which contain an [internal link](https://www.mediawiki.org/wiki/Help:Links) (aka wikilink) or category link, and are not a [redirect](https://www.mediawiki.org/wiki/Help:Redirects) page. This conforms to the traditional definition of an "article" within the Wikimedia community -- different Wikimedia projects can have different [definitions of what constitutes an article](https://www.mediawiki.org/wiki/Manual:Article_count).'
+        url  : 'https://www.mediawiki.org/wiki/Analytics/Metric_definitions#Countable_pages'
+    
+    *   id   : 'pageview'
+        name : 'Pageview'
+        desc : '''A subset of requests such that:
+        
+        - The url in a logline contains `/wiki/`. This excludes `/w/index.php?` and `SpecialPages`.
+        - Not all public Wikimedia projects are counted (e.g. foundation wiki).
+        - Any article namespace qualifies (unlike the [dump-based reports](https://www.mediawiki.org/wiki/Analytics/Metric_definitions#Content)).
+        
+        Pageviews reported by Wikistats are derived via webstatscollector from incoming squid logs.
+        '''
+        url  : 'https://www.mediawiki.org/wiki/Analytics/Metric_definitions#Page_views'
+    
+    *   id   : 'unique_visitor_comscore'
+        name : 'Unique Visitor'
+        desc : 'The number of [unique visitors](http://en.wikipedia.org/wiki/Unique_visitor) to any page in any wiki under the Wikimedia family, as measured by comScore.'
+        url  : 'http://en.wikipedia.org/wiki/Comscore#Data_collection_and_reporting'
+    
+].forEach -> new MetricDef it
+

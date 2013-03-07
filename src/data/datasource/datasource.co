@@ -15,20 +15,20 @@ Seq = require 'seq'
 
 
 
-
 /**
  * @class Encapsulates the definition of a column in a DataSource.
  */
-class exports.ColumnDef extends Model
+export class ColumnDef extends Model
     ParsingMixin.mix this
     
     (attributes, @source) -> super ...
     
     defaults: ->
-        id    : null
-        label : ''
-        type  : 'int'
-        index : -1
+        id        : null
+        label     : ''
+        type      : 'int'
+        index     : -1
+        metricRef : null
     
     /**
      * Convert the string representation of a value from this Column to
@@ -46,7 +46,7 @@ class exports.ColumnDef extends Model
  * @class Metadata representing a source of data, such as a CSV file or
  * a web service endpoint.
  */
-class exports.DataSource extends StoredModel
+export class DataSource extends StoredModel
     -> super ...
     
     
@@ -103,7 +103,6 @@ class exports.DataSource extends StoredModel
     dataUrl: @computedRequires 'url', (url) ->
         return url unless url
         if url.indexOf('http') == 0
-            # TODO: no need to stream this through proxy, use CORS instead
             url = "/x/#url"
         else
             cacheBuster = @generateRandom()
