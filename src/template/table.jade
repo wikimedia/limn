@@ -1,19 +1,15 @@
 section.table-view
-    
-    .graph-name-row.row-fluid
-        h2(data-bind="text: model().name")
-    
     .graph-chart-row.row-fluid: .inner
         table.table.table-striped
             thead
                 tr(data-bind="foreach: tableColumns")
                     th(data-bind="text: label")
-            tbody(data-bind="foreach: tableRows")
-                tr(data-bind="foreach: $data")
-                    td(data-bind="html: $data")
+            tbody(data-bind="foreach: { data:tableRows, as:'row' }")
+                tr(data-bind="foreach: { data:row, as:'col' }")
+                    td(data-bind="html: col")
     
     .graph-details-row.row
-        .span7.offset3.ug.graph-desc(data-bind='html: model().desc')
+        .span7.offset3.ug.graph-desc(data-bind='markdown: model().desc')
     
     .graph-notes-row.row
-        .span7.offset3.ug.graph-notes(data-bind='html: model().notes')
+        .span7.offset3.ug.graph-notes(data-bind='markdown: model().notes')

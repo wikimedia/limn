@@ -22,7 +22,7 @@ section.graph.graph-display(data-bind="attr: { id:graphId }")
             ul(data-bind="foreach: uniqueMetricDataLinks()")
                 li
                     a(data-bind="text: $data, attr: {href: $data}", target="_blank")
-        button.btn(data-bind="click: tabularize") See as a Table
+        button.btn(data-bind="click: tabularize") View Data as Table
     
     .graph-metric-defs-row.row(data-bind='if: metricDefs')
         .offset3.ug
@@ -35,15 +35,18 @@ section.graph.graph-display(data-bind="attr: { id:graphId }")
 //-
     .row
         a(data-bind="attr: {href: '/graphs/'+ model().id() +'/edit'}") edit
-    ul(data-bind="foreach: model().tags")
-        li
-            span(data-bind="text: data")
-            button (remove)
+    
+    .graph-tags-row.row
+        ul(data-bind="foreach: model().tags")
+            li
+                span.tag(data-bind="text: $data")
+                button (remove)
+
 
 .modal.hide.tabularizeDialog(data-backdrop="false", data-bind="if: tabularizeDialog")
     .modal-header
         button.close(data-dismiss="modal", aria-hidden="true") &times;
-        h3 See as a Table
+        h2(data-bind='text: "Data for " + model().name()')
     .modal-body
         section(data-bind="subview: tabularizeDialog")
     .modal-footer

@@ -50,9 +50,6 @@ html(lang="en", dir="ltr")
                     
                     block lib-scripts
                         if IS_DEV
-                            //-
-                                FIXME:  grr! Can't get rid of modules.yaml because it has pointers to magic files like /vendor/browserify.js
-                                        that can't be easily introspected. Worse, loading order matters with vendor files.
                             for src in sources()
                                 script(src=path.join(mount, src))
                             
