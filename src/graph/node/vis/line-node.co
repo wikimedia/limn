@@ -77,11 +77,12 @@ class exports.LineNode extends TimeseriesNode
                 "
             return
         
-        r  = opts.get('hoverPoints.radius') / d3.max(zoom.scale)
+        rx = opts.get('hoverPoints.radius') / zoom.scale[0]
+        ry = opts.get('hoverPoints.radius') / zoom.scale[1]
         cx = cy = -1000
         color = @strokeColor()
         
-        @trackingCircle ?= @sel.append 'circle' .classed 'tracking', true
+        @trackingCircle ?= @sel.append 'ellipse' .classed 'tracking', true
         opts.applyShapeStyles @trackingCircle, 'hoverPoints.'
         @trackingCircle.style do
             fill   : opts.get('hoverPoints.fill')           or color
@@ -96,7 +97,7 @@ class exports.LineNode extends TimeseriesNode
             unless isFinite cx and isFinite cy
                 cx = cy = -1000
         
-        @trackingCircle.attr { r, cx, cy }
+        @trackingCircle.attr { rx, ry, cx, cy }
     
     
     paletteColor: @computedRequires 'model.options', (options) ->
