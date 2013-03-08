@@ -114,9 +114,9 @@ class exports.DataSourceView extends View
         @initializeAddForm()
     
     
-    addMetric: (link) -> @columns.push new ColumnDef {label:'', type:''}, @blankDataSource()
+    addMetric: -> @columns.push new ColumnDef {label:'', type:''}, this
     
-    removeMetricFrom: (datasource) -> (link) -> datasource.columns.remove link
+    removeMetricFrom: (datasource) -> (column) -> datasource.columns.remove column
     
     newDataSource: (form) ->
         # refresh the indices of the columns to match the order they were entered

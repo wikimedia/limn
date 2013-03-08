@@ -6,8 +6,9 @@ fieldset.controlGroup
             .controls
                 select(id="type", data-bind="value: type", required)
                     option(value="timeseries") Timeseries
-                    option(value="geojson") Geographical
                     option(value="series") Series
+                    option(value="mobile_device_by_geo") Special: Pivoted Geographical
+                    option(value="umapi_timeseries") Special: User Metrics API Timeseries
             .control-group
                 label.control-label(for="format") Format of Data
                 .controls
@@ -40,11 +41,9 @@ fieldset.controlGroup
             .control-group(data-bind="foreach: columns")
                 .controls.controls-row
                     span(data-bind="text: $index")
-                    // ko if: $parent.type() == 'geojson'
-                    input.span1(type="text", required, placeholder="id", data-bind="value: id")
-                    // /ko
-                    input.span3(type="text", required, placeholder="column heading", data-bind="value: label")
-                    input.span2(type="text", required, placeholder="data type (int, Date, float)", data-bind="value: type")
+                    input.span1(type="text", required, placeholder="id", data-bind="value: id()")
+                    input.span3(type="text", required, placeholder="column heading", data-bind="value: label()")
+                    input.span2(type="text", required, placeholder="data type (int, Date, float)", data-bind="value: type()")
                     a.btn(data-bind="click: $parents[1].removeMetricFrom($parent)") Remove
         .form-actions
             button.btn.btn-primary.save(type="submit") Save
