@@ -30,19 +30,22 @@ export class ColumnDef extends Model
         label      : ''
         type       : 'int'
         index      : -1
-        metricRefs : null
+        metricDefs : null
     
-    
-    
-    metricDefs: @eagerComputed ->
-        return unless refs = @metricRefs()
-        refs.map MetricDef.get
+    attributeTypes: ->
+        metricDefs : MetricDef.get
     
     
     canonicalize: (data={}) ->
-        refs = data.metricRefs or= []
-        data.metricRefs = [refs] unless _.isArray refs
+        defs = data.metricDefs or= []
+        data.metricDefs = [defs] unless _.isArray defs
         data
+    
+    
+    toJSON: ->
+        attrs = @toJS _.omit @attributes, 'metricDefs'
+        attrs.metricDefs = _.map @attributes.metricDefs.peek(), -> it.id.peek()
+        attrs
     
     
     /**
