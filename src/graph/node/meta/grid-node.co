@@ -58,6 +58,7 @@ class exports.GridNode extends GraphNode
         return unless dim       = options.get('dimension')
         return unless scale     = viewport[dim+'ZoomScale']()
         return unless tickCount = options.get('ticks')
+        
         @sel.classed dim+'-grid', true
         
         switch dim

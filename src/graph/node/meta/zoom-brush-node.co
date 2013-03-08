@@ -74,7 +74,7 @@ export class ZoomBrushNode extends GraphNode
     
     onBrushEnd: ->
         extent = @brush.extent()
-        # console.log "brushend", JSON.stringify extent
+        # console.log "brushend", JSON.stringify(extent)
         
         @hideTrackingCircles() # TODO: LineNode should listen for zoom event
         if @extentIsSignificant extent
@@ -96,7 +96,7 @@ export class ZoomBrushNode extends GraphNode
     
     
     extentIsSignificant: (extent) ->
-        [[x0], [x1]] = extent
-        x1 - x0 > 1000ms
+        [[x0, y0], [x1, y1]] = extent
+        (x1 - x0) > 1000ms
     
     

@@ -26,7 +26,7 @@ class exports.SeriesGroupNodeData extends GroupNodeData
             
             # See: https://github.com/mbostock/d3/wiki/Stack-Layout
             stack               : false                 # := true | false | object -- If bool, it becomes `options.stack.enabled`, and the defaults are:
-                # enabled       : false
+                # enabled       : options.stack         # := true | false
                 # offset        : 'zero'                # := zero | expand | silhouette | wiggle
                 # order         : 'default'             # := default (input order) | reverse | inside-out
             
@@ -36,7 +36,7 @@ class exports.SeriesGroupNodeData extends GroupNodeData
             bands :
                 padding         : 0.2                   # fraction of the band used for inter-band padding
                 outerPadding    : null                  # fraction of a band subtracted from the total range. Defaults to `options.bands.padding`.
-            
+    
     
     attributeTypes: ->
         {}
@@ -45,7 +45,8 @@ class exports.SeriesGroupNodeData extends GroupNodeData
         # Allow options.stack to be a bool, and use the defaults
         enabled = data.options?.stack
         if enabled!? or typeof enabled is 'boolean'
-            _.setNested data, 'options.stack', { enabled, offset:'zero', order:'default' }, {+ensure}
+            stackOpts = { enabled, offset:'zero', order:'default' }
+            _.setNested data, 'options.stack', stackOpts, {+ensure}
         data
     
     
@@ -89,9 +90,10 @@ class exports.SeriesGroupNode extends GroupNode
     
     xBands: @computed ->
         return unless viewport = @viewport()
-        return unless bandOpts = @options().bands()
-        return unless xValues  = viewport.xValues()
-        return unless xScale   = viewport.xScale()
+        bandOpts = @options().bands()
+        xValues  = viewport.xValues()
+        xScale   = viewport.xScale()
+        return unless xScale and xValues and bandOpts
         
         pad      = bandOpts.padding()
         outerPad = bandOpts.outerPadding() ? pad

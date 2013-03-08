@@ -5,7 +5,7 @@
 
 Trait = require '../graph-node-trait'
 
-datumValid = -> it.every isFinite
+datumValid = -> _.every it, isFinite
 validOr    = (v, def) -> if isFinite(+v) then v else def
 
 /**
@@ -96,7 +96,7 @@ class exports.ScatterplotNode extends TimeseriesNode
         options.applyStyles circle, <[ fillOpacity stroke.width stroke.opacity stroke.dashed ]>
         
         point.transition().attr do
-            r:  options.get('radius') / d3.max(zoom.scale)
+            r:  options.get('radius') / d3.max(zoom.scale) # TODO: this needs to move to a zoom-invariant layer or somethign
             cx: ([x,y]) -> xZoomScale x
             cy: ([x,y]) -> yZoomScale y
         

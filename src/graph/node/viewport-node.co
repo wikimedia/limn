@@ -391,43 +391,60 @@ class exports.ViewportNode extends GraphNode
      * Zoom state.
      * @type ko.observable<Object>
      */
-    zoomTransform: ko.observable { scale:[1.0, 1.0], x:0, y:0 }
+    zoomTransform: ko.observable {
+        scale:      [1.0, 1.0], sx:1.0, sy:1.0,
+        translate:  [0.0, 0.0], tx:0.0, ty:0.0
+    }
     
     
     /**
      * @protected
      */
-    updateZoomDomains: (scale, x, y) ->
-        [sx, sy] = scale
+    updateZoomDomainsFromTransform: (sx,sy, tx,ty) ->
         xScale = @xScale.peek()
-        [xMin, xMax] = xScale.domain()
-        x1 = xScale.invert(-x)
-        @xZoomScale.peek().domain [ x1 - (xMax - xMin)/sx, x1 ]
         yScale = @yScale.peek()
+        return unless xScale and yScale
+        
+        [xMin, xMax] = xScale.domain()
+        x1 = xScale.invert(-tx)
+        @xZoomScale.peek().domain [ x1 - (xMax - xMin)/sx, x1 ]
+        
         [yMin, yMax] = yScale.domain()
-        y1 = yScale.invert(-y)
+        y1 = yScale.invert(-ty)
         @yZoomScale.peek().domain [ y1 - (yMax - yMin)/sy, y1 ]
+    
+    
+    /**
+     * @protected
+     */
+    updateZoomDomains: (x0,y0, x1,y1) ->
+        xScale = @xScale.peek()
+        yScale = @yScale.peek()
+        return unless xScale and yScale
+        
+        @xZoomScale.peek().domain [ xScale.invert(x0), xScale.invert(x1) ]
+        @yZoomScale.peek().domain [ yScale.invert(y0), yScale.invert(y1) ]
     
     
     /**
      * Set the viewport zoom level.
      * 
      * @param {Number|Array<Number, Number>} scale Scaling transform `[sx, sy]`.
-     * @param {Array<Number, Number>} [translate] Position transform, `[x, y]`.
-     * @returns {ZoomTransform} Object of `{ scale, x, y }`
+     * @param {Array<Number, Number>} [translate] Position transform, `[tx, ty]`.
+     * @returns {ZoomTransform} Object of `{ scale, sx, sy, translate, tx, ty }`
      */
-    zoom: (scale, translate) ->
-        {x, y} = current = @zoomTransform.peek()
-        scale ?= current.scale
+    zoom: (scale, translate, noUpdateDomain) ->
         scale = [scale, scale] unless _.isArray scale
-        [x, y] = that if translate
-        zoom = { scale, x, y }
-        unless _.isEqual zoom, current
-            @updateZoomDomains scale, x, y
-            @zoomTransform zoom
-            @trigger 'zoom-graph', ({} import zoom), this
-        # console.log "@zoom!", JSON.stringify zoom
-        zoom
+        oldZoom = @zoomTransform.peek()
+        [tx, ty] = translate
+        [sx, sy] = scale
+        newZoom = { scale, sx, sy, translate, tx, ty }
+        unless _.isEqual oldZoom, newZoom
+            @updateZoomDomainsFromTransform sx, sy, tx, ty unless noUpdateDomain
+            @zoomTransform newZoom
+            @trigger 'zoom-graph', {...newZoom}, this
+        # console.log "@zoom!", JSON.stringify(oldZoom), '-->', JSON.stringify(newZoom)
+        @zoomTransform.peek()
     
     
     /**
@@ -442,20 +459,24 @@ class exports.ViewportNode extends GraphNode
      * @param {Number} y1
      * @returns {ZoomTransform}
      */
-    zoomToRegion: (x0,y0, x1,y1) ->
-        xScale = @xScale()
-        yScale = @yScale()
+    zoomToRegion: (x0,y0, x1,y1, noUpdateDomain) ->
+        xScale = @xScale.peek()
+        yScale = @yScale.peek()
         return unless xScale and yScale
+        
         [[x0,y0], [x1,y1]] = x0 if _.isArray x0
         [x0,x1] = [x1,x0] if x0 > x1
         [y0,y1] = [y1,y0] if y0 > y1
+        # console.log "@zoomToRegion!", ppExtents [[x0,y0], [x1,y1]]
+        @updateZoomDomains(x0,y0, x1,y1) unless noUpdateDomain
+        
         xMax = d3.max xScale.range()
         yMax = d3.max yScale.range()
         sx = xMax / (x1 - x0)
         sy = yMax / (y1 - y0)
-        # console.log "@zoomToRegion!", ppExtents [[x0,y0], [x1,y1]]
+        # console.log " --> ", [sx, sy], [-x0, -y0]
         # @dot(x0,y0, 'TL'); @dot(x1,y1, 'BR')
-        @zoom [sx, sy], [-x0, -y0]
+        @zoom [sx, sy], [-x0, -y0], true
     
     
     /**
@@ -471,13 +492,19 @@ class exports.ViewportNode extends GraphNode
      * @param {yType} y1
      * @returns {ZoomTransform}
      */
-    zoomToData: (x0,y0, x1,y1) ->
-        xZS = @xZoomScale()
-        yZS = @yZoomScale()
-        return unless xZS and yZS
+    zoomToData: (x0,y0, x1,y1, noUpdateDomain) ->
         [[x0,y0], [x1,y1]] = x0 if _.isArray x0
-        # console.log "@zoomToData!", ppExtents [[xZS(x0), yZS(y0)], [xZS(x1), yZS(y1)]]
-        @zoomToRegion xZS(x0), yZS(y0), xZS(x1), yZS(y1)
+        [x0,x1] = [x1,x0] if x0 > x1
+        [y0,y1] = [y1,y0] if y0 > y1
+        # console.log "@zoomToData!", ppExtents [[x0, y0], [x1, y1]]
+        xS = @xScale.peek()
+        yS = @yScale.peek()
+        return unless xS and yS
+        unless noUpdateDomain
+            @xZoomScale.peek().domain [ x0, x1 ]
+            @yZoomScale.peek().domain [ y0, y1 ]
+        # console.log " --> ", ppExtents [[xS(x0), yS(y0)], [xS(x1), yS(y1)]]
+        @zoomToRegion xS(x0),yS(y0), xS(x1),yS(y1), true
     
     
     /**
@@ -487,7 +514,9 @@ class exports.ViewportNode extends GraphNode
      * @returns {ZoomTransform}
      */
     resetZoom: ->
-        @zoom [1.0, 1.0], [0, 0]
+        @xZoomScale.peek().domain @xScale.peek().domain()
+        @yZoomScale.peek().domain @yScale.peek().domain()
+        @zoom [1.0, 1.0], [0, 0], true
     
     
     /**
@@ -503,9 +532,9 @@ class exports.ViewportNode extends GraphNode
      * @protected
      */
     watchZoom: @computed ->
-        { [sx, sy]:scale, x, y } = @zoomTransform()
+        { sx, sy, tx, ty } = @zoomTransform()
         return unless el = @contentViewportEl()
-        el.transition().attr 'transform', "scale(#sx, #sy), translate(#x, #y)"
+        el.transition().attr 'transform', "scale(#sx, #sy), translate(#tx, #ty)"
     
     
     

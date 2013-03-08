@@ -152,13 +152,13 @@ export class GeoMapNode extends ViewportNode
     watchZoom: @computed ->
         viewport = @viewport()
         features = @features()
-        { [sx, sy]:scale, x, y } = @zoomTransform()
+        { scale, sx, sy, tx, ty } = @zoomTransform()
         return unless viewport and features?.length and @projection and @path
         width    = viewport.width()
         [cx, cy] = viewport.center()
         @projection
             .scale width * d3.max(scale)
-            .translate [ cx * sx + x, cy * sy + y ]
+            .translate [ cx*sx + tx, cy*sy + ty ]
         features
             .attr 'd', @path
             .style 'fill', @model().options().get('featuresColor')
