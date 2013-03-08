@@ -19,8 +19,8 @@ class exports.MobileDeviceByGeoDataset extends Dataset
      */
     getLabels: ->
         labels = []
-        if @parsedData?.length
-            for key in @parsedData[0]
+        if @data?.length
+            for key in @data[0]
                 labels.push key
         labels
     

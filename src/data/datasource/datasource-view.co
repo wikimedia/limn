@@ -78,7 +78,7 @@ class exports.DataSourceView extends View
                 dataset.getLabels().map (label, i) ~>
                     type = @getTypeNameFromExample dataset.data[0][i]
                     newColumn = new ColumnDef {label, type}, @blankDataSource()
-                    if dataset.type is 'geojson'
+                    if dataset.type is 'mobile_device_by_geo'
                         label = 'unknown' unless label
                         switch label
                             case 'name'

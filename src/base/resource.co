@@ -280,6 +280,7 @@ class exports.Resource extends Mixin
         # Ensure that we have the appropriate request data.
         if not options.data and model and (action is 'create' or action is 'update')
             params.contentType = 'application/json'
+            # FIXME: this throws a circular structure error when saving a datasource now
             params.data        = JSON.stringify model
         
         # For older servers, emulate JSON by encoding the request into an HTML-form.

@@ -44,7 +44,7 @@ export class ColumnDef extends Model
     
     toJSON: ->
         attrs = @toJS _.omit @attributes, 'metricDefs'
-        attrs.metricDefs = _.map @attributes.metricDefs.peek(), -> it.id.peek()
+        attrs.metricDefs = _.map @attributes.metricDefs.peek(), -> if it then it.id.peek() else ''
         attrs
     
     
