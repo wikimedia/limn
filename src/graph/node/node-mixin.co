@@ -1,3 +1,4 @@
+op = require 'operator'
 ko = require 'knockout'
 
 { _, compareIds, Mixin,
@@ -174,6 +175,14 @@ class exports.NodeMixin extends Mixin
         return null unless parent = @parent()
         parent.findUp cxt, fn, idx+1
     
+    
+    pluck: (prop, peek) ->
+        unwrap = if peek then ko.utils.peekObservable else op.I
+        @map (node) -> unwrap node[prop]
+    
+    
+    invoke: (method, ...args) ->
+        @map (node) -> node[method]?.apply node, args
     
     
     # }}}

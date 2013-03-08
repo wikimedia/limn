@@ -24,7 +24,8 @@ class exports.Graph extends StoredModel
         shortName     : ''
         desc          : ''
         notes         : ''
-        root          : 
+        tags          : []
+        root : 
             nodeType  : 'canvas'
             width     : 750
             height    : 500
@@ -37,7 +38,6 @@ class exports.Graph extends StoredModel
      * Inform sub-objects its safe to begin their watchers.
      */
     watching: @computed ->
-        # console.log "#this.watching!"
         @isWatching = true
         @root().watching()
     
@@ -53,6 +53,13 @@ class exports.Graph extends StoredModel
         converter = new GraphJSONConverter data
         converter.canonicalize()
     
+    
+    /**
+     * All metrics in the Graph.
+     * @type ko.computed<Array<Metric>>
+     */
+    metrics: @computed ->
+        _.compact @root().invoke 'metric'
     
 
 
