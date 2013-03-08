@@ -145,6 +145,10 @@ class exports.LegendEntry extends AttributesBase implements formatters
      * handle toggling of legend entries, bound with knockout
      */
     toggleVisibility: ->
+        # if this is the last visible entry, don't disable it
+        # TODO: find out why on Dario's dashboards disabling the last metric created an invalid state
+        return unless @node.disabled()
+            or _.countBy(@legend.entries(), -> it.node.disabled()).false > 1
         @node.options().set 'disabled', !@node.disabled()
     
     
