@@ -75,17 +75,17 @@ class exports.ScatterplotNode extends TimeseriesNode
     render: ->
         viewport = @viewport()
         return unless (data = @seriesData()).length
-        return unless xZoomScale  = viewport.xZoomScale()
-        return unless yZoomScale  = viewport.yZoomScale()
+        return unless xScale  = viewport.xScale()
+        return unless yScale  = viewport.yScale()
         return unless options = @model().options()
         return unless zoom = viewport.zoomTransform()
         data = data.filter datumValid
         disabled = @disabled()
         
-        point = @selectAll 'circle.metric-point' .data data
+        point = @selectAll 'ellipse.metric-point' .data data
         point.exit().remove()
         circle = point.enter()
-            .append 'circle'
+            .append 'ellipse'
                 .classed    'metric-point'  ,       true
                 .attr       'vector-effect' ,       'non-scaling-stroke'
                 .style do
@@ -95,10 +95,12 @@ class exports.ScatterplotNode extends TimeseriesNode
         
         options.applyStyles circle, <[ fillOpacity stroke.width stroke.opacity stroke.dashed ]>
         
+        # XXX: consider a zoom-invariant layer or something
         point.transition().attr do
-            r:  options.get('radius') / d3.max(zoom.scale) # TODO: this needs to move to a zoom-invariant layer or somethign
-            cx: ([x,y]) -> xZoomScale x
-            cy: ([x,y]) -> yZoomScale y
+            rx: options.get('radius') / zoom.scale[0]
+            ry: options.get('radius') / zoom.scale[1]
+            cx: ([x,y]) -> xScale x
+            cy: ([x,y]) -> yScale y
         
         point
     
