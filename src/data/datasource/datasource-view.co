@@ -151,20 +151,22 @@ class exports.DataSourceView extends View
     
     visualize: (datasource, metricType) ->
         datasource.fetch().done ~>
-            
-            columns = _.clone datasource.columns()
-            # filter out columns that aren't meant to be visualized
-            switch metricType
-                case 'line'
-                    columns = columns.slice(1)
-                    graph = @buildLineGraph datasource, columns, metricType
-                case 'geo-feature'
-                    columns = columns.filter -> it.id() is not 'id' and it.id() is not 'name'
-                    graph = @buildWorldMapGraph datasource, columns, metricType
-            
-            limn.view.visualizeDialog new GraphView graph
+            limn.view.visualizeDialog new GraphView @buildGraphModel datasource, metricType
             limn.view.$('> .visualizeDialog').modal()
             limn.view.visualizeDialog().resize()
+    
+    
+    buildGraphModel: (datasource, metricType) ->
+        columns = _.clone datasource.columns()
+        # filter out columns that aren't meant to be visualized
+        switch metricType
+            case 'line'
+                columns = columns.slice(1)
+                graph = @buildLineGraph datasource, columns, metricType
+            case 'geo-feature'
+                columns = columns.filter -> it.id() is not 'id' and it.id() is not 'name'
+                graph = @buildWorldMapGraph datasource, columns, metricType
+        graph
     
     
     buildWorldMapGraph: (datasource, columns, metricType) ->
