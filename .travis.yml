@@ -3,7 +3,6 @@ node_js:
     0.8
 # default: npm install
 before_script:
-  - "npm update"
   - "coke build"
 script: test/run_headless
 
