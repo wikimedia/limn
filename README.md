@@ -89,7 +89,7 @@ Limn is open-source software, freely available under the MIT License.
 
 [wmf_analytics]: https://www.mediawiki.org/wiki/Analytics "Wikimedia Analytics team"
 [wmf_reportcard]: http://reportcard.wmflabs.org "The Wikimedia Foundation Monthly Reportcard"
-[wmf_reportcard_github]: https://github.com/wikimedia/reportcard "WMF Reportcard on GitHub"
+[wmf_reportcard_github]: https://gerrit.wikimedia.org/r/p/analytics/reportcard/data.git "WMF Reportcard source code"
 
 
 [nodejs]: http://nodejs.org/ "node.js"
