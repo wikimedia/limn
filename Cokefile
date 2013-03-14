@@ -60,11 +60,11 @@ task \link_data 'Link to data passed in as an argument' (options) ->
     sh "mkdir -p #datadir/geo"
     
     # remove links if they exist
-    sh "rm #datadir/dashboards/#toLink"
-    sh "rm #datadir/datafiles/#toLink"
-    sh "rm #datadir/datasources/#toLink"
-    sh "rm #datadir/graphs/#toLink"
-    sh "rm #datadir/geo/#toLink"
+    sh "rm -f #datadir/dashboards/#toLink"
+    sh "rm -f #datadir/datafiles/#toLink"
+    sh "rm -f #datadir/datasources/#toLink"
+    sh "rm -f #datadir/graphs/#toLink"
+    sh "rm -f #datadir/geo/#toLink"
     
     # make links
     sh "ln -sn #data/dashboards #datadir/dashboards/#toLink"
