@@ -1,5 +1,7 @@
 limn = require 'limn'
 
+QUnit.config.testTimeout = 2000
+
 require './util'
 require './base'
 require './data'
