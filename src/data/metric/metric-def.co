@@ -69,7 +69,7 @@ who has made their 10th edit during the time-period under consideration. Number 
         - The url in a logline contains `/wiki/`. This excludes `/w/index.php?` and `SpecialPages`.
         - Not all public Wikimedia projects are counted (e.g. foundation wiki).
         - Any article namespace qualifies (unlike the [dump-based reports](https://www.mediawiki.org/wiki/Analytics/Metric_definitions#Content)).
-        - Counts for all months are normalized to 30 days (Jan*30/31, Feb*30/28, Mar*30/31, etc).  This mainly shows from January to February and February to March.
+        - Counts for all months are normalized to 30 days (Jan\\*30/31, Feb\\*30/28, Mar\\*30/31, etc).  This mainly shows from January to February and February to March.
         
         Pageviews reported by Wikistats are derived via webstatscollector from incoming squid logs.
         '''
