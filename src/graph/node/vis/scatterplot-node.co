@@ -1,3 +1,4 @@
+_  = require 'underscore'
 # { SeriesNodeData, SeriesNode,
 # } = require './series-node'
 { TimeseriesNode, TimeseriesNodeData,
@@ -16,7 +17,7 @@ class exports.ScatterplotNodeData extends TimeseriesNodeData
     @registerType 'scatterplot'
     
     defaults: ->
-        options        : 
+        options        :
             label      : null
             noLegend   : false
             
@@ -32,7 +33,7 @@ class exports.ScatterplotNodeData extends TimeseriesNodeData
             
             fill        : null
             fillOpacity : 1
-            stroke     : 
+            stroke     :
                 color   : null
                 width  : 0
                 pattern : 'solid'
