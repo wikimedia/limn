@@ -7,7 +7,7 @@ class exports.EditView
      */
     (view) ->
         @view = view
-        $(@view.el()).addClass '.edit'
+        $(@view.el()).addClass 'edit'
         
         @editable = "edit-#{@__id__}"
         @isEditable = ".#{@editable}"
@@ -22,28 +22,24 @@ class exports.EditView
      * TODO: figure out how to not apply this class to subviews
      */
     makeEditable: ->
-        $('h4,h5,p', @view.el()).addClass @editable
+        $('.editable', @view.el()).addClass @editable
     
     /**
      * registers events in the scope of the view this is editing
      */
     registerEvents: ->
         scope = @view.el()
-        $(scope).on 'click', @isEditable, (event) ~>
+        self = this
+        $(scope).on 'click', @isEditable, (event) ->
             event.stopPropagation()
-            el = event.target
-            
-            editor = $(el).next()
-            unless editor.is @isEditing
-                editor = @createEditorFor el
-                $(el).after editor
+            el = this
             
             $(el).hide()
             $(el).next().show().focus()
         
-        $(scope).on 'blur', @isEditing, (event) ~>
+        $(scope).on 'blur', @isEditing, (event) ->
             event.stopPropagation()
-            el = event.target
+            el = this
             
             display = $(el).prev()
             
@@ -51,13 +47,3 @@ class exports.EditView
             display.show()
     
     createEditorFor: (el) ->
-        dataBindPlaceholder = '###'
-        editor = "<input #dataBindPlaceholder/>"
-        if $(el).is 'p'
-            editor = "<textarea #dataBindPlaceholder rows=3 cols=40></textarea>"
-        
-        editor = editor.replace dataBindPlaceholder, 'data-bind="' + $(el).data().bind.replace('text', 'value') + '"'
-        editor = $(editor).addClass @editing
-        data = ko.dataFor el
-        ko.applyBindings data, editor[0]
-        editor
