@@ -95,7 +95,17 @@ class exports.AxisNode extends GraphNode
         
         orient = options.get('orient')
         ticks  = options.get('ticks')
+        label  = options.get('label')
         axis   = d3.svg.axis().scale scale
+        
+        # clear any previous labels (TODO: fix this ubiquitous multiple execution problem once and for all)
+        @$el.find('text.label').remove()
+        if label
+            labelElement = @sel.append('text')
+                .classed('label', true)
+                .attr('text-anchor', 'end')
+                .attr('dy', '.75em')
+                .text(label)
         
         switch dim
             case 'x'
@@ -106,6 +116,10 @@ class exports.AxisNode extends GraphNode
                         .ticks ticks
                 else
                     axis.ticks scale.domain()
+                
+                labelElement
+                    .attr('x', viewport.viewportWidth() - 6)
+                    .attr('y', -18)
             
             case 'y'
                 axis.tickFormat @numberFormatterFor 2
@@ -124,6 +138,10 @@ class exports.AxisNode extends GraphNode
                 else
                     tickValues = scale.ticks(ticks)
                 axis.tickValues tickValues
+                
+                labelElement
+                    .attr('transform', 'rotate(-90)')
+                    .attr('y', 6)
         
         @sel.call axis
         @moveAxis()
