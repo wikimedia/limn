@@ -42,7 +42,9 @@
     "showdown": "== 0.3.x",
     "jade": "== 0.22.1",
     "stylus": "== 0.27.2",
-    "nib": "== 0.4.0"
+    "nib": "== 0.4.0",
+    "passport": "== 0.1.16",
+    "passport-google": "== 0.3.0"
   },
   "devDependencies": {
     "coco": "== 0.9.x",
