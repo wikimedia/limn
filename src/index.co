@@ -40,24 +40,23 @@ limn.dashboard  = require './dashboard'
 /**
  * Basic info and error messages that can be used anywhere via the limn object
  */
-limn.showMessages = ->
-    $('#messages').show()
+limn.showMessages = -> $('#messages').show()
+limn.hideMessages = -> $('#messages').hide()
+limn.hideError = -> $('#messages .error').hide()
+limn.hideInfo = -> $('#messages .info').hide()
 
 $('#messages button.close').on('click', -> $('#messages').hide())
+limn.hideMessages()
 
-limn.hideError = ->
-    $('#messages .error').hide()
 limn.error = (message) ->
-    limn.hideInfo()
     limn.showMessages()
+    limn.hideInfo()
     $('#messages .error .message').text message
     $('#messages .error').show 'slow'
 
-limn.hideInfo = ->
-    $('#messages .info').hide()
 limn.info = (message) ->
-    limn.hideError()
     limn.showMessages()
+    limn.hideError()
     $('#messages .info .message').text message
     $('#messages .info').show 'slow'
 
@@ -101,7 +100,7 @@ class limn.LimnApp
         window.addEventListener do
             'click'
             (evt) ->
-                return unless $ evt.target .is '.graph-raw-data-row a'
+                return unless $ evt.target .is '.graph-raw-data-row a,.not-client-side'
                 evt.stopPropagation()
                 false
             true # capture phase

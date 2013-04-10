@@ -7,11 +7,63 @@ exists  = fs.existsSync or path.existsSync
 
 express        = require 'express'
 LimnMiddleware = require './middleware'
+config         = require './config' # NOTE: server/config.json is a private file and should never be included with the source
+helpers        = {}
+users          = {}
 
 /**
  * Create server
  */
 app = exports = module.exports = express.createServer()
+
+
+
+/**
+ * Authentication via passport js and OAuth
+ */
+passport        = require 'passport'
+GoogleStrategy  = require 'passport-google' .Strategy;
+
+app.use passport.initialize()
+app.use passport.session()
+
+passport.serializeUser (user, done) -> done(null, user.id)
+passport.deserializeUser (id, done) -> done(null, users[id])
+
+passport.use(
+    new GoogleStrategy(
+        {
+            returnURL: config.web.redirect_uris[0],
+            realm: config.web.javascript_origins[0]
+        },
+        #User.findOrCreate({ openId: identifier }, (err, user) -> done(err, user))
+        (identifier, profile, done) ->
+            profile.id = identifier
+            user = users[profile.id] ?= profile
+            done(null, user)
+    )
+)
+
+# Redirect the user to Google for authentication.  When complete, Google
+# will redirect the user back to the application at
+#     /auth/google/callback
+app.get('/auth/google', passport.authenticate('google'))
+
+# Google will redirect the user to this URL after authentication.  Finish
+# the process by verifying the assertion.  If valid, the user will be
+# logged in.  Otherwise, authentication has failed.
+app.get('/auth/google/callback', passport.authenticate('google', {
+        successRedirect: '/graphs/timeseries_example/edit',
+        failureRedirect: '/auth/google'
+}))
+
+helpers.auth = (req, res) ->
+    map = {}
+    map.isAuthenticated = req.isAuthenticated()
+    map.user = req.user
+    map
+
+
 
 
 /**
@@ -29,6 +81,9 @@ app.use limn
 
 # show exceptions, pretty stack traces ### FIXME
 app.use express.errorHandler { +dumpExceptions, +showStack }
+
+# add any helpers defined above
+app.dynamicHelpers(helpers)
 
 mainfile = path.basename require.main?.filename
 if require.main is module or 'Cokefile' is mainfile

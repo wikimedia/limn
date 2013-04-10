@@ -21,6 +21,10 @@ html(lang="en", dir="ltr")
     
     body
         block body
+            section#login
+                //a.not-client-side.pull-right(href='/logout') Sign Out
+                a.not-client-side.pull-right(href='/auth/google') Sign In
+            
             section#messages.collapse
                 .error.hide
                     span.badge.badge-important !
