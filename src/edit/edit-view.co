@@ -23,6 +23,8 @@ class exports.EditView
      */
     makeEditable: ->
         $('.editable', @view.el()).addClass @editable
+        $('.hide-during-edit').hide()
+        $('.show-during-edit').show()
     
     /**
      * registers events in the scope of the view this is editing
@@ -31,8 +33,15 @@ class exports.EditView
         scope = @view.el()
         self = this
         $(scope).on 'click', @isEditable, (event) ->
+            # Preventing default here causes links to stop working
+            # This is the inteded behavior because we want to edit link text, but it might be disorienting
+            event.preventDefault()
             event.stopPropagation()
             el = this
+            
+            unless $(el).next().is self.isEditing
+                $(el).after $($(el).data('editor')).addClass(self.editing)
+                ko.applyBindings ko.dataFor(el), $(el).next()[0]
             
             $(el).hide()
             $(el).next().show().focus()
@@ -46,4 +55,5 @@ class exports.EditView
             $(el).hide()
             display.show()
     
-    createEditorFor: (el) ->
+    save: ->
+        console.log 'saving', this

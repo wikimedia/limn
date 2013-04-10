@@ -2,19 +2,19 @@ section.graph.graph-display(data-bind="attr: { id:graphId }")
     
     .graph-name-row.row-fluid
         section.callout
-        h2: a.graph-name(data-bind="text: model().name, attr: { href:model().link }")
+        h2: a.graph-name(data-bind="text: model().name, attr: { href:model().link }, editable: 'input'")
     
     .graph-chart-row.row-fluid: .inner
     
     .graph-details-row.row
-        .span7.offset3.ug.graph-desc(data-bind='markdown: model().desc, editable: "textarea"')
+        .span7.offset3.ug.graph-desc(data-bind="markdown: model().desc, editable: 'textarea'")
     
     .graph-links-row.row(data-bind="if: model().permalink")
         .span6.offset3.ug.graph-permalink
             input.span6(data-bind="attr: { value:model().permalink }", readonly="readonly")
     
     .graph-notes-row.row
-        .span7.offset3.ug.graph-notes(data-bind='markdown: model().notes')
+        .span7.offset3.ug.graph-notes(data-bind="markdown: model().notes, editable: 'textarea'")
     
     .graph-raw-data-row.row
         .span7.offset3.ug
@@ -23,6 +23,9 @@ section.graph.graph-display(data-bind="attr: { id:graphId }")
                 li
                     a(data-bind="text: $data, attr: {href: $data}", target="_blank")
         button.btn(data-bind="click: tabularize") View Data as Table
+        span.hide-during-edit
+            a.btn.btn-primary(data-bind="attr: { href:model().link() + '/edit' }") Edit
+        button.btn.btn-primary.hide.show-during-edit(data-bind="click: save") Save
     
     .graph-metric-defs-row.row(data-bind='if: metricDefs')
         .offset3.ug

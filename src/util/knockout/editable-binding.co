@@ -13,27 +13,24 @@ ko.bindingHandlers.editable = do
         $(element).addClass 'editable'
         unwrapped = ko.utils.unwrapObservable valueAccessor()
         
-        koBinding = ko.bindingHandlers.editable
-        editBinding = koBinding.getEditBindText $(element).data().bind.split(',')
-        
         dataBindPlaceholder = '###'
+        sameClasses = $(element).attr('class')
+        style = ''
         switch unwrapped
             case 'input'
                 editor = "<input #dataBindPlaceholder type=text/>"
             case 'textarea'
                 editor = "<textarea #dataBindPlaceholder rows=3 cols=40></textarea>"
+                # style hacks - not necessary with a dialog
+                if sameClasses.indexOf('offset3') >= 0
+                    style = 'margin-left: 260px'
             default
                 return
         
-        editor = editor.replace dataBindPlaceholder, "data-bind=\"#editBinding\""
-        editor = $(editor).addClass 'editing'
-        data = ko.dataFor element
-        ko.applyBindings data, editor[0]
-        
-        $(element).after editor
-        $(element).next().hide()
+        editBinding = ko.bindingHandlers.editable.getEditBindText $(element).data().bind.split(',')
+        editor = editor.replace dataBindPlaceholder, "data-bind=\"#editBinding\" class=\"#sameClasses\" style=\"#style\""
+        $(element).data('editor', editor)
     
-    #update: (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) ->
     
     getEditBindText: (bindings) ->
         for binding of bindings

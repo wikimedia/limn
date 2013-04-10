@@ -178,6 +178,8 @@ class exports.GraphView extends View
         @$el.find '.tabularizeDialog' .modal 'show'
     
     
+    save: ->
+    
     
     /* * * *  UI Feedback  * * * {{{ */
     
