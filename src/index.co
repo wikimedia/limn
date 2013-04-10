@@ -37,6 +37,30 @@ limn.graph      = require './graph'
 limn.dashboard  = require './dashboard'
 
 
+/**
+ * Basic info and error messages that can be used anywhere via the limn object
+ */
+limn.showMessages = ->
+    $('#messages').show()
+
+$('#messages button.close').on('click', -> $('#messages').hide())
+
+limn.hideError = ->
+    $('#messages .error').hide()
+limn.error = (message) ->
+    limn.hideInfo()
+    limn.showMessages()
+    $('#messages .error .message').text message
+    $('#messages .error').show 'slow'
+
+limn.hideInfo = ->
+    $('#messages .info').hide()
+limn.info = (message) ->
+    limn.hideError()
+    limn.showMessages()
+    $('#messages .info .message').text message
+    $('#messages .info').show 'slow'
+
 
 /**
  * @class Sets up root application, automatically attaching to an existing element

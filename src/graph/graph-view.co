@@ -179,6 +179,12 @@ class exports.GraphView extends View
     
     
     save: ->
+        graph = ko.utils.unwrapObservable @model
+        graph.save()
+            .done ->
+                limn.info 'Saved Successfully'
+            .fail ->
+                limn.error 'Not Saved.  There was a problem'
     
     
     /* * * *  UI Feedback  * * * {{{ */
