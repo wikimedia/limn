@@ -117,7 +117,7 @@ class exports.AxisNode extends GraphNode
                 else
                     axis.ticks scale.domain()
                 
-                labelElement
+                labelElement?
                     .attr('x', viewport.viewportWidth() - 6)
                     .attr('y', -18)
             
@@ -139,7 +139,7 @@ class exports.AxisNode extends GraphNode
                     tickValues = scale.ticks(ticks)
                 axis.tickValues tickValues
                 
-                labelElement
+                labelElement?
                     .attr('transform', 'rotate(-90)')
                     .attr('y', 6)
         
