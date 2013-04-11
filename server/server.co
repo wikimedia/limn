@@ -43,6 +43,7 @@ passport.use(
         #User.findOrCreate({ openId: identifier }, (err, user) -> done(err, user))
         (identifier, profile, done) ->
             profile.id = identifier
+            profile.email = profile.emails[0].value
             user = users[profile.id] ?= profile
             done(null, user)
     )

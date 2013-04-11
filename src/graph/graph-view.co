@@ -183,8 +183,12 @@ class exports.GraphView extends View
         graph.save()
             .done ->
                 limn.info 'Saved Successfully'
-            .fail ->
-                limn.error 'Not Saved.  There was a problem'
+            .fail (data, message, response) ->
+                switch response.status
+                    case 403
+                        limn.error "Not Saved.  #message"
+                    default
+                        limn.error 'Not Saved.  There was a problem'
     
     
     /* * * *  UI Feedback  * * * {{{ */
