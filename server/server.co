@@ -24,6 +24,10 @@ app = exports = module.exports = express.createServer()
 passport        = require 'passport'
 GoogleStrategy  = require 'passport-google' .Strategy;
 
+#app.use express.static('public')
+app.use express.cookieParser()
+app.use express.bodyParser()
+app.use express.session({ secret: config.secret or 'not secure' })
 app.use passport.initialize()
 app.use passport.session()
 
@@ -31,7 +35,7 @@ passport.serializeUser (user, done) -> done(null, user.id)
 passport.deserializeUser (id, done) -> done(null, users[id])
 
 passport.use(
-    new GoogleStrategy(
+    'google', new GoogleStrategy(
         {
             returnURL: config.web.redirect_uris[0],
             realm: config.web.javascript_origins[0]
@@ -57,11 +61,7 @@ app.get('/auth/google/callback', passport.authenticate('google', {
         failureRedirect: '/auth/google'
 }))
 
-helpers.auth = (req, res) ->
-    map = {}
-    map.isAuthenticated = req.isAuthenticated()
-    map.user = req.user
-    map
+helpers.auth = (req, res) -> { isAuthenticated: req.isAuthenticated(), user: req.user }
 
 
 

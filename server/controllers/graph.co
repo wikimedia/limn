@@ -60,6 +60,7 @@ class GraphController extends FileBackedController
     
     # PUT /graphs/:graph
     update: (req, res, next) ->
+        console.log 'user putting', req.user
         return unless data = @processBody req, res
         if @PROTECT_GRAPHS and _ @PROTECTED_GRAPH_IDS .contains data.id
             return res.send {result:"error", message:"Graph '#{data.id}' is read-only."}, 403 # 403: Forbidden
