@@ -8,7 +8,6 @@ hasOwn = Object::hasOwnProperty
  * 
  * TODO: Default support for multi-gets (at new endpoint?) if autoload() is implemented.
  * TODO: Default support for get-all at /<resource>s.json (with paging!) if autoload() is implemented.
- * TODO: validate(id, data) method auto-run (if it exists) before any mutation (abstracts away PROTECTED_GRAPHS and such).
  */
 class Controller extends Resource
     /**

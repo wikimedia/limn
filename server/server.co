@@ -27,7 +27,7 @@ GoogleStrategy  = require 'passport-google' .Strategy;
 #app.use express.static('public')
 app.use express.cookieParser()
 app.use express.bodyParser()
-app.use express.session({ secret: config.secret or 'not secure' })
+app.use express.session({ secret: config.secret })
 app.use passport.initialize()
 app.use passport.session()
 
