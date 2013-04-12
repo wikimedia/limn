@@ -355,7 +355,7 @@ application = limn.application =
         # the process by verifying the assertion.  If valid, the user will be
         # logged in.  Otherwise, authentication has failed.
         @get '/auth/google/callback', passport.authenticate('google', {
-            successRedirect: '/login-view',
+            successRedirect: '/',
             failureRedirect: '/auth/google'
         })
 
