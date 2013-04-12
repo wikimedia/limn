@@ -21,6 +21,33 @@ view_helpers          = require './view-helpers'
 
 
 /**
+ * For authentication via passport js and OAuth
+ */
+config          = require './config' # NOTE: server/config.json is a private file and should never be included with the source
+helpers         = {}
+users           = {}
+passport        = require 'passport'
+GoogleStrategy  = require 'passport-google' .Strategy;
+
+passport.serializeUser (user, done) -> done(null, user.id)
+passport.deserializeUser (id, done) -> done(null, users[id])
+
+passport.use 'google', new GoogleStrategy(
+    {
+        returnURL: config.web.redirect_uris[0],
+        realm: config.web.javascript_origins[0]
+    },
+    #User.findOrCreate({ openId: identifier }, (err, user) -> done(err, user))
+    (identifier, profile, done) ->
+        profile.id = identifier
+        profile.email = profile.emails[0].value
+        user = users[profile.id] ?= profile
+        done(null, user)
+)
+
+
+
+/**
  * Limn project-internals
  */
 {
@@ -252,6 +279,14 @@ application = limn.application =
             @use '/data',           express.static dataDir, {maxAge}
             @use                    express.static STATIC,  {maxAge}
             
+            # Passport required middleware
+            @use express.cookieParser()
+            @use express.bodyParser()
+            @use express.session({ secret: config.secret })
+            @use passport.initialize()
+            @use passport.session()
+            # End Passport required middleware
+            
             @use @router
         
         
@@ -311,6 +346,25 @@ application = limn.application =
         @get '/test', (req, res) ->
             res.render 'test'
         
+        # Redirect the user to Google for authentication.  When complete, Google
+        # will redirect the user back to the application at
+        #     /auth/google/callback
+        @get '/auth/google', passport.authenticate('google')
+
+        # Google will redirect the user to this URL after authentication.  Finish
+        # the process by verifying the assertion.  If valid, the user will be
+        # logged in.  Otherwise, authentication has failed.
+        @get '/auth/google/callback', passport.authenticate('google', {
+            successRedirect: '/login-view',
+            failureRedirect: '/auth/google'
+        })
+
+        @get '/logout', (req, res) ->
+            req.logout()
+            res.redirect '/'
+        
+        @get '/login-view', (req, res) ->
+            res.render 'login'
         
         # All other non-controller, non-static endpoints mapped to default view
         # for client-side routing
@@ -321,4 +375,3 @@ application = limn.application =
     
 
 limn.view_helpers = view_helpers
-
