@@ -22,8 +22,13 @@ html(lang="en", dir="ltr")
     body
         block body
             section#login
-                //a.not-client-side.pull-right(href='/logout') Sign Out
-                a.not-client-side.pull-right(href='/auth/google') Sign In
+                if isAuthenticated
+                    .pull-right
+                        span welcome #{user.name.givenName}
+                        &nbsp;
+                        a.not-client-side(href='/logout') (sign out)
+                else
+                    a.not-client-side.pull-right(href='/auth/google') (sign in)
             
             section#messages.collapse
                 .error.hide

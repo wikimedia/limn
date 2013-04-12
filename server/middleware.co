@@ -156,6 +156,11 @@ application = limn.application =
         view_opts.__defineGetter__ 'mount', -> app.route or '/'
         @set 'view options', view_opts
         
+        @dynamicHelpers({
+            isAuthenticated: (req, res) -> req.isAuthenticated()
+            user: (req, res) -> req.user
+        })
+        
         /**
          * All environments: pre-process requests.
          */
