@@ -76,8 +76,9 @@ class exports.DataSourceView extends View
             @blankDataSource().columns []
             try
                 dataset.getLabels().map (label, i) ~>
+                    id = _.str.underscored (label or "#i").toLowerCase()
                     type = @getTypeNameFromExample dataset.data[0][i]
-                    newColumn = new ColumnDef {label, type}, @blankDataSource()
+                    newColumn = new ColumnDef {id, label, type}, @blankDataSource()
                     if dataset.type is 'mobile_device_by_geo'
                         label = 'unknown' unless label
                         switch label
