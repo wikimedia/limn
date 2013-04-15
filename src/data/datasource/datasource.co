@@ -96,7 +96,9 @@ export class DataSource extends StoredModel
         timespan      : { start:null, end:null, step:null }
     
     attributeTypes: ->
-        columns: -> new ColumnDef it, this
+        columns: ->
+            return it if it instanceof ColumnDef
+            new ColumnDef it, this
     
     
     
