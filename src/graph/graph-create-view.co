@@ -5,6 +5,8 @@ ko = require 'knockout'
 } = require '../base/view'
 { Graph,
 } = require './graph-model'
+{ GraphView,
+} = require './graph-view'
 { DataSource, ColumnDef,
 } = require '../data/datasource'
 
@@ -20,7 +22,7 @@ class exports.GraphCreateView extends View
     ->
         super()
         @blankGraph = ko.observable()
-        @metrics = ko.observable()
+        @metrics = ko.observableArray()
         @previewDialog = ko.observable()
         @datasources = ko.observableArray()
         @filter = ko.observable()
@@ -34,6 +36,7 @@ class exports.GraphCreateView extends View
                          name.indexOf(filter) >= 0
             else
                 @datasources()
+        @recentGraphs = ko.observableArray()
     
     
     newGraph: ->
@@ -79,25 +82,67 @@ class exports.GraphCreateView extends View
                     }
                 ]
         
-        # refresh the line-group children when metrics is changed
-        #@metrics.subscribe ->
-            #this.peek().map ->
-                #if it.
-                #{
-                    #nodeType: metricType
-                    #metric: {
-                        #source_id: it.source.id()
-                        #source_col: it.index()
-                        #type: it.type()
-                    #}
-                    #options: {
-                        #label: it.label()
-                    #}
-                #}
         @blankGraph blankGraph
     
     
+    refreshMetrics: ->
+        lineNodes = @metrics().map ->
+            {
+                nodeType: 'line'
+                metric: {
+                    source_id: it.source.id()
+                    source_col: it.index()
+                    type: it.type()
+                }
+            }
+        @blankGraph().root().children()[7].children lineNodes
+    
+    
+    addDatasource: (datasource) ->
+        ~>
+            metrics = @metrics.peek()
+            for column of datasource.columns()
+                metrics.push(column)
+            @metrics _.sortBy metrics, (c) -> c.source.name()
+            @refreshMetrics()
+    
+    
+    removeMetric: (metric) ->
+        ~>
+            @metrics.remove metric
+            @refreshMetrics()
+    
+    
+    keepOnlyThisMetric: (metric) ->
+        ~>
+            metrics = _.filter @metrics.peek(), (m) ->
+                m.source.id() != metric.source.id() || m.id() == metric.id()
+            @metrics metrics
+            @refreshMetrics()
+    
+    
     preview: ->
-        limn.view.previewDialog new GraphView @blankGraph()
+        limn.view.previewDialog new GraphView this
         limn.view.$('> .previewDialog').modal()
         limn.view.previewDialog().resize()
+    
+    
+    cleanUpPreview: ->
+        @initializeAddForm()
+        @refreshMetrics()
+    
+    
+    newGraph: ->
+        @blankGraph().save()
+            .done ~>
+                limn.info "Saved Successfully with id #{@blankGraph().slug()}"
+                @recentGraphs.push @blankGraph()
+                @cleanUpPreview()
+            .fail (data, message, response) ->
+                switch response.status
+                    case 403
+                        limn.error "Not Saved.  #message"
+                    case 409
+                        limn.error "Not Saved.  Graph '#{@slug()}' already exists"
+                    default
+                        limn.error 'Not Saved.  There was a problem'

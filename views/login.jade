@@ -1,6 +1,6 @@
 if isAuthenticated
-    span welcome #{user.name.givenName}
+    span Welcome #{user.name.givenName}
     &nbsp;
     a.not-client-side(href='/logout') (sign out)
 else
-    a.not-client-side(href='/auth/google') (sign in)
+    a.not-client-side(href='/auth/google') sign in

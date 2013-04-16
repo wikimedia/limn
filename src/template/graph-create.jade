@@ -1,6 +1,6 @@
 fieldset.controlGroup
     legend Create a Graph
-    form.form-horizontal.span6(data-bind="submit: newGraph, with: blankGraph")
+    form.form-horizontal.pull-left(data-bind="submit: newGraph, with: blankGraph")
         .control-group
             label.control-label(for="slug") Unique Id
             .controls
@@ -17,26 +17,27 @@ fieldset.controlGroup
             label.control-label(for="notes") Notes
             .controls
                 textarea(rows=3, cols=50, id="notes", placeholder="notes", data-bind="value: notes")
-        .control-group
-            h4 Metrics in Graph
-            .control-group(data-bind="foreach: metrics")
-                .controls.controls-row
-                    span.span1(data-bind="text: $index")
-                    .span3
-                        span(data-bind="text: source().name() + ' - ' + label()")
-                    .span2
-                        a.btn Remove
-                        a.btn Keep Only
-                        //-
-                            (data-bind="click: $parents[1].removeMetricFrom($parent)")
-                            (data-bind="click: $parents[1].removeSiblingMetricsFrom($parent)")
+        
+        h4 Metrics in Graph
+        table.table.table-hover(data-bind="foreach: $parent.metrics"): tr
+            td
+                span(data-bind="text: ' ' + source.name() + ' - ' + label()")
+            td
+                a(data-bind="click: $parents[1].removeMetric($data)", href="#") (remove)
+            td
+                a(data-bind="click: $parents[1].keepOnlyThisMetric($data)", href="#") (only)
+        
         .form-actions
-            button.btn Preview
+            button.btn(type="button", data-bind="click: $parent.preview") Preview
             button.btn.btn-primary.save(type="submit") Save
             span.pull-right(data-bind="text: $parent.message")
+        
+        .recent-graphs(data-bind="foreach: $parent.recentGraphs")
+            div: a.not-client-side(data-bind="attr: {href: link}, text: name", target="_blank")
+
     
     
-    .span7.pull-right
+    .span7
         h3 Pick Datasources
         .navbar
             .navbar-inner
@@ -48,18 +49,17 @@ fieldset.controlGroup
             tbody(data-bind="foreach: filteredDatasources")
                 tr
                     td
-                        button.btn(data-bind="click: $parent.addDatasource") Add
+                        button.btn(data-bind="click: $parent.addDatasource($data), text: 'Add '+ columns().length +' metrics'")
                     td
                         span(data-bind="text: id")
                     td
                         span(data-bind="text: name")
 
 
-        .modal.hide.previewDialog(data-backdrop="false", data-bind="if: previewDialog")
-            .modal-header
-                button.close(data-dismiss="modal", aria-hidden="true") &times;
-                h3 Quick Peek
-            .modal-body
-                section(data-bind="subview: previewDialog")
-            .modal-footer
-                a.btn.btn-primary(data-dismiss="modal") Close
+.modal.hide.previewDialog(data-backdrop="false", data-bind="if: previewDialog")
+    .modal-header
+        button.close(data-dismiss="modal", data-bind="click: cleanUpPreview", aria-hidden="true") &times;
+    .modal-body
+        section(data-bind="subview: previewDialog")
+    .modal-footer
+        a.btn.btn-primary(data-dismiss="modal", data-bind="click: cleanUpPreview") Close
