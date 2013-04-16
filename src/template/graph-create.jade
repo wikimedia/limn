@@ -1,6 +1,6 @@
 fieldset.controlGroup
     legend Create a Graph
-    form.form-horizontal.pull-left(data-bind="submit: newGraph, with: blankGraph")
+    form.form-horizontal(data-bind="submit: newGraph, with: blankGraph")
         .control-group
             label.control-label(for="slug") Unique Id
             .controls
@@ -32,12 +32,14 @@ fieldset.controlGroup
             button.btn.btn-primary.save(type="submit") Save
             span.pull-right(data-bind="text: $parent.message")
         
-        .recent-graphs(data-bind="foreach: $parent.recentGraphs")
-            div: a.not-client-side(data-bind="attr: {href: link}, text: name", target="_blank")
+        .recent-graphs(data-bind="if: $parent.recentGraphs().length > 0")
+            h4 Graphs Created in this Session
+            .recent-graphs(data-bind="foreach: $parent.recentGraphs")
+                div: a.not-client-side(data-bind="attr: {href: link}, text: name", target="_blank")
 
     
     
-    .span7
+    .pick-datasources
         h3 Pick Datasources
         .navbar
             .navbar-inner
@@ -49,7 +51,7 @@ fieldset.controlGroup
             tbody(data-bind="foreach: filteredDatasources")
                 tr
                     td
-                        button.btn(data-bind="click: $parent.addDatasource($data), text: 'Add '+ columns().length +' metrics'")
+                        button.btn(data-bind="click: $parent.addDatasource($data), text: 'Add '+ (columns().length - 1) +' metrics'")
                     td
                         span(data-bind="text: id")
                     td

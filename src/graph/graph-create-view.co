@@ -82,6 +82,12 @@ class exports.GraphCreateView extends View
                     }
                 ]
         
+        if @blankGraph()
+            blankGraph.name @blankGraph().name()
+            blankGraph.slug @blankGraph().slug()
+            blankGraph.desc @blankGraph().desc()
+            blankGraph.notes @blankGraph().notes()
+        
         @blankGraph blankGraph
     
     
@@ -102,7 +108,8 @@ class exports.GraphCreateView extends View
         ~>
             metrics = @metrics.peek()
             for column of datasource.columns()
-                metrics.push(column)
+                if column.type() is not 'date'
+                    metrics.push(column)
             @metrics _.sortBy metrics, (c) -> c.source.name()
             @refreshMetrics()
     
