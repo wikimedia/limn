@@ -66,12 +66,15 @@ limn.info = (message) ->
  *  found at `appSelector` and delegating to the appropriate view.
  */
 class limn.LimnApp
-    VIEWS :
+    VIEWS:
         'dashboards'    : limn.dashboard.DashboardView
         'graphs'        : limn.graph.GraphView
         'datasources'   : limn.data.datasource.DataSourceView
         '404'           : limn.base.NotFoundView
         'loading'       : limn.base.LoadingView
+    
+    CREATE_VIEWS:
+        'graphs'        : limn.graph.GraphCreateView
     
     
     /**
@@ -116,7 +119,18 @@ class limn.LimnApp
                 view = 'dashboards'
                 id   = 'reportcard'
             
-            if ViewType = @VIEWS[view]
+            # if the id is an action, route accordingly
+            if _(['create','list']).contains id
+                action = id
+                id = null
+            
+            switch action
+                case 'create'
+                    views = @CREATE_VIEWS
+                default
+                    views = @VIEWS
+            
+            if ViewType = views[view]
                 @currentView new ViewType id, action
                 @scrollTo 0, 0
             else

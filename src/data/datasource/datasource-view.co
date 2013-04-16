@@ -231,7 +231,7 @@ class exports.DataSourceView extends View
                     }
                     {
                         nodeType: "#{metricType}-group",
-                        options: {palette: 'category20'},
+                        options: {palette: 'category10'},
                         children: columns.map -> {
                             nodeType: metricType
                             metric: {

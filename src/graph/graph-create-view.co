@@ -1,0 +1,103 @@
+_ = require 'underscore'
+ko = require 'knockout'
+
+{ View,
+} = require '../base/view'
+{ Graph,
+} = require './graph-model'
+{ DataSource, ColumnDef,
+} = require '../data/datasource'
+
+
+
+class exports.GraphCreateView extends View
+    template: 'graph-create'
+    
+    
+    /**
+     * @constructor
+     */
+    ->
+        super()
+        @blankGraph = ko.observable()
+        @metrics = ko.observable()
+        @previewDialog = ko.observable()
+        @datasources = ko.observableArray()
+        @filter = ko.observable()
+        @filteredDatasources = ko.computed ~>
+            if @filter()?.length
+                filter = @filter().toLowerCase()
+                @datasources().filter ~>
+                    id = it.id().toLowerCase()
+                    name = it.name().toLowerCase()
+                    return id.indexOf(filter) >= 0 or
+                         name.indexOf(filter) >= 0
+            else
+                @datasources()
+    
+    
+    newGraph: ->
+        console.log 'submitted'
+    
+    
+    afterRender: (element) ->
+        return if @el()
+        @el element
+        
+        @initializeAddForm()
+        DataSource.fetchAll().done ~>
+            @datasources(_.sortBy DataSource.getAllSources(), (d) -> d.name())
+            @$('.datasourceSearch').typeahead({source: @datasources().map -> it.name()})
+    
+    
+    initializeAddForm: ->
+        blankGraph = new Graph do
+            root:
+                nodeType: 'canvas'
+                y:
+                    scaleType: 'linear'
+                width: 900
+                height: 350
+                children: [
+                    {nodeType: 'axis', options: {dimension: 'x', orient: 'bottom'}}
+                    {nodeType: 'axis', options: {dimension: 'y', orient: 'left'}}
+                    {nodeType: 'grid', options: {dimension: 'x'}}
+                    {nodeType: 'grid', options: {dimension: 'y'}}
+                    {nodeType: 'legend', options: {dateFormat: 'HH:mm on MMM DD, YYYY'}}
+                    {nodeType: 'zoom-brush'}
+                    {
+                        nodeType: 'tweaks',
+                        children: [
+                            {nodeType: 'smooth'},
+                            {nodeType: 'scaling'}
+                        ]
+                    }
+                    {
+                        nodeType: "line-group",
+                        options: {palette: 'category10'},
+                        children: []
+                    }
+                ]
+        
+        # refresh the line-group children when metrics is changed
+        #@metrics.subscribe ->
+            #this.peek().map ->
+                #if it.
+                #{
+                    #nodeType: metricType
+                    #metric: {
+                        #source_id: it.source.id()
+                        #source_col: it.index()
+                        #type: it.type()
+                    #}
+                    #options: {
+                        #label: it.label()
+                    #}
+                #}
+        @blankGraph blankGraph
+    
+    
+    preview: ->
+        limn.view.previewDialog new GraphView @blankGraph()
+        limn.view.$('> .previewDialog').modal()
+        limn.view.previewDialog().resize()
