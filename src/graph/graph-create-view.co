@@ -159,10 +159,6 @@ class exports.GraphCreateView extends View
         graph.destroy()
             .done ->
                 limn.info "Deleted Graph #{graph.id()}"
-                getLoopParent(event).recentGraphs.remove graph
+                ko.contextFor(event.target).$parents[1].recentGraphs.remove graph
             .fail ->
                 limn.error 'Not Deleted.  There was a problem'
-    
-    
-    getLoopParent: (event) ->
-        return ko.contextFor(event.target).$parents[1]

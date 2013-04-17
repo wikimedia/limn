@@ -294,7 +294,8 @@ class exports.Resource extends Mixin
             params.data._method = type if options.emulateJSON
         
         if type is 'DELETE'
-            params.data = _.extend (params.data or {}), {id: _.result model, 'id'}
+            params.contentType = 'application/json'
+            params.data = JSON.stringify model
         
         # Don't process data on a non-GET request.
         if params.type is not 'GET' and not options.emulateJSON

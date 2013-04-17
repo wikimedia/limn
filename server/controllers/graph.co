@@ -59,15 +59,14 @@ class GraphController extends FileBackedController
     
     # DELETE /graphs/:graph
     destroy: (req, res, next) ->
-        console.log req.param.id
-        id = req.param.id
+        return unless data = @processBody req, res
+        id = data.id
         unless @isAuthorized req
             return res.send {result:"error", message:"Graph '#{id}' is read-only."}, 403 # 403: Forbidden
         Seq()
             .seq @findFile, id, Seq
             .seq (file) ~>
-                console.log "Deleting Graph #id at #{file.path}"
-                #fs.unlink file, @errorHandler(res, "Error destroying Graph '#id'!", 500)
+                fs.unlink file, @errorHandler(res, "Error destroying Graph '#id'!", 500)
             .catch (err) -> res.send {result:"error", message:"Graph '#id' does not exist!"}, 410 # 410: Resource Gone
     
     
