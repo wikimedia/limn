@@ -21,22 +21,26 @@ class exports.GraphCreateView extends View
      */
     ->
         super()
+        
         @blankGraph = ko.observable()
         @metrics = ko.observableArray()
         @previewDialog = ko.observable()
+        @recentGraphs = ko.observableArray()
+        
         @datasources = ko.observableArray()
         @filter = ko.observable()
+        @datasourceType = ko.observable 'timeseries'
         @filteredDatasources = ko.computed ~>
-            if @filter()?.length
-                filter = @filter().toLowerCase()
-                @datasources().filter ~>
-                    id = it.id().toLowerCase()
-                    name = it.name().toLowerCase()
-                    return id.indexOf(filter) >= 0 or
-                         name.indexOf(filter) >= 0
-            else
-                @datasources()
-        @recentGraphs = ko.observableArray()
+            filter = (@filter() or '').toLowerCase()
+            typeFilter = @datasourceType().toLowerCase()
+            @datasources().filter ~>
+                id = it.id().toLowerCase()
+                name = it.name().toLowerCase()
+                type = it.type().toLowerCase()
+                return type is typeFilter
+                   and (not filter.length
+                         or id.indexOf(filter) >= 0
+                         or name.indexOf(filter) >= 0)
     
     
     newGraph: ->
@@ -69,13 +73,6 @@ class exports.GraphCreateView extends View
                     {nodeType: 'legend', options: {dateFormat: 'HH:mm on MMM DD, YYYY'}}
                     {nodeType: 'zoom-brush'}
                     {
-                        nodeType: 'tweaks',
-                        children: [
-                            {nodeType: 'smooth'},
-                            {nodeType: 'scaling'}
-                        ]
-                    }
-                    {
                         nodeType: "line-group",
                         options: {palette: 'category10'},
                         children: []
@@ -101,7 +98,9 @@ class exports.GraphCreateView extends View
                     type: it.type()
                 }
             }
-        @blankGraph().root().children()[7].children lineNodes
+        
+        lineGroup = _.find @blankGraph().root().children(), -> it.nodeType is 'line-group'
+        lineGroup.children lineNodes
     
     
     addDatasource: (datasource) ->
@@ -142,14 +141,28 @@ class exports.GraphCreateView extends View
     newGraph: ->
         @blankGraph().save()
             .done ~>
-                limn.info "Saved Successfully with id #{@blankGraph().slug()}"
+                @blankGraph().id @blankGraph().slug()
+                limn.info "Saved Successfully with id #{@blankGraph().id()}"
                 @recentGraphs.push @blankGraph()
                 @cleanUpPreview()
             .fail (data, message, response) ->
                 switch response.status
                     case 403
-                        limn.error "Not Saved.  #message"
+                        limn.error "Not Saved.  Please sign in (top right of this page)"
                     case 409
                         limn.error "Not Saved.  Graph '#{@slug()}' already exists"
                     default
                         limn.error 'Not Saved.  There was a problem'
+    
+    
+    deleteGraph: (graph, event) ->
+        graph.destroy()
+            .done ->
+                limn.info "Deleted Graph #{graph.id()}"
+                getLoopParent(event).recentGraphs.remove graph
+            .fail ->
+                limn.error 'Not Deleted.  There was a problem'
+    
+    
+    getLoopParent: (event) ->
+        return ko.contextFor(event.target).$parents[1]

@@ -35,7 +35,9 @@ fieldset.controlGroup
         .recent-graphs(data-bind="if: $parent.recentGraphs().length > 0")
             h4 Graphs Created in this Session
             .recent-graphs(data-bind="foreach: $parent.recentGraphs")
-                div: a.not-client-side(data-bind="attr: {href: link}, text: name", target="_blank")
+                div
+                    a.not-client-side(data-bind="attr: {href: link}, text: name", target="_blank")
+                    button.btn.btn-primary.btn-mini(data-bind="click: $parents[1].deleteGraph") delete
 
     
     
@@ -45,6 +47,9 @@ fieldset.controlGroup
             .navbar-inner
                 .navbar-search
                     input.search-query.datasourceSearch(data-bind="value: filter", placeholder="filter by id or name")
+                    select.offset2(data-bind="value: datasourceType")
+                        option(value="timeseries") Timeseries
+                        option(value="series") Series
 
         table.table.table-striped
             thead(data-bind="if: datasources().length == 0"): tr: th Loading all the datasources...
