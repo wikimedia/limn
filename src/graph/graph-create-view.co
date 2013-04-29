@@ -70,7 +70,7 @@ class exports.GraphCreateView extends View
                     {nodeType: 'axis', options: {dimension: 'y', orient: 'left'}}
                     {nodeType: 'grid', options: {dimension: 'x'}}
                     {nodeType: 'grid', options: {dimension: 'y'}}
-                    {nodeType: 'legend', options: {dateFormat: 'HH:mm on MMM DD, YYYY'}}
+                    {nodeType: 'legend', options: {dateFormat: 'MMM DD, YYYY'}}
                     {nodeType: 'zoom-brush'}
                     {
                         nodeType: "line-group",
