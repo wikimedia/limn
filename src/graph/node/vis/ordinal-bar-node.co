@@ -51,6 +51,9 @@ class exports.OrdinalBarNode extends SeriesNode
     color: @computedRequires 'model.options', (options) ->
         ProjectColors.lookup(@shortLabel(), @palette()) or options.stroke?()?.color or 'black'
     
+    strokeColor: @computedRequires 'model.options', (options) ->
+        options.stroke?()?.color or @paletteColor() or 'black'
+    
     width: @computedRequires 'model.options', (options) ->
         options.stroke?()?.width?() or 40
     
@@ -59,6 +62,7 @@ class exports.OrdinalBarNode extends SeriesNode
      * @type ko.computed<d3.selection.update>
      */
     render: ->
+        viewport = @viewport()
         data = if @seriesData() then that[0] else []
         
         # create selection
@@ -69,7 +73,8 @@ class exports.OrdinalBarNode extends SeriesNode
         
         return bar unless data.length
         return null unless model  = @model()
-        return null unless scales = @root().scales()
+        return unless xScale = viewport.xScale()
+        return unless yScale = viewport.yScale()
         disabled = @disabled()
         
         bar.enter()
@@ -84,7 +89,7 @@ class exports.OrdinalBarNode extends SeriesNode
                 if disabled
                     0
                 else
-                    scales.yScale.range()[0] - scales.yScale d
-            .attr 'x', scales.xScale(@label()) - @width()/2
-            .attr 'y', scales.yScale
+                    yScale.range()[0] - yScale d
+            .attr 'x', xScale(@label()) - @width()/2
+            .attr 'y', yScale
         bar
