@@ -94,7 +94,7 @@ class exports.GraphCreateView extends View
                 nodeType: 'line'
                 metric: {
                     sourceId: it.source.id()
-                    yColumn: it.id()
+                    yColumn: it.id() or it.index()
                     type: it.type()
                 }
             }
