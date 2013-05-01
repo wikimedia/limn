@@ -93,8 +93,8 @@ class exports.GraphCreateView extends View
             {
                 nodeType: 'line'
                 metric: {
-                    source_id: it.source.id()
-                    source_col: it.index()
+                    sourceId: it.source.id()
+                    yColumn: it.id()
                     type: it.type()
                 }
             }
@@ -122,7 +122,7 @@ class exports.GraphCreateView extends View
     keepOnlyThisMetric: (metric) ->
         ~>
             metrics = _.filter @metrics.peek(), (m) ->
-                m.source.id() != metric.source.id() || m.id() == metric.id()
+                m.source.id() != metric.source.id() || m is metric
             @metrics metrics
             @refreshMetrics()
     
