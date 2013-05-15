@@ -33,23 +33,23 @@ export class MetricDef extends Model
 [
     *   id   : 'edit'
         name : 'Edit'
-        desc : 'Updates to [countable pages](https://www.mediawiki.org/wiki/Analytics/Metric_definitions#Countable_pages) in [countable namespaces](https://www.mediawiki.org/wiki/Analytics/Metric_definitions#Content_namespaces) (aka, the "mainspace", namespace 0).'
+        desc : 'Updates to [countable pages](https://www.mediawiki.org/wiki/Analytics/Metric_definitions#Countable_pages) in [countable namespaces](https://www.mediawiki.org/wiki/Analytics/Metric_definitions#Content_namespaces) (aka, the "mainspace", namespace 0).  Monthly totals are not normalized to 30 day months.'
         url  : 'https://www.mediawiki.org/wiki/Analytics/Metric_definitions#Edits'
     
     *   id   : 'active_editor'
         name : 'Active Editor'
-        desc : 'A registered and logged-in person (not known as a [bot](https://www.mediawiki.org/wiki/Analytics/Metric_definitions#Bot)) who makes 5 or more edits in any month in [mainspace](https://www.mediawiki.org/wiki/Analytics/Metric_definitions#Content_namespaces) on [countable pages](https://www.mediawiki.org/wiki/Analytics/Metric_definitions#Countable_pages).'
+        desc : 'A registered and logged-in person (not known as a [bot](https://www.mediawiki.org/wiki/Analytics/Metric_definitions#Bot)) who makes 5 or more edits in any month in [mainspace](https://www.mediawiki.org/wiki/Analytics/Metric_definitions#Content_namespaces) on [countable pages](https://www.mediawiki.org/wiki/Analytics/Metric_definitions#Countable_pages).  Monthly totals are not normalized to 30 day months.'
         url  : 'https://www.mediawiki.org/wiki/Analytics/Metric_definitions#Active_editor'
     
     *   id   : 'very_active_editor'
         name : 'Very Active Editor'
-        desc : 'A registered and logged-in person (not known as a [bot](https://www.mediawiki.org/wiki/Analytics/Metric_definitions#Bot)) who makes 100 or more edits per month in [mainspace](https://www.mediawiki.org/wiki/Analytics/Metric_definitions#Content_namespaces) on [countable pages](https://www.mediawiki.org/wiki/Analytics/Metric_definitions#Countable_pages).'
+        desc : 'A registered and logged-in person (not known as a [bot](https://www.mediawiki.org/wiki/Analytics/Metric_definitions#Bot)) who makes 100 or more edits per month in [mainspace](https://www.mediawiki.org/wiki/Analytics/Metric_definitions#Content_namespaces) on [countable pages](https://www.mediawiki.org/wiki/Analytics/Metric_definitions#Countable_pages).  Monthly totals are not normalized to 30 day months.'
         url  : 'https://www.mediawiki.org/wiki/Analytics/Metric_definitions#Very_active_editor'
     
     *   id   : 'new_editor'
         name : 'New Editor'
         desc : 'A registered and logged-in person (not known as a [bot](https://www.mediawiki.org/wiki/Analytics/Metric_definitions#Bot)) 
-who has made their 10th edit during the time-period under consideration. Number of edits is a cumulative count across all of time on one wiki.'
+who has made their 10th edit during the time-period under consideration. Number of edits is a cumulative count across all of time on one wiki.  Monthly totals are not normalized to 30 day months.'
         url  : 'https://www.mediawiki.org/wiki/Analytics/Metric_definitions#Contributor'
     
     *   id   : 'upload'
@@ -59,7 +59,7 @@ who has made their 10th edit during the time-period under consideration. Number 
     
     *   id   : 'article'
         name : 'Article'
-        desc : 'Wiki pages which contain an [internal link](https://www.mediawiki.org/wiki/Help:Links) (aka wikilink) or category link, and are not a [redirect](https://www.mediawiki.org/wiki/Help:Redirects) page. This conforms to the traditional definition of an "article" within the Wikimedia community -- different Wikimedia projects can have different [definitions of what constitutes an article](https://www.mediawiki.org/wiki/Manual:Article_count).'
+        desc : 'Wiki pages which contain an [internal link](https://www.mediawiki.org/wiki/Help:Links) (aka wikilink) or category link, and are not a [redirect](https://www.mediawiki.org/wiki/Help:Redirects) page. This conforms to the traditional definition of an "article" within the Wikimedia community -- different Wikimedia projects can have different [definitions of what constitutes an article](https://www.mediawiki.org/wiki/Manual:Article_count).  Monthly totals are not normalized to 30 day months.'
         url  : 'https://www.mediawiki.org/wiki/Analytics/Metric_definitions#Countable_pages'
     
     *   id   : 'pageview'
@@ -77,7 +77,7 @@ who has made their 10th edit during the time-period under consideration. Number 
     
     *   id   : 'unique_visitor_comscore'
         name : 'Unique Visitor'
-        desc : 'The number of [unique visitors](http://en.wikipedia.org/wiki/Unique_visitor) to any page in any wiki under the Wikimedia family, as measured by comScore.'
+        desc : 'The number of [unique visitors](http://en.wikipedia.org/wiki/Unique_visitor) to any page in any wiki under the Wikimedia family, as measured by comScore.  These monthly totals are not normalized to 30 day months.'
         url  : 'http://en.wikipedia.org/wiki/Comscore#Data_collection_and_reporting'
     
 ].forEach -> new MetricDef it
