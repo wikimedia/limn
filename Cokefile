@@ -79,7 +79,7 @@ wrapInRequireDefine = (module, infile) ->
     "require.define('/node_modules/#module', function(require, module, exports, __dirname, __filename, undefined){\n\n" + read(infile) + "\n\n});\n"
 
 task \build 'Build coco sources' ->
-    invoke \setup
+    invoke \update_version
     coco <[ -bjc package.co ]>
     
     browserify              = require 'browserify'
