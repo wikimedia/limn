@@ -44,4 +44,4 @@ debian/limn*
 !debian/limn.conf
 debian/files
 
-server/config.json
+config.json

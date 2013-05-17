@@ -21,9 +21,26 @@ view_helpers          = require './view-helpers'
 
 
 /**
+ * Limn project-internals
+ */
+{
+    MODULES,
+    BASE, SRC, STATIC, VIEWS, CSS, TEST,
+    NODE_ENV, IS_DEV, IS_PROD, LIMN_VARDIR, LIMN_DATA,
+    LIMN_CONFIG
+} = require '../sources'
+
+LOG_LEVEL = process.env.LIMN_LOG_LEVEL
+LOG_LEVEL or= if IS_DEV then 'INFO' else 'WARN'
+LOG_LEVEL .= toUpperCase()
+
+REV = process.env.LIMN_REV or 'HEAD'
+
+
+
+/**
  * For authentication via passport js and OAuth
  */
-config          = require './config' # NOTE: server/config.json is a private file and should never be included with the source
 helpers         = {}
 users           = {}
 passport        = require 'passport'
@@ -34,8 +51,8 @@ passport.deserializeUser (id, done) -> done(null, users[id])
 
 passport.use 'google', new GoogleStrategy(
     {
-        returnURL: config.web.redirect_uris[0],
-        realm: config.web.javascript_origins[0]
+        returnURL: LIMN_CONFIG.web.redirect_uris[0],
+        realm: LIMN_CONFIG.web.javascript_origins[0]
     },
     #User.findOrCreate({ openId: identifier }, (err, user) -> done(err, user))
     (identifier, profile, done) ->
@@ -44,23 +61,6 @@ passport.use 'google', new GoogleStrategy(
         user = users[profile.id] ?= profile
         done(null, user)
 )
-
-
-
-/**
- * Limn project-internals
- */
-{
-    MODULES,
-    BASE, SRC, STATIC, VIEWS, CSS, TEST,
-    NODE_ENV, IS_DEV, IS_PROD, LIMN_VARDIR, LIMN_DATA
-} = require '../sources'
-
-LOG_LEVEL = process.env.LIMN_LOG_LEVEL
-LOG_LEVEL or= if IS_DEV then 'INFO' else 'WARN'
-LOG_LEVEL .= toUpperCase()
-
-REV = process.env.LIMN_REV or 'HEAD'
 
 
 /**
@@ -282,7 +282,7 @@ application = limn.application =
             # Passport required middleware
             @use express.cookieParser()
             @use express.bodyParser()
-            @use express.session({ secret: config.secret })
+            @use express.session({ secret: LIMN_CONFIG.secret })
             @use passport.initialize()
             @use passport.session()
             # End Passport required middleware

@@ -8,7 +8,8 @@ glob       = require 'glob'
 mkdirp     = require 'mkdirp'
 yaml       = require 'js-yaml'
 
-config     = require './config'
+{ LIMN_CONFIG,
+} = require '../sources'
 
 { readJSONFilesAsync,
 } = require './files'
@@ -98,7 +99,7 @@ class FileBackedController extends Controller
         return data
     
     isAuthorized: (req) ->
-        return req.user and _ config.emails_allowed_to_save .contains req.user.email
+        return req.user and _ LIMN_CONFIG.emails_allowed_to_save .contains req.user.email
 
 
 module.exports = exports = FileBackedController
