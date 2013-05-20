@@ -2,13 +2,14 @@ fs         = require 'fs'
 path       = require 'path'
 exists     = fs.existsSync or path.existsSync
 
+_          = require 'underscore'
 op         = require 'operator'
 Seq        = require 'seq'
 glob       = require 'glob'
 mkdirp     = require 'mkdirp'
 yaml       = require 'js-yaml'
 
-_ = require '../../src/util/underscore'
+
 { readFilesAsync, readJSONFilesAsync,
 } = require '../files'
 

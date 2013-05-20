@@ -7,7 +7,9 @@ Seq        = require 'seq'
 glob       = require 'glob'
 yaml       = require 'js-yaml'
 
-_                    = require '../../src/util/underscore'
+_          = require 'underscore'
+_.mixin      require 'underscore.nested'
+
 {readFilesAsync}     = require '../files'
 FileBackedController = require '../file-controller'
 
