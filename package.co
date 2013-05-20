@@ -3,7 +3,7 @@ version                         : '0.1.0'
 description                     : 'A GUI Visualization Toolkit'
 homepage                        : 'https://github.com/wikimedia/limn'
 keywords                        : <[ visualization graph dashboard data gui d3 ]>
-author                          : 'David Schoonover <dsc@wikimedia.org> (http://less.ly)'
+author                          : 'David Schoonover <dsc@less.ly> (http://less.ly)'
 contributors                    :
                                 'Dan Andreescu <dandreescu@wikimedia.org>'
                                 'Andrew Otto <otto@wikimedia.org>'
