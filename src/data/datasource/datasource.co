@@ -223,6 +223,7 @@ export class DataSource extends StoredModel
         else
             cols = _.merge { ids:[], types:[] }, cols
             data.columns = _.map cols.labels, (label, idx) ->
+                label = String(label)
                 id   = cols.ids[idx]   or _.str.underscored(label.toLowerCase())
                 type = cols.types[idx] or 'int'
                 {id, index: idx, label, type}
