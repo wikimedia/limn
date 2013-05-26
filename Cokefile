@@ -112,8 +112,6 @@ task \build 'Build coco sources' ->
                 write outfile, wrapInRequireDefine "#module.js", infile
             
             @ok()
-    
-    Seq()
         .seq ->
             console.log '  Bundling Browserify bundle'
             bundle = browserify exports:<[ require process ]>
