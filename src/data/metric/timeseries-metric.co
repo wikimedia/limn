@@ -67,8 +67,5 @@ class exports.TimeseriesMetric extends Metric
             dateDifference = Math.abs closestTo.getTime() - date.getTime()
             if dateDifference < closestDateDifference
                 closestDateDifference = dateDifference
-                closest = {date, value}
+                closest = {date, value or NaN}
         closest
-    
-    
-
