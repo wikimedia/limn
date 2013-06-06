@@ -54,6 +54,7 @@ class exports.TableView extends View
             else
                 firstColumn.push value
         
+        dateFormat = @findLegendDateFormat()
         for value of firstColumn.sort((a,b) ->
             return -1 if a > b
             return 1 if a < b
@@ -61,7 +62,7 @@ class exports.TableView extends View
         )
             row = []
             if moment(value).isValid()
-                row.push moment(value).format('YYYY-MM-DD HH:mm')
+                row.push moment(value).format(dateFormat)
             else
                 row.push value
             
@@ -73,3 +74,12 @@ class exports.TableView extends View
         @columns()[0].label = if firstColumn[0] instanceof Date then 'Date' else ''
         @tableColumns @columns()
         @tableRows @rows()
+    
+    
+    findLegendDateFormat: ->
+        dateFormat = 'YYYY-MM-DD HH:mm'
+        @rootNode().walk [], (columns, node) ~>
+            if node.nodeType is 'legend'
+                dateFormat := node.model().get('options.dateFormat')
+        
+        return dateFormat
