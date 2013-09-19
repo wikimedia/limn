@@ -140,7 +140,10 @@ class limn.LimnApp
             @currentView new @VIEWS['404']()
             @scrollTo 0, 0
         
+        # page eats our hash.  BAD page.  bad
+        hash = location.hash
         page()
+        location.hash = hash
     
     
     scrollTo: (x=0, y=0) ->
