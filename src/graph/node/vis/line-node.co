@@ -107,10 +107,12 @@ class exports.LineNode extends TimeseriesNode
         options.stroke?()?.color or @paletteColor() or 'black'
     
     width: @computedRequires 'model.options', (options) ->
-        options.stroke?()?.width or 3
+        stroke = options.get 'stroke'
+        stroke.width?() or 3
     
     dasharray: @computedRequires 'model.options', (options) ->
-        options.stroke?()?.dashed or 'none'
+        stroke = options.get 'stroke'
+        stroke.dashed?() or 'none'
     
     disabled: @computedRequires 'model.options', (options) ->
         options.disabled?() or false
