@@ -51,8 +51,8 @@ class exports.DataSourceView extends View
             if @filter()?.length
                 filter = @filter().toLowerCase()
                 @model().filter ~>
-                    id = it.id().toLowerCase()
-                    name = it.name().toLowerCase()
+                    id = it.id()?.toLowerCase?() or ''
+                    name = it.name()?.toLowerCase?() or ''
                     return id.indexOf(filter) >= 0 or
                          name.indexOf(filter) >= 0
             else

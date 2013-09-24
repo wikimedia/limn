@@ -31,12 +31,12 @@ class exports.GraphCreateView extends View
         @filter = ko.observable()
         @datasourceType = ko.observable 'timeseries'
         @filteredDatasources = ko.computed ~>
-            filter = (@filter() or '').toLowerCase()
             typeFilter = @datasourceType().toLowerCase()
+            filter = (@filter() or '').toLowerCase()
             @datasources().filter ~>
-                id = it.id().toLowerCase()
-                name = it.name().toLowerCase()
-                type = it.type().toLowerCase()
+                type = it.type()
+                id = it.id()?.toLowerCase?() or ''
+                name = it.name()?.toLowerCase?() or ''
                 return type is typeFilter
                    and (not filter.length
                          or id.indexOf(filter) >= 0
