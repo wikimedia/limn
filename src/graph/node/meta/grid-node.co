@@ -73,7 +73,7 @@ class exports.GridNode extends GraphNode
                     x2: scale
             
             case 'y'
-                ticks = scale.ticks(tickCount)
+                ticks = if viewport.yScaleType() is 'ordinal' then scale.range() else scale.ticks(tickCount)
                 size = viewport.width()
                 enter =
                     x1: -1 * size

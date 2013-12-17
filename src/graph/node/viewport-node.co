@@ -215,7 +215,11 @@ class exports.ViewportNode extends GraphNode
     xScale: @computed ->
         return null unless xScale = @createScale @xScaleType()
         xScale.domain that if @xDomain()
-        xScale.range [0, @viewportWidth()]
+        if @xScaleType() is 'ordinal'
+            rangeSpacing = @viewportWidth() / (xScale.domain().length + 2)
+            xScale.range _.range(0, @viewportWidth(), rangeSpacing)
+        else
+            xScale.range [0, @viewportWidth()]
     
     
     yScale: @computed ->
@@ -240,7 +244,10 @@ class exports.ViewportNode extends GraphNode
         domain = @model().get "#dim.domain"
         unless _.isArray(domain) and domain.length is 2 and _.every(domain, isFinite)
             return unless values?.length
-            domain = @applyPadding d3.extent(values), @model().get("#dim.padding")
+            if @["#{dim}ScaleType"]() is 'ordinal'
+                domain = _.flatten ['', values, '']
+            else
+                domain = @applyPadding d3.extent(values), @model().get("#dim.padding")
         domain
     
     
@@ -265,7 +272,7 @@ class exports.ViewportNode extends GraphNode
      */
     _scaleTypeFor: (typeDimension) ->
         return null unless metrics = @viewportMetrics()
-        types = _ metrics .chain()
+        types = _(metrics).chain()
             .invoke typeDimension
             .compact()
             .map ->
