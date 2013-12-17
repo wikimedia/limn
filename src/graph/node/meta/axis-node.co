@@ -127,7 +127,9 @@ class exports.AxisNode extends GraphNode
                 
                 # TODO: GridNode to apply the same scale calculations
                 ticks ?= 10
-                if viewport.yScaleType() is 'log'
+                if viewport.yScaleType() is 'ordinal'
+                    tickValues = scale.range()
+                else if viewport.yScaleType() is 'log'
                     tickValues = scale.ticks()
                     while 5 < tickValues.length > ticks + 2
                         tickValues .= filter (v, i) ->

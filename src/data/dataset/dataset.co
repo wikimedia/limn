@@ -1,7 +1,6 @@
 _ = require 'underscore'
 moment = require 'moment'
-{ CSVData,
-} = require 'timeseries'
+CSVTimeseriesData = require('timeseries').CSVData
 
 { AttributesBase,
 } = require '../../base'
@@ -9,7 +8,8 @@ moment = require 'moment'
 } = require '../../util'
 
 # FIXME: monkey-patching timeseries module to parse dates better
-CSVData.prototype.parseDate = (s) -> moment(s, "YYYY.MM.DD.HH.mm.ss").toDate()
+CSVTimeseriesData.prototype.parseDate = (s) ->
+    moment(s, "YYYY.MM.DD.HH.mm.ss").toDate()
 
 
 /**
@@ -39,13 +39,12 @@ class exports.Dataset extends AttributesBase
     
     
     formatParsers :
-        csv   : (rawData) -> new CSVData rawData
-        tsv   : (rawData) -> new CSVData rawData, { colSep:'\t' }
+        csv   : (rawData) -> new CSVTimeseriesData rawData
+        tsv   : (rawData) -> new CSVTimeseriesData rawData, { colSep:'\t' }
         json  : (rawData) -> rawData
         jsonp : (rawData) -> rawData
         xml   : (rawData) -> rawData
         log   : (rawData) -> rawData
-    
     
     
     /**
@@ -55,7 +54,6 @@ class exports.Dataset extends AttributesBase
         super()
         @format = @source.dataFormat()
         @data = @canonicalize @parse rawData, @format
-    
     
     
     /**
@@ -75,8 +73,8 @@ class exports.Dataset extends AttributesBase
             # Annotate rows (Arrays) with their column values by the column's ID
             colIds = _.invoke @source.columns(), 'id'
             _.each data, (row) ->
-                for id, idx of colIds
-                    row[id] = row[idx]
+                for id, index of colIds
+                    row[id] = row[index]
             
             data
         else
