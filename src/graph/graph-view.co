@@ -149,8 +149,8 @@ class exports.GraphView extends View
         # console.log "#this.afterRender()"
         @el element
         
-        if @action() is 'edit'
-            new EditView this
+        #if @action() is 'edit'
+            #new EditView this
     
     
     metricDefs: @computed ->

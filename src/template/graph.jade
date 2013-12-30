@@ -23,9 +23,9 @@ section.graph.graph-display(data-bind="attr: { id:graphId }")
                 li
                     a(data-bind="text: $data, attr: {href: $data}", target="_blank")
         button.btn(data-bind="click: tabularize") View Data as Table
-        span.hide-during-edit &nbsp;
-            a.btn.btn-primary(data-bind="attr: { href:model().link() + '/edit' }") Edit
-        button.btn.btn-primary.hide.show-during-edit(data-bind="click: save") Save
+        //-span.hide-during-edit &nbsp;
+            //-a.btn.btn-primary(data-bind="attr: { href:model().link() + '/edit' }") Edit
+        //-button.btn.btn-primary.hide.show-during-edit(data-bind="click: save") Save
     
     .graph-metric-defs-row.row(data-bind='if: metricDefs')
         .offset3.ug
