@@ -47,23 +47,20 @@ REV = process.env.LIMN_REV or 'HEAD'
 /**
  * For authentication via passport js and OAuth
  */
-helpers         = {}
-users           = {}
-passport        = require 'passport'
-GoogleStrategy  = require 'passport-google' .Strategy;
+users               = {}
+passport            = require 'passport'
+MediaWikiStrategy   = require 'passport-mediawiki-oauth' .OAuthStrategy;
 
 passport.serializeUser (user, done) -> done(null, user.id)
 passport.deserializeUser (id, done) -> done(null, users[id])
 
-passport.use 'google', new GoogleStrategy(
+passport.use 'mediawiki', new MediaWikiStrategy(
     {
-        returnURL: LIMN_CONFIG.web.redirect_uris[0],
-        realm: LIMN_CONFIG.web.javascript_origins[0]
+        consumerKey: LIMN_CONFIG.mediawiki.consumerKey,
+        consumerSecret: LIMN_CONFIG.mediawiki.consumerSecret,
+        callbackURL: LIMN_CONFIG.mediawiki.callbackURL
     },
-    #User.findOrCreate({ openId: identifier }, (err, user) -> done(err, user))
-    (identifier, profile, done) ->
-        profile.id = identifier
-        profile.email = profile.emails[0].value
+    (token, tokenSecret, profile, done) ->
         user = users[profile.id] ?= profile
         done(null, user)
 )
@@ -352,18 +349,22 @@ application = limn.application =
         @get '/test', (req, res) ->
             res.render 'test'
         
-        # Redirect the user to Google for authentication.  When complete, Google
+        # Redirect the user to MediaWiki for authentication.  When complete, MediaWiki
         # will redirect the user back to the application at
-        #     /auth/google/callback
-        @get '/auth/google', passport.authenticate('google')
+        #     /auth/mediawiki/callback
+        @get '/auth/mediawiki', (req, res) ~>
+            req.session.next = req.header('Referer') or '/'
+            passport.authenticate('mediawiki') ...
 
-        # Google will redirect the user to this URL after authentication.  Finish
+        # MediaWiki will redirect the user to this URL after authentication.  Finish
         # the process by verifying the assertion.  If valid, the user will be
         # logged in.  Otherwise, authentication has failed.
-        @get '/auth/google/callback', passport.authenticate('google', {
-            successRedirect: '/',
-            failureRedirect: '/auth/google'
-        })
+        @get '/auth/mediawiki/callback', passport.authenticate('mediawiki', {
+            failureRedirect: '/auth/mediawiki'
+        }), (req, res) ->
+            next = req.session.next
+            req.session.next = null
+            res.redirect next or '/'
 
         @get '/logout', (req, res) ->
             req.logout()

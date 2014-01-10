@@ -42,7 +42,7 @@ dependencies                    :
     'nib'                       : '== 0.4.0'
     
     'passport'                  : '== 0.1.16'
-    'passport-google'           : '== 0.3.0'
+    'passport-mediawiki-oauth'  : '== 0.1.0'
 
 devDependencies                 : 
     'coco'                      : '== 0.9.x'
@@ -54,7 +54,7 @@ devDependencies                 :
     'uglify-js'                 : '>= 1.2.x'
 
 scripts                         : 
-    test                        : 'phantomjs test/phantom.runner.js http://localhost:8081/test 3'
+    test                        : 'phantomjs test/phantom.runner.js http://localhost:5000/test 3'
     start                       : 'coke server'
 repository                      : type:'git', url:'git://github.com/wikimedia/limn.git'
 

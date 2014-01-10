@@ -148,7 +148,7 @@ class exports.GraphCreateView extends View
             .fail (data, message, response) ->
                 switch response.status
                     case 403
-                        limn.error "Not Saved.  Please sign in (top right of this page)"
+                        limn.error "Not Saved.  Please sign in with an authorized user"
                     case 409
                         limn.error "Not Saved.  Graph '#{@slug()}' already exists"
                     default
