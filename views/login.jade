@@ -1,6 +1,6 @@
 if isAuthenticated
-    span Welcome #{user.name.givenName}
+    span Welcome #{user.displayName}
     &nbsp;
     a.not-client-side(href='/logout') (sign out)
 else
-    a.not-client-side(href='/auth/google', target="_blank") sign in
+    a.not-client-side(href='/auth/mediawiki') sign in

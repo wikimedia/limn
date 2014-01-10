@@ -99,7 +99,9 @@ class FileBackedController extends Controller
         return data
     
     isAuthorized: (req) ->
-        return req.user and _ LIMN_CONFIG.emails_allowed_to_save .contains req.user.email
+        # ids_allowed_to_save is a list of the global mediawiki ids that have rights to save
+        console.log LIMN_CONFIG.ids_allowed_to_save, req.user, req.user.id
+        return req.user and _ LIMN_CONFIG.ids_allowed_to_save .contains req.user.id
 
 
 module.exports = exports = FileBackedController
