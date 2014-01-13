@@ -1,10 +1,7 @@
 #!/usr/bin/env coco
 
-fs                      = require 'fs'
 url                     = require 'url'
-path    = {dirname}     = require 'path'
 subproc = {exec, spawn} = require 'child_process'
-exists  = fs.existsSync or path.existsSync
 
 op                    = require 'operator'
 Seq                   = require 'seq'
