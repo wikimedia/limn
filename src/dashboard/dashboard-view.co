@@ -37,8 +37,30 @@ class exports.DashboardView extends View
         @tabs.equalityComparer = compareIds
         @tabs.subscribe ~>
             if @tabs().length
-                @tabs()[0].el.subscribe ~>
-                    @$('div.graphs.tabbable nav li.tab-button:first a').click()
+                
+                tabsShown = ko.observable(0)
+                @tabs().forEach (tab) ->
+                    tab.el.subscribe ->
+                        tabsShown(tabsShown()+1)
+                
+                tabsShown.subscribe ~>
+                    return if tabsShown() < @tabs().length
+                    
+                    if location.hash
+                        # enable link to tab, if one present in the url
+                        showTab = @$("li.tab-button a[href=#{location.hash}]")
+                    else
+                        # otherwise, open first tab
+                        showTab = @$('li.tab-button:first a')
+                    
+                    showTab.tab('show')
+                    showTab.click()
+                    
+                    # On navigate, change hash
+                    @$('li.tab-button a').on('shown', (e) ->
+                        location.hash = e.target.hash
+                        console.log('hi' + e.target.hash)
+                    )
         
         if model instanceof Dashboard
             model.fetch()

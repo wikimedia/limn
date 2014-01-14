@@ -8,6 +8,9 @@ glob       = require 'glob'
 mkdirp     = require 'mkdirp'
 yaml       = require 'js-yaml'
 
+{ LIMN_CONFIG,
+} = require '../sources'
+
 { readJSONFilesAsync,
 } = require './files'
 
@@ -94,6 +97,10 @@ class FileBackedController extends Controller
         
         mkdirp.sync @dataDir unless exists @dataDir
         return data
+    
+    isAuthorized: (req) ->
+        # ids_allowed_to_save is a list of the global mediawiki ids that have rights to save
+        return req.user and _ LIMN_CONFIG.ids_allowed_to_save .contains req.user.id
 
 
 module.exports = exports = FileBackedController

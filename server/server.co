@@ -14,6 +14,7 @@ LimnMiddleware = require './middleware'
 app = exports = module.exports = express.createServer()
 
 
+
 /**
  * Load Limn middleware
  */
@@ -30,9 +31,10 @@ app.use limn
 # show exceptions, pretty stack traces ### FIXME
 app.use express.errorHandler { +dumpExceptions, +showStack }
 
+
 mainfile = path.basename require.main?.filename
 if require.main is module or 'Cokefile' is mainfile
-    PORT = 8081
+    PORT = 5000
     PORT = parseInt(that, 10) if process.env.LIMN_PORT
     
     NODE_ENV    = process.env.NODE_ENV    or 'development'

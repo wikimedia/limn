@@ -1,0 +1,11 @@
+{
+    "mediawiki": {
+        "consumerKey": "d28ee52e069d0ef4fd362a710b5142d9",
+        "consumerSecret": "8ee2f3a9a8f6ba996db6a7750bc74a6b45c74f58",
+        "callbackURL": "http://localhost:5000/auth/mediawiki/callback"
+    },
+    "secret": "WQ$#RWAFRWAR#A#WQ3w.j;lsjfp3o3poq39q3j0wjepldijaewijf",
+    "ids_allowed_to_save": [
+        14688785
+    ]
+}

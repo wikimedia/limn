@@ -7,7 +7,7 @@ class exports.EditView
      */
     (view) ->
         @view = view
-        $(@view.el()).addClass '.edit'
+        $(@view.el()).addClass 'edit'
         
         @editable = "edit-#{@__id__}"
         @isEditable = ".#{@editable}"
@@ -22,42 +22,38 @@ class exports.EditView
      * TODO: figure out how to not apply this class to subviews
      */
     makeEditable: ->
-        $('h4,h5,p', @view.el()).addClass @editable
+        $('.editable', @view.el()).addClass @editable
+        $('.hide-during-edit').hide()
+        $('.show-during-edit').show()
     
     /**
      * registers events in the scope of the view this is editing
      */
     registerEvents: ->
         scope = @view.el()
-        $(scope).on 'click', @isEditable, (event) ~>
+        self = this
+        $(scope).on 'click', @isEditable, (event) ->
+            # Preventing default here causes links to stop working
+            # This is the inteded behavior because we want to edit link text, but it might be disorienting
+            event.preventDefault()
             event.stopPropagation()
-            el = event.target
+            el = this
             
-            editor = $(el).next()
-            unless editor.is @isEditing
-                editor = @createEditorFor el
-                $(el).after editor
+            unless $(el).next().is self.isEditing
+                $(el).after $($(el).data('editor')).addClass(self.editing)
+                ko.applyBindings ko.dataFor(el), $(el).next()[0]
             
             $(el).hide()
             $(el).next().show().focus()
         
-        $(scope).on 'blur', @isEditing, (event) ~>
+        $(scope).on 'blur', @isEditing, (event) ->
             event.stopPropagation()
-            el = event.target
+            el = this
             
             display = $(el).prev()
             
             $(el).hide()
             display.show()
     
-    createEditorFor: (el) ->
-        dataBindPlaceholder = '###'
-        editor = "<input #dataBindPlaceholder/>"
-        if $(el).is 'p'
-            editor = "<textarea #dataBindPlaceholder rows=3 cols=40></textarea>"
-        
-        editor = editor.replace dataBindPlaceholder, 'data-bind="' + $(el).data().bind.replace('text', 'value') + '"'
-        editor = $(editor).addClass @editing
-        data = ko.dataFor el
-        ko.applyBindings data, editor[0]
-        editor
+    save: ->
+        console.log 'saving', this

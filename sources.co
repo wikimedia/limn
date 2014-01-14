@@ -8,6 +8,7 @@
 
 fs     = require 'fs'
 path   = require 'path'
+exists = fs.existsSync or path.existsSync
 {dirname, basename} = path
 
 op     = require 'operator'
@@ -23,7 +24,6 @@ _.mixin _.str.exports()
  * Directory constants
  */
 export BASE     = __dirname
-export VAR      = "#BASE/var"
 export SRC      = "#BASE/src"
 export CSS      = "#BASE/css"
 export STATIC   = "#BASE/static"
@@ -43,6 +43,12 @@ export IS_DEV   = not (IS_PROD or IS_TEST)
  * Data that will be served through this Limn instance
  */
 export LIMN_VARDIR = process.env.LIMN_VARDIR or './var'
+# use the example configuration if custom configuration does not exist
+if exists "#LIMN_VARDIR/config.json"
+    # NOTE: config.json is a private file and should never be included with the source
+    export LIMN_CONFIG = require "#LIMN_VARDIR/config"
+else
+    export LIMN_CONFIG = require './config.example'
 export LIMN_DATA   = "#LIMN_VARDIR/data"
 
 /**

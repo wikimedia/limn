@@ -149,8 +149,8 @@ class exports.GraphView extends View
         # console.log "#this.afterRender()"
         @el element
         
-        if @action() is 'edit'
-            new EditView this
+        #if @action() is 'edit'
+            #new EditView this
     
     
     metricDefs: @computed ->
@@ -177,6 +177,18 @@ class exports.GraphView extends View
         @tabularizeDialog new TableView @model(), @rootNode()
         @$el.find '.tabularizeDialog' .modal 'show'
     
+    
+    save: ->
+        graph = ko.utils.unwrapObservable @model
+        graph.save()
+            .done ->
+                limn.info 'Saved Successfully'
+            .fail (data, message, response) ->
+                switch response.status
+                    case 403
+                        limn.error "Not Saved.  #message"
+                    default
+                        limn.error 'Not Saved.  There was a problem'
     
     
     /* * * *  UI Feedback  * * * {{{ */
