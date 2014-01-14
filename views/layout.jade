@@ -21,6 +21,19 @@ html(lang="en", dir="ltr")
     
     body
         block body
+            section#login
+                .pull-right
+                    include login
+            
+            section#messages.collapse
+                .error.hide
+                    span.badge.badge-important !
+                    span.message
+                    button.close.pull-right &times;
+                .info.hide
+                    span.badge.badge-success OK
+                    span.message
+                    button.close.pull-right &times;
             
             section#content: .inner
                 block content

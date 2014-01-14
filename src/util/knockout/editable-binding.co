@@ -1,0 +1,39 @@
+ko = require 'knockout'
+
+editableDomDataKey = '__ko_editableBindingData'
+/**
+ * Custom binding that is used as follows:
+ * `<p data-bind="value: observableProperty, editable: true"></p>`
+ * And works as follows:
+ *   This element will get some hooks to make it easy to find and make it editable
+ */
+ko.bindingHandlers.editable = do
+    init: (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) ->
+        controlsDescendantBindings: false
+        $(element).addClass 'editable'
+        unwrapped = ko.utils.unwrapObservable valueAccessor()
+        
+        dataBindPlaceholder = '###'
+        sameClasses = $(element).attr('class')
+        style = ''
+        switch unwrapped
+            case 'input'
+                editor = "<input #dataBindPlaceholder type=text/>"
+            case 'textarea'
+                editor = "<textarea #dataBindPlaceholder rows=3 cols=40></textarea>"
+                # style hacks - not necessary with a dialog
+                if sameClasses.indexOf('offset3') >= 0
+                    style = 'margin-left: 260px'
+            default
+                return
+        
+        editBinding = ko.bindingHandlers.editable.getEditBindText $(element).data().bind.split(',')
+        editor = editor.replace dataBindPlaceholder, "data-bind=\"#editBinding\" class=\"#sameClasses\" style=\"#style\""
+        $(element).data('editor', editor)
+    
+    
+    getEditBindText: (bindings) ->
+        for binding of bindings
+            for type of ['text', 'markdown']
+                if binding.indexOf(type) is 0
+                    return binding.replace(type, 'value')

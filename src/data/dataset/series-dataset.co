@@ -4,6 +4,16 @@ d3 = require 'd3'
 } = require './dataset'
 
 
+parseOrdinalCSV = (rawData) ->
+    data = []
+    lines = rawData.split '\n'
+    
+    _.each lines, (row) ~>
+        return true unless row
+        data.push(row.split(','))
+    data
+
+
 /**
  * @class
  * @extends Dataset
@@ -16,6 +26,33 @@ class exports.SeriesDataset extends Dataset
         super ...
         if _.isArray(@data) and _.isArray(@data[0])
             @columns = _.zip ...@data
+    
+    
+    formatParsers :
+        csv   : (rawData) -> parseOrdinalCSV rawData
+        tsv   : (rawData) -> parseOrdinalCSV rawData, { colSep:'\t' }
+        json  : (rawData) -> rawData
+        jsonp : (rawData) -> rawData
+        xml   : (rawData) -> rawData
+        log   : (rawData) -> rawData
+    
+    
+    /**
+     * Parses the raw data into an object representation.
+     * 
+     * @param {*} rawData Raw data.
+     * @param {String} format Data format.
+     * @returns {Object} Parsed data.
+     */
+    parse: (rawData, format) ->
+        unless format in @formatParsers
+            throw new Error "Unknown format '#format'!"
+        @data = @formatParsers[format] rawData
+        
+        _.each @data, (row) ~>
+            for column, index of @source.columns()
+                row[column.id()] = column.parse row[index]
+        @data
     
     
     /**

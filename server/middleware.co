@@ -1,10 +1,7 @@
 #!/usr/bin/env coco
 
-fs                      = require 'fs'
 url                     = require 'url'
-path    = {dirname}     = require 'path'
 subproc = {exec, spawn} = require 'child_process'
-exists  = fs.existsSync or path.existsSync
 
 op                    = require 'operator'
 Seq                   = require 'seq'
@@ -14,7 +11,13 @@ mkdirp                = require 'mkdirp'
 
 express               = require 'express'
 
-_                     = require '../src/util/underscore'
+_                     = require 'underscore'
+_.mixin                 require 'underscore.nested'
+_.mixin                 require 'underscore.kv'
+_.str                 = require 'underscore.string'
+_.mixin                 _.str.exports()
+
+
 {readFilesAsync}      = require './files'
 Controller            = require './controller'
 view_helpers          = require './view-helpers'
@@ -26,7 +29,8 @@ view_helpers          = require './view-helpers'
 {
     MODULES,
     BASE, SRC, STATIC, VIEWS, CSS, TEST,
-    NODE_ENV, IS_DEV, IS_PROD, LIMN_VARDIR, LIMN_DATA
+    NODE_ENV, IS_DEV, IS_PROD, LIMN_VARDIR, LIMN_DATA,
+    LIMN_CONFIG
 } = require '../sources'
 
 LOG_LEVEL = process.env.LIMN_LOG_LEVEL
@@ -34,6 +38,29 @@ LOG_LEVEL or= if IS_DEV then 'INFO' else 'WARN'
 LOG_LEVEL .= toUpperCase()
 
 REV = process.env.LIMN_REV or 'HEAD'
+
+
+
+/**
+ * For authentication via passport js and OAuth
+ */
+users               = {}
+passport            = require 'passport'
+MediaWikiStrategy   = require 'passport-mediawiki-oauth' .OAuthStrategy;
+
+passport.serializeUser (user, done) -> done(null, user.id)
+passport.deserializeUser (id, done) -> done(null, users[id])
+
+passport.use 'mediawiki', new MediaWikiStrategy(
+    {
+        consumerKey: LIMN_CONFIG.mediawiki.consumerKey,
+        consumerSecret: LIMN_CONFIG.mediawiki.consumerSecret,
+        callbackURL: LIMN_CONFIG.mediawiki.callbackURL
+    },
+    (token, tokenSecret, profile, done) ->
+        user = users[profile.id] ?= profile
+        done(null, user)
+)
 
 
 /**
@@ -156,6 +183,11 @@ application = limn.application =
         view_opts.__defineGetter__ 'mount', -> app.route or '/'
         @set 'view options', view_opts
         
+        @dynamicHelpers({
+            isAuthenticated: (req, res) -> req.isAuthenticated()
+            user: (req, res) -> req.user
+        })
+        
         /**
          * All environments: pre-process requests.
          */
@@ -247,6 +279,14 @@ application = limn.application =
             @use '/data',           express.static dataDir, {maxAge}
             @use                    express.static STATIC,  {maxAge}
             
+            # Passport required middleware
+            @use express.cookieParser()
+            @use express.bodyParser()
+            @use express.session({ secret: LIMN_CONFIG.secret })
+            @use passport.initialize()
+            @use passport.session()
+            # End Passport required middleware
+            
             @use @router
         
         
@@ -306,6 +346,29 @@ application = limn.application =
         @get '/test', (req, res) ->
             res.render 'test'
         
+        # Redirect the user to MediaWiki for authentication.  When complete, MediaWiki
+        # will redirect the user back to the application at
+        #     /auth/mediawiki/callback
+        @get '/auth/mediawiki', (req, res) ~>
+            req.session.next = req.header('Referer') or '/'
+            passport.authenticate('mediawiki') ...
+
+        # MediaWiki will redirect the user to this URL after authentication.  Finish
+        # the process by verifying the assertion.  If valid, the user will be
+        # logged in.  Otherwise, authentication has failed.
+        @get '/auth/mediawiki/callback', passport.authenticate('mediawiki', {
+            failureRedirect: '/auth/mediawiki'
+        }), (req, res) ->
+            next = req.session.next
+            req.session.next = null
+            res.redirect next or '/'
+
+        @get '/logout', (req, res) ->
+            req.logout()
+            res.redirect '/'
+        
+        @get '/login-view', (req, res) ->
+            res.render 'login'
         
         # All other non-controller, non-static endpoints mapped to default view
         # for client-side routing
@@ -316,4 +379,3 @@ application = limn.application =
     
 
 limn.view_helpers = view_helpers
-

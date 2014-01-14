@@ -51,6 +51,9 @@ class exports.OrdinalBarNode extends SeriesNode
     color: @computedRequires 'model.options', (options) ->
         ProjectColors.lookup(@shortLabel(), @palette()) or options.stroke?()?.color or 'black'
     
+    strokeColor: @computedRequires 'model.options', (options) ->
+        options.stroke?()?.color or @paletteColor() or 'black'
+    
     width: @computedRequires 'model.options', (options) ->
         options.stroke?()?.width?() or 40
     
@@ -59,7 +62,8 @@ class exports.OrdinalBarNode extends SeriesNode
      * @type ko.computed<d3.selection.update>
      */
     render: ->
-        data = if @seriesData() then that[0] else []
+        viewport = @viewport()
+        data = @seriesData() or []
         
         # create selection
         bar = @selectAll 'rect.metric-bar' .data data
@@ -68,8 +72,9 @@ class exports.OrdinalBarNode extends SeriesNode
         bar.exit().remove()
         
         return bar unless data.length
-        return null unless model  = @model()
-        return null unless scales = @root().scales()
+        return null unless model = @model()
+        return unless xScale = viewport.xScale()
+        return unless yScale = viewport.yScale()
         disabled = @disabled()
         
         bar.enter()
@@ -84,7 +89,7 @@ class exports.OrdinalBarNode extends SeriesNode
                 if disabled
                     0
                 else
-                    scales.yScale.range()[0] - scales.yScale d
-            .attr 'x', scales.xScale(@label()) - @width()/2
-            .attr 'y', scales.yScale
+                    yScale.range()[0] - yScale d[1]
+            .attr 'x', (d) ~> xScale(d[0]) - @width()/2
+            .attr 'y', (d) -> yScale(d[1])
         bar

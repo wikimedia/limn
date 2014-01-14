@@ -37,18 +37,44 @@ limn.graph      = require './graph'
 limn.dashboard  = require './dashboard'
 
 
+/**
+ * Basic info and error messages that can be used anywhere via the limn object
+ */
+limn.showMessages = -> $('#messages').show()
+limn.hideMessages = -> $('#messages').hide()
+limn.hideError = -> $('#messages .error').hide()
+limn.hideInfo = -> $('#messages .info').hide()
+
+$('#messages button.close').on('click', -> $('#messages').hide())
+limn.hideMessages()
+
+limn.error = (message) ->
+    limn.showMessages()
+    limn.hideInfo()
+    $('#messages .error .message').text message
+    $('#messages .error').show 'slow'
+
+limn.info = (message) ->
+    limn.showMessages()
+    limn.hideError()
+    $('#messages .info .message').text message
+    $('#messages .info').show 'slow'
+
 
 /**
  * @class Sets up root application, automatically attaching to an existing element
  *  found at `appSelector` and delegating to the appropriate view.
  */
 class limn.LimnApp
-    VIEWS :
+    VIEWS:
         'dashboards'    : limn.dashboard.DashboardView
         'graphs'        : limn.graph.GraphView
         'datasources'   : limn.data.datasource.DataSourceView
         '404'           : limn.base.NotFoundView
         'loading'       : limn.base.LoadingView
+    
+    CREATE_VIEWS:
+        'graphs'        : limn.graph.GraphCreateView
     
     
     /**
@@ -77,7 +103,7 @@ class limn.LimnApp
         window.addEventListener do
             'click'
             (evt) ->
-                return unless $ evt.target .is '.graph-raw-data-row a'
+                return unless $ evt.target .is '.graph-raw-data-row a,.not-client-side'
                 evt.stopPropagation()
                 false
             true # capture phase
@@ -93,7 +119,18 @@ class limn.LimnApp
                 view = 'dashboards'
                 id   = 'reportcard'
             
-            if ViewType = @VIEWS[view]
+            # if the id is an action, route accordingly
+            if _(['create','list']).contains id
+                action = id
+                id = null
+            
+            switch action
+                case 'create'
+                    views = @CREATE_VIEWS
+                default
+                    views = @VIEWS
+            
+            if ViewType = views[view]
                 @currentView new ViewType id, action
                 @scrollTo 0, 0
             else
@@ -103,7 +140,10 @@ class limn.LimnApp
             @currentView new @VIEWS['404']()
             @scrollTo 0, 0
         
+        # page eats our hash.  BAD page.  bad
+        hash = location.hash
         page()
+        location.hash = hash
     
     
     scrollTo: (x=0, y=0) ->

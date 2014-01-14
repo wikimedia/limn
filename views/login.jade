@@ -1,0 +1,6 @@
+if isAuthenticated
+    span Welcome #{user.displayName}
+    &nbsp;
+    a.not-client-side(href='/logout') (sign out)
+else
+    a.not-client-side(href='/auth/mediawiki') sign in

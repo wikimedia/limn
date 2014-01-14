@@ -43,3 +43,5 @@ debian/changelog
 debian/limn*
 !debian/limn.conf
 debian/files
+
+config.json

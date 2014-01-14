@@ -7,7 +7,9 @@ Seq        = require 'seq'
 glob       = require 'glob'
 yaml       = require 'js-yaml'
 
-_                    = require '../../src/util/underscore'
+_          = require 'underscore'
+_.mixin      require 'underscore.nested'
+
 {readFilesAsync}     = require '../files'
 FileBackedController = require '../file-controller'
 
@@ -75,6 +77,8 @@ class DataSourceController extends FileBackedController
     # POST /datasources
     create: (req, res, next) ->
         return unless data = @processBody req, res
+        unless @isAuthorized req
+            return res.send {result:"error", message:"You may not create a Datasource."}, 403 # 403: Forbidden
         Seq()
             .seq @findFile, data.id, Seq
             .seq (file) ->
@@ -85,7 +89,7 @@ class DataSourceController extends FileBackedController
     # PUT /datasources/:datasource
     update: (req, res, next) ->
         return unless data = @processBody req, res
-        if @PROTECT_DATASOURCES and _ @PROTECTED_DATASOURCE_IDS .contains data.id
+        unless @isAuthorized req
             return res.send {result:"error", message:"DataSource '#{data.id}' is read-only."}, 403 # 403: Forbidden
         console.log "#this.update(#{data.id})"
         Seq()
