@@ -48,6 +48,7 @@ The fastest way to get Limn up and running:
 
 ```
 git clone git@github.com:wikimedia/limn.git
+cd limn
 npm install
 npm i -g coco
 npm start
