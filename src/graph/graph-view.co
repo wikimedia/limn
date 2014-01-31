@@ -4,7 +4,7 @@ ko = require 'knockout'
 limn = require '../' # yes, you actually need the trailing slash
 { View,
 } = require '../base/view'
-{ OrderedMap,
+{ OrderedMap, ParsingMixin,
 } = require '../util'
 { Graph,
 } = require './graph-model'
@@ -14,6 +14,7 @@ limn = require '../' # yes, you actually need the trailing slash
 } = require './node/graph-node'
 { EditView,
 } = require '../edit/edit-view'
+ds = require '../data/datasource'
 
 Trait = require './node/graph-node-trait'
 
@@ -22,11 +23,15 @@ Trait = require './node/graph-node-trait'
 class exports.GraphView extends View
     template: 'graph'
     
+    # Apply Parser mixin
+    ParsingMixin.mix this
+    
     defaults: ->
         model  : null
         action : null
         isDisposed : false
     
+    parser: /https?:\/\/.*?([^\/]*)\.csv/
     
     /**
      * @constructor
@@ -39,7 +44,13 @@ class exports.GraphView extends View
         @graphId = 'graph-' + @__id__
         
         if model instanceof Graph
-            model.fetch()
+            # if the id is a url to a csv, infer metadata
+            if @parser.test model.id()
+                parsed = model.id().match(@parser)
+                model.url = parsed[0]
+                model.id parsed[1]
+            else
+                model.fetch()
         else if typeof model is 'string'
             model = Graph.load { id:model }
         else
@@ -151,6 +162,43 @@ class exports.GraphView extends View
         
         #if @action() is 'edit'
             #new EditView this
+        
+        # gotta defer or the dependency tracking will cause an infinite loop.
+        doLater = ~>
+            datasource = new ds.DataSource()
+            datasource.id @model().id()
+            datasource.url @model().url
+            datasource.determineFormat()
+            datasource.data()
+            @model().name(@model().id())
+            
+            datasource.data.task().done (dataset) ~>
+                dataset.parsedData.labels.map (label, i) ~>
+                    id = _.str.underscored (label or "#i").toLowerCase()
+                    type = @getTypeNameFromExample dataset.data[0][i]
+                    newColumn = new ds.ColumnDef {id, label, type}, datasource
+                    newColumn.index i
+                    datasource.columns.push newColumn
+                
+                # must add the datasource to the cache, so dependencies can resolve
+                # without a trip to the server (which would fail since the datasource
+                # is ephemeral in this case)
+                ds.DataSourceCache.cache[datasource.id()] = datasource
+                datasourceView = new ds.DataSourceView(datasource)
+                graph = datasourceView.buildGraphModel(
+                    datasource,
+                    'line',
+                    do
+                        width: 'auto',
+                        height: 500,
+                        noTweaks: true
+                )
+                @model().root(graph.root)
+                # hack the link so it doesn't go anywhere
+                @$el.find('.graph-name').attr('href', '#')
+        
+        if @parser.test(@model().url)
+            setTimeout doLater, 0
     
     
     metricDefs: @computed ->
