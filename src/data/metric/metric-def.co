@@ -38,12 +38,12 @@ export class MetricDef extends Model
     
     *   id   : 'active_editor'
         name : 'Active Editor'
-        desc : 'A registered and logged-in person (not known as a [bot](https://www.mediawiki.org/wiki/Analytics/Metric_definitions#Bot)) who makes 5 or more edits in any month in [mainspace](https://www.mediawiki.org/wiki/Analytics/Metric_definitions#Content_namespaces) on [countable pages](https://www.mediawiki.org/wiki/Analytics/Metric_definitions#Countable_pages).  Monthly totals are not normalized to 30 day months.'
+        desc : 'A registered and logged-in person (not known as a [bot](https://www.mediawiki.org/wiki/Analytics/Metric_definitions#Bot)) who makes 5 or more edits in any month in [mainspace](https://www.mediawiki.org/wiki/Analytics/Metric_definitions#Content_namespaces) on [countable pages](https://www.mediawiki.org/wiki/Analytics/Metric_definitions#Countable_pages).  Monthly totals are not normalized to 30 day months.  Note that the Total is counting unique active editors.  So, for example, if someone is an active editor on both Wikidata and Russian Wikipedia, they are only counted once in the total.'
         url  : 'https://www.mediawiki.org/wiki/Analytics/Metric_definitions#Active_editor'
     
     *   id   : 'very_active_editor'
         name : 'Very Active Editor'
-        desc : 'A registered and logged-in person (not known as a [bot](https://www.mediawiki.org/wiki/Analytics/Metric_definitions#Bot)) who makes 100 or more edits per month in [mainspace](https://www.mediawiki.org/wiki/Analytics/Metric_definitions#Content_namespaces) on [countable pages](https://www.mediawiki.org/wiki/Analytics/Metric_definitions#Countable_pages).  Monthly totals are not normalized to 30 day months.'
+        desc : 'A registered and logged-in person (not known as a [bot](https://www.mediawiki.org/wiki/Analytics/Metric_definitions#Bot)) who makes 100 or more edits per month in [mainspace](https://www.mediawiki.org/wiki/Analytics/Metric_definitions#Content_namespaces) on [countable pages](https://www.mediawiki.org/wiki/Analytics/Metric_definitions#Countable_pages).  Monthly totals are not normalized to 30 day months.  Note that the Total is counting unique very active editors.  So, for example, if someone is a very active editor on both Wikidata and Russian Wikipedia, they are only counted once in the total.'
         url  : 'https://www.mediawiki.org/wiki/Analytics/Metric_definitions#Very_active_editor'
     
     *   id   : 'new_editor'
