@@ -42,21 +42,21 @@ class exports.DataSourceView extends View
             @blankDataSource = ko.observable()
             @showAddForm = ko.computed ~> @blankDataSource?()?.url?()?.length > 0
             @hideAddForm = ko.computed ~> not @showAddForm()
-        
-        @action action
-        @message = ko.observable()
-        @visualizeDialog = ko.observable()
-        @filter = ko.observable()
-        @filteredModel = ko.computed ~>
-            if @filter()?.length
-                filter = @filter().toLowerCase()
-                @model().filter ~>
-                    id = it.id()?.toLowerCase?() or ''
-                    name = it.name()?.toLowerCase?() or ''
-                    return id.indexOf(filter) >= 0 or
-                         name.indexOf(filter) >= 0
-            else
-                @model()
+            
+            @action action
+            @message = ko.observable()
+            @visualizeDialog = ko.observable()
+            @filter = ko.observable()
+            @filteredModel = ko.computed ~>
+                if @filter()?.length
+                    filter = @filter().toLowerCase()
+                    @model().filter ~>
+                        id = it.id()?.toLowerCase?() or ''
+                        name = it.name()?.toLowerCase?() or ''
+                        return id.indexOf(filter) >= 0 or
+                             name.indexOf(filter) >= 0
+                else
+                    @model()
     
     
     initializeAddForm: ->
@@ -157,20 +157,21 @@ class exports.DataSourceView extends View
             limn.view.visualizeDialog().resize()
     
     
-    buildGraphModel: (datasource, metricType) ->
+    buildGraphModel: (datasource, metricType, options) ->
+        options ?= {}
         columns = _.clone datasource.columns()
         # filter out columns that aren't meant to be visualized
         switch metricType
             case 'line'
                 columns = columns.slice(1)
-                graph = @buildLineGraph datasource, columns, metricType
+                graph = @buildLineGraph datasource, columns, metricType, options
             case 'geo-feature'
                 columns = columns.filter -> it.id() is not 'id' and it.id() is not 'name'
-                graph = @buildWorldMapGraph datasource, columns, metricType
+                graph = @buildWorldMapGraph datasource, columns, metricType, options
         graph
     
     
-    buildWorldMapGraph: (datasource, columns, metricType) ->
+    buildWorldMapGraph: (datasource, columns, metricType, options) ->
         worldMapChildren = columns.map ->
             nodeType: 'geo-feature'
             metric:
@@ -206,15 +207,15 @@ class exports.DataSourceView extends View
                 ]
     
     
-    buildLineGraph: (datasource, columns, metricType) ->
-        return do
+    buildLineGraph: (datasource, columns, metricType, options) ->
+        graph = do
             name: "All Metrics in #{datasource.name()}"
             root:
                 nodeType: 'canvas'
                 y:
-                    scaleType: 'linear'
-                width: 900
-                height: 350
+                    scaleType: options.scale or 'linear'
+                width: options.width or 900
+                height: options.height or 350
                 children: [
                     {nodeType: 'axis', options: {dimension: 'x', orient: 'bottom'}}
                     {nodeType: 'axis', options: {dimension: 'y', orient: 'left'}}
@@ -222,13 +223,6 @@ class exports.DataSourceView extends View
                     {nodeType: 'grid', options: {dimension: 'y'}}
                     {nodeType: 'legend', options: {dateFormat: 'HH:mm on MMM DD, YYYY'}}
                     {nodeType: 'zoom-brush'}
-                    {
-                        nodeType: 'tweaks',
-                        children: [
-                            {nodeType: 'smooth'},
-                            {nodeType: 'scaling'}
-                        ]
-                    }
                     {
                         nodeType: "#{metricType}-group",
                         options: {palette: 'category10'},
@@ -245,3 +239,14 @@ class exports.DataSourceView extends View
                         }
                     }
                 ]
+        
+        unless options.noTweaks
+            graph.root.children.push {
+                nodeType: 'tweaks',
+                children: [
+                    {nodeType: 'smooth'},
+                    {nodeType: 'scaling'}
+                ]
+            }
+        
+        return graph
