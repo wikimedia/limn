@@ -31,7 +31,7 @@ class exports.GraphView extends View
         action : null
         isDisposed : false
     
-    isUrl: /https?:\/\/.*?([^\/]*)\.csv/
+    isUrl: /https?:\/\/.*?([^\/]*)\.(csv|tsv|json)/i
     
     /**
      * @constructor
