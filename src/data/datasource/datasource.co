@@ -124,9 +124,10 @@ export class DataSource extends StoredModel
         return url unless url
         if url.indexOf('http') == 0
             url = "/x/#url"
-        else
+        if url.indexOf('?') < 0
             cacheBuster = @generateRandom()
             url = "#url?#cacheBuster"
+        url
     
     
     /**
