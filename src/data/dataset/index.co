@@ -5,5 +5,6 @@ geo_json_dataset   = require './geo-json-dataset'
 topo_json_dataset  = require './topo-json-dataset'
 mobile_device_by_geo = require './mobile-device-by-geo-dataset'
 umapi_timeseries = require './umapi-timeseries-dataset'
+mmv_performance_geo = require './mmv-performance-geo-dataset'
 
-exports import dataset import series_dataset import timeseries_dataset import geo_json_dataset import topo_json_dataset import mobile_device_by_geo import umapi_timeseries
+exports import dataset import series_dataset import timeseries_dataset import geo_json_dataset import topo_json_dataset import mobile_device_by_geo  import umapi_timeseries import mmv_performance_geo
