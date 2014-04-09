@@ -1,10 +1,17 @@
 op = require 'operator'
+{ countriesData
+} = require '../../util'
 
 
 /**
  * @namespace Parsers by type.
  */
 parsers =
+    
+    parseTwoLetterCountryCode: (v) ->
+        return null unless v?
+        s = op.toStr v
+        limn.util.countriesData[s]?.id or s
     
     parseBoolean: (v) ->
         op.toBool v

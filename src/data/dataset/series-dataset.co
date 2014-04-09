@@ -4,13 +4,14 @@ d3 = require 'd3'
 } = require './dataset'
 
 
-parseOrdinalCSV = (rawData) ->
+parseOrdinalCSV = (rawData, options) ->
     data = []
     lines = rawData.split '\n'
+    colSep = options?.colSep or ','
     
     _.each lines, (row) ~>
         return true unless row
-        data.push(row.split(','))
+        data.push(row.split(colSep))
     data
 
 
