@@ -65,26 +65,29 @@ root.jQuery?.fn.invoke = (method, ...args) ->
 
 
 
-emitters    = exports.emitters    = require './emitters'
+emitters        = exports.emitters      = require './emitters'
 exports import emitters
 
-mixin       = exports.mixin       = require './mixin'
+mixin           = exports.mixin         = require './mixin'
 exports import mixin
 
-iterator    = exports.iterator    = require './iterator'
+iterator        = exports.iterator      = require './iterator'
 exports import iterator
 
-query       = exports.query       = require './query'
+query           = exports.query         = require './query'
 exports import query
 
-type_cache  = exports.type_cache  = require './type-cache'
+type_cache      = exports.type_cache    = require './type-cache'
 exports import type_cache
 
-collections = exports.collections = require './collections'
+collections     = exports.collections   = require './collections'
 exports import collections
 
-parse       = exports.parse       = require './parse'
+parse           = exports.parse         = require './parse'
 exports import parse
+
+countriesData   = exports.countriesData = require './countries-data'
+exports import countriesData
 
 formatters  = exports.formatters  = require './formatters'
 crc         = exports.crc         = require './crc'
