@@ -166,8 +166,10 @@ class exports.InfoboxEntry extends AttributesBase
     
     valueFormatter : @computedRequires 'infoboxOptions', 'nodeOptions', (infoboxOptions, nodeOptions) ->
         valueFormat = infoboxOptions.get('valueFormat') or nodeOptions.get('valueFormat')
-        d3.format valueFormat
-    
+        valueUnitSuffix = infoboxOptions.get('valueUnitSuffix') or nodeOptions.get('valueUnitSuffix') or ''
+        valueFormatFunction = d3.format valueFormat
+        (value) -> valueFormatFunction(value) + valueUnitSuffix
+
     valueReady : @computed ->
         featureId      = @infobox.featureId()
         dataById       = @dataById()
