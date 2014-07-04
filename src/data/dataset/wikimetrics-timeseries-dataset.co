@@ -1,0 +1,52 @@
+{ Dataset,
+} = require './dataset'
+
+
+/**
+ * @class Hack to handle User Metrics JSON structure
+ * @extends Dataset
+ */
+class exports.WikimetricsTimeseriesDataset extends Dataset
+    @registerType 'wikimetrics_timeseries'
+    
+    ->
+        super ...
+        @format = 'json'
+    
+    
+    /**
+     * @returns {Array<String>} List of column labels.
+     */
+    getLabels: ->
+        @labelInfo
+    
+    
+    parse: (rawData) ->
+        return rawData if typeof rawData is 'string'
+        console.info 'Wikimetrics format, parsing it into standard JSON'
+        console.log rawData
+        
+        normalized = []
+        
+        @labelInfo = []
+        for key in rawData
+            if key is 'parameters'
+                p = rawData[key]
+                # TODO: save the metadata somewhere?
+                console.log "#{p['Cohort']} - #{p['Metric']}"
+                continue
+            
+            newRow = []
+            index = 0
+            newRow[index] = new Date key
+            @labelInfo[index] ?= 'date'
+            values = rawData[key]['Sum'] # TODO: make it understand other aggregates?
+            for i in values
+                index ++
+                newRow[index] = values[i]
+                @labelInfo[index] ?= i
+            
+            normalized.push newRow
+        
+        normalized.sort (a, b) ->
+            a[0].getTime() - b[0].getTime()
