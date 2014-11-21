@@ -136,8 +136,9 @@ class exports.LegendEntry extends AttributesBase implements formatters
     (@legend, @node) ->
         super {}
         @legendOptions = @legend.options
-        @{ options, label, disabled
-        } = node
+        @{ options, label, disabled } = node
+        if @legendOptions().shortLabels?()
+            @label = node.shortLabel
         @legend.date.subscribe @trackLegendDate, this
     
     
