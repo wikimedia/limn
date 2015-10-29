@@ -31,7 +31,7 @@ class exports.GraphView extends View
         action : null
         isDisposed : false
     
-    isUrl: /https?:\/\/.*?([^\/]*)\.(csv|tsv|json)/i
+    isUrl: /https?:\/\/.*?([^\/]*)\.(csv|tsv|json)(\?.*)?/i
     
     /**
      * @constructor
@@ -49,6 +49,16 @@ class exports.GraphView extends View
                 parsed = model.id().match(@isUrl)
                 model.url = parsed[0]
                 model.id parsed[1]
+                optionQuery = parsed[3]?.substr 1
+                if optionQuery
+                    options = optionQuery.split('&').forEach(->
+                        [k, v] = it.split('=')
+                        if ['type'].indexOf(k) >= 0
+                            model[k] = v
+                        else
+                            model[k]?(v)
+                    )
+
             else
                 model.fetch()
         else if typeof model is 'string'
@@ -170,7 +180,8 @@ class exports.GraphView extends View
             datasource.url @model().url
             datasource.determineFormat()
             datasource.data()
-            @model().name(@model().id())
+            if not @model().name.peek()
+                @model().name(@model().id())
             
             datasource.data.task().done (dataset) ~>
                 dataset.parsedData.labels.map (label, i) ~>
@@ -187,7 +198,7 @@ class exports.GraphView extends View
                 datasourceView = new ds.DataSourceView(datasource)
                 graph = datasourceView.buildGraphModel(
                     datasource,
-                    'line',
+                    @model().type or 'line',
                     do
                         width: 'auto',
                         height: 500,
