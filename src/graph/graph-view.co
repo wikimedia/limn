@@ -58,6 +58,10 @@ class exports.GraphView extends View
                         else
                             model[k]?(v)
                     )
+                # have to make the id unique, otherwise caching
+                # will cause different graphs to use the same data
+                if model.name()?
+                    model.id(model.id() + model.name())
 
             else
                 model.fetch()
